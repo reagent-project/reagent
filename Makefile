@@ -9,7 +9,7 @@ PROF = dev,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.0.1 # -SNAPSHOT
+VERSION = 0.0.1-SNAPSHOT
 
 all: buildrun
 
@@ -61,4 +61,3 @@ tag: setversion
 	   git commit --allow-empty -a -m"Version "$(VERSION); \
 	   git tag v$(VERSION); \
 	fi
-
