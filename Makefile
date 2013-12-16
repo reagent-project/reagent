@@ -37,7 +37,6 @@ setup: preclean
 
 gen-react: bower_components
 	node bin/gencljs.js
-#	./bin/gencljs.sh bower_components/react/react-with-addons.js cloact.react > gentmp; mv gentmp src/cloact/react.cljs
 
 show-outdated:
 	lein ancient :all
