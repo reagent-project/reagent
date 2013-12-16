@@ -1,8 +1,8 @@
 
 
-(defproject todomvc-cloact "0.0.1-SNAPSHOT"
+(defproject todomvc-cloact "0.0.1"
   :dependencies [[org.clojure/clojurescript "0.0-2120"]
-                 [cloact "0.0.1-SNAPSHOT"]]
+                 [cloact "0.0.1"]]
   :plugins [[lein-cljsbuild "1.0.0"]]
   :hooks [leiningen.cljsbuild]
   :profiles {:prod {:cljsbuild

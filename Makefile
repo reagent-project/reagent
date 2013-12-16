@@ -9,7 +9,7 @@ PROF = dev,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.0.1-SNAPSHOT
+VERSION = 0.0.1 # -SNAPSHOT
 
 all: buildrun
 
@@ -49,8 +49,9 @@ bower_components:
 	bower install react#v0.5.1
 
 setversion:
+	version=$(VERSION); \
 	find . -name project.clj | \
-	xargs -n1 sed -i "" -e 's,\(cloact "\)\([^"]*\)",\1'$(VERSION)'"',g
+	xargs -n1 sed -i "" -e 's,\(cloact "\)\([^"]*\)",\1'"$$version"'"',g
 
 tag: setversion
 	if git rev-parse v$(VERSION) 2>/dev/null; then \

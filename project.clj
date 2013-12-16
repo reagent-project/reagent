@@ -1,6 +1,6 @@
 
 
-(defproject cloact "0.0.1-SNAPSHOT"
+(defproject cloact "0.0.1"
   :dependencies [[org.clojure/clojurescript "0.0-2120"]]
   :plugins [[lein-cljsbuild "1.0.1"]]
   :hooks [leiningen.cljsbuild]
