@@ -1,7 +1,6 @@
 
 (ns simpleexample
   (:require [cloact.core :as cloact :refer [atom partial]]
-            [cloact.debug :refer-macros [dbg]]
             [clojure.string :as string]))
 
 (def timer (atom (js/Date.)))
