@@ -8,14 +8,11 @@
 
 (def React tmpl/React)
 
-;;; Atom protocol as mixin
+;;; IDeref protocol as mixin
 
 (def CloactMixin (js-obj))
 (def -ToExtend (js-obj))
 (set! (.-prototype -ToExtend) CloactMixin)
-
-;; (declare get-props)
-;; (declare get-children)
 
 (extend-type -ToExtend
   IEquiv
@@ -55,15 +52,19 @@
 (defn- args-of [C]
   (-> C .-props .-cljsArgs))
 
-(defn- cljs-props [C]
-  (let [args (args-of C)
-        p (nth args 1 nil)]
-    (when (map? p)
-      p)))
+(defn- props-in-args [args]
+  (let [p (nth args 1 nil)]
+    (when (map? p) p)))
+
+(defn props-in-props [props]
+  (-> props .-cljsArgs props-in-args))
 
 (defn- first-child [args]
-  (let [p? (nth args 1 nil)]
-    (if (or (nil? p?) (map? p?)) 2 1)))
+  (let [p (nth args 1 nil)]
+    (if (or (nil? p) (map? p)) 2 1)))
+
+(defn- cljs-props [C]
+  (-> (args-of C) props-in-args))
 
 (defn- get-children [C]
   (let [args (args-of C)
@@ -83,15 +84,9 @@
   (replace-props C (merge (cljs-props C) newprops)))
 
 (defn get-props [C]
-  (let [ctx ratom/*ratom-context*]
-    (if (or (nil? ctx) (.-isRenderContext ctx))
-      (cljs-props C)
-      ;; Use atom if getting props in an ratom
-      (deref (or (.-cljsPropsAtom C)
-                 (set! (.-cljsPropsAtom C) (ratom/ratom (cljs-props C))))))))
+  (cljs-props C))
 
 (defn- do-render [C f]
-  (set! (.-isRenderContext ratom/*ratom-context*) true)
   (let [res (f (cljs-props C) C (.-state C))
         conv (if (vector? res)
                (tmpl/as-component res)
@@ -118,26 +113,23 @@
       ;; reset! doesn't call -notifyWatches unless -watches is set
       (set! (.-watches C) {})
       (when f
-        (set! (.-cljsOldState C)
-              (merge (.-state C) (f C)))))
+        (set! (.-cljsOldState C) (merge (.-state C) (f C)))))
 
     :componentWillReceiveProps
     (fn [C props]
-      (when-not (nil? (.-cljsPropsAtom C))
-        (reset! (.-cljsPropsAtom C) (cljs-props C)))
-      (when f (f C props)))
+      (when f (f C (props-in-props props))))
 
     :shouldComponentUpdate
     (fn [C nextprops nextstate]
-      (assert (nil? f) "shouldComponentUpdate is not yet supported")
       (let [a1 (args-of C)
             a2 (-> nextprops .-cljsArgs)
-            ostate (.-cljsOldState C)
-            eq (and (identical? ostate nextstate)
-                    (tmpl/equal-args a1 a2))]
+            ostate (.-cljsOldState C)]
         (assert (vector? a1))
         (set! (.-cljsOldState C) nextstate)
-        (not eq)))
+        (if (nil? f)
+          (not (and (identical? ostate nextstate)
+                    (tmpl/equal-args a1 a2)))
+          (f a1 a2 ostate nextstate))))
 
     :componentWillUnmount
     (fn [C]
@@ -167,7 +159,6 @@
     (default-wrapper (or wrap f))))
 
 (def obligatory {:getInitialState nil
-                 :componentWillReceiveProps nil
                  :shouldComponentUpdate nil
                  :componentWillUnmount nil})
 

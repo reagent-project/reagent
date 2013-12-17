@@ -28,7 +28,7 @@ install: setup
 	lein install
 
 preclean:
-	rm -rf repl .repl target
+	rm -rf repl .repl target out
 
 clean: preclean
 	lein -o clean
