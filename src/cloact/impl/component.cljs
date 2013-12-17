@@ -47,7 +47,11 @@
 (when-not -ToExtend
   (.log js/console "this should never happen to " -ToExtend))
 
-;;; Function wrapping
+;;; Accessors
+
+;; We store the "args" (i.e a vector like [comp props child1])
+;; in .-cljsArgs, with optional args, which makes access a bit
+;; tricky. The upside is that we don't have to do any allocations.
 
 (defn- args-of [C]
   (-> C .-props .-cljsArgs))
@@ -64,7 +68,7 @@
     (if (or (nil? p) (map? p)) 2 1)))
 
 (defn- cljs-props [C]
-  (-> (args-of C) props-in-args))
+  (-> C args-of props-in-args))
 
 (defn- get-children [C]
   (let [args (args-of C)
@@ -129,7 +133,9 @@
         (if (nil? f)
           (not (and (identical? ostate nextstate)
                     (tmpl/equal-args a1 a2)))
-          (f a1 a2 ostate nextstate))))
+          ;; Call f with oldprops, newprops, oldstate, newstate
+          (f (props-in-args a1) (props-in-args a2)
+             ostate nextstate))))
 
     :componentWillUnmount
     (fn [C]
@@ -183,7 +189,7 @@
                        (.-name r))))
         name1 (if (empty? name) (str (gensym "cloact")) name)]
     (into {} (for [[k v] (assoc fun-map :displayName name1)]
-               [k (get-wrapper k v name)]))))
+               [k (get-wrapper k v name1)]))))
 
 (defn- add-atom-mixin
   [props-map]
