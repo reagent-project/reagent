@@ -9,7 +9,7 @@ PROF = dev,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.0.2-SNAPSHOT
+VERSION = 0.0.2 # -SNAPSHOT
 
 all: buildrun
 
@@ -19,7 +19,7 @@ leinbuild: setup
 	lein -o cljsbuild once $(CLJSBUILD)
 
 openbrowser:
-	(sleep 1 && open -a "Google Chrome" site/test.html) &
+	(sleep 1 && open site/test.html) &
 
 buildrun: setup
 	lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
