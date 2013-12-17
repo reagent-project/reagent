@@ -92,7 +92,7 @@
 
 (defn- do-render [C f]
   (set! (.-isRenderContext ratom/*ratom-context*) true)
-  (let [res (f (cljs-props C) C)
+  (let [res (f (cljs-props C) C (.-state C))
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
