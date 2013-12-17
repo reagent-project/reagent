@@ -80,12 +80,6 @@
         (swap! C assoc :foo "there")
         (is (found-in #"hi there" div))
 
-        (let [runs @tests-run]
-          ;; should not be rendered
-          (swap! C assoc :foo "there")
-          (is (found-in #"hi there" div))
-          (is (= runs @tests-run)))
-
         (swap! C assoc :foo "you")
         (is (found-in #"hi you" div))))))
 

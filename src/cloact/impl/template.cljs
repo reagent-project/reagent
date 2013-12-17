@@ -83,8 +83,8 @@
            true
            (let [props1 (nth v1 1)]
              (if (or (nil? props1) (map? props1))
-               (and (= props1 (nth v2 1))
-                    (identical-parts v1 v2 2))
+               (and (identical-parts v1 v2 2)
+                    (= props1 (nth v2 1)))
                (identical-parts v1 v2 1)))))))
 
 (declare wrapper)

@@ -103,7 +103,7 @@
 
 (defn- do-render [C f]
   (set! (.-isRenderContext ratom/*ratom-context*) true)
-  (let [res (f (cljs-props C) f @C)
+  (let [res (f (cljs-props C) C @C)
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
@@ -141,12 +141,12 @@
     :shouldComponentUpdate
     (fn [C nextprops nextstate]
       (assert (nil? f) "shouldComponentUpdate is not yet supported")
-      (assert (vector? (-> C .-props .-cljsArgs)))
-      (let [a1 (-> C .-props .-cljsArgs)
+      (let [a1 (args-of C)
             a2 (-> nextprops .-cljsArgs)
             ostate (.-cljsOldState C)
-            eq (and (tmpl/equal-args a1 a2)
-                    (= ostate nextstate))]
+            eq (and (identical? ostate nextstate)
+                    (tmpl/equal-args a1 a2))]
+        (assert (vector? a1))
         (set! (.-cljsOldState C) nextstate)
         (not eq)))
 
