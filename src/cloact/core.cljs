@@ -9,31 +9,52 @@
 
 (def React tmpl/React)
 
-(defn create-class [body]
-  (comp/create-class body))
-
-(defn as-component [comp]
-  (tmpl/as-component comp))
+;; (defn as-component [comp]
+;;   (tmpl/as-component comp))
 
 (defn render-component
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
-     (.renderComponent React (as-component comp) container callback)))
+     (.renderComponent React (tmpl/as-component comp) container callback)))
 
 (defn unmount-component-at-node [container]
   (.unmountComponentAtNode React container))
 
 (defn render-component-to-string [component callback]
-  (.renderComponentToString React (as-component component) callback))
+  (.renderComponentToString React (tmpl/as-component component) callback))
 
-(defn set-props [C props]
-  (comp/set-props C props))
+(defn create-class [body]
+  (comp/create-class body))
 
-(defn replace-props [C props]
-  (comp/replace-props C props))
 
-(defn merge-props [defaults props]
+
+(defn set-props [comp props]
+  (comp/set-props comp props))
+
+(defn replace-props [comp props]
+  (comp/replace-props comp props))
+
+
+
+(defn props [comp]
+  (comp/get-props comp))
+
+(defn children [comp]
+  (comp/get-children comp))
+
+(defn dom-node [comp]
+  (.getDOMNode comp))
+
+(defn refs [comp]
+  (.-refs comp))
+
+
+
+(defn merge-props
+  "Utility function that merges two maps, handling :class and :style
+specially, like React's transferPropsTo."
+  [defaults props]
   (util/merge-props defaults props))
 
 

@@ -22,7 +22,7 @@
                                     nil)})])))
 
 (def todo-input (with-meta todo-input-render
-                  {:component-did-mount #(.focus (:dom-node %))}))
+                  {:component-did-mount #(.focus (cloact/dom-node %))}))
 
 (defn todo-item [{:keys [todo on-toggle on-save on-destroy]} this]
   (dbg "Rendering item")

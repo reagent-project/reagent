@@ -14,8 +14,8 @@
 (def -ToExtend (js-obj))
 (set! (.-prototype -ToExtend) CloactMixin)
 
-(declare get-props)
-(declare get-children)
+;; (declare get-props)
+;; (declare get-children)
 
 (extend-type -ToExtend
   IEquiv
@@ -38,17 +38,6 @@
     (.replaceState C new))
   (-add-watch [C key f] (assert false "Component isn't really watchable"))
   (-remove-watch [C key] (assert false "Component isn't really watchable"))
-
-  ILookup
-  (-lookup [C key]
-    (-lookup C key nil))
-  (-lookup [C key not-found]
-    (case key
-      :props (get-props C)
-      :children (get-children C)
-      :dom-node (.getDOMNode C)
-      :refs (.-refs C)
-      not-found))
 
   IHash
   (-hash [C] (goog/getUid C)))
@@ -103,7 +92,7 @@
 
 (defn- do-render [C f]
   (set! (.-isRenderContext ratom/*ratom-context*) true)
-  (let [res (f (cljs-props C) C @C)
+  (let [res (f (cljs-props C) C)
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
