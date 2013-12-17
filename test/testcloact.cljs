@@ -28,88 +28,85 @@
 (defn found-in [re div]
   (re-find re (.-innerHTML div)))
 
-(def tests-run (clojure.core/atom 0))
-(def tests-should-run (clojure.core/atom 0))
-
-(defn really-simple []
-  [:div "div in really-simple"])
 
 (deftest really-simple-test
-  (swap! tests-should-run inc)
-  (with-mounted-component [really-simple nil nil]
-    (fn [c div]
-      (swap! tests-run inc)
-      (is (found-in #"div in really-simple" div)))))
+  (let [ran (atom 0)
+        really-simple (fn []
+                        (swap! ran inc)
+                        [:div "div in really-simple"])]
+    (with-mounted-component [really-simple nil nil]
+      (fn [c div]
+        (swap! ran inc)
+        (is (found-in #"div in really-simple" div))))
+    (is (= 2 @ran))))
 
 (deftest test-simple-callback
-  (swap! tests-should-run + 6)
-  (let [comp (r/create-class
-              {:component-did-mount #(swap! tests-run inc)
-               :render (fn [P C S]
+  (let [ran (atom 0)
+        comp (r/create-class
+              {:component-did-mount #(swap! ran inc)
+               :render (fn [P C]
                          (assert (map? P))
-                         (swap! tests-run inc)
+                         (swap! ran inc)
                          [:div (str "hi " (:foo P) ".")])})]
     (with-mounted-component (comp {:foo "you"})
       (fn [C div]
-        (swap! tests-run inc)
+        (swap! ran inc)
         (is (found-in #"hi you" div))
         
         (r/set-props C {:foo "there"})
         (is (found-in #"hi there" div))
 
-        (let [runs @tests-run]
+        (let [runs @ran]
           (r/set-props C {:foo "there"})
           (is (found-in #"hi there" div))
-          (is (= runs @tests-run)))
+          (is (= runs @ran)))
 
         (r/replace-props C {:foobar "not used"})
-        (is (found-in #"hi ." div))))))
+        (is (found-in #"hi ." div))))
+    (is (= 5 @ran))))
 
 (deftest test-state-change
-  (swap! tests-should-run + 3)
-  (let [comp (r/create-class
+  (let [ran (atom 0)
+        comp (r/create-class
               {:get-initial-state (fn [])
-               :render (fn [P C S]
-                         (swap! tests-run inc)
-                         [:div (str "hi " (:foo S))])})]
+               :render (fn [P C]
+                         (swap! ran inc)
+                         [:div (str "hi " (:foo @C))])})]
     (with-mounted-component (comp)
       (fn [C div]
-        (swap! tests-run inc)
+        (swap! ran inc)
         (is (found-in #"hi " div))
 
         (swap! C assoc :foo "there")
         (is (found-in #"hi there" div))
 
         (swap! C assoc :foo "you")
-        (is (found-in #"hi you" div))))))
+        (is (found-in #"hi you" div))))
+    (is (= 4 @ran))))
 
 (deftest test-ratom-change
-  (swap! tests-should-run + 3)
-  (let [runs (running)
+  (let [ran (atom 0)
+        runs (running)
         val (atom 0)
         v1 (reaction @val)
-        ran @tests-run
         comp (fn []
-              (swap! tests-run inc)
-              [:div (str "val " @v1)])]
+               (swap! ran inc)
+               [:div (str "val " @v1)])]
     (with-mounted-component [comp]
       (fn [C div]
-        (swap! tests-run inc)
+        (swap! ran inc)
         (is (not= runs (running)))
         (is (found-in #"val 0" div))
-        (is (= @tests-run (+ ran 2)))
+        (is (= 2 @ran))
 
         (reset! val 1)
         (is (found-in #"val 1" div))
-        (is (= @tests-run (+ ran 3)))
+        (is (= 3 @ran))
 
         ;; should not be rendered
         (reset! val 1)
         (is (found-in #"val 1" div))
-        (is (= @tests-run (+ ran 3)))))
-    (is (= runs (running)))))
+        (is (= 3 @ran))))
+    (is (= runs (running)))
+    (is (= 3 @ran))))
 
-(deftest check-that-test-ran
-  (if isClient
-    (is (= @tests-run @tests-should-run))
-    (is (= @tests-run 0))))
