@@ -54,6 +54,11 @@
          [:button#clear-completed {:on-click clear}
           "Clear completed " done])])))
 
+(defn animation [props this]
+  (let [TransitionGroup cloact/React.addons.TransitionGroup]
+    [TransitionGroup {:transitionName (:name props)}
+     (cloact/children this)]))
+
 (def counter (atom 0))
 
 (defn add-todo [todos text]
@@ -95,11 +100,12 @@
                                                   (pos? active))}]
           [:label {:for "toggle-all"} "Mark all as complete"]
           [:ul#todo-list
-           (for [{id :id :as todo} (filter pred items)]
-             [todo-item {:key id :todo todo
-                         :on-save (partial save todos id)
-                         :on-toggle (partial toggle todos id)
-                         :on-destroy (partial delete todos id)}])]]
+           [animation {:name "todoitem"}
+            (for [{id :id :as todo} (filter pred items)]
+              [todo-item {:key id :todo todo
+                          :on-save (partial save todos id)
+                          :on-toggle (partial toggle todos id)
+                          :on-destroy (partial delete todos id)}])]]]
          [:footer#footer
           [todo-stats {:active active :done done :filter filt
                        :clear (partial clear-done todos)}]]

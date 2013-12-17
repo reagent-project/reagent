@@ -35,7 +35,7 @@
 
 (defn examples []
   (let [p {:style {:color "#aaa"}}]
-    [:div
+    [:div.runtests
      [:div
       [:h2 p "Test results:"]
       [test-output]]

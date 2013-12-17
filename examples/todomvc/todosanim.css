@@ -1,0 +1,20 @@
+
+.todoitem-enter {
+    opacity: 0.01;
+    transition: opacity .2s ease-in;
+}
+
+.todoitem-enter.todoitem-enter-active {
+    opacity: 1;
+}
+
+.todoitem-leave {
+    opacity: 0.3;
+    max-height: 58px;
+    transition: opacity 0.1s ease-in, max-height 0.2s ease-out;
+}
+
+.todoitem-leave.todoitem-leave-active {
+    opacity: 0.01;
+    max-height: 1px;
+}
