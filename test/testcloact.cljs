@@ -2,7 +2,7 @@
   (:require-macros [cemerick.cljs.test
                     :refer (is deftest with-test run-tests testing)]
                    [cloact.ratom :refer [reaction]]
-                   [cloact.debug :refer [dbg println]])
+                   [cloact.debug :refer [dbg println log]])
   (:require [cemerick.cljs.test :as t]
             [cloact.core :as r :refer [atom]]
             [cloact.ratom :as rv]))
@@ -26,8 +26,11 @@
         (r/unmount-component-at-node div)))))
 
 (defn found-in [re div]
-  (re-find re (.-innerHTML div)))
-
+  (let [res (.-innerHTML div)]
+    (if (re-find re res)
+      true
+      (do (println "Not found: " res)
+          false))))
 
 (deftest really-simple-test
   (let [ran (atom 0)
@@ -110,3 +113,22 @@
     (is (= runs (running)))
     (is (= 3 @ran))))
 
+(deftest init-state-test
+  (let [ran (atom 0)
+        really-simple (fn [props this]
+                        (swap! ran inc)
+                        (swap! this assoc :foo "foobar")
+                        (fn []
+                          [:div (str "this is " (:foo @this))]))]
+    (with-mounted-component [really-simple nil nil]
+      (fn [c div]
+        (swap! ran inc)
+        (is (found-in #"this is foobar" div))))
+    (is (= 2 @ran))))
+
+(deftest to-string-test []
+  (let [comp (fn [props]
+               [:div (str "i am " (:foo props))])]
+    (is (re-find #"i am foobar"
+                 (r/render-component-to-string
+                  [comp {:foo "foobar"}])))))

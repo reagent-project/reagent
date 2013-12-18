@@ -90,6 +90,9 @@
 (defn get-props [C]
   (cljs-props C))
 
+
+;;; Function wrapping
+
 (defn- do-render [C f]
   (let [res (f (cljs-props C) C (.-state C))
         conv (if (vector? res)

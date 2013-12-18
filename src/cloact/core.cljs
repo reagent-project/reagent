@@ -21,8 +21,13 @@
 (defn unmount-component-at-node [container]
   (.unmountComponentAtNode React container))
 
-(defn render-component-to-string [component callback]
-  (.renderComponentToString React (tmpl/as-component component) callback))
+(defn render-component-to-string
+  ([component]
+     (let [res (clojure.core/atom nil)]
+       (render-component-to-string component #(reset! res %))
+       @res))
+  ([component callback]
+     (.renderComponentToString React (tmpl/as-component component) callback)))
 
 (defn create-class [body]
   (comp/create-class body))

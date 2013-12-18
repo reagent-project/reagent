@@ -1,6 +1,6 @@
 
 .todoitem-enter {
-    opacity: 0.01;
+    opacity: 0.1;
     transition: opacity .2s ease-in;
 }
 
@@ -9,12 +9,10 @@
 }
 
 .todoitem-leave {
-    opacity: 0.3;
-    max-height: 58px;
-    transition: opacity 0.1s ease-in, max-height 0.2s ease-out;
+    opacity: 0.8;
+    transition: opacity 0.2s ease-out;
 }
 
 .todoitem-leave.todoitem-leave-active {
-    opacity: 0.01;
-    max-height: 1px;
+    opacity: 0.1;
 }
