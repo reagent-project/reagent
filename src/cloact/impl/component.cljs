@@ -54,7 +54,8 @@
 ;; tricky. The upside is that we don't have to do any allocations.
 
 (defn- args-of [C]
-  (-> C .-props .-cljsArgs))
+  (-> C (aget "props") .-cljsArgs)
+  #_(-> C .-props .-cljsArgs))
 
 (defn- props-in-args [args]
   (let [p (nth args 1 nil)]
@@ -94,7 +95,7 @@
 ;;; Function wrapping
 
 (defn- do-render [C f]
-  (let [res (f (cljs-props C) C (.-state C))
+  (let [res (f (cljs-props C) C (aget "state" C) #_(.-state C))
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
@@ -120,7 +121,8 @@
       ;; reset! doesn't call -notifyWatches unless -watches is set
       (set! (.-watches C) {})
       (when f
-        (set! (.-cljsOldState C) (merge (.-state C) (f C)))))
+        (set! (.-cljsOldState C) (merge (aget "state" C)
+                                        #_(.-state C) (f C)))))
 
     :componentWillReceiveProps
     (fn [C props]

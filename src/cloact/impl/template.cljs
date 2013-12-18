@@ -2,7 +2,7 @@
 (ns cloact.impl.template
   (:require-macros [cloact.debug :refer [dbg prn println]])
   (:require [clojure.string :as string]
-            [cloact.react :as reacts]))
+            [cloact.impl.reactimport :as reacts]))
 
 (def React reacts/React)
 
@@ -18,9 +18,11 @@
        :private true}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
+(def DOM (aget React "DOM"))
+
 (defn parse-tag [tag]
   (let [[tag id class] (->> tag name (re-matches re-tag) next)
-        comp (aget (.-DOM React) tag)
+        comp (aget DOM tag)
         class' (when class
                  (string/replace class #"\." " "))]
     [comp (when (or id class')
@@ -130,7 +132,7 @@
 (def cached-tag (memoize parse-tag))
 
 (defn render-wrapped [this]
-  (let [inprops (.-props this)
+  (let [inprops (aget this "props") #_(.-props this)
         args (.-cljsArgs inprops)
         [tag scnd] args
         hasprops (or (nil? scnd) (map? scnd))
@@ -145,7 +147,7 @@
     (.apply f nil (.concat (array jsprops) jsargs))))
 
 (defn should-update-wrapped [C nextprops nextstate]
-  (let [a1 (-> C .-props .-cljsArgs)
+  (let [a1 (-> C (aget "props") #_.-props .-cljsArgs)
         a2 (-> nextprops .-cljsArgs)]
     (not (equal-args a1 a2))))
 

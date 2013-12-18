@@ -24,7 +24,7 @@ openbrowser:
 buildrun: setup
 	lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
 
-install: setup
+install: leinbuild
 	lein install
 
 preclean:
@@ -33,10 +33,7 @@ preclean:
 clean: preclean
 	lein -o clean
 
-setup: preclean
-
-gen-react: bower_components
-	node bin/gencljs.js
+setup: preclean copyjs
 
 show-outdated:
 	lein ancient :all
@@ -46,6 +43,11 @@ veryclean: clean
 
 bower_components:
 	bower install react#v0.5.1
+
+src/cloact/impl/react.min.js: bower_components/react/react-with-addons.min.js
+	cp $< $@
+
+copyjs: src/cloact/impl/react.min.js
 
 setversion:
 	version=$(VERSION); \
