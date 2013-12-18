@@ -29,7 +29,8 @@ var propNames = ['allowFullScreen', 'autoComplete', 'autoFocus', 'autoPlay',
                  'gradientUnits', 'points', 'r', 'rx', 'ry', 'spreadMethod',
                  'stopColor', 'stopOpacity', 'strokeLinecap', 'strokeWidth',
                  'viewBox', 'x1', 'x2', 'x', 'y1', 'y2', 'y',
-                 'componentConstructor', 'displayName'
+                 'componentConstructor', 'displayName',
+                 'transitionName', 'component'
                 ];
 
 var getNames = function (obj) {
@@ -104,7 +105,7 @@ var printCljs = function () {
            'var X = {};'].concat(fnames.map(function (x) {
                return '/** @expose */\nX.' + x + " = true;"
            })).concat([
-               '})();',
+               '});',
                ns + ".React = (typeof(window) != 'undefined' ? window.React : global.React);",
                '")',
           ]);

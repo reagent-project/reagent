@@ -15806,6 +15806,10 @@ X.y = true;
 X.componentConstructor = true;
 /** @expose */
 X.displayName = true;
-})();
+/** @expose */
+X.transitionName = true;
+/** @expose */
+X.component = true;
+});
 cloact.react.React = (typeof(window) != 'undefined' ? window.React : global.React);
 ")
