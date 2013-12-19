@@ -5,6 +5,10 @@ A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [
 
 Cloact provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
+To use Cloact you just add this to your `project.clj`:
+
+    [cloact "0.0.3"]
+
 
 ## Examples
 
