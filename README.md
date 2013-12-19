@@ -111,7 +111,7 @@ See the examples directory for more examples.
 
 ## Performance
 
-React is pretty darn fast, and so is Cloact. It should even be faster than plain old javascript React a lot of the time, since ClojureScript allows us to allow a lot of unnecessary rendering (through judicious use of React's `shouldComponentUpdate`).
+React is pretty darn fast, and so is Cloact. It should even be faster than plain old javascript React a lot of the time, since ClojureScript allows us to skip a lot of unnecessary rendering (through judicious use of React's `shouldComponentUpdate`).
 
 The ClojureScript overhead is kept down, thanks to lots of caching.
 
