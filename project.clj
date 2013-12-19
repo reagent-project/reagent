@@ -1,6 +1,9 @@
 
 
 (defproject cloact "0.0.3"
+  :url "http://github.com/holmsand/cloact"
+  :license {:name "MIT"}
+  :description "A simple ClojureScript interface to React"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2120"]]
   :plugins [[lein-cljsbuild "1.0.1"]]
