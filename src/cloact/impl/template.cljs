@@ -132,8 +132,10 @@
         a (js-obj)]
     (set! (.-cljsArgs a) x)
     (when (map? p)
-      (set! (.-key a) (:key p))
-      (set! (.-ref a) (:ref p)))
+      (when-let [key (:key p)]
+        (set! (.-key a) key))
+      (when-let [ref (:ref p)]
+        (set! (.-ref a) ref)))
     (c a)))
 
 (defn map-into-array [f coll]
@@ -151,7 +153,7 @@
 (def cached-tag (memoize parse-tag))
 
 (defn render-wrapped [this]
-  (let [inprops (aget this "props") #_(.-props this)
+  (let [inprops (aget this "props")
         args (.-cljsArgs inprops)
         [tag scnd] args
         hasprops (or (nil? scnd) (map? scnd))
@@ -166,7 +168,7 @@
     (.apply f nil (.concat (array jsprops) jsargs))))
 
 (defn should-update-wrapped [C nextprops nextstate]
-  (let [a1 (-> C (aget "props") #_.-props .-cljsArgs)
+  (let [a1 (-> C (aget "props") .-cljsArgs)
         a2 (-> nextprops .-cljsArgs)]
     (not (equal-args a1 a2))))
 
