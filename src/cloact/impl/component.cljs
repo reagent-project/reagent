@@ -32,7 +32,8 @@
 
   IWatchable
   (-notify-watches [C old new]
-    (.replaceState C new))
+    (when-not (identical? old new)
+      (.forceUpdate C)))
   (-add-watch [C key f] (assert false "Component isn't really watchable"))
   (-remove-watch [C key] (assert false "Component isn't really watchable"))
 
@@ -120,7 +121,7 @@
       ;; reset! doesn't call -notifyWatches unless -watches is set
       (set! (.-watches C) {})
       (when f
-        (set! (.-cljsOldState C) (merge (.-state C) (f C)))))
+        (set! (.-state C) (merge (.-state C) (f C)))))
 
     :componentWillReceiveProps
     (fn [C props]
@@ -128,17 +129,15 @@
 
     :shouldComponentUpdate
     (fn [C nextprops nextstate]
+      ;; Don't care about nextstate here, we use forceUpdate
+      ;; when only when state has changed anyway.
       (let [a1 (args-of C)
-            a2 (-> nextprops .-cljsArgs)
-            ostate (.-cljsOldState C)]
+            a2 (-> nextprops .-cljsArgs)]
         (assert (vector? a1))
-        (set! (.-cljsOldState C) nextstate)
         (if (nil? f)
-          (not (and (identical? ostate nextstate)
-                    (tmpl/equal-args a1 a2)))
-          ;; Call f with oldprops, newprops, oldstate, newstate
-          (f (props-in-args a1) (props-in-args a2)
-             ostate nextstate))))
+          (not (tmpl/equal-args a1 a2))
+          ;; Call f with oldprops, newprops
+          (f (props-in-args a1) (props-in-args a2)))))
 
     :componentWillUnmount
     (fn [C]
