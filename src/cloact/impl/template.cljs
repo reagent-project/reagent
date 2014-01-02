@@ -126,17 +126,19 @@
                wrapper
                (fn-to-class x)))))
 
-(defn vec-to-comp [x]
-  (let [[tag p] x
+(defn vec-to-comp [v]
+  (let [[tag props] v
         c (.-cljsReactClass (as-class tag))
-        a (js-obj)]
-    (set! (.-cljsArgs a) x)
-    (when (map? p)
-      (when-let [key (:key p)]
-        (set! (.-key a) key))
-      (when-let [ref (:ref p)]
-        (set! (.-ref a) ref)))
-    (c a)))
+        obj (js-obj)]
+    (set! (.-cljsArgs obj) v)
+    (when (map? props)
+      (let [key (:key props)]
+        (when-not (nil? key)
+          (set! (.-key obj) key)))
+      (let [ref (:ref props)]
+        (when-not (nil? ref)
+          (set! (.-ref obj) ref))))
+    (c obj)))
 
 (defn map-into-array [f coll]
   (let [a (into-array coll)
