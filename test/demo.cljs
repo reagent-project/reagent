@@ -33,8 +33,27 @@
     (string/join "\n"
                  (map #(% defs) names))))
 
+(def builtins ["def" "defn" "ns" "atom" "let" "if" "when"
+               "cond" "merge"])
+
+(defn syntaxify [src]
+  (let [str-p "\"[^\"]*\""
+        keyw-p ":[^\\][(){} \\t\\n]+"
+        res-p (string/join "\\b|" builtins)
+        any-p ".|\\n"
+        patt (re-pattern (str "("
+                              (string/join ")|(" [str-p keyw-p res-p any-p])
+                              ")"))]
+    (apply vector :pre
+           (for [[s str keyw res] (re-seq patt src)]
+             (cond
+              str [:span {:style {:color "green"}} str]
+              keyw [:span {:style {:color "blue"}} keyw]
+              res [:b res]
+              :else s)))))
+
 (defn src-for [{:keys [defs]}]
-  [:pre (src-for-names defs)])
+  [:pre (syntaxify (src-for-names defs))])
 
 (defn demo-component [props]
   [:div.example
