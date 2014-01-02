@@ -5,6 +5,7 @@
                    [cloact.debug :refer [dbg println]])
   (:require [cemerick.cljs.test :as t]
             [cloact.core :as cloact :refer [atom]]
+            [demo :as demo]
             [todomvc :as todomvc]))
 
 (defn ^:export console-print [x]
@@ -36,6 +37,7 @@
 (defn examples []
   (let [p {:style {:color "#aaa"}}]
     [:div.runtests
+     [demo/demo]
      [:div
       [:h2 p "Test results:"]
       [test-output]]
