@@ -81,7 +81,7 @@
 (defn lister [props]
   [:ul
    (for [item (:items props)]
-     [:li "Item " item])])
+     [:li {:key item} "Item " item])])
 
 (defn lister-user []
   [:div
@@ -174,7 +174,14 @@ Hiccup-like syntax."]
    [:code "seq"] "." ]
 
    [demo-component {:comp lister-user
-                    :defs [:lister :lister-user]}]])
+                    :defs [:lister :lister-user]}]
+
+   [:p [:strong "Note: "]
+    "The " [:code "{:key item}"] " part of the " [:code ":li"] " isn't
+    really necessary in this simple example, but passing a unique key
+    for every item in a dynamically generated list of components is
+    good practice, and helps React to improve performance a lot for
+    large lists."]])
 
 (defn managing-state []
   [:div
