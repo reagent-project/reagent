@@ -34,12 +34,13 @@
                  (map #(% defs) names))))
 
 (def builtins ["def" "defn" "ns" "atom" "let" "if" "when"
-               "cond" "merge"])
+               "cond" "merge" "assoc" "swap!" "reset!"])
 
 (defn syntaxify [src]
-  (let [str-p "\"[^\"]*\""
-        keyw-p ":[^\\][(){} \\t\\n]+"
-        res-p (string/join "\\b|" builtins)
+  (let [sep "\\][(){} \\t\\n"
+        str-p "\"[^\"]*\""
+        keyw-p (str ":[^" sep "]+")
+        res-p (string/join "|" (map #(str % "(?=[" sep "])") builtins))
         any-p ".|\\n"
         patt (re-pattern (str "("
                               (string/join ")|(" [str-p keyw-p res-p any-p])
@@ -56,11 +57,14 @@
   [:pre (syntaxify (src-for-names defs))])
 
 (defn demo-component [props]
-  [:div.example
-   [:h3 "Example"]
-   [(:comp props)]
-   [:h3 "Source"]
-   [src-for props]])
+  [:div
+   (when (:comp props)
+     [:div.demo-example
+      [:h3.demo-heading "Example"]
+      [(:comp props)]])
+   [:div.demo-source
+    [:h3.demo-heading "Source"]
+    [src-for props]]])
 
 (defn simple-component []
   [:div
@@ -88,7 +92,8 @@
 
 (defn counting-component []
   [:div
-   "The atom " [:code "click-count"] " has value: " @click-count ". "
+   "The atom " [:code "click-count"] " has value: "
+   @click-count ". "
    [:input {:type "button"
             :value "Click me!"
             :on-click #(swap! click-count inc)}]])
@@ -99,9 +104,13 @@
       [:div
        [:p "The value of " [:code "val"] " is now: " @val]
        [:p "Change it: "
-        [:input {:type "text"
-                 :value @val
-                 :on-change #(reset! val (-> % .-target .-value))}]]])))
+        [:input
+         {:type "text" :value @val
+          :on-change #(reset! val (-> % .-target .-value))}]]])))
+
+(defn render-simple []
+  (cloact/render-component [simple-component]
+                           (.-body js/document)))
 
 (defn calc-bmi [{:keys [height weight bmi] :as params}]
   (let [h (/ height 100)]
@@ -114,11 +123,11 @@
 (defn set-bmi [key val clear]
   (swap! bmi-data #(calc-bmi (merge % {key val, clear nil}))))
 
-(defn slider [{:keys [value key clear min max]}]
+(defn slider [{:keys [value min max param clear]}]
   [:div
    [:input {:type "range" :min min :max max :value value
             :style {:width "100%"}
-            :on-change #(set-bmi key (-> % .-target .-value)
+            :on-change #(set-bmi param (-> % .-target .-value)
                                  (or clear :bmi))}]])
 
 (defn bmi-component []
@@ -129,16 +138,18 @@
                           (< bmi 30) ["orange" "overweight"]
                           :else ["red" "obese"])]
     [:div
+     [:h3 "BMI calculator"]
      [:div
       "Height: " (int height) "cm"
-      [slider {:value height :min 100 :max 220 :key :height}]]
+      [slider {:value height :min 100 :max 220 :param :height}]]
      [:div
       "Weight: " (int weight) "kg"
-      [slider {:value weight :min 50 :max 200 :key :weight}]]
+      [slider {:value weight :min 30 :max 150 :param :weight}]]
      [:div
       "BMI: " (int bmi) " "
       [:span {:style {:color color}} diagnose]
-      [slider {:value bmi :min 10 :max 50 :key :bmi :clear :weight}]]]))
+      [slider {:value bmi :min 10 :max 50 :param :bmi
+               :clear :weight}]]]))
 
 (defn intro []
   [:div
@@ -172,15 +183,15 @@ Hiccup-like syntax."]
    [:p "The easiest way to manage state in Cloact is to use Cloact's
    own version of " [:code "atom"] ". It works exactly like the one in
    clojure.core, except that it keeps track of every time it is
-   deref'ed. Any component that uses the atom is automagically
-   re-rendered."]
+   deref'ed. Any component that uses an " [:code "atom"]" is automagically
+   re-rendered when its value changes."]
 
    [:p "Let's demonstrate that with a simple example:"]
    [demo-component {:comp counting-component
                     :defs [:ns :click-count :counting-component]}]
 
    [:p "Sometimes you may want to maintain state locally in a
-   component. That is very easy to do with an " [:code "atom"] " as well."]
+   component. That is easy to do with an " [:code "atom"] " as well."]
 
    [:p "Here is an example of that:"]
    [demo-component {:comp local-state
@@ -193,18 +204,39 @@ Hiccup-like syntax."]
    created components, without resorting to React's lifecycle
    events."]])
 
+(defn essential-api []
+  [:div
+   [:h2 "Essential API"]
+
+   [:p "Cloact supports (almost) the entire React API, but there is
+   really only one entry-point that is necessary for most
+   applications: " [:code "cloact.core/render-component"] "."]
+
+   [:p "It takes too arguments: a component, and a DOM node. For
+   example, splashing the very first example all over the page would
+   look like this:"]
+
+   [demo-component {:defs [:ns :simple-component :render-simple]}]])
 
 (defn bmi-demo []
   [:div
-   [:h2 "Simple BMI calculator"]
+   [:h2 "Putting it all together"]
+   
+   [:p "Here is a slightly less contrived example: a simple BMI
+   calculator."]
+
+   [:p "Data is kept in a single " [:code "cloact.core/atom"] ": a map
+   with height, weight and BMI as keys."]
+
    [demo-component {:comp bmi-component
                     :defs [:ns :calc-bmi :bmi-data :set-bmi :slider
                            :bmi-component]}]])
 
 (defn demo []
-  [:div
+  [:div.cloact-demo
    [:h1 "This will become a demo"]
    [intro]
    [managing-state]
+   [essential-api]
    [bmi-demo]
    [:p "WIP"]])
