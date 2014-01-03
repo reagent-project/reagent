@@ -1,0 +1,28 @@
+
+.cloact-demo {
+    background-color: #fff;
+    margin: 40px -60px;
+    padding: 40px 60px;
+}
+
+.cloact-demo h2 {
+    margin-top: 48px;
+}
+
+.demo-example {
+    background-color: #ebebeb;
+    margin: 0px -18px;
+    padding: 20px 18px;
+}
+
+.demo-source {
+    background-color: #f8f8f5;
+    margin: 0px -18px;
+    padding: 20px 18px;
+}
+
+.demo-heading {
+    margin-top: 0;
+    color: #999;
+    font-size: 14px;
+}
