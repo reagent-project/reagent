@@ -208,9 +208,9 @@ Hiccup-like syntax."]
   [:div
    [:h2 "Essential API"]
 
-   [:p "Cloact supports (almost) the entire React API, but there is
-   really only one entry-point that is necessary for most
-   applications: " [:code "cloact.core/render-component"] "."]
+   [:p "Cloact supports most of React's API, but there is really only
+   one entry-point that is necessary for most applications: "
+   [:code "cloact.core/render-component"] "."]
 
    [:p "It takes too arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would

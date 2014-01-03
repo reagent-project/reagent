@@ -134,10 +134,7 @@
     (when (map? props)
       (let [key (:key props)]
         (when-not (nil? key)
-          (set! (.-key obj) key)))
-      (let [ref (:ref props)]
-        (when-not (nil? ref)
-          (set! (.-ref obj) ref))))
+          (set! (.-key obj) key))))
     (c obj)))
 
 (defn map-into-array [f coll]

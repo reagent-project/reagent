@@ -51,9 +51,6 @@
 (defn dom-node [comp]
   (.getDOMNode comp))
 
-(defn refs [comp]
-  (aget comp "refs")
-  #_(.-refs comp))
 
 
 (defn merge-props
