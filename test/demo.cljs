@@ -64,17 +64,25 @@
 
 (defn simple-component []
   [:div
-   [:h3 "I am a component!"]
+   [:p "I am a component!"]
    [:p.someclass 
     "I have " [:strong "bold"]
-    [:span {:style {:color "red"}} " and red "]
-    "text."]])
+    [:span {:style {:color "red"}} " and red "] "text."]])
 
-(defn demo-simple []
+(defn simple-parent []
   [:div
-   [:h2 "This is a simple component"]
-   [demo-component {:comp simple-component
-                    :defs [:ns :simple-component]}]])
+   [:p "I include simple-component."]
+   [simple-component]])
+
+(defn lister [props]
+  [:ul
+   (for [item (:items props)]
+     [:li "Item " item])])
+
+(defn lister-user []
+  [:div
+   "Here is a list:"
+   [lister {:items (range 3)}]])
 
 (defn calc-bmi [{:keys [height weight bmi] :as params}]
   (let [h (/ height 100)]
@@ -113,6 +121,32 @@
       [:span {:style {:color color}} diagnose]
       [slider {:value bmi :min 10 :max 50 :key :bmi :clear :weight}]]]))
 
+(defn intro []
+  [:div
+
+   [:p "Cloact provides a minimalistic interface between ClojureScript
+and React. It allows you to define React components using nothing but
+plain ClojureScript functions, that describe your UI using a
+Hiccup-like syntax."]
+
+   [:p "A very basic component may look something like this: "]
+   [demo-component {:comp simple-component
+                    :defs [:simple-component]}]
+
+   [:p "You can build new components using other components as
+   building blocks. That looks like this:"]
+   [demo-component {:comp simple-parent
+                    :defs [:simple-parent]}]
+
+   [:p "Data is passed to child components using a plain old Clojure
+   maps. For example, here is a component that shows items in a "
+   [:code "seq"] "." ]
+
+   [demo-component {:comp lister-user
+                    :defs [:lister :lister-user]}]
+   ])
+
+
 (defn bmi-demo []
   [:div
    [:h2 "Simple BMI calculator"]
@@ -123,6 +157,6 @@
 (defn demo []
   [:div
    [:h1 "This will become a demo"]
-   [demo-simple]
+   [intro]
    [bmi-demo]
    [:p "WIP"]])
