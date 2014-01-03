@@ -42,9 +42,9 @@ veryclean: clean
 	rm -rf bower_components
 
 bower_components:
-	bower install react#v0.5.2
+	bower install react#v0.8.0
 
-src/cloact/impl/react.min.js: bower_components/react/react-with-addons.min.js
+src/cloact/impl/react.min.js: bower_components/react/react-with-addons.min.js Makefile
 	cp $< $@
 
 copyjs: bower_components src/cloact/impl/react.min.js
