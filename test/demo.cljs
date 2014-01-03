@@ -84,6 +84,25 @@
    "Here is a list:"
    [lister {:items (range 3)}]])
 
+(def click-count (atom 0))
+
+(defn counting-component []
+  [:div
+   "The atom " [:code "click-count"] " has value: " @click-count ". "
+   [:input {:type "button"
+            :value "Click me!"
+            :on-click #(swap! click-count inc)}]])
+
+(defn local-state []
+  (let [val (atom "foo")]
+    (fn []
+      [:div
+       [:p "The value of " [:code "val"] " is now: " @val]
+       [:p "Change it: "
+        [:input {:type "text"
+                 :value @val
+                 :on-change #(reset! val (-> % .-target .-value))}]]])))
+
 (defn calc-bmi [{:keys [height weight bmi] :as params}]
   (let [h (/ height 100)]
     (if (nil? bmi)
@@ -123,6 +142,7 @@
 
 (defn intro []
   [:div
+   [:h2 "Introduction to Cloact"]
 
    [:p "Cloact provides a minimalistic interface between ClojureScript
 and React. It allows you to define React components using nothing but
@@ -143,8 +163,35 @@ Hiccup-like syntax."]
    [:code "seq"] "." ]
 
    [demo-component {:comp lister-user
-                    :defs [:lister :lister-user]}]
-   ])
+                    :defs [:lister :lister-user]}]])
+
+(defn managing-state []
+  [:div
+   [:h2 "Managing state in Cloact"]
+
+   [:p "The easiest way to manage state in Cloact is to use Cloact's
+   own version of " [:code "atom"] ". It works exactly like the one in
+   clojure.core, except that it keeps track of every time it is
+   deref'ed. Any component that uses the atom is automagically
+   re-rendered."]
+
+   [:p "Let's demonstrate that with a simple example:"]
+   [demo-component {:comp counting-component
+                    :defs [:ns :click-count :counting-component]}]
+
+   [:p "Sometimes you may want to maintain state locally in a
+   component. That is very easy to do with an " [:code "atom"] " as well."]
+
+   [:p "Here is an example of that:"]
+   [demo-component {:comp local-state
+                    :defs [:ns :local-state]}]
+
+   [:p "This example also uses another feature of Cloact: a component
+   function can return another function, that is used to do the actual
+   rendering. It is called with the same arguments as any other
+   component function. This allows you to perform some setup of newly
+   created components, without resorting to React's lifecycle
+   events."]])
 
 
 (defn bmi-demo []
@@ -158,5 +205,6 @@ Hiccup-like syntax."]
   [:div
    [:h1 "This will become a demo"]
    [intro]
+   [managing-state]
    [bmi-demo]
    [:p "WIP"]])
