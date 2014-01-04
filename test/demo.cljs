@@ -102,11 +102,18 @@
   (let [val (atom "foo")]
     (fn []
       [:div
-       [:p "The value of " [:code "val"] " is now: " @val]
+       [:p "The value is now: " @val]
        [:p "Change it: "
         [:input
          {:type "text" :value @val
           :on-change #(reset! val (-> % .-target .-value))}]]])))
+
+(defn timer-component []
+  (let [seconds-elapsed (atom 0)]
+    (fn []
+      (js/setTimeout #(swap! seconds-elapsed inc) 1000)
+      [:div
+       "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
   (cloact/render-component [simple-component]
@@ -156,9 +163,9 @@
    [:h2 "Introduction to Cloact"]
 
    [:p "Cloact provides a minimalistic interface between ClojureScript
-and React. It allows you to define React components using nothing but
-plain ClojureScript functions, that describe your UI using a
-Hiccup-like syntax."]
+   and React. It allows you to define React components using nothing
+   but plain ClojureScript functions, that describe your UI using a
+   Hiccup-like syntax."]
 
    [:p "A very basic component may look something like this: "]
    [demo-component {:comp simple-component
@@ -204,12 +211,17 @@ Hiccup-like syntax."]
    [demo-component {:comp local-state
                     :defs [:ns :local-state]}]
 
-   [:p "This example also uses another feature of Cloact: a component
+   [:p "The previous example also uses another feature of Cloact: a component
    function can return another function, that is used to do the actual
    rendering. It is called with the same arguments as any other
    component function. This allows you to perform some setup of newly
    created components, without resorting to React's lifecycle
-   events."]])
+   events."]
+
+   [:p "Here is another example, where we call setTimeout everytime
+   the component is rendered to update a simple clock:"]
+   [demo-component {:comp timer-component
+                    :defs [:timer-component]}]])
 
 (defn essential-api []
   [:div
