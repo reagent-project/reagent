@@ -34,14 +34,15 @@
                  (map #(% defs) names))))
 
 (def builtins ["def" "defn" "ns" "atom" "let" "if" "when"
-               "cond" "merge" "assoc" "swap!" "reset!"])
+               "cond" "merge" "assoc" "swap!" "reset!" "for"
+               "range" "nil\\?" "int" "or" "->" "%"])
 
 (defn syntaxify [src]
   (let [sep "\\][(){} \\t\\n"
         str-p "\"[^\"]*\""
         keyw-p (str ":[^" sep "]+")
-        res-p (string/join "|" (map #(str % "(?=[" sep "])") builtins))
-        any-p ".|\\n"
+        res-p (string/join "|" (map #(str "\\b" % "(?=[" sep "])") builtins))
+        any-p (str "[^" sep "]+|.|\\n") ;; ".|\\n"
         patt (re-pattern (str "("
                               (string/join ")|(" [str-p keyw-p res-p any-p])
                               ")"))]
@@ -94,19 +95,21 @@
   [:div
    "The atom " [:code "click-count"] " has value: "
    @click-count ". "
-   [:input {:type "button"
-            :value "Click me!"
+   [:input {:type "button" :value "Click me!"
             :on-click #(swap! click-count inc)}]])
 
-(defn local-state []
+(defn atom-input [{:keys [value]}]
+  [:input {:type "text"
+           :value @value
+           :on-change #(reset! value (-> % .-target .-value))}])
+
+(defn shared-state []
   (let [val (atom "foo")]
     (fn []
       [:div
        [:p "The value is now: " @val]
-       [:p "Change it: "
-        [:input
-         {:type "text" :value @val
-          :on-change #(reset! val (-> % .-target .-value))}]]])))
+       [:p "Change it here: "
+        [atom-input {:value val}]]])))
 
 (defn timer-component []
   (let [seconds-elapsed (atom 0)]
@@ -162,10 +165,12 @@
   [:div
    [:h2 "Introduction to Cloact"]
 
-   [:p "Cloact provides a minimalistic interface between ClojureScript
-   and React. It allows you to define React components using nothing
-   but plain ClojureScript functions, that describe your UI using a
-   Hiccup-like syntax."]
+   [:p "Cloact provides a minimalistic interface between "
+    [:a {:href "https://github.com/clojure/clojurescript"} "ClojureScript"]
+    " and " [:a {:href "http://facebook.github.io/react/"} "React"]
+    ". It allows you to define React components using nothing but
+    plain ClojureScript functions, that describe your UI using a
+    Hiccup-like syntax."]
 
    [:p "A very basic component may look something like this: "]
    [demo-component {:comp simple-component
@@ -178,7 +183,7 @@
 
    [:p "Data is passed to child components using a plain old Clojure
    maps. For example, here is a component that shows items in a "
-   [:code "seq"] "." ]
+    [:code "seq"] "." ]
 
    [demo-component {:comp lister-user
                     :defs [:lister :lister-user]}]
@@ -207,10 +212,12 @@
    [:p "Sometimes you may want to maintain state locally in a
    component. That is easy to do with an " [:code "atom"] " as well."]
 
-   [:p "Here is an example of that:"]
-   [demo-component {:comp local-state
-                    :defs [:ns :local-state]}]
-
+   [:p "Here is an example of that, where we call setTimeout every
+   time the component is rendered to update a simple clock:"]
+   
+   [demo-component {:comp timer-component
+                    :defs [:timer-component]}]
+   
    [:p "The previous example also uses another feature of Cloact: a component
    function can return another function, that is used to do the actual
    rendering. It is called with the same arguments as any other
@@ -218,10 +225,10 @@
    created components, without resorting to React's lifecycle
    events."]
 
-   [:p "Here is another example, where we call setTimeout everytime
-   the component is rendered to update a simple clock:"]
-   [demo-component {:comp timer-component
-                    :defs [:timer-component]}]])
+   [:p "By simply passing atoms around you can share state management
+   between components, like this:"]
+   [demo-component {:comp shared-state
+                    :defs [:ns :atom-input :shared-state]}]])
 
 (defn essential-api []
   [:div
@@ -229,7 +236,7 @@
 
    [:p "Cloact supports most of React's API, but there is really only
    one entry-point that is necessary for most applications: "
-   [:code "cloact.core/render-component"] "."]
+    [:code "cloact.core/render-component"] "."]
 
    [:p "It takes too arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would
