@@ -33,27 +33,57 @@
     (string/join "\n"
                  (map #(% defs) names))))
 
-(def builtins ["def" "defn" "ns" "atom" "let" "if" "when"
+(def builtins #{"def" "defn" "ns" "atom" "let" "if" "when"
                "cond" "merge" "assoc" "swap!" "reset!" "for"
-               "range" "nil\\?" "int" "or" "->" "%"])
+               "range" "nil?" "int" "or" "->" "%" "fn"})
+
+(defn tokenize [src]
+  (let [ws " \\t\\n"
+        open "[({"
+        close ")\\]}"
+        str-p "\"[^\"]*\""
+        sep (str ws open close)
+        open-p (str "[" open "]")
+        close-p (str "[" close "]")
+        iden-p (str "[^" sep "]+")
+        any-p ".|\\n"
+        patt (re-pattern (str "("
+                              (string/join ")|(" [str-p open-p close-p
+                                                  iden-p any-p])
+                              ")"))
+        keyw-re #"^:"]
+    (for [[s str-litt open close iden any] (re-seq patt src)]
+      (cond
+       str-litt [:str-litt s]
+       open [:open s]
+       close [:close s]
+       iden (cond
+             (re-find keyw-re s) [:keyw s]
+             (builtins s) [:builtin s]
+             :else [:iden s])
+       any [:other s]))))
 
 (defn syntaxify [src]
-  ;; quick and (very) dirty syntax coloring
-  (let [sep "\\][(){} \\t\\n"
-        str-p "\"[^\"]*\""
-        keyw-p (str ":[^" sep "]+")
-        res-p (string/join "|" (map #(str "\\b" % "(?=[" sep "])") builtins))
-        any-p (str "[^" sep "]+|.|\\n")
-        patt (re-pattern (str "("
-                              (string/join ")|(" [str-p keyw-p res-p any-p])
-                              ")"))]
-    (apply vector :pre
-           (for [[s str keyw res] (re-seq patt src)]
-             (cond
-              str [:span {:style {:color "green"}} str]
-              keyw [:span {:style {:color "blue"}} keyw]
-              res [:b res]
-              :else s)))))
+  (let [def-re #"^def|^ns\b"]
+    (loop [tokens (tokenize src)
+           prev nil
+           res []]
+      (let [[kind val] (first tokens)
+            part (case kind
+                   :str-litt [:span {:style {:color "green"}} val]
+                   :keyw     [:span {:style {:color "blue"}} val]
+                   :builtin  [:span {:style {:font-weight "bold"}} val]
+                   :iden     (if (and prev (re-find def-re prev))
+                               [:span {:style {:color "#55c"
+                                               :font-weight "bold"}} val]
+                               val)
+                   val)
+            remain (rest tokens)]
+        (if-not (empty? remain)
+          (recur remain
+                 (if (= kind :other) prev val)
+                 (conj res part))
+          (apply vector :pre res))))))
 
 (defn src-for [defs]
   [:pre (syntaxify (src-for-names defs))])
