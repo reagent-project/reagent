@@ -25,7 +25,7 @@
 
 (def nssrc
   "(ns example
-  (:require [cloact.core :as cloact :refer [atom]])
+  (:require [cloact.core :as cloact :refer [atom]]))
 ")
 
 (defn src-for-names [names]
@@ -46,7 +46,7 @@
         open-p (str "[" open "]")
         close-p (str "[" close "]")
         iden-p (str "[^" sep "]+")
-        any-p ".|\\n"
+        any-p (str "[" ws "]+" "|.")
         patt (re-pattern (str "("
                               (string/join ")|(" [str-p open-p close-p
                                                   iden-p any-p])
@@ -64,25 +64,36 @@
        any [:other s]))))
 
 (defn syntaxify [src]
-  (let [def-re #"^def|^ns\b"]
+  (let [def-re #"^def|^ns\b"
+        parcol ["#9a3" "#c83" "#4a8"]
+        ncol (count parcol)
+        paren-style (fn [level]
+                      {:style {:color (nth parcol (mod level ncol))}})]
     (loop [tokens (tokenize src)
            prev nil
+           level 0
            res []]
       (let [[kind val] (first tokens)
-            part (case kind
-                   :str-litt [:span {:style {:color "green"}} val]
-                   :keyw     [:span {:style {:color "blue"}} val]
-                   :builtin  [:span {:style {:font-weight "bold"}} val]
-                   :iden     (if (and prev (re-find def-re prev))
-                               [:span {:style {:color "#55c"
-                                               :font-weight "bold"}} val]
-                               val)
-                   val)
+            level' (case kind
+                     :open (inc level)
+                     :close (dec level)
+                     level)
+            style (case kind
+                    :str-litt {:style {:color "green"}}
+                    :keyw     {:style {:color "blue"}}
+                    :builtin  {:style {:font-weight "bold"}}
+                    :iden     (when (and prev (re-find def-re prev))
+                                {:style {:color "#55c"
+                                         :font-weight "bold"}})
+                    :open     (paren-style level)
+                    :close    (paren-style level')
+                    nil)
             remain (rest tokens)]
         (if-not (empty? remain)
           (recur remain
                  (if (= kind :other) prev val)
-                 (conj res part))
+                 level'
+                 (conj res [:span style val]))
           (apply vector :pre res))))))
 
 (defn src-for [defs]
