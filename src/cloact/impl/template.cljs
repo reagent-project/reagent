@@ -6,6 +6,9 @@
 
 (def React reacts/React)
 
+(def isClient (not (nil? (try (.-document js/window)
+                              (catch js/Object e nil)))))
+
 (defn dash-to-camel [dashed]
   (let [words (string/split (name dashed) #"-")
         camels (map string/capitalize (rest words))]

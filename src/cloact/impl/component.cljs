@@ -107,7 +107,9 @@
   (assert C)
   (when (nil? (.-cljsRatom C))
     (set! (.-cljsRatom C)
-          (reaction :auto-run #(.forceUpdate C)
+          (reaction :auto-run (if tmpl/isClient
+                                #(.forceUpdate C)
+                                identity)
                     (do-render C (.-cljsRenderFn C)))))
   (ratom/run (.-cljsRatom C)))
 

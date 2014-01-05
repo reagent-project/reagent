@@ -12,7 +12,7 @@
                     {:builds
                      {:client {:compiler
                                {:optimizations :advanced
-                                :pretty-print true}}}}}
+                                :pretty-print false}}}}}
              :test {:plugins [[com.cemerick/clojurescript.test "0.2.1"]]
                     :cljsbuild
                     {:builds

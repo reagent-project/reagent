@@ -266,3 +266,9 @@
    [essential-api]
    [bmi-demo]
    [:p "WIP"]])
+
+(defn ^:export mountdemo []
+  (cloact/render-component [demo] (.-body js/document)))
+
+(defn ^:export genpage []
+  (cloact/render-component-to-string [demo]))

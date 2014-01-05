@@ -16,7 +16,7 @@ all: buildrun
 run: openbrowser buildrun
 
 leinbuild: setup
-	lein -o cljsbuild once $(CLJSBUILD)
+	lein -o with-profile $(PROF) cljsbuild once $(CLJSBUILD)
 
 openbrowser:
 	(sleep 1 && open site/test.html) &
@@ -48,6 +48,14 @@ src/cloact/impl/react.min.js: bower_components/react/react-with-addons.min.js Ma
 	cp $< $@
 
 copyjs: bower_components src/cloact/impl/react.min.js
+
+gensite:
+	node bin/gen-site.js
+
+prodbuild:
+	$(MAKE) PROF=prod,test leinbuild
+
+buildsite: prodbuild gensite
 
 setversion:
 	version=$(VERSION); \
