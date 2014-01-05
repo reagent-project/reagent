@@ -38,11 +38,12 @@
                "range" "nil\\?" "int" "or" "->" "%"])
 
 (defn syntaxify [src]
+  ;; quick and (very) dirty syntax coloring
   (let [sep "\\][(){} \\t\\n"
         str-p "\"[^\"]*\""
         keyw-p (str ":[^" sep "]+")
         res-p (string/join "|" (map #(str "\\b" % "(?=[" sep "])") builtins))
-        any-p (str "[^" sep "]+|.|\\n") ;; ".|\\n"
+        any-p (str "[^" sep "]+|.|\\n")
         patt (re-pattern (str "("
                               (string/join ")|(" [str-p keyw-p res-p any-p])
                               ")"))]
@@ -54,18 +55,18 @@
               res [:b res]
               :else s)))))
 
-(defn src-for [{:keys [defs]}]
+(defn src-for [defs]
   [:pre (syntaxify (src-for-names defs))])
 
-(defn demo-component [props]
+(defn demo-component [{:keys [comp defs]}]
   [:div
-   (when (:comp props)
+   (when comp
      [:div.demo-example
       [:h3.demo-heading "Example"]
-      [(:comp props)]])
+      [comp]])
    [:div.demo-source
     [:h3.demo-heading "Source"]
-    [src-for props]]])
+    (src-for defs)]])
 
 (defn simple-component []
   [:div
@@ -165,7 +166,8 @@
   [:div
    [:h2 "Introduction to Cloact"]
 
-   [:p "Cloact provides a minimalistic interface between "
+   [:p [:a {:href "https://github.com/holmsand/cloact"} "Cloact"]
+    " provides a minimalistic interface between "
     [:a {:href "https://github.com/clojure/clojurescript"} "ClojureScript"]
     " and " [:a {:href "http://facebook.github.io/react/"} "React"]
     ". It allows you to define React components using nothing but

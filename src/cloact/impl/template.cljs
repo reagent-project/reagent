@@ -32,7 +32,8 @@
             [id class'])]))
 
 (def attr-aliases {"class" "className"
-                   "for" "htmlFor"})
+                   "for" "htmlFor"
+                   "charset" "charSet"})
 
 (defn undash-prop-name [n]
   (let [undashed (dash-to-camel n)]
@@ -114,6 +115,7 @@
 (declare wrapper)
 
 (defn fn-to-class [f]
+  (assert (fn? f))
   (let [spec (meta f)
         withrender (merge spec {:render f})
         res (cloact.core/create-class withrender)]
@@ -130,6 +132,7 @@
                (fn-to-class x)))))
 
 (defn vec-to-comp [v]
+  (assert (pos? (count v)))
   (let [[tag props] v
         c (.-cljsReactClass (as-class tag))
         obj (js-obj)]

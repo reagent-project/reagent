@@ -208,6 +208,7 @@
 
 (defn create-class
   [body]
+  (assert (map? body))
   (let [spec (cljsify body)
         res (.createClass React spec)
         f (fn [& args]
