@@ -15,23 +15,6 @@
         camels (map string/capitalize (rest words))]
     (apply str (first words) camels)))
 
-;; From Weavejester's Hiccup, via pump:
-;; https://github.com/weavejester/hiccup/blob/master/src/hiccup/compiler.clj#L32
-(def ^{:doc "Regular expression that parses a CSS-style id and class
-             from a tag name."
-       :private true}
-  re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
-
-(def DOM (aget React "DOM"))
-
-(defn parse-tag [tag]
-  (let [[tag id class] (->> tag name (re-matches re-tag) next)
-        comp (aget DOM tag)
-        class' (when class
-                 (string/replace class #"\." " "))]
-    [comp (when (or id class')
-            [id class'])]))
-
 (def attr-aliases {"class" "className"
                    "for" "htmlFor"
                    "charset" "charSet"})
@@ -73,31 +56,82 @@
                (set-tag-extra objprops extra))
              objprops))))
 
+(defn map-into-array [f coll]
+  (let [a (into-array coll)
+        len (alength a)]
+    (dotimes [i len]
+      (aset a i (f (aget a i))))
+    a))
 
+(declare as-component)
 
-(declare wrapper)
+(defn wrapped-render [this comp extra]
+  (let [inprops (aget this "props")
+        args (.-cljsArgs inprops)
+        [_ scnd] args
+        hasprops (or (nil? scnd) (map? scnd))
+        jsprops (convert-props (if hasprops scnd) extra)
+        jsargs (->> args
+                    (drop (if hasprops 2 1))
+                    (map-into-array as-component))]
+    (.apply comp nil (.concat (array jsprops) jsargs))))
+
+(defn wrapped-should-update [C nextprops nextstate]
+  (let [a1 (-> C (aget "props") .-cljsArgs)
+        a2 (-> nextprops .-cljsArgs)]
+    (not (util/equal-args a1 a2))))
+
+(defn wrap-component [comp extras]
+  (let [spec #js {:render #(this-as C (wrapped-render C comp extras))
+                  :shouldComponentUpdate
+                  #(this-as C (wrapped-should-update C %1 %2))}]
+    (.createClass React spec)))
+
+;; From Weavejester's Hiccup, via pump:
+;; https://github.com/weavejester/hiccup/blob/master/src/hiccup/compiler.clj#L32
+(def ^{:doc "Regular expression that parses a CSS-style id and class
+             from a tag name."
+       :private true}
+  re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
+
+(def DOM (aget React "DOM"))
+
+(defn parse-tag [tag]
+  (let [[tag id class] (->> tag name (re-matches re-tag) next)
+        comp (aget DOM tag)
+        class' (when class
+                 (string/replace class #"\." " "))]
+    [comp (when (or id class')
+            [id class'])]))
+
+(defn get-wrapper [tag]
+  (let [[comp extra] (parse-tag tag)]
+    (wrap-component comp extra)))
+
+(def cached-wrapper (memoize get-wrapper))
 
 (defn fn-to-class [f]
   (assert (fn? f))
   (let [spec (meta f)
         withrender (merge spec {:render f})
-        res (cloact.core/create-class withrender)]
-    (set! (.-cljsReactClass f) (.-cljsReactClass res))
-    res))
+        res (cloact.core/create-class withrender)
+        wrapf (.-cljsReactClass res)]
+    (set! (.-cljsReactClass f) wrapf)
+    wrapf))
 
 (defn as-class [x]
   (cond
-   (keyword? x) wrapper
-   (not (nil? (.-cljsReactClass x))) x
+   (keyword? x) (cached-wrapper x)
+   (not (nil? (.-cljsReactClass x))) (.-cljsReactClass x)
    :else (do (assert (fn? x))
              (if (.isValidClass React x)
-               wrapper
+               (set! (.-cljsReactClass x) (wrap-component x nil))
                (fn-to-class x)))))
 
 (defn vec-to-comp [v]
   (assert (pos? (count v)))
   (let [[tag props] v
-        c (.-cljsReactClass (as-class tag))
+        c (as-class tag)
         obj (js-obj)]
     (set! (.-cljsArgs obj) v)
     (when (map? props)
@@ -106,44 +140,7 @@
           (set! (.-key obj) key))))
     (c obj)))
 
-(defn map-into-array [f coll]
-  (let [a (into-array coll)
-        len (alength a)]
-    (dotimes [i len]
-      (aset a i (f (aget a i))))
-    a))
-
 (defn as-component [x]
   (cond (vector? x) (vec-to-comp x)
         (seq? x) (map-into-array as-component x)
         true x))
-
-(def cached-tag (memoize parse-tag))
-
-(defn render-wrapped [this]
-  (let [inprops (aget this "props")
-        args (.-cljsArgs inprops)
-        [tag scnd] args
-        hasprops (or (nil? scnd) (map? scnd))
-        [native extra] (when (keyword? tag) (cached-tag tag))
-        f (or native tag)
-        jsprops (convert-props (when hasprops scnd) extra)
-        jsargs (->> args
-                    (drop (if hasprops 2 1))
-                    (map-into-array as-component))]
-    (assert (.isValidClass React f))
-    (assert (nil? (.-cljsReactClass f)))
-    (.apply f nil (.concat (array jsprops) jsargs))))
-
-(defn should-update-wrapped [C nextprops nextstate]
-  (let [a1 (-> C (aget "props") .-cljsArgs)
-        a2 (-> nextprops .-cljsArgs)]
-    (not (util/equal-args a1 a2))))
-
-(def wrapper
-  (.createClass React (js-obj "render"
-                              #(this-as C (render-wrapped C))
-                              "shouldComponentUpdate"
-                              #(this-as C (should-update-wrapped C %1 %2)))))
-
-(set! (.-cljsReactClass wrapper) wrapper)

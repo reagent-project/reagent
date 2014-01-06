@@ -51,10 +51,10 @@
 (defn equal-args [v1 v2]
   ;; Compare two "args" vectors, i.e things like [:div {:foo "bar} "baz"],
   ;; using identical? on all individual parts.
+  ;; The first bit (e.g the :div is assumed to be identical).
   (or (identical? v1 v2)
       (let [c1 (count v1)]
-        (and (= (nth v1 0) (nth v2 0)) ; may be symbol or fn
-             (identical? c1 (count v2))
+        (and (identical? c1 (count v2))
              (if (< c1 2)
                true
                (let [props1 (nth v1 1)]
