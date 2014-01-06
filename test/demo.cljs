@@ -1,27 +1,20 @@
 (ns demo
   (:require [cloact.core :as cloact :refer [atom]]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [demoutil :as demoutil])
   (:require-macros [demoutil :refer [get-source]]
                    [cloact.debug :refer [dbg println]]))
 
-(def demosrc (get-source "demo.cljs"))
-
 (defn src-parts [src]
-  (->>
-   (string/split src #"\n\(")
-   rest
-   (map #(str "(" %))))
+  (string/split src #"\n(?=[(])"))
 
 (defn src-defs [parts]
-  (into {} (for [x parts]
-             [(keyword (nth (string/split x #"\s+") 1))
-              x])))
+  (let [ws #"\s+"]
+    (into {} (for [x parts]
+               [(-> x (string/split ws) second keyword) x]))))
 
 (def srcmap
-  (-> "demo.cljs"
-      get-source
-      src-parts
-      src-defs))
+  (-> "demo.cljs" get-source src-parts src-defs))
 
 (def nssrc
   "(ns example
@@ -29,75 +22,13 @@
 ")
 
 (defn src-for-names [names]
-  (let [defs (merge srcmap {:ns nssrc})]
-    (string/join "\n"
-                 (map #(% defs) names))))
-
-(def builtins #{"def" "defn" "ns" "atom" "let" "if" "when"
-               "cond" "merge" "assoc" "swap!" "reset!" "for"
-               "range" "nil?" "int" "or" "->" "%" "fn"})
-
-(defn tokenize [src]
-  (let [ws " \\t\\n"
-        open "[({"
-        close ")\\]}"
-        str-p "\"[^\"]*\""
-        sep (str ws open close)
-        open-p (str "[" open "]")
-        close-p (str "[" close "]")
-        iden-p (str "[^" sep "]+")
-        any-p (str "[" ws "]+" "|.")
-        patt (re-pattern (str "("
-                              (string/join ")|(" [str-p open-p close-p
-                                                  iden-p any-p])
-                              ")"))
-        keyw-re #"^:"]
-    (for [[s str-litt open close iden any] (re-seq patt src)]
-      (cond
-       str-litt [:str-litt s]
-       open [:open s]
-       close [:close s]
-       iden (cond
-             (re-find keyw-re s) [:keyw s]
-             (builtins s) [:builtin s]
-             :else [:iden s])
-       any [:other s]))))
-
-(defn syntaxify [src]
-  (let [def-re #"^def|^ns\b"
-        parcol ["#9a3" "#c83" "#4a8"]
-        ncol (count parcol)
-        paren-style (fn [level]
-                      {:style {:color (nth parcol (mod level ncol))}})]
-    (loop [tokens (tokenize src)
-           prev nil
-           level 0
-           res []]
-      (let [[kind val] (first tokens)
-            level' (case kind
-                     :open (inc level)
-                     :close (dec level)
-                     level)
-            style (case kind
-                    :str-litt {:style {:color "green"}}
-                    :keyw     {:style {:color "blue"}}
-                    :builtin  {:style {:font-weight "bold"}}
-                    :iden     (when (and prev (re-find def-re prev))
-                                {:style {:color "#55c"
-                                         :font-weight "bold"}})
-                    :open     (paren-style level)
-                    :close    (paren-style level')
-                    nil)
-            remain (rest tokens)]
-        (if-not (empty? remain)
-          (recur remain
-                 (if (= kind :other) prev val)
-                 level'
-                 (conj res [:span style val]))
-          (apply vector :pre res))))))
+  (string/join "\n" (-> srcmap
+                        (assoc :ns nssrc)
+                        (select-keys names)
+                        vals)))
 
 (defn src-for [defs]
-  [:pre (syntaxify (src-for-names defs))])
+  [:pre (-> defs src-for-names demoutil/syntaxify)])
 
 (defn demo-component [{:keys [comp defs]}]
   [:div
@@ -173,7 +104,7 @@
 (def bmi-data (atom (calc-bmi {:height 180 :weight 80})))
 
 (defn set-bmi [key val clear]
-  (swap! bmi-data #(calc-bmi (merge % {key val, clear nil}))))
+  (swap! bmi-data #(calc-bmi (assoc % key val clear nil))))
 
 (defn slider [{:keys [value min max param clear]}]
   [:div
