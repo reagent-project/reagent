@@ -9,19 +9,21 @@
   (let [ws " \\t\\n"
         open "[({"
         close ")\\]}"
-        str-p "\"[^\"]*\""
         sep (str ws open close)
+        comment-p ";.*"
+        str-p "\"[^\"]*\""
         open-p (str "[" open "]")
         close-p (str "[" close "]")
         iden-p (str "[^" sep "]+")
         any-p (str "[" ws "]+" "|.")
         patt (re-pattern (str "("
-                              (string/join ")|(" [str-p open-p close-p
-                                                  iden-p any-p])
+                              (string/join ")|(" [comment-p str-p open-p
+                                                  close-p iden-p any-p])
                               ")"))
         keyw-re #"^:"]
-    (for [[s str-litt open close iden any] (re-seq patt src)]
+    (for [[s comment str-litt open close iden any] (re-seq patt src)]
       (cond
+       comment [:comment s]
        str-litt [:str-litt s]
        open [:open s]
        close [:close s]
@@ -47,6 +49,8 @@
                      :close (dec level)
                      level)
             style (case kind
+                    :comment  {:style {:color "gray"
+                                       :font-style "italic"}}
                     :str-litt {:style {:color "green"}}
                     :keyw     {:style {:color "blue"}}
                     :builtin  {:style {:font-weight "bold"

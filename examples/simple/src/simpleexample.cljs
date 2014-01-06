@@ -7,6 +7,7 @@
 (def time-color (atom "#f34"))
 
 (defn update-time [time]
+  ;; Update the time every 1/10 second to be accurate...
   (js/setTimeout #(reset! time (js/Date.)) 100))
 
 (defn greeting [props]

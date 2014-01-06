@@ -83,9 +83,9 @@
         [:section#todoapp
          [:header#header
           [:h1 "todos"]
-          [todo-input {:id "new-todo"
-                       :placeholder "What needs to be done?"
-                       :on-save add-todo}]]
+          [todo-input-basic {:id "new-todo"
+                             :placeholder "What needs to be done?"
+                             :on-save add-todo}]]
          [:section#main
           [:input#toggle-all {:type "checkbox" :checked (zero? active)
                               :on-change #(complete-all (pos? active))}]
