@@ -33,7 +33,7 @@
 
 (defn syntaxify [src]
   (let [def-re #"^def|^ns\b"
-        parcol ["#9a3" "#c83" "#4a8"]
+        parcol ["#9a0" "#c80" "#0a8"]
         ncol (count parcol)
         paren-style (fn [level]
                       {:style {:color (nth parcol (mod level ncol))}})]
@@ -49,7 +49,8 @@
             style (case kind
                     :str-litt {:style {:color "green"}}
                     :keyw     {:style {:color "blue"}}
-                    :builtin  {:style {:font-weight "bold"}}
+                    :builtin  {:style {:font-weight "bold"
+                                       :color "#687868"}}
                     :iden     (when (and prev (re-find def-re prev))
                                 {:style {:color "#55c"
                                          :font-weight "bold"}})

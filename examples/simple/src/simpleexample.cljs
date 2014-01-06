@@ -1,6 +1,6 @@
 
 (ns simpleexample
-  (:require [cloact.core :as cloact :refer [atom partial]]
+  (:require [cloact.core :as cloact :refer [atom]]
             [clojure.string :as string]))
 
 (def timer (atom (js/Date.)))

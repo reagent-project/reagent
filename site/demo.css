@@ -1,7 +1,7 @@
 
 .cloact-demo {
     background-color: #fff;
-    margin: 40px -60px;
+    margin: 40px -80px;
     padding: 40px 60px;
 }
 
@@ -11,14 +11,16 @@
 
 .demo-example {
     background-color: #ebebeb;
-    margin: 0px -18px;
-    padding: 20px 18px;
 }
 
 .demo-source {
     background-color: #f8f8f5;
-    margin: 0px -18px;
-    padding: 20px 18px;
+    color: #555;
+}
+
+.demo-example, .demo-source {
+    margin: 0px -20px;
+    padding: 20px 20px;
 }
 
 .demo-heading {
