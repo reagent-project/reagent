@@ -30,7 +30,7 @@
 (defn src-for [defs]
   [:pre (-> defs src-for-names demoutil/syntaxify)])
 
-(defn demo-component [{:keys [comp defs]}]
+(defn demo-component [{:keys [comp defs src]}]
   [:div
    (when comp
      [:div.demo-example
@@ -38,7 +38,9 @@
       [comp]])
    [:div.demo-source
     [:h3.demo-heading "Source"]
-    (src-for defs)]])
+    (if src
+      (demoutil/syntaxify src)
+      (src-for defs))]])
 
 (defn simple-component []
   [:div
@@ -232,14 +234,37 @@
                     :defs [:ns :calc-bmi :bmi-data :set-bmi :slider
                            :bmi-component]}]])
 
+(defn test-results []
+  [:div
+   [:h2 "Test results"]
+   [runtests/test-output]])
+
+(defn complete-simple-demo []
+  [:div
+   [:h2 "Another demo"]
+   [demo-component {:comp simpleexample/simple-example
+                    :src (get-source "simpleexample.cljs")}]])
+
+(defn todomvc-demo []
+  [:div
+   [:h2 "Todomvc"]
+   [demo-component {:comp todomvc/todo-app
+                    :src (get-source "todomvc.cljs")}]])
+
 (defn demo []
-  [:div.cloact-demo
-   [:h1 "This will become a demo"]
-   [intro]
-   [managing-state]
-   [essential-api]
-   [bmi-demo]
-   [:p "WIP"]])
+  [:div
+   [:div.test-output-mini
+    [runtests/test-output-mini]]
+   [:div.cloact-demo
+    [:h1 "This will become a demo"]
+    [intro]
+    [managing-state]
+    [essential-api]
+    [bmi-demo]
+    [test-results]
+    [complete-simple-demo]
+    [todomvc-demo]
+    [:p "WIP"]]])
 
 (defn ^:export mountdemo []
   (cloact/render-component [demo] (.-body js/document)))

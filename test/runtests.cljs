@@ -4,9 +4,7 @@
                     :refer (is deftest with-test run-tests testing)]
                    [cloact.debug :refer [dbg println]])
   (:require [cemerick.cljs.test :as t]
-            [cloact.core :as cloact :refer [atom]]
-            [demo :as demo]
-            [todomvc :as todomvc]))
+            [cloact.core :as cloact :refer [atom]]))
 
 (defn ^:export console-print [x]
   (when (not= x "\n")
@@ -34,23 +32,11 @@
                  " assertions.")]
         [:p (:fail res) " failues, " (:error res) " errors."]])]))
 
-(defn examples []
-  (let [p {:style {:color "#aaa"}}]
-    [:div.runtests
-     [demo/demo]
-     [:div
-      [:h2 p "Test results:"]
-      [test-output]]
-     [:div
-      [:h2 p "Simple example:"]
-      [simpleexample/simple-example]]
-     [:div
-      [:h2 p "Todomvc:"]
-      [todomvc/todo-app]]]))
+(defn test-output-mini []
+  (let [res @test-results]
+    (if res
+      (if (zero? (+ (:fail res) (:error res)))
+        [:div "Tests ok"]
+        [test-output])
+      [:div "."])))
 
-(defn test-main []
-  [examples])
-
-(defn ^:export run []
-  (cloact/render-component [test-main]
-                           (.-body js/document)))
