@@ -137,7 +137,7 @@
             a2 (-> nextprops .-cljsArgs)]
         (assert (vector? a1))
         (if (nil? f)
-          (not (tmpl/equal-args a1 a2))
+          (not (util/equal-args a1 a2))
           ;; Call f with oldprops, newprops
           (f (props-in-args a1) (props-in-args a2)))))
 

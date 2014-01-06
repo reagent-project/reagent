@@ -2,7 +2,8 @@
 (ns cloact.impl.template
   (:require-macros [cloact.debug :refer [dbg prn println]])
   (:require [clojure.string :as string]
-            [cloact.impl.reactimport :as reacts]))
+            [cloact.impl.reactimport :as reacts]
+            [cloact.impl.util :as util]))
 
 (def React reacts/React)
 
@@ -72,45 +73,7 @@
                (set-tag-extra objprops extra))
              objprops))))
 
-(defn identical-parts [v1 v2 from]
-  ;; Compare two vectors, from item with index "from", using identical?
-  (let [end (count v1)]
-    (loop [n from]
-      (if (>= n end)
-        true
-        (if (identical? (nth v1 n) (nth v2 n))
-          (recur (inc n))
-          false)))))
 
-(def -not-found (js-obj))
-
-(defn shallow-equal-maps [x y]
-  ;; Compare two maps, using identical? on all values
-  (or (identical? x y)
-      (when (== (count x) (count y))
-        (reduce-kv (fn [res k v]
-                     (let [yv (get y k -not-found)]
-                       (if (or (identical? v yv)
-                               ;; hack to allow cloact.core/partial
-                               (and (ifn? v) (= v yv)))
-                         res
-                         (reduced false))))
-                   true x))))
-
-(defn equal-args [v1 v2]
-  ;; Compare two "args" vectors, i.e things like [:div {:foo "bar} "baz"],
-  ;; using identical? on all individual parts.
-  (or (identical? v1 v2)
-      (let [c1 (count v1)]
-        (and (= (nth v1 0) (nth v2 0)) ; may be symbol or fn
-             (identical? c1 (count v2))
-             (if (< c1 2)
-               true
-               (let [props1 (nth v1 1)]
-                 (if (or (nil? props1) (map? props1))
-                   (and (identical-parts v1 v2 2)
-                        (shallow-equal-maps props1 (nth v2 1)))
-                   (identical-parts v1 v2 1))))))))
 
 (declare wrapper)
 
@@ -175,7 +138,7 @@
 (defn should-update-wrapped [C nextprops nextstate]
   (let [a1 (-> C (aget "props") .-cljsArgs)
         a2 (-> nextprops .-cljsArgs)]
-    (not (equal-args a1 a2))))
+    (not (util/equal-args a1 a2))))
 
 (def wrapper
   (.createClass React (js-obj "render"
