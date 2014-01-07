@@ -3,7 +3,25 @@
 
 (def builtins #{"def" "defn" "ns" "atom" "let" "if" "when"
                "cond" "merge" "assoc" "swap!" "reset!" "for"
-               "range" "nil?" "int" "or" "->" "%" "fn"})
+               "range" "nil?" "int" "or" "->" "->>" "%" "fn" "if-not"
+               "empty?" "case" "str" "pos?" "zero?" "map" "remove"
+               "empty" "into" "assoc-in" "dissoc" "get-in" "when-not"
+               "filter" "vals" "count" "complement" "identity" "dotimes"
+               "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
+               "="})
+
+(def styles {:comment  {:style {:color "gray"
+                                :font-style "italic"}}
+             :str-litt {:style {:color "green"}}
+             :keyw     {:style {:color "blue"}}
+             :builtin  {:style {:font-weight "bold"
+                                :color "#687868"}}
+             :def      {:style {:color "#55c"
+                                :font-weight "bold"}}})
+
+(def paren-styles [{:style {:color "#272"}}
+                   {:style {:color "#940"}}
+                   {:style {:color "#44a"}}])
 
 (defn tokenize [src]
   (let [ws " \\t\\n"
@@ -15,18 +33,20 @@
         open-p (str "[" open "]")
         close-p (str "[" close "]")
         iden-p (str "[^" sep "]+")
-        any-p (str "[" ws "]+" "|.")
+        meta-p (str "\\^" iden-p)
+        any-p (str "[" ws "]+" "|\\^[^" sep "]+|.")
         patt (re-pattern (str "("
                               (string/join ")|(" [comment-p str-p open-p
-                                                  close-p iden-p any-p])
+                                                  close-p meta-p iden-p any-p])
                               ")"))
         keyw-re #"^:"]
-    (for [[s comment str-litt open close iden any] (re-seq patt src)]
+    (for [[s comment str-litt open close met iden any] (re-seq patt src)]
       (cond
        comment [:comment s]
        str-litt [:str-litt s]
        open [:open s]
        close [:close s]
+       met [:other s]
        iden (cond
              (re-find keyw-re s) [:keyw s]
              (builtins s) [:builtin s]
@@ -35,10 +55,9 @@
 
 (defn syntaxify [src]
   (let [def-re #"^def|^ns\b"
-        parcol ["#9a0" "#c80" "#0a8"]
-        ncol (count parcol)
+        ncol (count paren-styles)
         paren-style (fn [level]
-                      {:style {:color (nth parcol (mod level ncol))}})]
+                      (nth paren-styles (mod level ncol)))]
     (loop [tokens (tokenize src)
            prev nil
            level 0
@@ -49,18 +68,11 @@
                      :close (dec level)
                      level)
             style (case kind
-                    :comment  {:style {:color "gray"
-                                       :font-style "italic"}}
-                    :str-litt {:style {:color "green"}}
-                    :keyw     {:style {:color "blue"}}
-                    :builtin  {:style {:font-weight "bold"
-                                       :color "#687868"}}
-                    :iden     (when (and prev (re-find def-re prev))
-                                {:style {:color "#55c"
-                                         :font-weight "bold"}})
-                    :open     (paren-style level)
-                    :close    (paren-style level')
-                    nil)
+                    :iden  (when (and prev (re-find def-re prev))
+                             (:def styles))
+                    :open  (paren-style level)
+                    :close (paren-style level')
+                    (styles kind))
             remain (rest tokens)]
         (if-not (empty? remain)
           (recur remain

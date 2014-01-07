@@ -31,16 +31,27 @@
   [:pre (-> defs src-for-names demoutil/syntaxify)])
 
 (defn demo-component [{:keys [comp defs src]}]
-  [:div
-   (when comp
-     [:div.demo-example
-      [:h3.demo-heading "Example"]
-      [comp]])
-   [:div.demo-source
-    [:h3.demo-heading "Source"]
-    (if src
-      (demoutil/syntaxify src)
-      (src-for defs))]])
+  (let [colored (if src
+                  (demoutil/syntaxify src)
+                  (src-for defs))
+        showing (atom true)]
+    (fn []
+      [:div
+       (when comp
+         [:div.demo-example
+          [:a.demo-example-hide {:on-click (fn [e]
+                                             (.preventDefault e)
+                                             (swap! showing not))}
+           (if @showing "hide" "show")]
+          [:h3.demo-heading "Example "]
+          (when @showing
+            (if defs
+              [:div.simple-demo [comp]]
+              [comp]))])
+       (when @showing
+         [:div.demo-source
+          [:h3.demo-heading "Source"]
+          colored])])))
 
 (defn simple-component []
   [:div
@@ -97,23 +108,24 @@
   (cloact/render-component [simple-component]
                            (.-body js/document)))
 
-(defn calc-bmi [{:keys [height weight bmi] :as params}]
-  (let [h (/ height 100)]
-    (if (nil? bmi)
-      (assoc params :bmi (/ weight (* h h)))
-      (assoc params :weight (* bmi h h)))))
+(defn calc-bmi [params to-calc]
+  (let [{:keys [height weight bmi]} params
+        h (/ height 100)]
+    (case to-calc
+      :bmi (assoc params :bmi (/ weight (* h h)))
+      :weight (assoc params :weight (* bmi h h)))))
 
-(def bmi-data (atom (calc-bmi {:height 180 :weight 80})))
+(def bmi-data (atom (calc-bmi {:height 180 :weight 80} :bmi)))
 
-(defn set-bmi [key val clear]
-  (swap! bmi-data #(calc-bmi (assoc % key val clear nil))))
+(defn set-bmi [key val]
+  (swap! bmi-data #(calc-bmi (assoc % key val)
+                             (case key :bmi :weight :bmi))))
 
-(defn slider [{:keys [value min max param clear]}]
+(defn slider [{:keys [value min max param]}]
   [:div
    [:input {:type "range" :min min :max max :value value
             :style {:width "100%"}
-            :on-change #(set-bmi param (-> % .-target .-value)
-                                 (or clear :bmi))}]])
+            :on-change #(set-bmi param (-> % .-target .-value))}]])
 
 (defn bmi-component []
   (let [{:keys [weight height bmi]} @bmi-data
@@ -133,11 +145,11 @@
      [:div
       "BMI: " (int bmi) " "
       [:span {:style {:color color}} diagnose]
-      [slider {:value bmi :min 10 :max 50 :param :bmi
-               :clear :weight}]]]))
+      [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
 
 (defn intro []
-  [:div
+  [:div.demo-text
+   
    [:h2 "Introduction to Cloact"]
 
    [:p [:a {:href "https://github.com/holmsand/cloact"} "Cloact"]
@@ -157,9 +169,9 @@
    [demo-component {:comp simple-parent
                     :defs [:simple-parent]}]
 
-   [:p "Data is passed to child components using a plain old Clojure
+   [:p "Data is passed to child components using plain old Clojure
    maps. For example, here is a component that shows items in a "
-    [:code "seq"] "." ]
+    [:code "seq"] ":" ]
 
    [demo-component {:comp lister-user
                     :defs [:lister :lister-user]}]
@@ -172,7 +184,7 @@
     large lists."]])
 
 (defn managing-state []
-  [:div
+  [:div.demo-text
    [:h2 "Managing state in Cloact"]
 
    [:p "The easiest way to manage state in Cloact is to use Cloact's
@@ -207,7 +219,7 @@
                     :defs [:ns :atom-input :shared-state]}]])
 
 (defn essential-api []
-  [:div
+  [:div.demo-text
    [:h2 "Essential API"]
 
    [:p "Cloact supports most of React's API, but there is really only
@@ -221,7 +233,7 @@
    [demo-component {:defs [:ns :simple-component :render-simple]}]])
 
 (defn bmi-demo []
-  [:div
+  [:div.demo-text
    [:h2 "Putting it all together"]
    
    [:p "Here is a slightly less contrived example: a simple BMI
@@ -235,18 +247,18 @@
                            :bmi-component]}]])
 
 (defn test-results []
-  [:div
+  [:div.demo-text
    [:h2 "Test results"]
    [runtests/test-output]])
 
 (defn complete-simple-demo []
-  [:div
+  [:div.demo-text
    [:h2 "Another demo"]
    [demo-component {:comp simpleexample/simple-example
                     :src (get-source "simpleexample.cljs")}]])
 
 (defn todomvc-demo []
-  [:div
+  [:div.demo-text
    [:h2 "Todomvc"]
    [demo-component {:comp todomvc/todo-app
                     :src (get-source "todomvc.cljs")}]])

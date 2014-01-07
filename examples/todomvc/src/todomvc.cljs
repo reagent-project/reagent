@@ -21,7 +21,7 @@
 
 (dotimes [x 5] (add-todo (str "Some todo " x)))
 
-(defn todo-input-basic [{:keys [title on-save on-stop]}]
+(defn todo-input [{:keys [title on-save on-stop]}]
   (let [val (atom title)
         stop (fn []
                (reset! val "")
@@ -39,13 +39,13 @@
                                     27 (stop)
                                     nil)})])))
 
-(def todo-input (with-meta todo-input-basic
-                  {:component-did-mount #(.focus (cloact/dom-node %))}))
+(def todo-edit (with-meta todo-input
+                 {:component-did-mount #(.focus (cloact/dom-node %))}))
 
-(defn todo-stats [{:keys [filter active done]}]
+(defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
-                    {:class (when (= name @filter) "selected")
-                     :on-click #(reset! filter name)})]
+                    {:class (when (= name @filt) "selected")
+                     :on-click #(reset! filt name)})]
     [:div
      [:span#todo-count
       [:strong active] " " (case active 1 "item" "items") " left"]
@@ -69,9 +69,9 @@
         [:label {:on-double-click #(reset! editing true)} title]
         [:button.destroy {:on-click #(delete id)}]]
        (when @editing
-         [todo-input {:class "edit" :title title
-                      :on-save #(save id %)
-                      :on-stop #(reset! editing false)}])])))
+         [todo-edit {:class "edit" :title title
+                     :on-save #(save id %)
+                     :on-stop #(reset! editing false)}])])))
 
 (defn todo-app [props]
   (let [filt (atom :all)]
@@ -83,21 +83,21 @@
         [:section#todoapp
          [:header#header
           [:h1 "todos"]
-          [todo-input-basic {:id "new-todo"
-                             :placeholder "What needs to be done?"
-                             :on-save add-todo}]]
+          [todo-input {:id "new-todo"
+                       :placeholder "What needs to be done?"
+                       :on-save add-todo}]]
          [:section#main
           [:input#toggle-all {:type "checkbox" :checked (zero? active)
                               :on-change #(complete-all (pos? active))}]
           [:label {:for "toggle-all"} "Mark all as complete"]
           [:ul#todo-list
-           (for [{id :id :as todo} (filter (case @filt
-                                             :active (complement :done)
-                                             :done :done
-                                             :all identity) items)]
-             [todo-item {:key id :todo todo}])]]
+           (for [todo (filter (case @filt
+                                :active (complement :done)
+                                :done :done
+                                :all identity) items)]
+             [todo-item {:key (:id todo) :todo todo}])]]
          [:footer#footer
-          [todo-stats {:active active :done done :filter filt}]]
+          [todo-stats {:active active :done done :filt filt}]]
          [:footer#info
           [:p "Double-click to edit a todo"]]]))))
 

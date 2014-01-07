@@ -23,11 +23,11 @@ var body = ['<body>',
             main,
             '<script type="text/javascript" src="site/demo.js"></script>',
             '<script type="text/javascript">',
-            'demo.mountdemo();',
+            'setTimeout(demo.mountdemo, 200);',
             '</script>',
             '</body>'].join('\n');
 
-var html = ['<html>', head, body, '</html>'].join('\n');
+var html = ['<!doctype html>', '<html>', head, body, '</html>'].join('\n');
 
 console.log('Writing site');
 fs.writeFileSync("index.html", html);

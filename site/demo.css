@@ -1,12 +1,24 @@
 
 .cloact-demo {
     background-color: #fff;
-    margin: 40px -80px;
+    margin: 40px -100px;
     padding: 40px 60px;
+}
+
+.test-output-mini {
+    text-align: right;
 }
 
 .cloact-demo h2 {
     margin-top: 48px;
+    color: #555;
+}
+
+.demo-text > p {
+    font-family: georgia, serif;
+    font-size: 18px;
+    line-height: 27px;
+    color: #444;
 }
 
 .demo-example {
@@ -19,12 +31,21 @@
 }
 
 .demo-example, .demo-source {
-    margin: 0px -20px;
-    padding: 20px 20px;
+    margin: 0px -22px;
+    padding: 22px 22px;
+}
+
+.simple-demo, .simple-demo input {
+    font-size: 17px;
 }
 
 .demo-heading {
     margin-top: 0;
     color: #999;
     font-size: 14px;
+}
+
+.demo-example-hide {
+    float: right;
+    cursor: pointer;
 }

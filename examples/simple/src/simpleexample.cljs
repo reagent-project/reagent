@@ -1,7 +1,6 @@
 
 (ns simpleexample
-  (:require [cloact.core :as cloact :refer [atom]]
-            [clojure.string :as string]))
+  (:require [cloact.core :as cloact :refer [atom]]))
 
 (def timer (atom (js/Date.)))
 (def time-color (atom "#f34"))
@@ -15,7 +14,7 @@
 
 (defn clock []
   (update-time timer)
-  (let [time-str (-> @timer .toTimeString (string/split " ") first)]
+  (let [time-str (-> @timer .toTimeString (clojure.string/split " ") first)]
     [:div.example-clock
      {:style {:color @time-color}}
      time-str]))
