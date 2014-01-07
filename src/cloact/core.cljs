@@ -10,9 +10,6 @@
 (def React tmpl/React)
 
 
-;; (defn as-component [comp]
-;;   (tmpl/as-component comp))
-
 (defn render-component
   ([comp container]
      (render-component comp container nil))
@@ -42,15 +39,24 @@
   (comp/replace-props comp props))
 
 
+(defn state [this]
+  (comp/state this))
 
-(defn props [comp]
-  (comp/get-props comp))
+(defn replace-state [this new-state]
+  (comp/replace-state this new-state))
 
-(defn children [comp]
-  (comp/get-children comp))
+(defn set-state [this new-state]
+  (comp/set-state this new-state))
 
-(defn dom-node [comp]
-  (.getDOMNode comp))
+
+(defn props [this]
+  (comp/get-props this))
+
+(defn children [this]
+  (comp/get-children this))
+
+(defn dom-node [this]
+  (.getDOMNode this))
 
 
 

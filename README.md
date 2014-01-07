@@ -24,7 +24,7 @@ Cloact uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead 
     " text."]])
 ```
 
-You use one component inside another:
+You can use one component inside another:
 
 ```clj
 (defn calling-component []
@@ -47,63 +47,55 @@ You mount the component into the DOM like this:
 
 ```clj
 (defn mountit []
-  (cloact/render-component [childcaller](.-body js/document)))
+  (cloact/render-component [childcaller]
+                           (.-body js/document)))
 ```
 
 assuming we have imported Cloact like this:
 
 ```clj
-(ns readme
-  (:require [cloact.core :as cloact]))
+(ns example
+  (:require [cloact.core :as cloact :refer [atom]]))
 ```
 
-The state of the component is managed like a ClojureScript atom, so using it looks like this:
+State is handled using Cloact's version of `atom`, like this:
 
 ```clj
-(defn state-ful [props this]
-  ;; "this" is the actual component
-  [:div {:on-click #(swap! this update-in [:clicked] inc)}
-   "I have been clicked "
-   (or (:clicked @this) "zero")
-   " times."])
-```
-
-State can also be handled using Cloact's version of atom, like this:
-
-```clj
-(def click-count (cloact/atom 0))
+(def click-count (atom 0))
 
 (defn state-ful-with-atom []
   [:div {:on-click #(swap! click-count inc)}
    "I have been clicked " @click-count " times."])
 ```
 
-Any component that dereferences a cloact/atom will be automatically re-rendered.
+Any component that dereferences a `cloact.core/atom` will be automatically re-rendered.
 
 If you want do some setting up when the component is first created, the component function can return a new function that will be called to do the actual rendering:
 
 ```clj
-(defn using-setup [props this]
-  (reset! this {:clicked 0})
-  (fn [props]
-    [:div {:on-click #(swap! this update-in [:clicked] inc)}
-     "I have been clicked " (:clicked @this) " times."]))
+(defn timer-component []
+  (let [seconds-elapsed (atom 0)]
+    (fn []
+      (js/setTimeout #(swap! seconds-elapsed inc) 1000)
+      [:div
+       "Seconds Elapsed: " @seconds-elapsed])))
 ```
 
 This way you can avoid using React's lifecycle callbacks like `getInitialState` and `componentWillMount` most of the time.
 
-But you can still use them if you want to, either using `cloact/create-class` or by attaching meta-data to a component function:
+But you can still use them if you want to, either using `cloact.core/create-class` or by attaching meta-data to a component function:
 
 ```clj
+(def my-html (atom ""))
+
 (defn plain-component [props this]
-  [:p "My html is " (:html @this)])
+  [:p "My html is " @my-html])
 
 (def component-with-callback
   (with-meta plain-component
     {:component-did-mount
      (fn [this]
-       (swap! this assoc :html
-              (.-innerHTML (cloact/dom-node this))))}))
+       (reset! my-html (.-innerHTML (cloact/dom-node this))))}))
 ```
 
 See the examples directory for more examples.
