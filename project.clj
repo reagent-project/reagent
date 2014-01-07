@@ -18,8 +18,7 @@
                     {:builds
                      {:client {:source-paths ["test"
                                               "examples/todomvc/src"
-                                              "examples/simple/src"]}
-                      :server {:source-paths ["test"]}}}}
+                                              "examples/simple/src"]}}}}
              :srcmap {:cljsbuild
                       {:builds
                        {:client
@@ -29,12 +28,7 @@
   :source-paths ["src"]
   :cljsbuild
   {:builds
-   {:server {:source-paths ["src"]
-             :compiler
-             {:output-dir "target/server"
-              :output-to "target/cljs-server.js"
-              :pretty-print true}}
-    :client {:source-paths ["src"]
+   {:client {:source-paths ["src"]
              :compiler
              {:output-dir "target/client"
               :output-to "target/cljs-client.js"
