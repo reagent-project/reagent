@@ -122,10 +122,9 @@
                              (case key :bmi :weight :bmi))))
 
 (defn slider [{:keys [value min max param]}]
-  [:div
-   [:input {:type "range" :min min :max max :value value
-            :style {:width "100%"}
-            :on-change #(set-bmi param (-> % .-target .-value))}]])
+  [:input {:type "range" :value value :min min :max max
+           :style {:width "100%"}
+           :on-change #(set-bmi param (-> % .-target .-value))}])
 
 (defn bmi-component []
   (let [{:keys [weight height bmi]} @bmi-data
@@ -156,16 +155,17 @@
     " provides a minimalistic interface between "
     [:a {:href "https://github.com/clojure/clojurescript"} "ClojureScript"]
     " and " [:a {:href "http://facebook.github.io/react/"} "React"]
-    ". It allows you to define React components using nothing but
-    plain ClojureScript functions, that describe your UI using a
-    Hiccup-like syntax."]
+    ". It allows you to define efficient React components using nothing but
+    plain ClojureScript functions, that describe your UI using a " [:a
+    {:href "https://github.com/weavejester/hiccup"} "Hiccup"] "-like
+    syntax."]
 
    [:p "A very basic component may look something like this: "]
    [demo-component {:comp simple-component
                     :defs [:simple-component]}]
 
    [:p "You can build new components using other components as
-   building blocks. That looks like this:"]
+   building blocks. Like this:"]
    [demo-component {:comp simple-parent
                     :defs [:simple-parent]}]
 
@@ -180,8 +180,8 @@
     "The " [:code "{:key item}"] " part of the " [:code ":li"] " isn't
     really necessary in this simple example, but passing a unique key
     for every item in a dynamically generated list of components is
-    good practice, and helps React to improve performance a lot for
-    large lists."]])
+    good practice, and helps React to improve performance for large
+    lists."]])
 
 (defn managing-state []
   [:div.demo-text
@@ -200,8 +200,9 @@
    [:p "Sometimes you may want to maintain state locally in a
    component. That is easy to do with an " [:code "atom"] " as well."]
 
-   [:p "Here is an example of that, where we call setTimeout every
-   time the component is rendered to update a simple clock:"]
+   [:p "Here is an example of that, where we call "
+   [:code "setTimeout"] " every time the component is rendered to
+   update a counter:"]
    
    [demo-component {:comp timer-component
                     :defs [:timer-component]}]
@@ -232,6 +233,12 @@
 
    [demo-component {:defs [:ns :simple-component :render-simple]}]])
 
+(defn performance []
+  [:div.demo-text
+   [:h2 "Performance"]
+
+   [:p "Something about performance..."]])
+
 (defn bmi-demo []
   [:div.demo-text
    [:h2 "Putting it all together"]
@@ -253,30 +260,48 @@
 
 (defn complete-simple-demo []
   [:div.demo-text
-   [:h2 "Another demo"]
+   [:h2 "Complete demo"]
+
+   [:p "Cloact comes with a couple of complete examples, with
+   Leiningen project files and everything. Here's one of them in
+   action:"]
+   
    [demo-component {:comp simpleexample/simple-example
                     :src (get-source "simpleexample.cljs")}]])
 
 (defn todomvc-demo []
   [:div.demo-text
    [:h2 "Todomvc"]
+
+   [:p "The obligatory todo list looks roughly like this in
+   Cloact (cheating a little bit by skipping routing and
+   persistence):"]
+   
    [demo-component {:comp todomvc/todo-app
                     :src (get-source "todomvc.cljs")}]])
+
+(defn github-badge []
+  [:a.github-badge
+   {:href "https://github.com/holmsand/cloact"}
+   [:img {:style {:position "absolute" :top 0 :left 0 :border 0}
+          :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"
+          :alt "Fork me on GitHub"}]])
 
 (defn demo []
   [:div
    [:div.test-output-mini
     [runtests/test-output-mini]]
    [:div.cloact-demo
-    [:h1 "This will become a demo"]
+    [:h1 "Cloact: Simple and fast UI for ClojureScript"]
     [intro]
     [managing-state]
     [essential-api]
+    [performance]
     [bmi-demo]
     [test-results]
     [complete-simple-demo]
     [todomvc-demo]
-    [:p "WIP"]]])
+    [github-badge]]])
 
 (defn ^:export mountdemo []
   (cloact/render-component [demo] (.-body js/document)))

@@ -1,12 +1,39 @@
 
+* { 
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
 .cloact-demo {
     background-color: #fff;
     margin: 40px -100px;
     padding: 40px 60px;
 }
 
+.cloact-demo > h1 {
+    font-size: 36px;
+    line-height: 1.1em;
+}
+
+@media (max-width: 768px) {
+    body {
+        width: auto;
+        margin: 0 0;
+    }
+    .cloact-demo {
+        margin: 0 0;
+        padding: 27px 27px;
+        width: 100%;
+    }
+    .github-badge {
+        display: none;
+    }
+}
+
 .test-output-mini {
     text-align: right;
+    margin-right: -180px;
 }
 
 .cloact-demo h2 {

@@ -1,3 +1,4 @@
+
 div, h1, input {
     font-family: HelveticaNeue, Helvetica;
     color: #777;
@@ -7,6 +8,12 @@ div, h1, input {
     font-size: 128px;
     line-height: 1.2em;
     font-family: HelveticaNeue-UltraLight, Helvetica;
+}
+
+@media (max-width: 768px) {
+    .example-clock {
+        font-size: 64px;
+    }
 }
 
 .color-input, .color-input input {
