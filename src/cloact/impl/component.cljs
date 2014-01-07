@@ -1,16 +1,13 @@
 
 (ns cloact.impl.component
-  (:require-macros [cloact.ratom :refer [reaction]]
-                   [cloact.debug :refer [dbg prn]])
   (:require [cloact.impl.template :as tmpl]
             [cloact.impl.util :as util]
-            [cloact.ratom :as ratom]))
+            [cloact.ratom :as ratom]
+            [cloact.debug :refer-macros [dbg prn]]))
 
 (def React tmpl/React)
 
-
 ;;; Accessors
-
 
 (defn replace-state [this new-state]
   ;; Don't use React's replaceState, since it doesn't play well
@@ -83,10 +80,11 @@
   (assert C)
   (when (nil? (.-cljsRatom C))
     (set! (.-cljsRatom C)
-          (reaction :auto-run (if tmpl/isClient
+          (ratom/make-reaction
+           #(do-render C (.-cljsRenderFn C))
+           :auto-run (if tmpl/isClient
                                 #(.forceUpdate C)
-                                identity)
-                    (do-render C (.-cljsRenderFn C)))))
+                                identity))))
   (ratom/run (.-cljsRatom C)))
 
 (defn custom-wrapper [key f]

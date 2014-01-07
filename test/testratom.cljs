@@ -78,7 +78,7 @@
           "Counter auto updated")
       (dispose co))
     (let [!x (rv/atom 0)
-          !co (reaction :auto-run true (inc @!x))]
+          !co (rv/make-reaction #(inc @!x) :auto-run true)]
       (is (= 1 @!co) "CO has correct value on first deref") 
       (swap! !x inc) 
       (is (= 2 @!co) "CO auto-updates")
@@ -171,17 +171,17 @@
           disposed-c (rv/atom nil)
           disposed-cns (rv/atom nil)
           count-b (rv/atom 0)
-          b (reaction
-             :on-dispose #(reset! disposed true)
-             (swap! count-b inc)
-             (inc @a))
-          c (reaction
-             :on-dispose #(reset! disposed-c true)
-             (if (< @a 1) (inc @b) (dec @a)))
+          b (rv/make-reaction (fn []
+                                (swap! count-b inc)
+                                (inc @a))
+                              :on-dispose #(reset! disposed true))
+          c (rv/make-reaction #(if (< @a 1) (inc @b) (dec @a))
+                              :on-dispose #(reset! disposed-c true))
           res (rv/atom nil)
-          cns (run!
-               :on-dispose #(reset! disposed-cns true)
-               (reset! res @c))]
+          cns (rv/make-reaction #(reset! res @c)
+                                :auto-run true
+                                :on-dispose #(reset! disposed-cns true))]
+      @cns
       (is (= @res 2))
       (is (= (+ 3 runs) (running)))
       (is (= @count-b 1))
@@ -211,10 +211,11 @@
 (deftest test-on-set
   (let [runs (running)
         a (rv/atom 0)
-        b (run!
-           :on-set (fn [oldv newv]
-                     (reset! a (+ 10 newv)))
-           (+ 5 @a))]
+        b (rv/make-reaction #(+ 5 @a)
+                            :auto-run true
+                            :on-set (fn [oldv newv]
+                                      (reset! a (+ 10 newv))))]
+    @b
     (is (= 5 @b))
     (reset! a 1)
     (is (= 6 @b))
