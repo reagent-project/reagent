@@ -71,22 +71,11 @@ specially, like React's transferPropsTo."
 
 ;; Utilities
 
-(deftype partial-ifn [f args ^:mutable p]
-  IFn
-  (-invoke [_ & a]
-    (or p (set! p (apply clojure.core/partial f args)))
-    (apply p a))
-  IEquiv
-  (-equiv [_ other]
-    (and (= f (.-f other)) (= args (.-args other))))
-  IHash
-  (-hash [_] (hash [f args])))
-
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and
 the result can be compared with ="
   [f & args]
-  (partial-ifn. f args nil))
+  (util/partial-ifn. f args nil))
 
 (let [p1 (partial vector 1 2)]
   (assert (= (p1 3) [1 2 3]))

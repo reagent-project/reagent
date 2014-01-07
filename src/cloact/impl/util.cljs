@@ -1,5 +1,16 @@
 (ns cloact.impl.util)
 
+(deftype partial-ifn [f args ^:mutable p]
+  IFn
+  (-invoke [_ & a]
+    (or p (set! p (apply clojure.core/partial f args)))
+    (apply p a))
+  IEquiv
+  (-equiv [_ other]
+    (and (= f (.-f other)) (= args (.-args other))))
+  IHash
+  (-hash [_] (hash [f args])))
+
 (defn- merge-class [p1 p2]
   (let [class (when-let [c1 (:class p1)]
                 (when-let [c2 (:class p2)]
@@ -36,14 +47,18 @@
 (def -not-found (js-obj))
 
 (defn shallow-equal-maps [x y]
-  ;; Compare two maps, using identical? on all values
+  ;; Compare two maps, using keyword-identical? on all values
   (or (identical? x y)
       (when (== (count x) (count y))
         (reduce-kv (fn [res k v]
                      (let [yv (get y k -not-found)]
-                       (if (or (identical? v yv)
-                               ;; hack to allow cloact.core/partial
-                               (and (ifn? v) (= v yv)))
+                       (if (or (keyword-identical? v yv)
+                               ;; hack to allow cloact.core/partial and :style
+                               ;; maps to be compared with =
+                               (and (or
+                                     (keyword-identical? k :style)
+                                     (identical? (type v) partial-ifn))
+                                    (= v yv)))
                          res
                          (reduced false))))
                    true x))))
@@ -54,7 +69,7 @@
   ;; The first bit (e.g the :div is assumed to be identical).
   (or (identical? v1 v2)
       (let [c1 (count v1)]
-        (and (identical? c1 (count v2))
+        (and (== c1 (count v2))
              (if (< c1 2)
                true
                (let [props1 (nth v1 1)]
