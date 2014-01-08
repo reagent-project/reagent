@@ -1,9 +1,9 @@
 
 (ns cloact.impl.template
-  (:require-macros [cloact.debug :refer [dbg prn println]])
   (:require [clojure.string :as string]
             [cloact.impl.reactimport :as reactimport]
-            [cloact.impl.util :as util]))
+            [cloact.impl.util :as util]
+            [cloact.debug :refer-macros [dbg prn println]]))
 
 (def React reactimport/React)
 

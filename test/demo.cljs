@@ -1,9 +1,8 @@
 (ns demo
   (:require [cloact.core :as cloact :refer [atom]]
             [clojure.string :as string]
-            [demoutil :as demoutil])
-  (:require-macros [demoutil :refer [get-source]]
-                   [cloact.debug :refer [dbg println]]))
+            [demoutil :as demoutil :refer-macros [get-source]]
+            [cloact.debug :refer-macros [dbg println]]))
 
 (defn src-parts [src]
   (string/split src #"\n(?=[(])"))

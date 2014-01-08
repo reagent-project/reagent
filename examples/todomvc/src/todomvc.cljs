@@ -1,11 +1,10 @@
 
 (ns todomvc
-  (:require [cloact.core :as cloact :refer [atom]]
-            [cloact.debug :refer-macros [dbg]]))
-
-(def counter (atom 0))
+  (:require [cloact.core :as cloact :refer [atom]]))
 
 (def todos (atom (sorted-map)))
+
+(def counter (atom 0))
 
 (defn add-todo [text]
   (let [id (swap! counter inc)]
@@ -23,13 +22,11 @@
 
 (defn todo-input [{:keys [title on-save on-stop]}]
   (let [val (atom title)
-        stop (fn []
-               (reset! val "")
-               (if on-stop (on-stop)))
-        save (fn []
-               (let [v (-> @val str clojure.string/trim)]
-                 (if-not (empty? v) (on-save v))
-                 (stop)))]
+        stop #(do (reset! val "")
+                  (if on-stop (on-stop)))
+        save #(let [v (-> @val str clojure.string/trim)]
+                (if-not (empty? v) (on-save v))
+                (stop))]
     (fn [props]
       [:input (merge props
                      {:type "text" :value @val :on-blur save
@@ -44,7 +41,7 @@
 
 (defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
-                    {:class (when (= name @filt) "selected")
+                    {:class (if (= name @filt) "selected")
                      :on-click #(reset! filt name)})]
     [:div
      [:span#todo-count
@@ -60,7 +57,6 @@
 (defn todo-item []
   (let [editing (atom false)]
     (fn [{{:keys [id done title]} :todo}]
-      (dbg "Rendering item")
       [:li {:class (str (if done "completed ")
                         (if @editing "editing"))}
        [:div.view
@@ -79,7 +75,6 @@
       (let [items (vals @todos)
             done (->> items (filter :done) count)
             active (- (count items) done)]
-        (dbg "Rendering main")
         [:section#todoapp
          [:header#header
           [:h1 "todos"]
