@@ -65,18 +65,20 @@
 
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
-        args (.-cljsArgs inprops)
-        props (nth args 1 nil)
+        props (.-cljsProps inprops)
         hasprops (or (nil? props) (map? props))
-        jsargs (->> (if hasprops (drop 1 args) args)
+        jsargs (->> (.-cljsChildren inprops)
                     (map-into-array as-component))]
-    (aset jsargs 0 (convert-props (if hasprops props) id-class))
+    (.unshift jsargs (convert-props props id-class))
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [C nextprops nextstate]
-  (let [a1 (-> C (aget "props") .-cljsArgs)
-        a2 (-> nextprops .-cljsArgs)]
-    (not (util/equal-args a1 a2))))
+  (let [inprops (aget C "props")
+        p1 (.-cljsProps inprops)
+        c1 (.-cljsChildren inprops)
+        p2 (.-cljsProps nextprops)
+        c2 (.-cljsChildren nextprops)]
+    (not (util/equal-args p1 c1 p2 c2))))
 
 (defn wrap-component [comp extras]
   (.createClass React (js-obj "render"
@@ -129,10 +131,15 @@
 (defn vec-to-comp [v]
   (assert (pos? (count v)))
   (let [[tag props] v
+        hasmap (map? props)
+        first-child (if (or hasmap (nil? props)) 2 1)
         c (as-class tag)
         jsprops (js-obj)]
-    (set! (.-cljsArgs jsprops) v)
-    (when (map? props)
+    (set! (.-cljsProps jsprops) (if hasmap props {}))
+    (set! (.-cljsChildren jsprops)
+          (if (> (count v) first-child)
+            (subvec v first-child)))
+    (when hasmap
       (let [key (:key props)]
         (when-not (nil? key)
           (aset jsprops "key" key))))

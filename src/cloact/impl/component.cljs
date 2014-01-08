@@ -23,39 +23,21 @@
 (defn state [this]
   (.-cljsState this))
 
-;; We store the "args" (i.e a vector like [comp props child1])
-;; in .-cljsArgs, with optional props, which makes access a bit
-;; tricky. The upside is that we don't have to do any allocations.
-
-(defn args-of [C]
-  (-> C (aget "props") .-cljsArgs))
-
-(defn props-in-args [args]
-  (let [p (nth args 1 nil)]
-    (when (map? p) p)))
+(defn js-props [C]
+  (aget C "props"))
 
 (defn props-in-props [props]
-  (-> props .-cljsArgs props-in-args))
+  (-> props .-cljsProps))
 
-(defn- first-child [args]
-  (let [p (nth args 1 nil)]
-    (if (or (nil? p) (map? p)) 2 1)))
-
-(defn- cljs-props [C]
-  (-> C args-of props-in-args))
+(defn cljs-props [C]
+  (-> C js-props props-in-props))
 
 (defn get-children [C]
-  (let [args (args-of C)
-        c (first-child args)]
-    (drop c args)))
+  (-> C js-props .-cljsChildren))
 
 (defn replace-props [C newprops]
   (let [obj (js-obj)]
-    (set! (.-cljsArgs obj)
-          (apply vector
-                 (nth (args-of C) 0)
-                 newprops
-                 (get-children C)))
+    (set! (.-cljsProps obj) newprops)
     (.setProps C obj)))
 
 (defn set-props [C newprops]
@@ -105,13 +87,15 @@
     (fn [C nextprops nextstate]
       ;; Don't care about nextstate here, we use forceUpdate
       ;; when only when state has changed anyway.
-      (let [a1 (args-of C)
-            a2 (-> nextprops .-cljsArgs)]
-        (assert (vector? a1))
+      (let [inprops (aget C "props")
+            p1 (.-cljsProps inprops)
+            c1 (.-cljsChildren inprops)
+            p2 (.-cljsProps nextprops)
+            c2 (.-cljsChildren nextprops)]
         (if (nil? f)
-          (not (util/equal-args a1 a2))
-          ;; Call f with oldprops, newprops
-          (f (props-in-args a1) (props-in-args a2)))))
+          (not (util/equal-args p1 c1 p2 c2))
+          ;; call f with oldprops newprops oldchildren newchildren
+          (f p1 p2 c1 c2))))
 
     :componentWillUnmount
     (fn [C]
@@ -170,8 +154,14 @@
   (let [spec (cljsify body)
         res (.createClass React spec)
         f (fn [& args]
-            (let [arg (js-obj)]
-              (set! (.-cljsArgs arg) (apply vector res args))
+            (let [arg (js-obj)
+                  props (nth args 0 nil)
+                  hasmap (map? props)
+                  first-child (if (or hasmap (nil? props)) 1 0)]
+              (set! (.-cljsProps arg) (if hasmap props {}))
+              (set! (.-cljsChildren arg)
+                    (if (> (count args) first-child)
+                      (subvec args first-child)))
               (res arg)))]
     (set! (.-cljsReactClass f) res)
     (set! (.-cljsReactClass res) res)

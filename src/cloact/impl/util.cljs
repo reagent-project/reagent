@@ -1,4 +1,5 @@
-(ns cloact.impl.util)
+(ns cloact.impl.util
+  (:require [cloact.debug :refer-macros [dbg]]))
 
 (deftype partial-ifn [f args ^:mutable p]
   IFn
@@ -34,46 +35,38 @@
       (assert (map? p1))
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
-(defn identical-parts [v1 v2 from]
-  ;; Compare two vectors, from item with index "from", using identical?
-  (let [end (count v1)]
-    (loop [n from]
-      (if (>= n end)
-        true
-        (if (identical? (nth v1 n) (nth v2 n))
-          (recur (inc n))
-          false)))))
+(defn identical-parts [v1 v2]
+  ;; Compare two vectors using identical?
+  (or (identical? v1 v2)
+      (let [end (count v1)]
+        (and (== end (count v2))
+             (loop [n 0]
+               (if (>= n end)
+                 true
+                 (if (identical? (nth v1 n) (nth v2 n))
+                   (recur (inc n))
+                   false)))))))
 
 (def -not-found (js-obj))
 
 (defn shallow-equal-maps [x y]
   ;; Compare two maps, using keyword-identical? on all values
   (or (identical? x y)
-      (when (== (count x) (count y))
-        (reduce-kv (fn [res k v]
-                     (let [yv (get y k -not-found)]
-                       (if (or (keyword-identical? v yv)
-                               ;; hack to allow cloact.core/partial and :style
-                               ;; maps to be compared with =
-                               (and (or
-                                     (keyword-identical? k :style)
-                                     (identical? (type v) partial-ifn))
-                                    (= v yv)))
-                         res
-                         (reduced false))))
-                   true x))))
+      (and (== (count x) (count y))
+           (reduce-kv (fn [res k v]
+                        (let [yv (get y k -not-found)]
+                          (if (or (keyword-identical? v yv)
+                                  ;; hack to allow cloact.core/partial and :style
+                                  ;; maps to be compared with =
+                                  (and (or
+                                        (keyword-identical? k :style)
+                                        (identical? (type v) partial-ifn))
+                                       (= v yv)))
+                            res
+                            (reduced false))))
+                      true x))))
 
-(defn equal-args [v1 v2]
-  ;; Compare two "args" vectors, i.e things like [:div {:foo "bar} "baz"],
-  ;; using identical? on all individual parts.
-  ;; The first bit (e.g the :div is assumed to be identical).
-  (or (identical? v1 v2)
-      (let [c1 (count v1)]
-        (and (== c1 (count v2))
-             (if (< c1 2)
-               true
-               (let [props1 (nth v1 1)]
-                 (if (or (nil? props1) (map? props1))
-                   (and (identical-parts v1 v2 2)
-                        (shallow-equal-maps props1 (nth v2 1)))
-                   (identical-parts v1 v2 1))))))))
+(defn equal-args [p1 c1 p2 c2]
+  [p1 c1 p2 c2]
+  (and (identical-parts c1 c2)
+       (shallow-equal-maps p1 p2)))
