@@ -16,13 +16,6 @@
   (when-not (or (nil? *ratom-context*))
     (swap! *ratom-context* conj derefable)))
 
-;; Have atoms make a note when they're dereferenced.
-;; (extend-type Atom
-;;   IDeref
-;;   (-deref [this]
-;;     (notify-deref-watcher! this)
-;;     (.-state this)))
-
 (deftype RAtom [state meta validator watches]
   IEquiv
   (-equiv [o other] (identical? o other))
