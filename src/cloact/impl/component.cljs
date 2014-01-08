@@ -1,56 +1,53 @@
 
 (ns cloact.impl.component
-  (:require [cloact.impl.template :as tmpl]
+  (:require [cloact.impl.template :as tmpl
+             :refer [cljs-props cljs-children React]]
             [cloact.impl.util :as util]
             [cloact.ratom :as ratom]
             [cloact.debug :refer-macros [dbg prn]]))
 
-(def React tmpl/React)
+
+(def cljs-state "cljsState")
 
 ;;; Accessors
+
+(defn state [this]
+  (aget this cljs-state))
 
 (defn replace-state [this new-state]
   ;; Don't use React's replaceState, since it doesn't play well
   ;; with clojure maps
-  (let [old-state (.-cljsState this)]
+  (let [old-state (state this)]
     (when-not (identical? old-state new-state)
-      (set! (.-cljsState this) new-state)
+      (aset this cljs-state new-state)
       (.forceUpdate this))))
 
 (defn set-state [this new-state]
-  (replace-state this (merge (.-cljsState this) new-state)))
-
-(defn state [this]
-  (.-cljsState this))
+  (replace-state this (merge (state this) new-state)))
 
 (defn js-props [C]
   (aget C "props"))
 
 (defn props-in-props [props]
-  (-> props .-cljsProps))
+  (aget props cljs-props))
 
-(defn cljs-props [C]
+(defn get-props [C]
   (-> C js-props props-in-props))
 
 (defn get-children [C]
-  (-> C js-props .-cljsChildren))
+  (->> C js-props (aget cljs-children)))
 
 (defn replace-props [C newprops]
-  (let [obj (js-obj)]
-    (set! (.-cljsProps obj) newprops)
-    (.setProps C obj)))
+  (.setProps C (js-obj cljs-props newprops)))
 
 (defn set-props [C newprops]
-  (replace-props C (merge (cljs-props C) newprops)))
-
-(defn get-props [C]
-  (cljs-props C))
+  (replace-props C (merge (get-props C) newprops)))
 
 
 ;;; Function wrapping
 
 (defn do-render [C f]
-  (let [res (f (cljs-props C) C)
+  (let [res (f (get-props C) C)
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
@@ -77,7 +74,7 @@
     :getInitialState
     (fn [C]
       (when f
-        (set! (.-cljsState C) (merge (.-cljsState C) (f C)))))
+        (aset C cljs-state (merge (state C) (f C)))))
 
     :componentWillReceiveProps
     (fn [C props]
@@ -88,10 +85,10 @@
       ;; Don't care about nextstate here, we use forceUpdate
       ;; when only when state has changed anyway.
       (let [inprops (aget C "props")
-            p1 (.-cljsProps inprops)
-            c1 (.-cljsChildren inprops)
-            p2 (.-cljsProps nextprops)
-            c2 (.-cljsChildren nextprops)]
+            p1 (aget inprops cljs-props)
+            c1 (aget inprops cljs-children)
+            p2 (aget nextprops cljs-props)
+            c2 (aget nextprops cljs-children)]
         (if (nil? f)
           (not (util/equal-args p1 c1 p2 c2))
           ;; call f with oldprops newprops oldchildren newchildren
@@ -154,15 +151,12 @@
   (let [spec (cljsify body)
         res (.createClass React spec)
         f (fn [& args]
-            (let [arg (js-obj)
-                  props (nth args 0 nil)
+            (let [props (nth args 0 nil)
                   hasmap (map? props)
                   first-child (if (or hasmap (nil? props)) 1 0)]
-              (set! (.-cljsProps arg) (if hasmap props {}))
-              (set! (.-cljsChildren arg)
-                    (if (> (count args) first-child)
-                      (subvec args first-child)))
-              (res arg)))]
+              (res (js-obj cljs-props    (if hasmap props)
+                           cljs-children (if (> (count args) first-child)
+                                           (subvec args first-child))))))]
     (set! (.-cljsReactClass f) res)
     (set! (.-cljsReactClass res) res)
     f))

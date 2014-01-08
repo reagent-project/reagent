@@ -7,6 +7,9 @@
 
 (def React reactimport/React)
 
+(def cljs-props "cljsProps")
+(def cljs-children "cljsChildren")
+
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
 
@@ -65,19 +68,19 @@
 
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
-        props (.-cljsProps inprops)
+        props (aget inprops cljs-props)
         hasprops (or (nil? props) (map? props))
-        jsargs (->> (.-cljsChildren inprops)
+        jsargs (->> (aget inprops cljs-children)
                     (map-into-array as-component))]
     (.unshift jsargs (convert-props props id-class))
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [C nextprops nextstate]
   (let [inprops (aget C "props")
-        p1 (.-cljsProps inprops)
-        c1 (.-cljsChildren inprops)
-        p2 (.-cljsProps nextprops)
-        c2 (.-cljsChildren nextprops)]
+        p1 (aget inprops cljs-props)
+        c1 (aget inprops cljs-children)
+        p2 (aget nextprops cljs-props)
+        c2 (aget nextprops cljs-children)]
     (not (util/equal-args p1 c1 p2 c2))))
 
 (defn wrap-component [comp extras]
@@ -134,11 +137,9 @@
         hasmap (map? props)
         first-child (if (or hasmap (nil? props)) 2 1)
         c (as-class tag)
-        jsprops (js-obj)]
-    (set! (.-cljsProps jsprops) (if hasmap props {}))
-    (set! (.-cljsChildren jsprops)
-          (if (> (count v) first-child)
-            (subvec v first-child)))
+        jsprops (js-obj cljs-props    (if hasmap props)
+                        cljs-children (if (> (count v) first-child)
+                                        (subvec v first-child)))]
     (when hasmap
       (let [key (:key props)]
         (when-not (nil? key)
