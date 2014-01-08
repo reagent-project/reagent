@@ -47,7 +47,11 @@
 ;;; Function wrapping
 
 (defn do-render [C f]
-  (let [res (f (get-props C) C)
+  (let [p (js-props C)
+        props (props-in-props p)
+        children (aget p cljs-children)
+        ;; Call render function with props, children, component
+        res (f props children C)
         conv (if (vector? res)
                (tmpl/as-component res)
                (if (fn? res)
@@ -84,7 +88,7 @@
     (fn [C nextprops nextstate]
       ;; Don't care about nextstate here, we use forceUpdate
       ;; when only when state has changed anyway.
-      (let [inprops (aget C "props")
+      (let [inprops (js-props C)
             p1 (aget inprops cljs-props)
             c1 (aget inprops cljs-children)
             p2 (aget nextprops cljs-props)

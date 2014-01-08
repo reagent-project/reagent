@@ -49,10 +49,10 @@
     (let [ran (atom 0)
           comp (cloact/create-class
                        {:component-did-mount #(swap! ran inc)
-                        :render (fn [P C]
-                                  (assert (map? P))
+                        :render (fn [props children this]
+                                  (assert (map? props))
                                   (swap! ran inc)
-                                  [:div (str "hi " (:foo P) ".")])})]
+                                  [:div (str "hi " (:foo props) ".")])})]
       (with-mounted-component (comp {:foo "you"})
         (fn [C div]
           (swap! ran inc)
@@ -75,9 +75,9 @@
     (let [ran (atom 0)
           comp (cloact/create-class
                        {:get-initial-state (fn [])
-                        :render (fn [P C]
+                        :render (fn [props children this]
                                   (swap! ran inc)
-                                  [:div (str "hi " (:foo (cloact/state C)))])})]
+                                  [:div (str "hi " (:foo (cloact/state this)))])})]
       (with-mounted-component (comp)
         (fn [C div]
           (swap! ran inc)
@@ -120,11 +120,12 @@
 (deftest init-state-test
   (when isClient
     (let [ran (atom 0)
-          really-simple (fn [props this]
+          really-simple (fn [props children this]
                           (swap! ran inc)
                           (cloact/set-state this {:foo "foobar"})
                           (fn []
-                            [:div (str "this is " (:foo (cloact/state this)))]))]
+                            [:div (str "this is "
+                                       (:foo (cloact/state this)))]))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
