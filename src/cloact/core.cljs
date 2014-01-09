@@ -12,15 +12,23 @@
 (def is-client tmpl/isClient)
 
 (defn render-component
+  "Render a Cloact component into the DOM. The first argument may be either a vector (using Cloact's Hiccup syntax), or a React component. The second argument should be a DOM node.
+
+Optionally takes a callback that is called when the component is in place.
+
+Returns the mounted component instance."
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
      (.renderComponent React (tmpl/as-component comp) container callback)))
 
-(defn unmount-component-at-node [container]
+(defn unmount-component-at-node
+  "Remove a component from the given DOM node."
+  [container]
   (.unmountComponentAtNode React container))
 
 (defn render-component-to-string
+  "Turns a component into an HTML string."
   ([component]
      (let [res (clojure.core/atom nil)]
        (render-component-to-string component #(reset! res %))
@@ -28,35 +36,63 @@
   ([component callback]
      (.renderComponentToString React (tmpl/as-component component) callback)))
 
-(defn create-class [body]
-  (comp/create-class body))
+(defn create-class
+  "Create a component, React style. Should be called with a map,
+looking like this:
+{:get-initial-state (fn [this])
+:component-will-receive-props (fn [this new-props])
+:should-component-update (fn [this old-props new-props old-children new-children])
+:component-did-update (fn [this old-props old-children])
+:component-will-unmount (fn [this])
+:render (fn [props children this])}
+
+Everything is optional, except :render.
+"
+  [spec]
+  (comp/create-class spec))
 
 
 
-(defn set-props [comp props]
+(defn set-props
+  "Merge the props of a mounted, top-level component."
+  [comp props]
   (comp/set-props comp props))
 
-(defn replace-props [comp props]
+(defn replace-props
+  "Set the props of a mounted, top-level component."
+  [comp props]
   (comp/replace-props comp props))
 
 
-(defn state [this]
+(defn state
+  "Returns the state of a component, as set with replace-state or set-state."
+  [this]
   (comp/state this))
 
-(defn replace-state [this new-state]
+(defn replace-state
+  "Set state of a component."
+  [this new-state]
   (comp/replace-state this new-state))
 
-(defn set-state [this new-state]
+(defn set-state
+  "Merge component state with new-state."
+  [this new-state]
   (comp/set-state this new-state))
 
 
-(defn props [this]
+(defn props
+  "Returns the props passed to a component."
+  [this]
   (comp/get-props this))
 
-(defn children [this]
+(defn children
+  "Returns the children passed to a component."
+  [this]
   (comp/get-children this))
 
-(defn dom-node [this]
+(defn dom-node
+  "Returns the root DOM node of a mounted component."
+  [this]
   (.getDOMNode this))
 
 
@@ -71,7 +107,9 @@ specially, like React's transferPropsTo."
 ;; Ratom
 
 (defn atom
-  "Like clojure.core/atom, except that it keeps track of derefs."
+  "Like clojure.core/atom, except that it keeps track of derefs.
+Cloact components that derefs one of these are automatically
+re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 

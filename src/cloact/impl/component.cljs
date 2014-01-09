@@ -96,7 +96,14 @@
         (if (nil? f)
           (not (util/equal-args p1 c1 p2 c2))
           ;; call f with oldprops newprops oldchildren newchildren
-          (f p1 p2 c1 c2))))
+          (f C p1 p2 c1 c2))))
+
+    :componentDidUpdate
+    (fn [C oldprops]
+      (let [inprops (js-props C)
+            p (aget inprops cljs-props)
+            c (aget inprops cljs-children)]
+        (f C p c)))
 
     :componentWillUnmount
     (fn [C]
