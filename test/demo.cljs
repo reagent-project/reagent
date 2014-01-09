@@ -146,53 +146,60 @@
       [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
 
 (defn intro []
-  [:div.demo-text
-   
-   [:h2 "Introduction to Cloact"]
+  (let [github {:href "https://github.com/holmsand/cloact"}
+        clojurescript {:href "https://github.com/clojure/clojurescript"}
+        react {:href "http://facebook.github.io/react/"}
+        hiccup {:href "https://github.com/weavejester/hiccup"}]
+    [:div.demo-text
 
-   [:p [:a {:href "https://github.com/holmsand/cloact"} "Cloact"]
-    " provides a minimalistic interface between "
-    [:a {:href "https://github.com/clojure/clojurescript"} "ClojureScript"]
-    " and " [:a {:href "http://facebook.github.io/react/"} "React"]
-    ". It allows you to define efficient React components using nothing but
-    plain ClojureScript functions, that describe your UI using a " [:a
-    {:href "https://github.com/weavejester/hiccup"} "Hiccup"] "-like
-    syntax."]
+     [:h2 "Introduction to Cloact"]
 
-   [:p "A very basic component may look something like this: "]
-   [demo-component {:comp simple-component
-                    :defs [:simple-component]}]
+     [:p [:a github "Cloact"] " provides a minimalistic interface
+     between " [:a clojurescript "ClojureScript"] " and " [:a
+     react "React"] ". It allows you to define efficient React
+     components using nothing but plain ClojureScript functions and
+     data, that describe your UI using a " [:a hiccup "Hiccup"] "-like
+     syntax."]
 
-   [:p "You can build new components using other components as
-   building blocks. Like this:"]
-   [demo-component {:comp simple-parent
-                    :defs [:simple-parent]}]
+     [:p "The goal of Cloact is to make it possible to define
+     arbitrarily complex UIs using just a couple of basic concepts,
+     and to be fast enough by default that you rarely have to care
+     about performance."]
 
-   [:p "Data is passed to child components using plain old Clojure
-   maps. For example, here is a component that shows items in a "
-    [:code "seq"] ":" ]
+     [:p "A very basic Cloact component may look something like this: "]
+     [demo-component {:comp simple-component
+                      :defs [:simple-component]}]
 
-   [demo-component {:comp lister-user
-                    :defs [:lister :lister-user]}]
+     [:p "You can build new components using other components as
+     building blocks. Like this:"]
+     [demo-component {:comp simple-parent
+                      :defs [:simple-parent]}]
 
-   [:p [:strong "Note: "]
-    "The " [:code "{:key item}"] " part of the " [:code ":li"] " isn't
-    really necessary in this simple example, but passing a unique key
-    for every item in a dynamically generated list of components is
-    good practice, and helps React to improve performance for large
-    lists."]])
+     [:p "Data is passed to child components using plain old Clojure
+     maps. For example, here is a component that shows items in a "
+     [:code "seq"] ":" ]
+
+     [demo-component {:comp lister-user
+                      :defs [:lister :lister-user]}]
+
+     [:p [:strong "Note: "]
+     "The " [:code "{:key item}"] " part of the " [:code ":li"] "
+     isn’t really necessary in this simple example, but passing a
+     unique key for every item in a dynamically generated list of
+     components is good practice, and helps React to improve
+     performance for large lists."]]))
 
 (defn managing-state []
   [:div.demo-text
    [:h2 "Managing state in Cloact"]
 
-   [:p "The easiest way to manage state in Cloact is to use Cloact's
+   [:p "The easiest way to manage state in Cloact is to use Cloact’s
    own version of " [:code "atom"] ". It works exactly like the one in
    clojure.core, except that it keeps track of every time it is
-   deref'ed. Any component that uses an " [:code "atom"]" is automagically
+   deref’ed. Any component that uses an " [:code "atom"]" is automagically
    re-rendered when its value changes."]
 
-   [:p "Let's demonstrate that with a simple example:"]
+   [:p "Let’s demonstrate that with a simple example:"]
    [demo-component {:comp counting-component
                     :defs [:ns :click-count :counting-component]}]
 
@@ -200,7 +207,7 @@
    component. That is easy to do with an " [:code "atom"] " as well."]
 
    [:p "Here is an example of that, where we call "
-   [:code "setTimeout"] " every time the component is rendered to
+    [:code "setTimeout"] " every time the component is rendered to
    update a counter:"]
    
    [demo-component {:comp timer-component
@@ -208,21 +215,28 @@
    
    [:p "The previous example also uses another feature of Cloact: a component
    function can return another function, that is used to do the actual
-   rendering. It is called with the same arguments as any other
-   component function. This allows you to perform some setup of newly
-   created components, without resorting to React's lifecycle
+   rendering. This allows you to perform some setup of newly
+   created components, without resorting to React’s lifecycle
    events."]
 
    [:p "By simply passing atoms around you can share state management
    between components, like this:"]
    [demo-component {:comp shared-state
-                    :defs [:ns :atom-input :shared-state]}]])
+                    :defs [:ns :atom-input :shared-state]}]
+
+   [:p [:strong "Note: "] "Component functions (including the ones
+    returned by other component functions) are called with three
+    arguments: "]
+   [:ul
+    [:li [:code "props"] ": a map passed from a parent" ]
+    [:li [:code "children"] ": a vector of the children passed to the component"]
+    [:li [:code "this"] ": the actual React component"]]])
 
 (defn essential-api []
   [:div.demo-text
    [:h2 "Essential API"]
 
-   [:p "Cloact supports most of React's API, but there is really only
+   [:p "Cloact supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
     [:code "cloact.core/render-component"] "."]
 
@@ -236,7 +250,45 @@
   [:div.demo-text
    [:h2 "Performance"]
 
-   [:p "Something about performance..."]])
+   [:p "React itself is very fast, and so is Cloact. In fact, Cloact
+   will be even faster than plain React a lot of the time, thanks to
+   optimizations made possible by ClojureScript."]
+
+   [:p "Mounted components are only re-rendered when their parameters
+   have changed. The change could come from a deref’ed "
+   [:code "atom"] ", the arguments passed to the component (i.e the
+   ”props” map and children) or component state."]
+
+   [:p "All of these are checked for changes with a simple "
+   [:code "identical?"] " which is basically only a pointer
+   comparison, so the overhead is very low (even if the components of
+   the props map are compared separately, and "
+   [:code ":style"] " attributes are handled specially). Even the
+   built-in React components are handled the same way."]
+
+   [:p "All this means that you (hopefully) simply won’t have to care
+   about performance most of the time. Just define your UI however you like
+   – it will be fast enough."]
+
+   [:p "There are a couple of situations that you might have to care
+   about, though. If you give Cloact big " [:code "seq"] "s of
+   components to render, you might have to supply all of them with a
+   unique " [:code ":key"] " attribute to speed up rendering. Also note
+   that anonymous functions are not, in general, equal to each other
+   even if they represent the same code and closure."]
+
+   [:p "But again, in general you should just trust that React and
+   Cloact will be fast enough. This very page is composed of a single
+   Cloact component with thousands of child components (every single
+   parenthesis etc in the code examples is a separate component), and
+   yet the page can be updated many times every second without taxing
+   the browser the slightest."]
+
+   [:p "Incidentally, this page also uses another React trick: the
+   entire page is pre-rendered using Node, and "
+   [:code "cloact/render-component-to-string"] ". When it is loaded
+   into the browser, React automatically attaches event-handlers to
+   the already present DOM tree."]])
 
 (defn bmi-demo []
   [:div.demo-text
@@ -262,7 +314,7 @@
    [:h2 "Complete demo"]
 
    [:p "Cloact comes with a couple of complete examples, with
-   Leiningen project files and everything. Here's one of them in
+   Leiningen project files and everything. Here’s one of them in
    action:"]
    
    [demo-component {:comp simpleexample/simple-example
@@ -291,16 +343,16 @@
    [:div.test-output-mini
     [runtests/test-output-mini]]
    [:div.cloact-demo
-    [:h1 "Cloact: Simple and fast UI for ClojureScript"]
+    [:h1 "Cloact: Minimalistic React for ClojureScript"]
     [intro]
     [managing-state]
     [essential-api]
-    [performance]
     [bmi-demo]
+    [performance]
     [test-results]
     [complete-simple-demo]
-    [todomvc-demo]
-    [github-badge]]])
+    [todomvc-demo]]
+   [github-badge]])
 
 (defn ^:export mountdemo []
   (cloact/render-component [demo] (.-body js/document)))

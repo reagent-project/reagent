@@ -9,6 +9,7 @@
 
 (def React tmpl/React)
 
+(def is-client tmpl/isClient)
 
 (defn render-component
   ([comp container]

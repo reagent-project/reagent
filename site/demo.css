@@ -41,7 +41,7 @@
     color: #555;
 }
 
-.demo-text > p {
+.demo-text > p, .demo-text > ul {
     font-family: georgia, serif;
     font-size: 18px;
     line-height: 27px;

@@ -19,7 +19,7 @@
    (println "-----------------------------------------")
    (reset! test-results (t/run-all-tests))
    (println "-----------------------------------------"))
- 1000)
+ (if cloact/is-client 1000 0))
 
 (defn test-output []
   (let [res @test-results]
