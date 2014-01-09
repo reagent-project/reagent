@@ -12,7 +12,9 @@
 (def is-client tmpl/isClient)
 
 (defn render-component
-  "Render a Cloact component into the DOM. The first argument may be either a vector (using Cloact's Hiccup syntax), or a React component. The second argument should be a DOM node.
+  "Render a Cloact component into the DOM. The first argument may be either a
+vector (using Cloact's Hiccup syntax), or a React component. The second argument
+should be a DOM node.
 
 Optionally takes a callback that is called when the component is in place.
 
