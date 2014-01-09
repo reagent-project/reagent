@@ -20,6 +20,7 @@ var cssFiles = ['examples/todomvc/todos.css',
 var head = ['<head>',
             '<meta charset="utf-8">',
             '<title>Cloact: Minimalistic React for ClojureScript</title>',
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
             '<link rel="stylesheet" href="site/democss.css' + ts + '">',
             '</head>'].join('\n');
 
