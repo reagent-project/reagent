@@ -628,6 +628,12 @@ div, h1, input {
     .github-badge {
         display: none;
     }
+    .demo-source {
+        overflow-x: scroll;
+    }
+    .test-output-mini {
+        display: none;
+    }
 }
 
 .test-output-mini {
@@ -662,7 +668,7 @@ div, h1, input {
 }
 
 .simple-demo, .simple-demo input {
-    font-size: 17px;
+    font-size: 18px;
 }
 
 .demo-heading {
