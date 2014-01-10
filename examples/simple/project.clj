@@ -1,9 +1,9 @@
 
 
-(defproject simple-cloact "0.1.0-SNAPSHOT"
+(defproject simple-cloact "0.1.0"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2138"]
-                 [cloact "0.1.0-SNAPSHOT"]]
+                 [cloact "0.1.0"]]
   :plugins [[lein-cljsbuild "1.0.1"]]
   :hooks [leiningen.cljsbuild]
   :profiles {:prod {:cljsbuild
