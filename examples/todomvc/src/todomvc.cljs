@@ -43,7 +43,7 @@
   (let [props-for (fn [name]
                     {:class (if (= name @filt) "selected")
                      :on-click #(reset! filt name)})]
-    [:div
+    [:footer#footer
      [:span#todo-count
       [:strong active] " " (case active 1 "item" "items") " left"]
      [:ul#filters
@@ -91,8 +91,7 @@
                                 :done :done
                                 :all identity) items)]
              [todo-item {:key (:id todo) :todo todo}])]]
-         [:footer#footer
-          [todo-stats {:active active :done done :filt filt}]]
+         [todo-stats {:active active :done done :filt filt}]
          [:footer#info
           [:p "Double-click to edit a todo"]]]))))
 
