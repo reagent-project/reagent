@@ -1,15 +1,16 @@
 
 
-(defproject todomvc-cloact "0.0.3"
+(defproject todomvc-cloact "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2120"]
-                 [cloact "0.0.3"]]
+                 [org.clojure/clojurescript "0.0-2138"]
+                 [cloact "0.1.0-SNAPSHOT"]]
   :plugins [[lein-cljsbuild "1.0.1"]]
   :hooks [leiningen.cljsbuild]
   :profiles {:prod {:cljsbuild
                     {:builds
                      {:client {:compiler
                                {:optimizations :advanced
+                                :preamble ^:replace ["cloact/react.min.js"]
                                 :pretty-print false}}}}}
              :srcmap {:cljsbuild
                       {:builds
@@ -21,6 +22,7 @@
   {:builds
    {:client {:source-paths ["src"]
              :compiler
-             {:output-dir "target/client"
+             {:preamble ["cloact/react.js"]
+              :output-dir "target/client"
               :output-to "target/client.js"
               :pretty-print true}}}})
