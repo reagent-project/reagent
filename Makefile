@@ -1,7 +1,7 @@
 PORT = 4562
 
-PROF = dev
-PROF = dev,test
+PROF = dev,demo
+PROF = dev,demo,test
 # PROF = dev,test,srcmap
 # PROF = prod,test
 # PROF = prod
@@ -9,7 +9,7 @@ PROF = dev,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.0.4-SNAPSHOT
+VERSION = 0.1.0-SNAPSHOT
 
 all: buildrun
 
@@ -44,18 +44,21 @@ veryclean: clean
 bower_components:
 	bower install react#v0.8.0
 
-src/cloact/impl/react.min.js: bower_components/react/react-with-addons.min.js Makefile
+src/cloact/react.min.js: bower_components/react/react.min.js Makefile
 	cp $< $@
 
-copyjs: bower_components src/cloact/impl/react.min.js
+src/cloact/react.js: bower_components/react/react.js Makefile
+	cp $< $@
+
+copyjs: bower_components src/cloact/react.min.js src/cloact/react.js
 
 gensite:
 	node bin/gen-site.js
 
-prodbuild:
-	$(MAKE) PROF=prod,test leinbuild
+demobuild:
+	$(MAKE) PROF=prod,demo leinbuild
 
-buildsite: prodbuild gensite
+buildsite: demobuild gensite
 
 setversion:
 	version=$(VERSION); \
