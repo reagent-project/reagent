@@ -4,7 +4,8 @@
                     :refer (is deftest with-test run-tests testing)]
                    [cloact.debug :refer [dbg println]])
   (:require [cemerick.cljs.test :as t]
-            [cloact.core :as cloact :refer [atom]]))
+            [cloact.core :as cloact :refer [atom]]
+            [demo :as demo]))
 
 (defn ^:export console-print [x]
   (when (not= x "\n")
