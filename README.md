@@ -5,9 +5,21 @@ A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [
 
 Cloact provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
-To use Cloact you just add this to your `project.clj`:
+To use Cloact you add this to your dependencies in `project.clj`:
 
-    [cloact "0.0.3"]
+    [cloact "0.1.0"]
+
+You also need to include react.js itself. One way to do this is to add
+
+    :preamble ["cloact/react.js"]
+
+to the *:compiler* section of project.clj, as shown in the examples
+directory (or "cloact/react.min.js" in production). You could also
+add
+
+    <script src="http://fb.me/react-0.8.0.js"></script>
+
+directly to your html.
 
 
 ## Examples
@@ -107,7 +119,7 @@ React is pretty darn fast, and so is Cloact. It should even be faster than plain
 
 The ClojureScript overhead is kept down, thanks to lots of caching.
 
-Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 56K gzipped, using advanced compilation.
+Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 53K gzipped, using advanced compilation.
 
 
 ## About
