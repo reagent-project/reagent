@@ -1,7 +1,7 @@
 PORT = 4562
 
-PROF = dev
-PROF = dev,test
+PROF = dev,demo
+PROF = dev,demo,test
 # PROF = dev,test,srcmap
 # PROF = prod,test
 # PROF = prod
@@ -55,10 +55,10 @@ copyjs: bower_components src/cloact/react.min.js src/cloact/react.js
 gensite:
 	node bin/gen-site.js
 
-prodbuild:
-	$(MAKE) PROF=prod,test leinbuild
+demobuild:
+	$(MAKE) PROF=prod,demo leinbuild
 
-buildsite: prodbuild gensite
+buildsite: demobuild gensite
 
 setversion:
 	version=$(VERSION); \

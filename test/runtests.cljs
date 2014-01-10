@@ -40,3 +40,10 @@
         [test-output])
       [:div "."])))
 
+(defn test-demo []
+  [:div
+   [test-output]
+   [demo/demo]])
+
+(defn ^:export mounttests []
+  (cloact/render-component [test-demo] (.-body js/document)))

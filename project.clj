@@ -19,6 +19,11 @@
                      {:client {:source-paths ["test"
                                               "examples/todomvc/src"
                                               "examples/simple/src"]}}}}
+             :demo {:cljsbuild
+                    {:builds
+                     {:client {:source-paths ["demo"
+                                              "examples/todomvc/src"
+                                              "examples/simple/src"]}}}}
              :srcmap {:cljsbuild
                       {:builds
                        {:client

@@ -304,11 +304,6 @@
                     :defs [:ns :calc-bmi :bmi-data :set-bmi :slider
                            :bmi-component]}]])
 
-(defn test-results []
-  [:div.demo-text
-   [:h2 "Test results"]
-   [runtests/test-output]])
-
 (defn complete-simple-demo []
   [:div.demo-text
    [:h2 "Complete demo"]
@@ -340,8 +335,6 @@
 
 (defn demo []
   [:div
-   [:div.test-output-mini
-    [runtests/test-output-mini]]
    [:div.cloact-demo
     [:h1 "Cloact: Minimalistic React for ClojureScript"]
     [intro]
@@ -349,7 +342,6 @@
     [essential-api]
     [bmi-demo]
     [performance]
-    [test-results]
     [complete-simple-demo]
     [todomvc-demo]]
    [github-badge]])
