@@ -9,7 +9,7 @@ PROF = dev,demo,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.1.0-SNAPSHOT
+VERSION = 0.1.0
 
 all: buildrun
 
