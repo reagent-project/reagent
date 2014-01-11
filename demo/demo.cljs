@@ -240,7 +240,7 @@
    one entry-point that is necessary for most applications: "
     [:code "cloact.core/render-component"] "."]
 
-   [:p "It takes too arguments: a component, and a DOM node. For
+   [:p "It takes two arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would
    look like this:"]
 
