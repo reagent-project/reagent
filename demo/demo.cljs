@@ -1,8 +1,21 @@
 (ns demo
   (:require [reagent.core :as reagent :refer [atom]]
             [clojure.string :as string]
+            [reagentdemo.page :as rpage]
+            [reagentdemo.news :as news]
             [demoutil :as demoutil :refer-macros [get-source]]
             [reagent.debug :refer-macros [dbg println]]))
+
+(def page rpage/page)
+
+(defn link [props children]
+  (apply vector :a (assoc props
+                     :on-click (if rpage/history
+                                 (fn [e]
+                                   (.preventDefault e)
+                                   (reset! page (:href props)))
+                                 identity))
+         children))
 
 (defn src-parts [src]
   (string/split src #"\n(?=[(])"))
@@ -333,17 +346,27 @@
           :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"
           :alt "Fork me on GitHub"}]])
 
+(defn reagent-intro []
+  [:div.reagent-demo
+   [:h1 "Reagent: Minimalistic React for ClojureScript"]
+   [intro]
+   [managing-state]
+   [essential-api]
+   [bmi-demo]
+   [performance]
+   [complete-simple-demo]
+   [todomvc-demo]])
+
 (defn demo []
   [:div
-   [:div.reagent-demo
-    [:h1 "Reagent: Minimalistic React for ClojureScript"]
-    [intro]
-    [managing-state]
-    [essential-api]
-    [bmi-demo]
-    [performance]
-    [complete-simple-demo]
-    [todomvc-demo]]
+   [:div
+    [:ul
+     [:li [link {:href "news.html"} "News"]]
+     [:li [link {:href "index.html"} "Intro"]]]]
+   (case (dbg @page)
+     "index.html" [reagent-intro]
+     "news.html" [news/main]
+     [reagent-intro])
    [github-badge]])
 
 (defn ^:export mountdemo []
