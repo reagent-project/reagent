@@ -4,6 +4,7 @@
             [reagentdemo.page :as rpage]
             [reagentdemo.news :as news]
             [demoutil :as demoutil :refer-macros [get-source]]
+            [reagentdemo.common :as common :refer [demo-component]]
             [reagent.debug :refer-macros [dbg println]]))
 
 (def page rpage/page)
@@ -16,54 +17,6 @@
                                    (reset! page (:href props)))
                                  identity))
          children))
-
-(defn src-parts [src]
-  (string/split src #"\n(?=[(])"))
-
-(defn src-defs [parts]
-  (let [ws #"\s+"]
-    (into {} (for [x parts]
-               [(-> x (string/split ws) second keyword) x]))))
-
-(def srcmap
-  (-> "demo.cljs" get-source src-parts src-defs))
-
-(def nssrc
-  "(ns example
-  (:require [reagent.core :as reagent :refer [atom]]))
-")
-
-(defn src-for-names [names]
-  (string/join "\n" (-> srcmap
-                        (assoc :ns nssrc)
-                        (select-keys names)
-                        vals)))
-
-(defn src-for [defs]
-  [:pre (-> defs src-for-names demoutil/syntaxify)])
-
-(defn demo-component [{:keys [comp defs src]}]
-  (let [colored (if src
-                  (demoutil/syntaxify src)
-                  (src-for defs))
-        showing (atom true)]
-    (fn []
-      [:div
-       (when comp
-         [:div.demo-example
-          [:a.demo-example-hide {:on-click (fn [e]
-                                             (.preventDefault e)
-                                             (swap! showing not))}
-           (if @showing "hide" "show")]
-          [:h3.demo-heading "Example "]
-          (when @showing
-            (if defs
-              [:div.simple-demo [comp]]
-              [comp]))])
-       (when @showing
-         [:div.demo-source
-          [:h3.demo-heading "Source"]
-          colored])])))
 
 (defn simple-component []
   [:div
@@ -158,6 +111,9 @@
       [:span {:style {:color color}} diagnose]
       [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
 
+(def funmap (-> "demo.cljs" get-source common/fun-map))
+(defn src-for [defs] (common/src-for funmap defs))
+
 (defn intro []
   (let [github {:href "https://github.com/holmsand/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
@@ -181,19 +137,19 @@
 
      [:p "A very basic Reagent component may look something like this: "]
      [demo-component {:comp simple-component
-                      :defs [:simple-component]}]
+                      :src (src-for [:simple-component])}]
 
      [:p "You can build new components using other components as
      building blocks. Like this:"]
      [demo-component {:comp simple-parent
-                      :defs [:simple-parent]}]
+                      :src (src-for [:simple-parent])}]
 
      [:p "Data is passed to child components using plain old Clojure
      maps. For example, here is a component that shows items in a "
      [:code "seq"] ":" ]
 
      [demo-component {:comp lister-user
-                      :defs [:lister :lister-user]}]
+                      :src (src-for [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
      "The " [:code "{:key item}"] " part of the " [:code ":li"] "
@@ -214,7 +170,7 @@
 
    [:p "Let’s demonstrate that with a simple example:"]
    [demo-component {:comp counting-component
-                    :defs [:ns :click-count :counting-component]}]
+                    :src (src-for [:ns :click-count :counting-component])}]
 
    [:p "Sometimes you may want to maintain state locally in a
    component. That is easy to do with an " [:code "atom"] " as well."]
@@ -224,7 +180,7 @@
    update a counter:"]
    
    [demo-component {:comp timer-component
-                    :defs [:timer-component]}]
+                    :src (src-for [:timer-component])}]
    
    [:p "The previous example also uses another feature of Reagent: a component
    function can return another function, that is used to do the actual
@@ -235,7 +191,7 @@
    [:p "By simply passing atoms around you can share state management
    between components, like this:"]
    [demo-component {:comp shared-state
-                    :defs [:ns :atom-input :shared-state]}]
+                    :src (src-for [:ns :atom-input :shared-state])}]
 
    [:p [:strong "Note: "] "Component functions (including the ones
     returned by other component functions) are called with three
@@ -257,7 +213,7 @@
    example, splashing the very first example all over the page would
    look like this:"]
 
-   [demo-component {:defs [:ns :simple-component :render-simple]}]])
+   [demo-component {:src (src-for [:ns :simple-component :render-simple])}]])
 
 (defn performance []
   [:div.demo-text
@@ -314,8 +270,8 @@
    with height, weight and BMI as keys."]
 
    [demo-component {:comp bmi-component
-                    :defs [:ns :calc-bmi :bmi-data :set-bmi :slider
-                           :bmi-component]}]])
+                    :src (src-for [:ns :calc-bmi :bmi-data :set-bmi :slider
+                                   :bmi-component])}]])
 
 (defn complete-simple-demo []
   [:div.demo-text
@@ -326,7 +282,10 @@
    action:"]
    
    [demo-component {:comp simpleexample/simple-example
-                    :src (get-source "simpleexample.cljs")}]])
+                    :complete true
+                    :src (-> "simpleexample.cljs"
+                             get-source
+                             common/syntaxify)}]])
 
 (defn todomvc-demo []
   [:div.demo-text
@@ -337,7 +296,10 @@
    persistence):"]
    
    [demo-component {:comp todomvc/todo-app
-                    :src (get-source "todomvc.cljs")}]])
+                    :complete true
+                    :src (-> "todomvc.cljs"
+                             get-source
+                             common/syntaxify)}]])
 
 (defn github-badge []
   [:a.github-badge
@@ -347,15 +309,19 @@
           :alt "Fork me on GitHub"}]])
 
 (defn reagent-intro []
-  [:div.reagent-demo
-   [:h1 "Reagent: Minimalistic React for ClojureScript"]
-   [intro]
-   [managing-state]
-   [essential-api]
-   [bmi-demo]
-   [performance]
-   [complete-simple-demo]
-   [todomvc-demo]])
+  (let [show-all (atom false)]
+    (js/setTimeout #(reset! show-all true) 500)
+    (fn []
+      [:div.reagent-demo
+       [:h1 "Reagent: Minimalistic React for ClojureScript"]
+       [intro]
+       [managing-state]
+       [essential-api]
+       [bmi-demo]
+       [performance]
+       ;; Show heavy examples on load, to make html file smaller
+       (when @show-all [complete-simple-demo])
+       (when @show-all [todomvc-demo])])))
 
 (defn demo []
   [:div
