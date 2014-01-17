@@ -1,6 +1,6 @@
-(ns cloact.ratom
+(ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [cloact.debug :refer (dbg)]))
+  (:require-macros [reagent.debug :refer (dbg)]))
 
 (declare ^:dynamic *ratom-context*)
 

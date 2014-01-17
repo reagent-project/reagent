@@ -1,9 +1,9 @@
 
-(ns cloact.impl.template
+(ns reagent.impl.template
   (:require [clojure.string :as string]
-            [cloact.impl.reactimport :as reactimport]
-            [cloact.impl.util :as util]
-            [cloact.debug :refer-macros [dbg prn println]]))
+            [reagent.impl.reactimport :as reactimport]
+            [reagent.impl.util :as util]
+            [reagent.debug :refer-macros [dbg prn println]]))
 
 (def React reactimport/React)
 
@@ -114,7 +114,7 @@
 (defn fn-to-class [f]
   (let [spec (meta f)
         withrender (merge spec {:render f})
-        res (cloact.core/create-class withrender)
+        res (reagent.core/create-class withrender)
         wrapf (.-cljsReactClass res)]
     (set! (.-cljsReactClass f) wrapf)
     wrapf))

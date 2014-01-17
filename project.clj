@@ -1,7 +1,7 @@
 
 
-(defproject cloact "0.1.0"
-  :url "http://github.com/holmsand/cloact"
+(defproject reagent "0.2.0-SNAPSHOT"
+  :url "http://github.com/holmsand/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
   :dependencies [[org.clojure/clojure "1.5.1"]

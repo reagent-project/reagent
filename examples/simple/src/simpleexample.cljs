@@ -1,6 +1,6 @@
 
 (ns simpleexample
-  (:require [cloact.core :as cloact :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]))
 
 (def timer (atom (js/Date.)))
 (def time-color (atom "#f34"))
@@ -33,5 +33,5 @@
    [color-input]])
 
 (defn ^:export run []
-  (cloact/render-component [simple-example]
-                           (.-body js/document)))
+  (reagent/render-component [simple-example]
+                            (.-body js/document)))

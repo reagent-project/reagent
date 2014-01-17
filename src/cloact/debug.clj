@@ -1,5 +1,5 @@
 
-(ns cloact.debug
+(ns reagent.debug
   (:refer-clojure :exclude [prn println]))
 
 (defmacro log

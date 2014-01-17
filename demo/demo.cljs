@@ -1,8 +1,8 @@
 (ns demo
-  (:require [cloact.core :as cloact :refer [atom]]
+  (:require [reagent.core :as reagent :refer [atom]]
             [clojure.string :as string]
             [demoutil :as demoutil :refer-macros [get-source]]
-            [cloact.debug :refer-macros [dbg println]]))
+            [reagent.debug :refer-macros [dbg println]]))
 
 (defn src-parts [src]
   (string/split src #"\n(?=[(])"))
@@ -17,7 +17,7 @@
 
 (def nssrc
   "(ns example
-  (:require [cloact.core :as cloact :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]))
 ")
 
 (defn src-for-names [names]
@@ -104,8 +104,8 @@
        "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
-  (cloact/render-component [simple-component]
-                           (.-body js/document)))
+  (reagent/render-component [simple-component]
+                            (.-body js/document)))
 
 (defn calc-bmi [params to-calc]
   (let [{:keys [height weight bmi]} params
@@ -146,27 +146,27 @@
       [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
 
 (defn intro []
-  (let [github {:href "https://github.com/holmsand/cloact"}
+  (let [github {:href "https://github.com/holmsand/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
         react {:href "http://facebook.github.io/react/"}
         hiccup {:href "https://github.com/weavejester/hiccup"}]
     [:div.demo-text
 
-     [:h2 "Introduction to Cloact"]
+     [:h2 "Introduction to Reagent"]
 
-     [:p [:a github "Cloact"] " provides a minimalistic interface
+     [:p [:a github "Reagent"] " provides a minimalistic interface
      between " [:a clojurescript "ClojureScript"] " and " [:a
      react "React"] ". It allows you to define efficient React
      components using nothing but plain ClojureScript functions and
      data, that describe your UI using a " [:a hiccup "Hiccup"] "-like
      syntax."]
 
-     [:p "The goal of Cloact is to make it possible to define
+     [:p "The goal of Reagent is to make it possible to define
      arbitrarily complex UIs using just a couple of basic concepts,
      and to be fast enough by default that you rarely have to care
      about performance."]
 
-     [:p "A very basic Cloact component may look something like this: "]
+     [:p "A very basic Reagent component may look something like this: "]
      [demo-component {:comp simple-component
                       :defs [:simple-component]}]
 
@@ -191,9 +191,9 @@
 
 (defn managing-state []
   [:div.demo-text
-   [:h2 "Managing state in Cloact"]
+   [:h2 "Managing state in Reagent"]
 
-   [:p "The easiest way to manage state in Cloact is to use Cloact’s
+   [:p "The easiest way to manage state in Reagent is to use Reagent’s
    own version of " [:code "atom"] ". It works exactly like the one in
    clojure.core, except that it keeps track of every time it is
    deref’ed. Any component that uses an " [:code "atom"]" is automagically
@@ -213,7 +213,7 @@
    [demo-component {:comp timer-component
                     :defs [:timer-component]}]
    
-   [:p "The previous example also uses another feature of Cloact: a component
+   [:p "The previous example also uses another feature of Reagent: a component
    function can return another function, that is used to do the actual
    rendering. This allows you to perform some setup of newly
    created components, without resorting to React’s lifecycle
@@ -236,9 +236,9 @@
   [:div.demo-text
    [:h2 "Essential API"]
 
-   [:p "Cloact supports most of React’s API, but there is really only
+   [:p "Reagent supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
-    [:code "cloact.core/render-component"] "."]
+    [:code "reagent.core/render-component"] "."]
 
    [:p "It takes two arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would
@@ -250,7 +250,7 @@
   [:div.demo-text
    [:h2 "Performance"]
 
-   [:p "React itself is very fast, and so is Cloact. In fact, Cloact
+   [:p "React itself is very fast, and so is Reagent. In fact, Reagent
    will be even faster than plain React a lot of the time, thanks to
    optimizations made possible by ClojureScript."]
 
@@ -271,22 +271,22 @@
    – it will be fast enough."]
 
    [:p "There are a couple of situations that you might have to care
-   about, though. If you give Cloact big " [:code "seq"] "s of
+   about, though. If you give Reagent big " [:code "seq"] "s of
    components to render, you might have to supply all of them with a
    unique " [:code ":key"] " attribute to speed up rendering. Also note
    that anonymous functions are not, in general, equal to each other
    even if they represent the same code and closure."]
 
    [:p "But again, in general you should just trust that React and
-   Cloact will be fast enough. This very page is composed of a single
-   Cloact component with thousands of child components (every single
+   Reagent will be fast enough. This very page is composed of a single
+   Reagent component with thousands of child components (every single
    parenthesis etc in the code examples is a separate component), and
    yet the page can be updated many times every second without taxing
    the browser the slightest."]
 
    [:p "Incidentally, this page also uses another React trick: the
    entire page is pre-rendered using Node, and "
-   [:code "cloact/render-component-to-string"] ". When it is loaded
+   [:code "reagent/render-component-to-string"] ". When it is loaded
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 
@@ -297,7 +297,7 @@
    [:p "Here is a slightly less contrived example: a simple BMI
    calculator."]
 
-   [:p "Data is kept in a single " [:code "cloact.core/atom"] ": a map
+   [:p "Data is kept in a single " [:code "reagent.core/atom"] ": a map
    with height, weight and BMI as keys."]
 
    [demo-component {:comp bmi-component
@@ -308,7 +308,7 @@
   [:div.demo-text
    [:h2 "Complete demo"]
 
-   [:p "Cloact comes with a couple of complete examples, with
+   [:p "Reagent comes with a couple of complete examples, with
    Leiningen project files and everything. Here’s one of them in
    action:"]
    
@@ -320,7 +320,7 @@
    [:h2 "Todomvc"]
 
    [:p "The obligatory todo list looks roughly like this in
-   Cloact (cheating a little bit by skipping routing and
+   Reagent (cheating a little bit by skipping routing and
    persistence):"]
    
    [demo-component {:comp todomvc/todo-app
@@ -328,15 +328,15 @@
 
 (defn github-badge []
   [:a.github-badge
-   {:href "https://github.com/holmsand/cloact"}
+   {:href "https://github.com/holmsand/reagent"}
    [:img {:style {:position "absolute" :top 0 :left 0 :border 0}
           :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"
           :alt "Fork me on GitHub"}]])
 
 (defn demo []
   [:div
-   [:div.cloact-demo
-    [:h1 "Cloact: Minimalistic React for ClojureScript"]
+   [:div.reagent-demo
+    [:h1 "Reagent: Minimalistic React for ClojureScript"]
     [intro]
     [managing-state]
     [essential-api]
@@ -347,7 +347,7 @@
    [github-badge]])
 
 (defn ^:export mountdemo []
-  (cloact/render-component [demo] (.-body js/document)))
+  (reagent/render-component [demo] (.-body js/document)))
 
 (defn ^:export genpage []
-  (cloact/render-component-to-string [demo]))
+  (reagent/render-component-to-string [demo]))

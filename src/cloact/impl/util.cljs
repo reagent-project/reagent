@@ -1,5 +1,5 @@
-(ns cloact.impl.util
-  (:require [cloact.debug :refer-macros [dbg]]))
+(ns reagent.impl.util
+  (:require [reagent.debug :refer-macros [dbg]]))
 
 (deftype partial-ifn [f args ^:mutable p]
   IFn
@@ -56,7 +56,7 @@
            (reduce-kv (fn [res k v]
                         (let [yv (get y k -not-found)]
                           (if (or (keyword-identical? v yv)
-                                  ;; hack to allow cloact.core/partial and :style
+                                  ;; hack to allow reagent.core/partial and :style
                                   ;; maps to be compared with =
                                   (and (or
                                         (keyword-identical? k :style)

@@ -1,10 +1,10 @@
 
-(ns cloact.impl.component
-  (:require [cloact.impl.template :as tmpl
+(ns reagent.impl.component
+  (:require [reagent.impl.template :as tmpl
              :refer [cljs-props cljs-children React]]
-            [cloact.impl.util :as util]
-            [cloact.ratom :as ratom]
-            [cloact.debug :refer-macros [dbg prn]]))
+            [reagent.impl.util :as util]
+            [reagent.ratom :as ratom]
+            [reagent.debug :refer-macros [dbg prn]]))
 
 
 (def cljs-state "cljsState")
@@ -145,7 +145,7 @@
                  (when-let [r (:render fun-map)]
                    (or (.-displayName r)
                        (.-name r))))
-        name1 (if (empty? name) (str (gensym "cloact")) name)]
+        name1 (if (empty? name) (str (gensym "reagent")) name)]
     (into {} (for [[k v] (assoc fun-map :displayName name1)]
                [k (get-wrapper k v name1)]))))
 

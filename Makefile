@@ -9,7 +9,7 @@ PROF = dev,demo,test
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.1.0
+VERSION = 0.2.0-SNAPSHOT
 
 all: buildrun
 
@@ -63,7 +63,7 @@ buildsite: demobuild gensite
 setversion:
 	version=$(VERSION); \
 	find . -name project.clj | \
-	xargs -n1 sed -i "" -e 's,\(cloact "\)\([^"]*\)",\1'"$$version"'"',g
+	xargs -n1 sed -i "" -e 's,\(reagent "\)\([^"]*\)",\1'"$$version"'"',g
 
 tag: setversion
 	if git rev-parse v$(VERSION) 2>/dev/null; then \

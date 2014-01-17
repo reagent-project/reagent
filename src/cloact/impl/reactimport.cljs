@@ -1,7 +1,7 @@
-(ns cloact.impl.reactimport
-  (:require-macros [cloact.impl.util :refer [import-js expose-vars]]))
+(ns reagent.impl.reactimport
+  (:require-macros [reagent.impl.util :refer [import-js expose-vars]]))
 
-;; (import-js "cloact/impl/react.min.js")
+;; (import-js "reagent/impl/react.min.js")
 
 (def React js/React)
 

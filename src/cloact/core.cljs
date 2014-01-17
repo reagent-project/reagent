@@ -1,19 +1,19 @@
 
-(ns cloact.core
+(ns reagent.core
   (:refer-clojure :exclude [partial atom])
-  (:require-macros [cloact.debug :refer [dbg prn]])
-  (:require [cloact.impl.template :as tmpl]
-            [cloact.impl.component :as comp]
-            [cloact.impl.util :as util]
-            [cloact.ratom :as ratom]))
+  (:require-macros [reagent.debug :refer [dbg prn]])
+  (:require [reagent.impl.template :as tmpl]
+            [reagent.impl.component :as comp]
+            [reagent.impl.util :as util]
+            [reagent.ratom :as ratom]))
 
 (def React tmpl/React)
 
 (def is-client tmpl/isClient)
 
 (defn render-component
-  "Render a Cloact component into the DOM. The first argument may be either a
-vector (using Cloact's Hiccup syntax), or a React component. The second argument
+  "Render a Reagent component into the DOM. The first argument may be either a
+vector (using Reagent's Hiccup syntax), or a React component. The second argument
 should be a DOM node.
 
 Optionally takes a callback that is called when the component is in place.
@@ -110,7 +110,7 @@ specially, like React's transferPropsTo."
 
 (defn atom
   "Like clojure.core/atom, except that it keeps track of derefs.
-Cloact components that derefs one of these are automatically
+Reagent components that derefs one of these are automatically
 re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))

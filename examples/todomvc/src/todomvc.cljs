@@ -1,6 +1,6 @@
 
 (ns todomvc
-  (:require [cloact.core :as cloact :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]))
 
 (def todos (atom (sorted-map)))
 
@@ -37,7 +37,7 @@
                                     nil)})])))
 
 (def todo-edit (with-meta todo-input
-                 {:component-did-mount #(.focus (cloact/dom-node %))}))
+                 {:component-did-mount #(.focus (reagent/dom-node %))}))
 
 (defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
@@ -97,4 +97,4 @@
           [:p "Double-click to edit a todo"]]]))))
 
 (defn ^:export run []
-  (cloact/render-component [todo-app] (.-body js/document)))
+  (reagent/render-component [todo-app] (.-body js/document)))

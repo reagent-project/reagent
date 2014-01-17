@@ -1,11 +1,11 @@
-(ns testcloact
+(ns testreagent
   (:require-macros [cemerick.cljs.test
                     :refer (is deftest with-test run-tests testing)]
-                   [cloact.ratom :refer [reaction]]
-                   [cloact.debug :refer [dbg println log]])
+                   [reagent.ratom :refer [reaction]]
+                   [reagent.debug :refer [dbg println log]])
   (:require [cemerick.cljs.test :as t]
-            [cloact.core :as cloact :refer [atom]]
-            [cloact.ratom :as rv]))
+            [reagent.core :as reagent :refer [atom]]
+            [reagent.ratom :as rv]))
 
 (defn running [] (rv/running))
 
@@ -21,9 +21,9 @@
 
 (defn with-mounted-component [comp f]
   (when isClient
-    (let [div (add-test-div "_testcloact")]
-      (let [comp (cloact/render-component comp div #(f comp div))]
-        (cloact/unmount-component-at-node div)))))
+    (let [div (add-test-div "_testreagent")]
+      (let [comp (reagent/render-component comp div #(f comp div))]
+        (reagent/unmount-component-at-node div)))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
@@ -47,7 +47,7 @@
 (deftest test-simple-callback
   (when isClient
     (let [ran (atom 0)
-          comp (cloact/create-class
+          comp (reagent/create-class
                        {:component-did-mount #(swap! ran inc)
                         :render (fn [props children this]
                                   (assert (map? props))
@@ -58,35 +58,35 @@
           (swap! ran inc)
           (is (found-in #"hi you" div))
           
-          (cloact/set-props C {:foo "there"})
+          (reagent/set-props C {:foo "there"})
           (is (found-in #"hi there" div))
 
           (let [runs @ran]
-            (cloact/set-props C {:foo "there"})
+            (reagent/set-props C {:foo "there"})
             (is (found-in #"hi there" div))
             (is (= runs @ran)))
 
-          (cloact/replace-props C {:foobar "not used"})
+          (reagent/replace-props C {:foobar "not used"})
           (is (found-in #"hi ." div))))
       (is (= 5 @ran)))))
 
 (deftest test-state-change
   (when isClient
     (let [ran (atom 0)
-          comp (cloact/create-class
+          comp (reagent/create-class
                        {:get-initial-state (fn [])
                         :render (fn [props children this]
                                   (swap! ran inc)
-                                  [:div (str "hi " (:foo (cloact/state this)))])})]
+                                  [:div (str "hi " (:foo (reagent/state this)))])})]
       (with-mounted-component (comp)
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi " div))
 
-          (cloact/set-state C {:foo "there"})
+          (reagent/set-state C {:foo "there"})
           (is (found-in #"hi there" div))
 
-          (cloact/set-state C {:foo "you"})
+          (reagent/set-state C {:foo "you"})
           (is (found-in #"hi you" div))))
       (is (= 4 @ran)))))
 
@@ -122,10 +122,10 @@
     (let [ran (atom 0)
           really-simple (fn [props children this]
                           (swap! ran inc)
-                          (cloact/set-state this {:foo "foobar"})
+                          (reagent/set-state this {:foo "foobar"})
                           (fn []
                             [:div (str "this is "
-                                       (:foo (cloact/state this)))]))]
+                                       (:foo (reagent/state this)))]))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
@@ -136,5 +136,5 @@
   (let [comp (fn [props]
                [:div (str "i am " (:foo props))])]
     (is (re-find #"i am foobar"
-                 (cloact/render-component-to-string
-                         [comp {:foo "foobar"}])))))
+                 (reagent/render-component-to-string
+                  [comp {:foo "foobar"}])))))

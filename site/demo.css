@@ -5,13 +5,13 @@
     box-sizing: border-box;
 }
 
-.cloact-demo {
+.reagent-demo {
     background-color: #fff;
     margin: 40px -100px;
     padding: 40px 60px;
 }
 
-.cloact-demo > h1 {
+.reagent-demo > h1 {
     font-size: 36px;
     line-height: 1.1em;
 }
@@ -21,7 +21,7 @@
         width: auto;
         margin: 0 0;
     }
-    .cloact-demo {
+    .reagent-demo {
         margin: 0 0;
         padding: 27px 27px;
         width: 100%;
@@ -42,7 +42,7 @@
     margin-right: -180px;
 }
 
-.cloact-demo h2 {
+.reagent-demo h2 {
     margin-top: 48px;
     color: #555;
 }

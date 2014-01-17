@@ -1,10 +1,10 @@
 (ns testratom
   (:require-macros [cemerick.cljs.test
                     :refer (is deftest with-test run-tests testing)]
-                   [cloact.ratom :refer [run! reaction]]
-                   [cloact.debug :refer [dbg]])
+                   [reagent.ratom :refer [run! reaction]]
+                   [reagent.debug :refer [dbg]])
   (:require [cemerick.cljs.test :as t]
-            [cloact.ratom :as rv]))
+            [reagent.ratom :as rv]))
 
 (defn running [] (rv/running))
 (defn dispose [v] (rv/dispose! v))
