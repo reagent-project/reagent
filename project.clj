@@ -11,7 +11,7 @@
                     {:builds
                      {:client {:compiler
                                {:optimizations :advanced
-                                :preamble ^:replace ["cloact/react.min.js"]
+                                :preamble ^:replace ["reagent/react.min.js"]
                                 :pretty-print false}}}}}
              :test {:plugins [[com.cemerick/clojurescript.test "0.2.1"]]
                     :cljsbuild
@@ -35,7 +35,7 @@
   {:builds
    {:client {:source-paths ["src"]
              :compiler
-             {:preamble ["cloact/react.js"]
+             {:preamble ["reagent/react.js"]
               :output-dir "target/client"
               :output-to "target/cljs-client.js"
               :pretty-print true}}}})

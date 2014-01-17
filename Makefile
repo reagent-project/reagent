@@ -44,13 +44,13 @@ veryclean: clean
 bower_components:
 	bower install react#v0.8.0
 
-src/cloact/react.min.js: bower_components/react/react.min.js Makefile
+src/reagent/react.min.js: bower_components/react/react.min.js Makefile
 	cp $< $@
 
-src/cloact/react.js: bower_components/react/react.js Makefile
+src/reagent/react.js: bower_components/react/react.js Makefile
 	cp $< $@
 
-copyjs: bower_components src/cloact/react.min.js src/cloact/react.js
+copyjs: bower_components src/reagent/react.min.js src/reagent/react.js
 
 gensite:
 	node bin/gen-site.js
