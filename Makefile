@@ -1,9 +1,7 @@
 PORT = 4562
 
-PROF = dev,demo
-PROF = dev,demo,test
-# PROF = dev,test,srcmap
-# PROF = prod,test
+PROF = dev
+# PROF = prod,srcmap
 # PROF = prod
 
 CLJSBUILD = client
@@ -23,6 +21,9 @@ openbrowser:
 
 buildrun: setup
 	lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
+
+runtest:
+	$(MAKE) PROF=test,$(PROF)
 
 install: leinbuild
 	lein install

@@ -14,8 +14,11 @@
     <h1>This will become an example when compiled</h1>
     <script type="text/javascript" src="../target/cljs-client.js"></script>
     <script type="text/javascript">
-      runtests.mounttests();
-      <!-- demo.mountdemo(); -->
+      if (typeof runtests !== 'undefined') {
+        runtests.mounttests();
+      } else {
+        demo.mountdemo();
+      }
     </script>
   </body>
 </html>
