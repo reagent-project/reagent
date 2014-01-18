@@ -1,4 +1,4 @@
-(ns demoutil
+(ns reagentdemo.syntax
   (:require [clojure.string :as string]))
 
 (def builtins #{"def" "defn" "ns" "atom" "let" "if" "when"

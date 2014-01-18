@@ -1,10 +1,10 @@
 (ns reagentdemo.common
   (:require [reagent.core :as reagent :refer [atom]]
-            [demoutil :as demoutil :refer-macros [get-source]]
+            [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
-            [reagent.debug :refer-macros [dbg println]]))
+            [reagentdemo.syntax :as syntax]))
 
-(def syntaxify (memoize demoutil/syntaxify))
+(def syntaxify (memoize syntax/syntaxify))
 
 (defn src-parts [src]
   (string/split src #"\n(?=[(])"))
@@ -31,8 +31,7 @@
   [:pre (-> funmap (src-for-names defs) syntaxify)])
 
 (defn demo-component [{:keys [comp src complete]}]
-  (let [colored src
-        showing (atom true)]
+  (let [showing (atom true)]
     (fn []
       [:div
        (when comp
@@ -49,4 +48,4 @@
        (when @showing
          [:div.demo-source
           [:h3.demo-heading "Source"]
-          colored])])))
+          src])])))

@@ -4,7 +4,6 @@
             [reagentdemo.page :as rpage]
             [reagentdemo.news :as news]
             [reagentdemo.intro :as intro]
-            [demoutil :as demoutil :refer-macros [get-source]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagent.debug :refer-macros [dbg println]]))
 

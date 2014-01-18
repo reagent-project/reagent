@@ -3,7 +3,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
-            [demoutil :as demoutil :refer-macros [get-source]]
+            [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (defn simple-component []
