@@ -3,42 +3,33 @@
 var fs = require("fs");
 var vm = require('vm');
 
-var srcFile = "target/cljs-client.js";
-var src = fs.readFileSync(srcFile);
-vm.runInThisContext(src, srcFile);
-
-console.log('Generating page');
-var main = demo.genpage();
-
-var ts = '?' + Date.now();
-
 var cssFiles = ['examples/todomvc/todos.css',
                 'examples/todomvc/todosanim.css',
                 'examples/simple/example.css',
                 'site/demo.css'];
 
-var head = ['<head>',
-            '<meta charset="utf-8">',
-            '<title>Cloact: Minimalistic React for ClojureScript</title>',
-            '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-            '<link rel="stylesheet" href="site/democss.css' + ts + '">',
-            '</head>'].join('\n');
+var srcFile = "target/cljs-client.js";
+var src = fs.readFileSync(srcFile);
 
-var body = ['<body>',
-            main,
-            '<script type="text/javascript" src="site/demo.js' + ts + '"></script>',
-            '<script type="text/javascript">',
-            'setTimeout(demo.mountdemo, 200);',
-            '</script>',
-            '</body>'].join('\n');
+var clj_genpages = function (profile) {
+    if (typeof demo === 'undefined') {
+        vm.runInThisContext(src, srcFile);
+    }
+    return demo.genpages(profile);
+}
 
-var html = ['<!doctype html>', '<html>', head, body, '</html>'].join('\n');
+var generate = function () {
+    var pages = clj_genpages();
+    Object.keys(pages).map(function (page) {
+        fs.writeFileSync(page, pages[page]);
+    });
+    fs.writeFileSync("assets/demo.js", src);
+    fs.writeFileSync("assets/demo.css",
+                     cssFiles.map(function (x) {
+                         return fs.readFileSync(x);
+                     }).join("\n"));
+    console.log('Wrote site');
+}
 
 console.log('Writing site');
-fs.writeFileSync("index.html", html);
-fs.writeFileSync("site/demo.js", src);
-fs.writeFileSync("site/democss.css",
-                 cssFiles.map(function (x) {
-                     return fs.readFileSync(x);
-                 }).join("\n"));
-console.log('Wrote site');
+generate();

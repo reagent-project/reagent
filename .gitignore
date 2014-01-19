@@ -1,6 +1,6 @@
 index.html
-site/demo.js
-site/democss.css
+assets/
+news/
 target
 pom.xml
 .lein-repl-history

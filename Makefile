@@ -32,9 +32,11 @@ preclean:
 	rm -rf repl .repl target out
 
 clean: preclean
+	rm -rf news assets
 	lein -o clean
 
 setup: preclean copyjs
+	mkdir -p news assets
 
 show-outdated:
 	lein ancient :all
