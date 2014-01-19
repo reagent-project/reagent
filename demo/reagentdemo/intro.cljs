@@ -100,7 +100,7 @@
       [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
 
 (def funmap (-> "reagentdemo/intro.cljs" get-source common/fun-map))
-(defn src-for [defs] (common/src-for funmap defs))
+(def src-for (partial common/src-for funmap))
 
 (defn intro []
   (let [github {:href "https://github.com/holmsand/reagent"}
