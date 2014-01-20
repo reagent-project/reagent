@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.common :as common :refer [demo-component]]
+            [reagentdemo.common :as common :refer [demo-component title]]
             [todomvc :as todomvc]))
 
 (def funmap (-> "reagentdemo/news.cljs" get-source common/fun-map))
@@ -44,6 +44,8 @@
                           (remove-watch state ::undo-watcher))}))
 
 (defn main []
-  [:div.reagent-demo
-   [:h1 "This should become news"]
-   [undo-demo-cleanup]])
+  (let [head "This should become news"]
+    [:div.reagent-demo
+     [:h1 head]
+     [title head]
+     [undo-demo-cleanup]]))

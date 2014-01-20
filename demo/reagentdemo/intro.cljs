@@ -4,7 +4,7 @@
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.common :as common :refer [demo-component]]))
+            [reagentdemo.common :as common :refer [demo-component title]]))
 
 (defn simple-component []
   [:div
@@ -290,11 +290,13 @@
                              common/syntaxify)}]])
 
 (defn main []
-  (let [show-all (atom false)]
+  (let [show-all (atom false)
+        head "Reagent: Minimalistic React for ClojureScript"]
     (js/setTimeout #(reset! show-all true) 500)
     (fn []
       [:div.reagent-demo
-       [:h1 "Reagent: Minimalistic React for ClojureScript"]
+       [title head]
+       [:h1 head]
        [intro]
        [managing-state]
        [essential-api]
