@@ -43,9 +43,15 @@
                           (reset! undo-list nil)
                           (remove-watch state ::undo-watcher))}))
 
-(defn main []
+(defn undo-example []
   (let [head "This should become news"]
     [:div.reagent-demo
-     [:h1 [link {:href :undo-demo} head]]
+     [:h1 [link {:href undo-example} head]]
      [title head]
      [undo-demo-cleanup]]))
+
+(defn main []
+  [undo-example])
+
+(swap! common/page-map assoc
+       "news/cloact-reagent-undo-demo.html" undo-example)

@@ -2,15 +2,14 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [clojure.string :as string]
             [reagentdemo.common :as common
-             :refer [demo-component page link reverse-page-map prefix]]
+             :refer [demo-component page link page-map prefix]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
             [reagent.debug :refer-macros [dbg println]]))
 
-(common/set-page-map {:index ["index.html" [intro/main]]
-                      :news ["news/index.html" [news/main]]
-                      :undo-demo ["news/cloact-reagent-undo-demo.html"
-                                  [news/main]]})
+(swap! page-map assoc
+       "index.html" intro/main
+       "news/index.html" news/main)
 
 (defn github-badge []
   [:a.github-badge
@@ -23,13 +22,11 @@
   [:div
    [:div.nav
     [:ul.nav
-     [:li.brand [link {:href :index} "Reagent:"]]
-     [:li [link {:href :index} "Introduction"]]
-     [:li [link {:href :news} "News"]]]]
-   (let [p @page
-         [_ comp] (get @reverse-page-map p
-                       (:index @common/page-map))]
-     comp)
+     [:li.brand [link {:href intro/main} "Reagent:"]]
+     [:li [link {:href intro/main} "Introduction"]]
+     [:li [link {:href news/main} "News"]]]]
+   (let [comp (get @page-map @page intro/main)]
+     [comp])
    [github-badge]])
 
 (defn ^:export mountdemo [p]
@@ -38,6 +35,7 @@
 
 (defn gen-page [p timestamp]
   (reset! page p)
+  (dbg @page)
   (let [body (reagent/render-component-to-string [demo])
         title @common/title-atom]
     (str "<!doctype html>
@@ -60,7 +58,7 @@
 
 (defn ^:export genpages []
   (let [timestamp (str "?" (.now js/Date))]
-    (->> (keys @reverse-page-map)
+    (->> (keys @page-map)
          (map #(vector % (gen-page % timestamp)))
          (into {})
          clj->js)))

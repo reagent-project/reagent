@@ -13,10 +13,11 @@
 (def page-map (atom nil))
 (def reverse-page-map (atom nil))
 
-(defn set-page-map [m]
-  (reset! page-map m)
-  (reset! reverse-page-map (into {} (for [[k [p c]] m]
-                                      [p [k c]]))))
+(add-watch page-map ::page-map-watch
+           (fn [_ _ _ new-map]
+             (reset! reverse-page-map
+                     (into {} (for [[k v] new-map]
+                                [v k])))))
 
 (defn prefix [href]
   (let [depth (-> #"/" (re-seq @page) count)
@@ -24,9 +25,9 @@
     (str pref href)))
 
 (defn link [props children]
-  (let [pm @page-map
-        href (-> props :href pm first)]
-    (assert href)
+  (let [pm @reverse-page-map
+        href (-> props :href pm)]
+    (assert (string? href))
     (apply vector :a (assoc props
                        :href (prefix href)
                        :on-click (if rpage/history
