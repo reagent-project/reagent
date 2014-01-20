@@ -29,7 +29,25 @@ var generate = function () {
                          return fs.readFileSync(x);
                      }).join("\n"));
     console.log('Wrote site');
-}
+};
 
-console.log('Writing site');
-generate();
+var compileOk = function () {
+    var msg = process.argv[2];
+    if (msg && msg.match(/failed/)) {
+        console.log("Compilation failed");
+        // beep
+        console.log('\u0007');
+        return false;
+    }
+    return true;
+};
+
+if (compileOk()) {
+    console.log('Writing site');
+    try {
+        generate();
+    } catch (e) {
+        console.log('\u0007');
+        console.error(e.stack);
+    }
+}
