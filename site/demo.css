@@ -67,6 +67,11 @@ ul.nav > li.brand > a {
     line-height: 1.25em;
 }
 
+.reagent-demo > h1 > a {
+    color: inherit;
+    text-decoration: none;
+}
+
 @media (max-width: 768px) {
     body {
         width: auto;
