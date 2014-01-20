@@ -5,15 +5,66 @@
     box-sizing: border-box;
 }
 
+div.nav {
+    /* background-color: #f00; */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+ul.nav {
+    margin: 0 auto;
+    width: 750px;
+    height: 40px;
+    padding-left: 60px;
+    padding-top: 10px;
+}
+
+ul.nav > li {
+    float: left;
+    margin-right: 60px;
+}
+
+ul.nav > li > a {
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 11px;
+    color: #777;
+}
+
+ul.nav > li.brand > a {
+    color: #444;
+}
+
+@media (max-width: 768px) {
+    div.nav {
+        position: static;
+        background-color: #fff;
+    }
+    ul.nav {
+        width: 100%;
+        padding: 18px 27px;
+    }
+    ul.nav > li {
+        float: left;
+        margin-right: 30px;
+    }
+}
+
 .reagent-demo {
     background-color: #fff;
-    margin: 40px -100px;
-    padding: 40px 60px;
+    margin: 60px -100px;
+    padding: 36px 60px;
 }
 
 .reagent-demo > h1 {
-    font-size: 36px;
-    line-height: 1.1em;
+    font-size: 48px;
+    color: #555;
+    font-family: 'HelveticaNeue-Light', 'Helvetica Neue', arial;
+    font-weight: normal;
+    line-height: 1.25em;
 }
 
 @media (max-width: 768px) {
@@ -23,7 +74,7 @@
     }
     .reagent-demo {
         margin: 0 0;
-        padding: 27px 27px;
+        padding: 36px 27px;
         width: 100%;
     }
     .github-badge {
