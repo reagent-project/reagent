@@ -2,7 +2,8 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.common :as common :refer [demo-component title link]]
+            [reagentdemo.page :refer [title link page-map]]
+            [reagentdemo.common :as common :refer [demo-component]]
             [todomvc :as todomvc]))
 
 (def funmap (-> "reagentdemo/news.cljs" get-source common/fun-map))
@@ -53,5 +54,5 @@
 (defn main []
   [undo-example])
 
-(swap! common/page-map assoc
+(swap! page-map assoc
        "news/cloact-reagent-undo-demo.html" undo-example)

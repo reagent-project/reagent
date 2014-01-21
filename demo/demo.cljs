@@ -1,8 +1,8 @@
 (ns demo
   (:require [reagent.core :as reagent :refer [atom]]
             [clojure.string :as string]
-            [reagentdemo.common :as common
-             :refer [demo-component page link page-map prefix]]
+            [reagentdemo.page :as page :refer [page-map page link prefix]]
+            [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
             [reagent.debug :refer-macros [dbg println]]))
@@ -35,9 +35,8 @@
 
 (defn gen-page [p timestamp]
   (reset! page p)
-  (dbg @page)
   (let [body (reagent/render-component-to-string [demo])
-        title @common/title-atom]
+        title @page/title-atom]
     (str "<!doctype html>
 <html>
   <head>

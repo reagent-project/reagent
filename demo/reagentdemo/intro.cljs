@@ -4,7 +4,8 @@
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.common :as common :refer [demo-component title]]))
+            [reagentdemo.page :refer [link title]]
+            [reagentdemo.common :as common :refer [demo-component]]))
 
 (defn simple-component []
   [:div

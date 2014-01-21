@@ -5,46 +5,6 @@
             [reagentdemo.page :as rpage]
             [reagentdemo.syntax :as syntax]))
 
-
-(def page rpage/page)
-
-(def title-atom (atom "Reagent: Minimalistic React for ClojureScript"))
-
-(def page-map (atom nil))
-(def reverse-page-map (atom nil))
-
-(add-watch page-map ::page-map-watch
-           (fn [_ _ _ new-map]
-             (reset! reverse-page-map
-                     (into {} (for [[k v] new-map]
-                                [v k])))))
-
-(defn prefix [href]
-  (let [depth (-> #"/" (re-seq @page) count)
-        pref (->> "../" (repeat depth) (apply str))]
-    (str pref href)))
-
-(defn link [props children]
-  (let [pm @reverse-page-map
-        href (-> props :href pm)]
-    (assert (string? href))
-    (apply vector :a (assoc props
-                       :href (prefix href)
-                       :on-click (if rpage/history
-                                   (fn [e]
-                                     (.preventDefault e)
-                                     (reset! page href))
-                                   identity))
-           children)))
-
-(defn title [props children]
-  (let [name (first children)]
-    (if reagent/is-client
-      (let [title (aget (.getElementsByTagName js/document "title") 0)]
-        (set! (.-innerHTML title) (dbg name))))
-    (reset! title-atom name)
-    [:div]))
-
 (def syntaxify (memoize syntax/syntaxify))
 
 (defn src-parts [src]

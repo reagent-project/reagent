@@ -29,4 +29,40 @@
 
 (def history (setup-history))
 
+(def title-atom (atom ""))
 
+(def page-map (atom nil))
+
+(def reverse-page-map (atom nil))
+
+(add-watch page-map ::page-map-watch
+           (fn [_ _ _ new-map]
+             (reset! reverse-page-map
+                     (into {} (for [[k v] new-map]
+                                [v k])))))
+
+(defn prefix [href]
+  (let [depth (-> #"/" (re-seq @page) count)]
+    (str (->> "../" (repeat depth) (apply str)) href)))
+
+(defn link [props children]
+  (let [rpm @reverse-page-map
+        href (-> props :href rpm)]
+    (assert (string? href))
+    (apply vector
+           :a (assoc props
+                :href (prefix href)
+                :on-click (if history
+                            (fn [e]
+                              (.preventDefault e)
+                              (reset! page href))
+                            identity))
+           children)))
+
+(defn title [props children]
+  (let [name (first children)]
+    (if reagent/is-client
+      (let [title (aget (.getElementsByTagName js/document "title") 0)]
+        (set! (.-innerHTML title) name)))
+    (reset! title-atom name)
+    [:div]))
