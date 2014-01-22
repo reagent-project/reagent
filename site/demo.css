@@ -6,7 +6,6 @@
 }
 
 div.nav {
-    /* background-color: #f00; */
     position: absolute;
     top: 0;
     left: 0;
@@ -99,6 +98,8 @@ ul.nav > li.brand > a {
 }
 
 .reagent-demo h2 {
+    font-size: 20px;
+    line-height: 1.25em;
     margin-top: 48px;
     color: #555;
 }
@@ -106,7 +107,7 @@ ul.nav > li.brand > a {
 .demo-text > p, .demo-text > ul {
     font-family: georgia, serif;
     font-size: 18px;
-    line-height: 27px;
+    line-height: 1.5em;
     color: #444;
 }
 

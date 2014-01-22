@@ -11,20 +11,23 @@
        "index.html" intro/main
        "news/index.html" news/main)
 
+(def github {:href "https://github.com/holmsand/reagent"})
+
 (defn github-badge []
   [:a.github-badge
-   {:href "https://github.com/holmsand/reagent"}
+   github
    [:img {:style {:position "absolute" :top 0 :left 0 :border 0}
-          :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"
-          :alt "Fork me on GitHub"}]])
+          :alt "Fork me on GitHub"
+          :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"}]])
 
 (defn demo []
   [:div
    [:div.nav
     [:ul.nav
      [:li.brand [link {:href intro/main} "Reagent:"]]
-     [:li [link {:href intro/main} "Introduction"]]
-     [:li [link {:href news/main} "News"]]]]
+     [:li [link {:href intro/main} "Intro"]]
+     [:li [link {:href news/main} "News"]]
+     [:li [:a github "GitHub"]]]]
    (let [comp (get @page-map @page intro/main)]
      [comp])
    [github-badge]])

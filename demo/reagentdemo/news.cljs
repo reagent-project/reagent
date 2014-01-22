@@ -45,11 +45,40 @@
                           (remove-watch state ::undo-watcher))}))
 
 (defn undo-example []
-  (let [head "This should become news"]
+  (let [head "Cloact becomes Reagent: Undo is trivial"]
     [:div.reagent-demo
      [:h1 [link {:href undo-example} head]]
      [title head]
-     [undo-demo-cleanup]]))
+     [:div.demo-text
+      [:h2 "(reset! cloact-name \"Reagent\")"]
+      
+      [:p "It turns out that ”Cloact” was a really, really bad
+      name. It made some people think about birds’ behinds, in
+      possibly unhealthy ways, which even Google suggested they
+      should."]
+
+      [:p "The new name is " [:strong "Reagent"] ", which hopefully
+      doesn’t bring with it the same disgusting connotations."]
+
+      [:p "The API is otherwise unchanged, so a simple
+      search-and-replace should suffice."]
+
+      [:h2 "Undo the easy way"]
+
+      [:p "To celebrate the undoing of the apparently disgusting name,
+      here is an example of how easy it is to add undo functionality
+      to Reagent components."]
+
+      [:p "It simply saves the old state whenever it changes, and
+      restores it when the button is clicked."]
+
+      [:p "The really nice thing about ClojureScript is that not only
+      is this easy and safe to do, courtesy of immutable data
+      structures, it is also efficient. ClojureScript figures out how
+      to represent ”changes” to maps and vectors efficiently, so that
+      you won’t have to."]
+      
+      [undo-demo-cleanup]]]))
 
 (defn main []
   [undo-example])
