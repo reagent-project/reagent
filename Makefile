@@ -7,7 +7,7 @@ PROF = dev
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.2.0-SNAPSHOT
+VERSION = 0.2.0
 
 all: buildrun
 
@@ -23,7 +23,7 @@ buildrun: setup
 	lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
 
 runtest:
-	$(MAKE) PROF=test,$(PROF)
+	$(MAKE) run PROF=test,$(PROF)
 
 runsite: setup
 	(sleep 3 && open "http://127.0.0.1:$(PORT)") &
