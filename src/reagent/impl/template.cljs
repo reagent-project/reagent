@@ -83,11 +83,13 @@
         c2 (aget nextprops cljs-children)]
     (not (util/equal-args p1 c1 p2 c2))))
 
-(defn wrap-component [comp extras]
+(defn wrap-component [comp extras name]
   (.createClass React (js-obj "render"
                               #(this-as C (wrapped-render C comp extras))
                               "shouldComponentUpdate"
-                              #(this-as C (wrapped-should-update C %1 %2)))))
+                              #(this-as C (wrapped-should-update C %1 %2))
+                              "displayName"
+                              (or name "ComponentWrapper"))))
 
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
@@ -107,7 +109,7 @@
 
 (defn get-wrapper [tag]
   (let [[comp id-class] (parse-tag tag)]
-    (wrap-component comp id-class)))
+    (wrap-component comp id-class (str tag))))
 
 (def cached-wrapper (memoize get-wrapper))
 
@@ -128,7 +130,7 @@
         (if-not (nil? cached-class)
           cached-class
           (if (.isValidClass React tag)
-            (set! (.-cljsReactClass tag) (wrap-component tag nil))
+            (set! (.-cljsReactClass tag) (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
 (defn vec-to-comp [v]
