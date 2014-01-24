@@ -18,6 +18,7 @@ ul.nav {
     height: 40px;
     padding-left: 60px;
     padding-top: 10px;
+    list-style-type: none;
 }
 
 ul.nav > li {

@@ -7,11 +7,7 @@
             [reagent.core :as reagent :refer [atom]]
             [demo :as demo]))
 
-(defn ^:export console-print [x]
-  (when (not= x "\n")
-    (println x)))
-
-(set-print-fn! console-print)
+(enable-console-print!)
 
 (def test-results (atom nil))
 
@@ -24,7 +20,7 @@
 
 (defn test-output []
   (let [res @test-results]
-    [:div
+    [:div {:style {:margin-top "40px"}}
      (if-not res
        [:div "waiting for tests to run"]
        [:div

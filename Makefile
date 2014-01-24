@@ -25,6 +25,12 @@ buildrun: setup
 runtest:
 	$(MAKE) PROF=test,$(PROF)
 
+runsite: setup
+	(sleep 3 && open "http://127.0.0.1:$(PORT)") &
+	( trap "kill 0" SIGINT SIGTERM EXIT; \
+	  ( python -m SimpleHTTPServer $(PORT) & ); \
+	  lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD) )
+
 install: leinbuild
 	lein install
 
