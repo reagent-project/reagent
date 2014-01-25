@@ -13,10 +13,14 @@
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
 
-(defn dash-to-camel [dashed]
-  (let [words (-> dashed name (string/split #"-"))]
-    (apply str (first words)
-           (->> words rest (map string/capitalize)))))
+(defn dash-to-camel [k]
+  (if (string? k)
+    k ; Leave strings unmodified
+    (let [[first-word & more-words] (-> k name (string/split #"-"))
+          first-word (string/lower-case first-word)]
+      (if (#{"data" "aria"} first-word)
+        k ; Leave special attrs unmodified
+        (apply str first-word (map string/capitalize more-words))))))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
