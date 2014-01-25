@@ -13,10 +13,16 @@
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
 
+(def dont-camel-case #{"aria" "data"})
+
 (defn dash-to-camel [dashed]
-  (let [words (-> dashed name (string/split #"-"))]
-    (apply str (first words)
-           (->> words rest (map string/capitalize)))))
+  (if (string? dashed)
+    dashed
+    (let [name-str (name dashed)
+          [start & parts] (string/split name-str #"-")]
+      (if (dont-camel-case start)
+        name-str
+        (apply str start (map string/capitalize parts))))))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"

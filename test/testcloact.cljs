@@ -132,9 +132,26 @@
           (is (found-in #"this is foobar" div))))
       (is (= 2 @ran)))))
 
+(defn as-string [comp]
+  (reagent/render-component-to-string comp))
+
 (deftest to-string-test []
   (let [comp (fn [props]
                [:div (str "i am " (:foo props))])]
     (is (re-find #"i am foobar"
-                 (reagent/render-component-to-string
-                  [comp {:foo "foobar"}])))))
+                 (as-string [comp {:foo "foobar"}])))))
+
+(deftest data-aria-test []
+  (is (re-find #"data-foo"
+               (as-string [:div {:data-foo "x"}])))
+  (is (re-find #"aria-foo"
+               (as-string [:div {:aria-foo "x"}])))
+  (is (not (re-find #"enctype"
+                    (as-string [:div {"enc-type" "x"}])))
+      "Strings are passed through to React.")
+  (is (re-find #"enctype"
+               (as-string [:div {"encType" "x"}]))
+      "Strings are passed through to React, and have to be camelcase.")
+  (is (re-find #"enctype"
+               (as-string [:div {:enc-type "x"}]))
+      "Strings are passed through to React, and have to be camelcase."))
