@@ -4,7 +4,8 @@
              :refer [cljs-props cljs-children React]]
             [reagent.impl.util :as util]
             [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg prn]]))
+            [reagent.debug :refer-macros [dbg prn]]
+            [clojure.string :as str]))
 
 
 (def cljs-state "cljsState")
@@ -133,9 +134,17 @@
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
 
+(defn- camelify-map-key? [k]
+  (and (keyword? k)
+       (let [kname (-> k name str/lower-case)]
+         (not-any? #(zero? (.indexOf kname %)) ["data-" "aria-"]))))
+
 (defn camelify-map-keys [m]
   (into {} (for [[k v] m]
-             [(-> k tmpl/dash-to-camel keyword) v])))
+             [(if (camelify-map-key? k)
+                (-> k tmpl/dash-to-camel keyword)
+                k)
+              v])))
 
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
