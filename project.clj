@@ -16,7 +16,10 @@
              :test {:plugins [[com.cemerick/clojurescript.test "0.2.1"]]
                     :cljsbuild
                     {:builds
-                     {:client {:source-paths ["test"]}}}}
+                     {:client {:source-paths ^:replace
+                               ["test" "src" "demo"
+                                "examples/todomvc/src"
+                                "examples/simple/src"]}}}}
              :srcmap {:cljsbuild
                       {:builds
                        {:client

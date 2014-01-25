@@ -1,22 +1,13 @@
 
 (ns runtests
-  (:require-macros [cemerick.cljs.test
-                    :refer (is deftest with-test run-tests testing)]
-                   [reagent.debug :refer [dbg println]])
-  (:require [cemerick.cljs.test :as t]
-            [reagent.core :as reagent :refer [atom]]
-            [demo :as demo]))
+  (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.debug :refer-macros [dbg println]]
+            [demo :as demo]
+            [cemerick.cljs.test :as t]))
 
 (enable-console-print!)
 
 (def test-results (atom nil))
-
-(js/setTimeout
- (fn []
-   (println "-----------------------------------------")
-   (reset! test-results (t/run-all-tests))
-   (println "-----------------------------------------"))
- (if reagent/is-client 1000 0))
 
 (defn test-output []
   (let [res @test-results]
@@ -44,3 +35,17 @@
 
 (defn ^:export mounttests []
   (reagent/render-component [test-demo] (.-body js/document)))
+
+(defn ^:export run-all-tests []
+  (println "-----------------------------------------")
+  (try
+    (reset! test-results (t/run-all-tests))
+    (catch js/Object e
+      (do
+        (println "Testrun failed\n" e "\n" (.-stack e))
+        (reset! test-results {:error e}))))
+  (println "-----------------------------------------"))
+
+(if reagent/is-client
+  (js/setTimeout run-all-tests 1000)
+  (run-all-tests))
