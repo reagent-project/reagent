@@ -9,7 +9,7 @@ React components using (almost) nothing but plain ClojureScript functions.
 
 To use Reagent you add this to your dependencies in `project.clj`:
 
-    [reagent "0.2.0"]
+    [reagent "0.2.1"]
 
 You also need to include react.js itself. One way to do this is to add
 
