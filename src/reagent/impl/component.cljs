@@ -2,7 +2,7 @@
 (ns reagent.impl.component
   (:refer-clojure :exclude [flush])
   (:require [reagent.impl.template :as tmpl
-             :refer [cljs-props cljs-children React]]
+             :refer [cljs-props cljs-children cljs-level React]]
             [reagent.impl.util :as util]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
@@ -51,17 +51,23 @@
     (js/requestAnimationFrame f)
     (js/setTimeout f 16)))
 
-(defn run-queue [v]
-  (doseq [C v]
-    (when-not (.-cljsIsDirty C)
-      (dbg C))
-    (when (.-cljsIsDirty C)
-      (.forceUpdate C))))
+(defn compare-levels [c1 c2]
+  (- (-> c1 js-props (aget cljs-level))
+     (-> c2 js-props (aget cljs-level))))
+
+(defn run-queue [a]
+  ;; sort components by level, to make sure parents
+  ;; are rendered before children
+  (.sort a compare-levels)
+  (dotimes [i (alength a)]
+    (let [C (aget a i)]
+      (when (.-cljsIsDirty C)
+        (.forceUpdate C)))))
 
 (deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
   Object
   (queue-render [this C]
-    (set! queue (conj queue C))
+    (.push queue C)
     (.schedule this))
   (schedule [this]
     (when-not scheduled?
@@ -69,11 +75,11 @@
       (next-tick #(.run-queue this))))
   (run-queue [_]
     (let [q queue]
-      (set! queue (empty queue))
+      (set! queue (array))
       (set! scheduled? false)
       (run-queue q))))
 
-(def render-queue (RenderQueue. [] false))
+(def render-queue (RenderQueue. (array) false))
 
 (defn flush []
   (.run-queue render-queue))
@@ -90,7 +96,7 @@
         ;; Call render function with props, children, component
         res (f props children C)
         conv (if (vector? res)
-               (tmpl/as-component res)
+               (tmpl/as-component res (aget p cljs-level))
                (if (fn? res)
                  (do-render C (set! (.-cljsRenderFn C) res))
                  res))]

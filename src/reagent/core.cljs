@@ -44,6 +44,7 @@ looking like this:
 {:get-initial-state (fn [this])
 :component-will-receive-props (fn [this new-props])
 :should-component-update (fn [this old-props new-props old-children new-children])
+:component-did-mount (fn [this])
 :component-did-update (fn [this old-props old-children])
 :component-will-unmount (fn [this])
 :render (fn [props children this])}

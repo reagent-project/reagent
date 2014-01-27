@@ -9,6 +9,7 @@
 
 (def cljs-props "cljsProps")
 (def cljs-children "cljsChildren")
+(def cljs-level "cljsLevel")
 
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
@@ -64,10 +65,10 @@
                (set-id-class objprops id-class))
              objprops))))
 
-(defn map-into-array [f coll]
+(defn map-into-array [f arg coll]
   (let [a (into-array coll)]
     (dotimes [i (alength a)]
-      (aset a i (f (aget a i))))
+      (aset a i (f (aget a i) arg)))
     a))
 
 (declare as-component)
@@ -75,9 +76,10 @@
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
         props (aget inprops cljs-props)
+        level (aget inprops cljs-level)
         hasprops (or (nil? props) (map? props))
         jsargs (->> (aget inprops cljs-children)
-                    (map-into-array as-component))]
+                    (map-into-array as-component (inc level)))]
     (.unshift jsargs (convert-props props id-class))
     (.apply comp nil jsargs)))
 
@@ -139,7 +141,7 @@
             (set! (.-cljsReactClass tag) (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
-(defn vec-to-comp [v]
+(defn vec-to-comp [v level]
   (assert (pos? (count v)))
   (let [[tag props] v
         hasmap (map? props)
@@ -147,14 +149,17 @@
         c (as-class tag)
         jsprops (js-obj cljs-props    (if hasmap props)
                         cljs-children (if (> (count v) first-child)
-                                        (subvec v first-child)))]
+                                        (subvec v first-child))
+                        cljs-level    level)]
     (when hasmap
       (let [key (:key props)]
         (when-not (nil? key)
           (aset jsprops "key" key))))
     (c jsprops)))
 
-(defn as-component [x]
-  (cond (vector? x) (vec-to-comp x)
-        (seq? x) (map-into-array as-component x)
-        true x))
+(defn as-component
+  ([x] (as-component x 0))
+  ([x level]
+     (cond (vector? x) (vec-to-comp x level)
+           (seq? x) (map-into-array as-component level x)
+           true x)))

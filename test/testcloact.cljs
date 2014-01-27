@@ -12,6 +12,8 @@
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
 
+(def rflush reagent/flush)
+
 (defn add-test-div [name]
   (let [doc js/document
         body (.-body js/document)
@@ -123,6 +125,40 @@
           (is (= 2 @ran))))
       (is (= runs (running)))
       (is (= 2 @ran)))))
+
+(deftest batched-update-test []
+  (when isClient
+    (let [ran (atom 0)
+          v1 (atom 0)
+          v2 (atom 0)
+          c2 (fn [{val :val}]
+               (swap! ran inc)
+               (assert (= @v1 val))
+               [:div @v2])
+          c1 (fn []
+               (swap! ran inc)
+               [:div @v1
+                [c2 {:val @v1}]])]
+      (with-mounted-component [c1]
+        (fn [c div]
+          (rflush)
+          (is (= @ran 2))
+          (swap! v2 inc)
+          (is (= @ran 2))
+          (rflush)
+          (is (= @ran 3))
+          (swap! v1 inc)
+          (rflush)
+          (is (= @ran 5))
+          (swap! v2 inc)
+          (swap! v1 inc)
+          (rflush)
+          (is (= @ran 7))
+          (swap! v1 inc)
+          (swap! v1 inc)
+          (swap! v2 inc)
+          (rflush)
+          (is (= @ran 9)))))))
 
 (deftest init-state-test
   (when isClient
