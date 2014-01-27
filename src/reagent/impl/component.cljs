@@ -46,10 +46,18 @@
 
 ;;; Rendering
 
-(defn next-tick [f]
-  (if (.-requestAnimationFrame js/window)
-    (js/requestAnimationFrame f)
-    (js/setTimeout f 16)))
+(defn fake-raf [f]
+  (js/setTimeout f 16))
+
+(def next-tick
+  (if-not tmpl/isClient
+    fake-raf
+    (let [w js/window]
+      (or (.-requestAnimationFrame w)
+          (.-webkitRequestAnimationFrame w)
+          (.-mozRequestAnimationFrame w)
+          (.-msRequestAnimationFrame w)
+          fake-raf))))
 
 (defn compare-levels [c1 c2]
   (- (-> c1 js-props (aget cljs-level))
