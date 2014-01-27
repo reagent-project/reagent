@@ -95,27 +95,34 @@
     (let [ran (atom 0)
           runs (running)
           val (atom 0)
+          secval (atom 0)
           v1 (reaction @val)
           comp (fn []
                  (swap! ran inc)
-                 [:div (str "val " @v1)])]
+                 [:div (str "val " @v1 @val @secval)])]
       (with-mounted-component [comp]
         (fn [C div]
-          (swap! ran inc)
+          (reagent/flush)
           (is (not= runs (running)))
           (is (found-in #"val 0" div))
-          (is (= 2 @ran))
+          (is (= 1 @ran))
 
+          (reset! secval 1)
+          (reset! secval 0)
           (reset! val 1)
+          (reset! val 2)
+          (reset! val 1)
+          (reagent/flush)
           (is (found-in #"val 1" div))
-          (is (= 3 @ran))
+          (is (= 2 @ran))
 
           ;; should not be rendered
           (reset! val 1)
+          (reagent/flush)
           (is (found-in #"val 1" div))
-          (is (= 3 @ran))))
+          (is (= 2 @ran))))
       (is (= runs (running)))
-      (is (= 3 @ran)))))
+      (is (= 2 @ran)))))
 
 (deftest init-state-test
   (when isClient

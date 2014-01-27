@@ -39,7 +39,8 @@
          [:div.demo-example
           [:a.demo-example-hide {:on-click (fn [e]
                                              (.preventDefault e)
-                                             (swap! showing not))}
+                                             (swap! showing not)
+                                             false)}
            (if @showing "hide" "show")]
           [:h3.demo-heading "Example "]
           (when @showing

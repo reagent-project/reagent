@@ -1,6 +1,6 @@
 
 (ns reagent.core
-  (:refer-clojure :exclude [partial atom])
+  (:refer-clojure :exclude [partial atom flush])
   (:require-macros [reagent.debug :refer [dbg prn]])
   (:require [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
@@ -104,6 +104,10 @@ Everything is optional, except :render.
 specially, like React's transferPropsTo."
   [defaults props]
   (util/merge-props defaults props))
+
+(defn flush []
+  (comp/flush))
+
 
 
 ;; Ratom

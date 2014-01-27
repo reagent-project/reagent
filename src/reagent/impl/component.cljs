@@ -1,5 +1,6 @@
 
 (ns reagent.impl.component
+  (:refer-clojure :exclude [flush])
   (:require [reagent.impl.template :as tmpl
              :refer [cljs-props cljs-children React]]
             [reagent.impl.util :as util]
@@ -43,10 +44,46 @@
 (defn set-props [C newprops]
   (replace-props C (merge (get-props C) newprops)))
 
+;;; Rendering
 
-;;; Function wrapping
+(defn next-tick [f]
+  (if (.-requestAnimationFrame js/window)
+    (js/requestAnimationFrame f)
+    (js/setTimeout f 16)))
+
+(defn run-queue [v]
+  (doseq [C v]
+    (when-not (.-cljsIsDirty C)
+      (dbg C))
+    (when (.-cljsIsDirty C)
+      (.forceUpdate C))))
+
+(deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
+  Object
+  (queue-render [this C]
+    (set! queue (conj queue C))
+    (.schedule this))
+  (schedule [this]
+    (when-not scheduled?
+      (set! scheduled? true)
+      (next-tick #(.run-queue this))))
+  (run-queue [_]
+    (let [q queue]
+      (set! queue (empty queue))
+      (set! scheduled? false)
+      (run-queue q))))
+
+(def render-queue (RenderQueue. [] false))
+
+(defn flush []
+  (.run-queue render-queue))
+
+(defn queue-render [C]
+  (set! (.-cljsIsDirty C) true)
+  (.queue-render render-queue C))
 
 (defn do-render [C f]
+  (set! (.-cljsIsDirty C) false)
   (let [p (js-props C)
         props (props-in-props p)
         children (aget p cljs-children)
@@ -66,9 +103,12 @@
           (ratom/make-reaction
            #(do-render C (.-cljsRenderFn C))
            :auto-run (if tmpl/isClient
-                                #(.forceUpdate C)
-                                identity))))
+                       #(queue-render C)
+                       identity))))
   (ratom/run (.-cljsRatom C)))
+
+
+;;; Function wrapping
 
 (defn custom-wrapper [key f]
   (case key
@@ -108,6 +148,7 @@
     :componentWillUnmount
     (fn [C]
       (ratom/dispose! (.-cljsRatom C))
+      (set! (.-cljsIsDirty C) false)
       (when f (f C)))
 
     :render
