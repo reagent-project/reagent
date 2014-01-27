@@ -8,26 +8,43 @@
            [goog.history EventType]))
 
 (def page (atom ""))
+(def base-path (atom nil))
+(def html5-history false)
 
 (defn create-history []
   (when reagent/is-client
     (let [proto (-> js/window .-location .-protocol)]
       (if (and (.isSupported Html5History)
                (case proto "http:" true "https:" true false))
-        (doto (Html5History.)
-          (.setUseFragment false))
+        (do (set! html5-history true)
+            (doto (Html5History.)
+              (.setUseFragment false)))
         (History.)))))
 
 (defn setup-history []
   (when-let [h (create-history)]
     (events/listen h EventType/NAVIGATE
-                   (fn [e] (reset! page (.-token e))))
+                   (fn [e] (reset! page (subs (.-token e)
+                                              (count @base-path)))))
     (add-watch page ::history (fn [_ _ oldp newp]
-                                (.setToken h newp)))
+                                (.setToken h (str @base-path newp))))
     (.setEnabled h true)
     h))
 
 (def history (setup-history))
+
+(defn set-start-page [p]
+  (when html5-history
+    ;; Find base-path for html5 history
+    (let [loc (-> js/window .-location .-pathname)
+          split #".[^/]*"
+          loc-parts (re-seq split loc)
+          page-parts (re-seq split (case p "" "." p))
+          base (str (apply str
+                           (drop-last (count page-parts) loc-parts))
+                    "/")]
+      (reset! base-path (string/replace base #"^/" ""))))
+  (reset! page p))
 
 (def title-atom (atom ""))
 
