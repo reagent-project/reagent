@@ -81,27 +81,24 @@
 (defn get-props [this]
   (-> this (aget "props") (aget cljs-props)))
 
-(defn input-initial-state []
-  (this-as this
-           (let [props (get-props this)]
-             #js {:value (:value props)
-                  :checked (:checked props)})))
+(defn input-initial-state [this]
+  (let [props (get-props this)]
+    #js {:value (:value props)
+         :checked (:checked props)}))
 
-(defn input-handle-change [e]
-  (this-as this
-           (let [props (get-props this)
-                 on-change (or (props :on-change) (props "onChange"))]
-             (when-not (nil? on-change)
-               (on-change e)
-               (let [target (.-target e)]
-                 (.setState this #js {:value (.-value target)
-                                      :checked (.-checked target)}))))))
+(defn input-handle-change [this e]
+  (let [props (get-props this)
+        on-change (or (props :on-change) (props "onChange"))]
+    (when-not (nil? on-change)
+      (on-change e)
+      (let [target (.-target e)]
+        (.setState this #js {:value (.-value target)
+                             :checked (.-checked target)})))))
 
-(defn input-will-receive-props [new-props]
-  (this-as this
-           (let [props (aget new-props cljs-props)]
-             (.setState this #js {:value (:value props)
-                                  :checked (:checked props)}))))
+(defn input-will-receive-props [this new-props]
+  (let [props (aget new-props cljs-props)]
+    (.setState this #js {:value (:value props)
+                         :checked (:checked props)})))
 
 (defn input-render-setup [this jsprops]
   (let [state (aget this "state")]
@@ -140,9 +137,10 @@
     (when (input-components comp)
       (doto def
         (aset "shouldComponentUpdate" nil)
-        (aset "getInitialState" input-initial-state)
-        (aset "handleChange" input-handle-change)
-        (aset "componentWillReceiveProps" input-will-receive-props)))
+        (aset "getInitialState" #(this-as C (input-initial-state C)))
+        (aset "handleChange" #(this-as C (input-handle-change C %)))
+        (aset "componentWillReceiveProps"
+              #(this-as C (input-will-receive-props C %)))))
     (.createClass React def)))
 
 ;; From Weavejester's Hiccup, via pump:
