@@ -155,3 +155,22 @@
   (is (re-find #"enctype"
                (as-string [:div {:enc-type "x"}]))
       "Strings are passed through to React, and have to be camelcase."))
+
+(deftest dynamic-id-class []
+  (is (re-find #"id=.foo"
+               (as-string [:div#foo {:class "bar"}])))
+  (is (re-find #"class=.foo bar"
+               (as-string [:div.foo {:class "bar"}])))
+  (is (re-find #"class=.foo bar"
+               (as-string [:div.foo.bar])))
+  (is (re-find #"id=.foo"
+               (as-string [:div#foo.foo.bar])))
+  (is (re-find #"class=.xxx bar"
+               (as-string [:div#foo.xxx.bar])))
+  (is (re-find #"id=.foo"
+               (as-string [:div.bar {:id "foo"}])))
+  (is (re-find #"id=.foo"
+               (as-string [:div.bar.xxx {:id "foo"}])))
+  (is (re-find #"id=.foo"
+               (as-string [:div#bar {:id "foo"}]))
+      "Dynamic id overwrites static"))

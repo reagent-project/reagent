@@ -44,7 +44,7 @@
         :else (clj->js val)))
 
 (defn set-id-class [props [id class]]
-  (aset props "id" id)
+  (aset props "id" (or (aget props "id") id))
   (when class
     (aset props "className" (if-let [old (aget props "className")]
                               (str class " " old)
@@ -104,12 +104,12 @@
 
 (def DOM (aget React "DOM"))
 
-(defn parse-tag [tag]
-  (let [[tag id class] (->> tag name (re-matches re-tag) next)
+(defn parse-tag [hiccup-tag]
+  (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
         comp (aget DOM tag)
         class' (when class
                  (string/replace class #"\." " "))]
-    (assert comp (str "Unknown tag: " tag))
+    (assert comp (str "Unknown tag: '" hiccup-tag "'"))
     [comp (when (or id class')
             [id class'])]))
 
