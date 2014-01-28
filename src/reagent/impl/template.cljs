@@ -75,29 +75,40 @@
 
 (def DOM (aget React "DOM"))
 
-(def input-components #{(aget DOM "input")})
+(def input-components #{(aget DOM "input")
+                        (aget DOM "textarea")})
+
+(defn get-props [this]
+  (-> this (aget "props") (aget cljs-props)))
 
 (defn input-initial-state []
   (this-as this
-           (let [props (-> this (aget "props") (aget cljs-props))]
-             #js {:value (:value props)})))
+           (let [props (get-props this)]
+             #js {:value (:value props)
+                  :checked (:checked props)})))
 
 (defn input-handle-change [e]
   (this-as this
-           (let [props (-> this (aget "props") (aget cljs-props))
+           (let [props (get-props this)
                  on-change (or (props :on-change) (props "onChange"))]
              (when-not (nil? on-change)
-               (.setState this #js {:value (-> e .-target .-value)})
-               (on-change e)))))
+               (on-change e)
+               (let [target (.-target e)]
+                 (.setState this #js {:value (.-value target)
+                                      :checked (.-checked target)}))))))
 
 (defn input-will-receive-props [new-props]
   (this-as this
            (let [props (aget new-props cljs-props)]
-             (.setState this #js {:value (:value props)}))))
+             (.setState this #js {:value (:value props)
+                                  :checked (:checked props)}))))
 
 (defn input-render-setup [this jsprops]
-  (aset jsprops "value" (-> this (aget "state") (aget "value")))
-  (aset jsprops "onChange" (aget this "handleChange")))
+  (let [state (aget this "state")]
+    (doto jsprops
+      (aset "value" (.-value state))
+      (aset "checked" (.-checked state))
+      (aset "onChange" (aget this "handleChange")))))
 
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
@@ -121,14 +132,14 @@
     (not (util/equal-args p1 c1 p2 c2))))
 
 (defn wrap-component [comp extras name]
-  (let [def (js-obj "render"
-                    #(this-as C (wrapped-render C comp extras))
-                    "shouldComponentUpdate"
-                    #(this-as C (wrapped-should-update C %1 %2))
-                    "displayName"
-                    (or name "ComponentWrapper"))]
+  (let [def #js {:render
+                 #(this-as C (wrapped-render C comp extras))
+                 :shouldComponentUpdate
+                 #(this-as C (wrapped-should-update C %1 %2))
+                 :displayName (or name "ComponentWrapper")}]
     (when (input-components comp)
       (doto def
+        (aset "shouldComponentUpdate" nil)
         (aset "getInitialState" input-initial-state)
         (aset "handleChange" input-handle-change)
         (aset "componentWillReceiveProps" input-will-receive-props)))
