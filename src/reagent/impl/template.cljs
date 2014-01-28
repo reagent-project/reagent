@@ -3,7 +3,7 @@
   (:require [clojure.string :as string]
             [reagent.impl.reactimport :as reactimport]
             [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg prn println]]))
+            [reagent.debug :refer-macros [dbg prn println log]]))
 
 (def React reactimport/React)
 
@@ -73,14 +73,43 @@
 
 (declare as-component)
 
+(def DOM (aget React "DOM"))
+
+(def input-components #{(aget DOM "input")})
+
+(defn input-initial-state []
+  (this-as this
+           (let [props (-> this (aget "props") (aget cljs-props))]
+             #js {:value (:value props)})))
+
+(defn input-handle-change [e]
+  (this-as this
+           (let [props (-> this (aget "props") (aget cljs-props))
+                 on-change (or (props :on-change) (props "onChange"))]
+             (when-not (nil? on-change)
+               (.setState this #js {:value (-> e .-target .-value)})
+               (on-change e)))))
+
+(defn input-will-receive-props [new-props]
+  (this-as this
+           (let [props (aget new-props cljs-props)]
+             (.setState this #js {:value (:value props)}))))
+
+(defn input-render-setup [this jsprops]
+  (aset jsprops "value" (-> this (aget "state") (aget "value")))
+  (aset jsprops "onChange" (aget this "handleChange")))
+
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
         props (aget inprops cljs-props)
         level (aget inprops cljs-level)
         hasprops (or (nil? props) (map? props))
         jsargs (->> (aget inprops cljs-children)
-                    (map-into-array as-component (inc level)))]
-    (.unshift jsargs (convert-props props id-class))
+                    (map-into-array as-component (inc level)))
+        jsprops (convert-props props id-class)]
+    (when (input-components comp)
+      (input-render-setup this jsprops))
+    (.unshift jsargs jsprops)
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [C nextprops nextstate]
@@ -92,19 +121,23 @@
     (not (util/equal-args p1 c1 p2 c2))))
 
 (defn wrap-component [comp extras name]
-  (.createClass React (js-obj "render"
-                              #(this-as C (wrapped-render C comp extras))
-                              "shouldComponentUpdate"
-                              #(this-as C (wrapped-should-update C %1 %2))
-                              "displayName"
-                              (or name "ComponentWrapper"))))
+  (let [def (js-obj "render"
+                    #(this-as C (wrapped-render C comp extras))
+                    "shouldComponentUpdate"
+                    #(this-as C (wrapped-should-update C %1 %2))
+                    "displayName"
+                    (or name "ComponentWrapper"))]
+    (when (input-components comp)
+      (doto def
+        (aset "getInitialState" input-initial-state)
+        (aset "handleChange" input-handle-change)
+        (aset "componentWillReceiveProps" input-will-receive-props)))
+    (.createClass React def)))
 
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
-
-(def DOM (aget React "DOM"))
 
 (defn parse-tag [tag]
   (let [[tag id class] (->> tag name (re-matches re-tag) next)
