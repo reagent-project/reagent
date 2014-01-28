@@ -123,6 +123,9 @@ re-rendered."
 
 ;; Utilities
 
+(defn next-tick [f]
+  (comp/next-tick f))
+
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and
 the result can be compared with ="
