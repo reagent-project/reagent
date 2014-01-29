@@ -36,13 +36,22 @@
 (def cached-prop-name (memoize undash-prop-name))
 (def cached-style-name (memoize dash-to-camel))
 
+(defn to-js-val [v]
+  (if-not (ifn? v)
+    v
+    (cond (keyword? v) (name v)
+          (symbol? v) (str v)
+          (coll? v) (clj->js v)
+          :else (fn [& args] (apply v args)))))
+
 (defn convert-prop-value [val]
-  (cond (map? val) (let [obj (js-obj)]
-                     (doseq [[k v] val]
-                       (aset obj (cached-style-name k) (clj->js v)))
-                     obj)
-        (ifn? val) (fn [& args] (apply val args))
-        :else (clj->js val)))
+  (if (map? val)
+    (reduce-kv (fn [res k v]
+                 (doto res
+                   (aset (cached-prop-name k)
+                         (to-js-val v))))
+               (js-obj) val)
+    (to-js-val val)))
 
 (defn set-id-class [props [id class]]
   (aset props "id" id)
@@ -58,9 +67,10 @@
      (identical? (type props) js/Object) props
      :else (let [objprops (js-obj)]
              (when-not is-empty
-               (doseq [[k v] props]
-                 (aset objprops (cached-prop-name k)
-                       (convert-prop-value v))))
+               (reduce-kv (fn [o k v]
+                            (doto o (aset (cached-prop-name k)
+                                          (convert-prop-value v))))
+                          objprops props))
              (when-not (nil? id-class)
                (set-id-class objprops id-class))
              objprops))))
@@ -90,10 +100,10 @@
   (let [props (get-props this)
         on-change (or (props :on-change) (props "onChange"))]
     (when-not (nil? on-change)
-      (on-change e)
       (let [target (.-target e)]
         (.setState this #js {:value (.-value target)
-                             :checked (.-checked target)})))))
+                             :checked (.-checked target)}))
+      (on-change e))))
 
 (defn input-will-receive-props [this new-props]
   (let [props (aget new-props cljs-props)]
