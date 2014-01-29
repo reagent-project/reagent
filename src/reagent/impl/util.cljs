@@ -56,12 +56,12 @@
            (reduce-kv (fn [res k v]
                         (let [yv (get y k -not-found)]
                           (if (or (keyword-identical? v yv)
-                                  ;; hack to allow reagent.core/partial and :style
-                                  ;; maps to be compared with =
-                                  (and (or
-                                        (keyword-identical? k :style)
-                                        (identical? (type v) partial-ifn))
-                                       (= v yv)))
+                                  ;; Allow :style maps and reagent/partial
+                                  ;; and :style maps to be compared properly
+                                  (and (keyword-identical? k :style)
+                                       (shallow-equal-maps v yv))
+                                  (and (identical? (type v) partial-ifn)
+                                       (= y yv)))
                             res
                             (reduced false))))
                       true x))))
