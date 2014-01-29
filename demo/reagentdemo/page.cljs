@@ -24,8 +24,10 @@
 (defn setup-history []
   (when-let [h (create-history)]
     (events/listen h EventType/NAVIGATE
-                   (fn [e] (reset! page (subs (.-token e)
-                                              (count @base-path)))))
+                   (fn [e]
+                     (reset! page (subs (.-token e)
+                                        (count @base-path)))
+                     (reagent/flush)))
     (add-watch page ::history (fn [_ _ oldp newp]
                                 (.setToken h (str @base-path newp))))
     (.setEnabled h true)

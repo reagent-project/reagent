@@ -29,7 +29,7 @@ runsite: setup
 	(sleep 3 && open "http://127.0.0.1:$(PORT)/$$(basename $$PWD)") &
 	( trap "kill 0" SIGINT SIGTERM EXIT; \
 	  ( cd .. && python -m SimpleHTTPServer $(PORT) & ); \
-	  lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD) )
+	  lein -o with-profile $(PROF),prod cljsbuild auto $(CLJSBUILD) )
 
 install: leinbuild
 	lein install
