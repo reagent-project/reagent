@@ -176,6 +176,51 @@
           (is (found-in #"this is foobar" div))))
       (is (= 2 @ran)))))
 
+(deftest shoud-update-test
+  (when isClient
+    (let [parent-ran (atom 0)
+          child-ran (atom 0)
+          child-props (atom nil)
+          f (fn [])
+          f1 (fn [])
+          child (fn [p]
+                  (swap! child-ran inc)
+                  [:div (:val p)])
+          parent(fn []
+                  (swap! parent-ran inc)
+                  [:div "child-foo" [child @child-props]])]
+      (with-mounted-component [parent nil nil]
+        (fn [c div]
+          (rflush)
+          (is (= @child-ran 1))
+          (is (found-in #"child-foo" div))
+          (do (reset! child-props {:style {:display :none}})
+              (rflush))
+          (is (= @child-ran 2))
+          (do (reset! child-props {:style {:display :none}})
+              (rflush))
+          (is (= @child-ran 2) "keyw is equal")
+          (do (reset! child-props {:class :foo}) (rflush))
+          (is (= @child-ran 3))
+          (do (reset! child-props {:class :foo}) (rflush))
+          (is (= @child-ran 3))
+          (do (reset! child-props {:class 'foo}) (rflush))
+          (is (= @child-ran 4) "symbols are different from keyw")
+          (do (reset! child-props {:class 'foo}) (rflush))
+          (is (= @child-ran 4) "symbols are equal")
+          (do (reset! child-props {:style {:color 'red}}) (rflush))
+          (is (= @child-ran 5))
+          (do (reset! child-props {:on-change (reagent/partial f)})
+              (rflush))
+          (is (= @child-ran 6))
+          (do (reset! child-props {:on-change (reagent/partial f)})
+              (rflush))
+          (is (= @child-ran 6))
+          (do (reset! child-props {:on-change (reagent/partial f1)})
+              (rflush))
+          (is (= @child-ran 7)))))))
+
+
 (defn as-string [comp]
   (reagent/render-component-to-string comp))
 

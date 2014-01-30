@@ -52,16 +52,20 @@
 (defn shallow-equal-maps [x y]
   ;; Compare two maps, using keyword-identical? on all values
   (or (identical? x y)
-      (and (== (count x) (count y))
+      (and (map? x)
+           (map? y)
+           (== (count x) (count y))
            (reduce-kv (fn [res k v]
                         (let [yv (get y k -not-found)]
                           (if (or (keyword-identical? v yv)
-                                  ;; Allow :style maps and reagent/partial
-                                  ;; and :style maps to be compared properly
+                                  ;; Allow :style maps, symbols
+                                  ;; and reagent/partial
+                                  ;; to be compared properly
                                   (and (keyword-identical? k :style)
                                        (shallow-equal-maps v yv))
-                                  (and (identical? (type v) partial-ifn)
-                                       (= y yv)))
+                                  (and (or (identical? (type v) partial-ifn)
+                                           (symbol? v))
+                                       (= v yv)))
                             res
                             (reduced false))))
                       true x))))
