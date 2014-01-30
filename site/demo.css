@@ -5,6 +5,16 @@
     box-sizing: border-box;
 }
 
+
+.clearfix:before, .clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.clearfix:after {
+    clear: both;
+}
+
 div.nav {
     position: absolute;
     top: 0;
@@ -139,4 +149,17 @@ ul.nav > li.brand > a {
 .demo-example-hide {
     float: right;
     cursor: pointer;
+}
+
+/* Color demo */
+
+.color-plate {
+    float: left;
+    height: 100px;
+    width: 100px;
+}
+
+.color-samples {
+    clear: both;
+    padding-top: 0.5em;
 }

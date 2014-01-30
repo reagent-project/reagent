@@ -78,10 +78,16 @@
                             identity))
            children)))
 
+(add-watch page ::title-watch
+           (fn [_ _ _ p]
+             ;; First title on a page wins
+             (reset! title-atom "")))
+
 (defn title [props children]
   (let [name (first children)]
-    (if reagent/is-client
-      (let [title (aget (.getElementsByTagName js/document "title") 0)]
-        (set! (.-innerHTML title) name)))
-    (reset! title-atom name)
+    (when (= @title-atom "")
+      (if reagent/is-client
+        (let [title (aget (.getElementsByTagName js/document "title") 0)]
+          (set! (.-innerHTML title) name)))
+      (reset! title-atom name))
     [:div]))
