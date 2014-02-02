@@ -9,11 +9,12 @@
 (defn running [] @-running)
 
 (defn- capture-derefed [f]
+  ;; TODO: Get rid of allocation.
   (binding [*ratom-context* (clojure.core/atom #{})]
     [(f) @*ratom-context*]))
 
 (defn- notify-deref-watcher! [derefable]
-  (when-not (or (nil? *ratom-context*))
+  (when-not (nil? *ratom-context*)
     (swap! *ratom-context* conj derefable)))
 
 (deftype RAtom [state meta validator watches]
@@ -36,8 +37,10 @@
 
   IWatchable
   (-notify-watches [this oldval newval]
-    (doseq [[key f] watches]
-      (f key this oldval newval)))
+    (reduce-kv (fn [_ key f]
+                 (f key this oldval newval)
+                 nil)
+               nil watches))
   (-add-watch [this key f]
     (set! (.-watches this) (assoc watches key f)))
   (-remove-watch [this key]
@@ -63,8 +66,10 @@
   (-handle-change [k sender oldval newval]))
 
 (defn- call-watches [obs watches oldval newval]
-  (doseq [[k wf] watches]
-    (wf k obs oldval newval)))
+  (reduce-kv (fn [_ key f]
+               (f key obs oldval newval)
+               nil)
+             nil watches))
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                        ^:mutable watching ^:mutable watches

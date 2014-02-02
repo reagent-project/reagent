@@ -76,10 +76,10 @@
              objprops))))
 
 (defn map-into-array [f arg coll]
-  (let [a (into-array coll)]
-    (dotimes [i (alength a)]
-      (aset a i (f (aget a i) arg)))
-    a))
+  (reduce (fn [a x]
+            (doto a
+              (.push (f x arg))))
+          #js [] coll))
 
 (declare as-component)
 
