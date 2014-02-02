@@ -36,7 +36,7 @@
   (-> C js-props props-in-props))
 
 (defn get-children [C]
-  (->> C js-props (aget cljs-children)))
+  (-> C js-props (aget cljs-children)))
 
 (defn replace-props [C newprops]
   (.setProps C (js-obj cljs-props newprops)))
@@ -152,11 +152,16 @@
           ;; call f with oldprops newprops oldchildren newchildren
           (f C p1 p2 c1 c2))))
 
+    :componentWillUpdate
+    (fn [C nextprops]
+      (let [p (aget nextprops cljs-props)
+            c (aget nextprops cljs-children)]
+        (f C p c)))
+
     :componentDidUpdate
     (fn [C oldprops]
-      (let [inprops (js-props C)
-            p (aget inprops cljs-props)
-            c (aget inprops cljs-children)]
+      (let [p (aget oldprops cljs-props)
+            c (aget oldprops cljs-children)]
         (f C p c)))
 
     :componentWillUnmount
