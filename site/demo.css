@@ -75,6 +75,8 @@ ul.nav > li.brand > a {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue', arial;
     font-weight: normal;
     line-height: 1.25em;
+    margin-top: 0.25em;
+    margin-bottom: 1em;
 }
 
 .reagent-demo > h1 > a {
@@ -153,6 +155,11 @@ ul.nav > li.brand > a {
 .demo-example-hide {
     float: right;
     cursor: pointer;
+}
+
+.news-read-more {
+    text-decoration: none;
+    font-size: 16px;
 }
 
 /* Color demo */

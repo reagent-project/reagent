@@ -74,7 +74,9 @@
                 :on-click (if history
                             (fn [e]
                               (.preventDefault e)
-                              (reset! page href))
+                              (reset! page href)
+                              (set! (.-scrollTop (.-body js/document))
+                                    0))
                             identity))
            children)))
 
