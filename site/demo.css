@@ -122,6 +122,10 @@ ul.nav > li.brand > a {
     color: #444;
 }
 
+.demo-text > ul > li {
+    margin-bottom: 1em;
+}
+
 .demo-example {
     background-color: #ebebeb;
 }
@@ -157,6 +161,10 @@ ul.nav > li.brand > a {
     float: left;
     height: 100px;
     width: 100px;
+}
+
+.color-slider > input {
+    width: 100%;
 }
 
 .color-samples {
