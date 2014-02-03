@@ -13,8 +13,7 @@
 
 (defn render-component
   "Render a Reagent component into the DOM. The first argument may be either a
-vector (using Reagent's Hiccup syntax), or a React component. The second argument
-should be a DOM node.
+vector (using Reagent's Hiccup syntax), or a React component. The second argument should be a DOM node.
 
 Optionally takes a callback that is called when the component is in place.
 
@@ -108,7 +107,12 @@ specially, like React's transferPropsTo."
   [defaults props]
   (util/merge-props defaults props))
 
-(defn flush []
+(defn flush
+  "Render dirty components immediately to the DOM.
+
+Note that this may not work in event handlers, since React.js does
+batching of updates there."
+  []
   (comp/flush))
 
 
@@ -125,7 +129,9 @@ re-rendered."
 
 ;; Utilities
 
-(defn next-tick [f]
+(defn next-tick
+  "Run f using requestAnimationFrame or equivalent."
+  [f]
   (comp/next-tick f))
 
 (defn partial
