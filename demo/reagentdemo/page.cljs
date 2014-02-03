@@ -2,10 +2,10 @@
   (:require [reagent.core :as reagent :refer [atom partial]]
             [reagent.debug :refer-macros [dbg]]
             [clojure.string :as string]
-            [goog.events :as events])
+            [goog.events :as events]
+            [goog.history.EventType :as hevt])
   (:import [goog History]
-           [goog.history Html5History]
-           [goog.history EventType]))
+           [goog.history Html5History]))
 
 (def page (atom ""))
 (def base-path (atom nil))
@@ -23,7 +23,7 @@
 
 (defn setup-history []
   (when-let [h (create-history)]
-    (events/listen h EventType/NAVIGATE
+    (events/listen h hevt/NAVIGATE
                    (fn [e]
                      (reset! page (subs (.-token e)
                                         (count @base-path)))

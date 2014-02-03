@@ -4,13 +4,14 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2138"]]
+                 [org.clojure/clojurescript "0.0-2156"]]
   :plugins [[lein-cljsbuild "1.0.1"]
             [com.cemerick/clojurescript.test "0.2.1"]]
   :profiles {:prod {:cljsbuild
                     {:builds
                      {:client {:compiler
                                {:optimizations :advanced
+                                :elide-asserts true
                                 :preamble ^:replace ["reagent/react.min.js"]
                                 :pretty-print false}}}}}
              :test {:plugins [[com.cemerick/clojurescript.test "0.2.1"]]
