@@ -4,6 +4,7 @@
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [title link page-map]]
             [reagentdemo.common :as common :refer [demo-component]]
+            [reagentdemo.news.async :as async]
             [todomvc :as todomvc]))
 
 (def funmap (-> "reagentdemo/news.cljs" get-source common/fun-map))
@@ -44,7 +45,7 @@
                           (reset! undo-list nil)
                           (remove-watch state ::undo-watcher))}))
 
-(defn undo-example []
+(defn undo-example [{:keys [summary]}]
   (let [head "Cloact becomes Reagent: Undo is trivial"]
     [:div.reagent-demo
      [:h1 [link {:href undo-example} head]]
@@ -63,25 +64,32 @@
       [:p "The API is otherwise unchanged, so a simple
       search-and-replace should suffice."]
 
-      [:h2 "Undo the easy way"]
+      (if summary
+        [link {:href undo-example
+               :class 'news-read-more} "Read more"]
+        [:div.demo-text
 
-      [:p "To celebrate the undoing of the apparently disgusting name,
-      here is an example of how easy it is to add undo functionality
-      to Reagent components."]
+         [:h2 "Undo the easy way"]
 
-      [:p "It simply saves the old state whenever it changes, and
-      restores it when the button is clicked."]
+         [:p "To celebrate the undoing of the apparently disgusting
+         name, here is an example of how easy it is to add undo
+         functionality to Reagent components."]
 
-      [:p "The really nice thing about ClojureScript is that not only
-      is this easy and safe to do, courtesy of immutable data
-      structures, it is also efficient. ClojureScript figures out how
-      to represent ”changes” to maps and vectors efficiently, so that
-      you won’t have to."]
-      
-      [undo-demo-cleanup]]]))
+         [:p "It simply saves the old state whenever it changes, and
+         restores it when the button is clicked."]
+
+         [:p "The really nice thing about ClojureScript is that not
+         only is this easy and safe to do, courtesy of immutable data
+         structures, it is also efficient. ClojureScript figures out
+         how to represent ”changes” to maps and vectors efficiently,
+         so that you won’t have to."]
+
+         [undo-demo-cleanup]])]]))
 
 (defn main []
-  [undo-example])
+  [:div
+   [async/main {:summary true}]
+   [undo-example {:summary true}]])
 
 (swap! page-map assoc
        "news/cloact-reagent-undo-demo.html" undo-example)

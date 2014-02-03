@@ -33,13 +33,14 @@
    [github-badge]])
 
 (defn ^:export mountdemo [p]
-  (when p (reset! page p))
+  (when p (page/set-start-page p))
   (reagent/render-component [demo] (.-body js/document)))
 
 (defn gen-page [p timestamp]
   (reset! page p)
   (let [body (reagent/render-component-to-string [demo])
-        title @page/title-atom]
+        title @page/title-atom
+        load-page (case p "index.html" "" p)]
     (str "<!doctype html>
 <html>
   <head>
@@ -53,7 +54,7 @@
     <script type='text/javascript'
       src='" (prefix "assets/demo.js") timestamp "'></script>
     <script type='text/javascript'>
-      setTimeout(function() {demo.mountdemo('" p "')}, 200);
+      setTimeout(function() {demo.mountdemo('" load-page "')}, 200);
     </script>
   </body>
 </html>")))

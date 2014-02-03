@@ -1,7 +1,8 @@
 
 (ns reagent.impl.component
+  (:refer-clojure :exclude [flush])
   (:require [reagent.impl.template :as tmpl
-             :refer [cljs-props cljs-children React]]
+             :refer [cljs-props cljs-children cljs-level React]]
             [reagent.impl.util :as util]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
@@ -35,7 +36,7 @@
   (-> C js-props props-in-props))
 
 (defn get-children [C]
-  (->> C js-props (aget cljs-children)))
+  (-> C js-props (aget cljs-children)))
 
 (defn replace-props [C newprops]
   (.setProps C (js-obj cljs-props newprops)))
@@ -43,17 +44,67 @@
 (defn set-props [C newprops]
   (replace-props C (merge (get-props C) newprops)))
 
+;;; Rendering
 
-;;; Function wrapping
+(defn fake-raf [f]
+  (js/setTimeout f 16))
+
+(def next-tick
+  (if-not tmpl/isClient
+    fake-raf
+    (let [w js/window]
+      (or (.-requestAnimationFrame w)
+          (.-webkitRequestAnimationFrame w)
+          (.-mozRequestAnimationFrame w)
+          (.-msRequestAnimationFrame w)
+          fake-raf))))
+
+(defn compare-levels [c1 c2]
+  (- (-> c1 js-props (aget cljs-level))
+     (-> c2 js-props (aget cljs-level))))
+
+(defn run-queue [a]
+  ;; sort components by level, to make sure parents
+  ;; are rendered before children
+  (.sort a compare-levels)
+  (dotimes [i (alength a)]
+    (let [C (aget a i)]
+      (when (.-cljsIsDirty C)
+        (.forceUpdate C)))))
+
+(deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
+  Object
+  (queue-render [this C]
+    (.push queue C)
+    (.schedule this))
+  (schedule [this]
+    (when-not scheduled?
+      (set! scheduled? true)
+      (next-tick #(.run-queue this))))
+  (run-queue [_]
+    (let [q queue]
+      (set! queue (array))
+      (set! scheduled? false)
+      (run-queue q))))
+
+(def render-queue (RenderQueue. (array) false))
+
+(defn flush []
+  (.run-queue render-queue))
+
+(defn queue-render [C]
+  (set! (.-cljsIsDirty C) true)
+  (.queue-render render-queue C))
 
 (defn do-render [C f]
+  (set! (.-cljsIsDirty C) false)
   (let [p (js-props C)
         props (props-in-props p)
         children (aget p cljs-children)
         ;; Call render function with props, children, component
         res (f props children C)
         conv (if (vector? res)
-               (tmpl/as-component res)
+               (tmpl/as-component res (aget p cljs-level))
                (if (fn? res)
                  (do-render C (set! (.-cljsRenderFn C) res))
                  res))]
@@ -66,9 +117,12 @@
           (ratom/make-reaction
            #(do-render C (.-cljsRenderFn C))
            :auto-run (if tmpl/isClient
-                                #(.forceUpdate C)
-                                identity))))
+                       #(queue-render C)
+                       identity))))
   (ratom/run (.-cljsRatom C)))
+
+
+;;; Function wrapping
 
 (defn custom-wrapper [key f]
   (case key
@@ -98,16 +152,22 @@
           ;; call f with oldprops newprops oldchildren newchildren
           (f C p1 p2 c1 c2))))
 
+    :componentWillUpdate
+    (fn [C nextprops]
+      (let [p (aget nextprops cljs-props)
+            c (aget nextprops cljs-children)]
+        (f C p c)))
+
     :componentDidUpdate
     (fn [C oldprops]
-      (let [inprops (js-props C)
-            p (aget inprops cljs-props)
-            c (aget inprops cljs-children)]
+      (let [p (aget oldprops cljs-props)
+            c (aget oldprops cljs-children)]
         (f C p c)))
 
     :componentWillUnmount
     (fn [C]
       (ratom/dispose! (.-cljsRatom C))
+      (set! (.-cljsIsDirty C) false)
       (when f (f C)))
 
     :render

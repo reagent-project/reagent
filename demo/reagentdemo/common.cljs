@@ -21,9 +21,7 @@
 ")
 
 (defn src-for-names [srcmap names]
-  (string/join "\n" (-> srcmap
-                        (select-keys names)
-                        vals)))
+  (string/join "\n" (map srcmap names)))
 
 (defn fun-map [src]
   (-> src src-parts src-defs (assoc :ns nssrc)))
@@ -36,10 +34,11 @@
     (fn []
       [:div
        (when comp
-         [:div.demo-example
+         [:div.demo-example.clearfix
           [:a.demo-example-hide {:on-click (fn [e]
                                              (.preventDefault e)
-                                             (swap! showing not))}
+                                             (swap! showing not)
+                                             false)}
            (if @showing "hide" "show")]
           [:h3.demo-heading "Example "]
           (when @showing
@@ -47,6 +46,6 @@
               [:div.simple-demo [comp]]
               [comp]))])
        (when @showing
-         [:div.demo-source
+         [:div.demo-source.clearfix
           [:h3.demo-heading "Source"]
           src])])))

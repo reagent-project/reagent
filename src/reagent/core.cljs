@@ -1,6 +1,6 @@
 
 (ns reagent.core
-  (:refer-clojure :exclude [partial atom])
+  (:refer-clojure :exclude [partial atom flush])
   (:require-macros [reagent.debug :refer [dbg prn]])
   (:require [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
@@ -13,8 +13,7 @@
 
 (defn render-component
   "Render a Reagent component into the DOM. The first argument may be either a
-vector (using Reagent's Hiccup syntax), or a React component. The second argument
-should be a DOM node.
+vector (using Reagent's Hiccup syntax), or a React component. The second argument should be a DOM node.
 
 Optionally takes a callback that is called when the component is in place.
 
@@ -44,6 +43,9 @@ looking like this:
 {:get-initial-state (fn [this])
 :component-will-receive-props (fn [this new-props])
 :should-component-update (fn [this old-props new-props old-children new-children])
+:component-will-mount (fn [this])
+:component-did-mount (fn [this])
+:component-will-update (fn [this new-props new-children])
 :component-did-update (fn [this old-props old-children])
 :component-will-unmount (fn [this])
 :render (fn [props children this])}
@@ -105,6 +107,15 @@ specially, like React's transferPropsTo."
   [defaults props]
   (util/merge-props defaults props))
 
+(defn flush
+  "Render dirty components immediately to the DOM.
+
+Note that this may not work in event handlers, since React.js does
+batching of updates there."
+  []
+  (comp/flush))
+
+
 
 ;; Ratom
 
@@ -117,6 +128,11 @@ re-rendered."
 
 
 ;; Utilities
+
+(defn next-tick
+  "Run f using requestAnimationFrame or equivalent."
+  [f]
+  (comp/next-tick f))
 
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and

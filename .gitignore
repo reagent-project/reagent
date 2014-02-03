@@ -1,6 +1,6 @@
 index.html
 assets/
-news/
+/news/
 target
 pom.xml
 .lein-repl-history

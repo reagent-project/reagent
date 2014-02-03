@@ -5,6 +5,16 @@
     box-sizing: border-box;
 }
 
+
+.clearfix:before, .clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.clearfix:after {
+    clear: both;
+}
+
 div.nav {
     position: absolute;
     top: 0;
@@ -65,6 +75,8 @@ ul.nav > li.brand > a {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue', arial;
     font-weight: normal;
     line-height: 1.25em;
+    margin-top: 0.25em;
+    margin-bottom: 1em;
 }
 
 .reagent-demo > h1 > a {
@@ -112,6 +124,10 @@ ul.nav > li.brand > a {
     color: #444;
 }
 
+.demo-text > ul > li {
+    margin-bottom: 1em;
+}
+
 .demo-example {
     background-color: #ebebeb;
 }
@@ -139,4 +155,26 @@ ul.nav > li.brand > a {
 .demo-example-hide {
     float: right;
     cursor: pointer;
+}
+
+.news-read-more {
+    text-decoration: none;
+    font-size: 16px;
+}
+
+/* Color demo */
+
+.color-plate {
+    float: left;
+    height: 100px;
+    width: 100px;
+}
+
+.color-slider > input {
+    width: 100%;
+}
+
+.color-samples {
+    clear: both;
+    padding-top: 0.5em;
 }

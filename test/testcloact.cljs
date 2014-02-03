@@ -12,6 +12,8 @@
 (def isClient (not (nil? (try (.-document js/window)
                               (catch js/Object e nil)))))
 
+(def rflush reagent/flush)
+
 (defn add-test-div [name]
   (let [doc js/document
         body (.-body js/document)
@@ -23,7 +25,8 @@
   (when isClient
     (let [div (add-test-div "_testreagent")]
       (let [comp (reagent/render-component comp div #(f comp div))]
-        (reagent/unmount-component-at-node div)))))
+        (reagent/unmount-component-at-node div)
+        (reagent/flush)))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
@@ -95,27 +98,68 @@
     (let [ran (atom 0)
           runs (running)
           val (atom 0)
+          secval (atom 0)
           v1 (reaction @val)
           comp (fn []
                  (swap! ran inc)
-                 [:div (str "val " @v1)])]
+                 [:div (str "val " @v1 @val @secval)])]
       (with-mounted-component [comp]
         (fn [C div]
-          (swap! ran inc)
+          (reagent/flush)
           (is (not= runs (running)))
           (is (found-in #"val 0" div))
-          (is (= 2 @ran))
+          (is (= 1 @ran))
 
+          (reset! secval 1)
+          (reset! secval 0)
           (reset! val 1)
+          (reset! val 2)
+          (reset! val 1)
+          (reagent/flush)
           (is (found-in #"val 1" div))
-          (is (= 3 @ran))
+          (is (= 2 @ran))
 
           ;; should not be rendered
           (reset! val 1)
+          (reagent/flush)
           (is (found-in #"val 1" div))
-          (is (= 3 @ran))))
+          (is (= 2 @ran))))
       (is (= runs (running)))
-      (is (= 3 @ran)))))
+      (is (= 2 @ran)))))
+
+(deftest batched-update-test []
+  (when isClient
+    (let [ran (atom 0)
+          v1 (atom 0)
+          v2 (atom 0)
+          c2 (fn [{val :val}]
+               (swap! ran inc)
+               (assert (= @v1 val))
+               [:div @v2])
+          c1 (fn []
+               (swap! ran inc)
+               [:div @v1
+                [c2 {:val @v1}]])]
+      (with-mounted-component [c1]
+        (fn [c div]
+          (rflush)
+          (is (= @ran 2))
+          (swap! v2 inc)
+          (is (= @ran 2))
+          (rflush)
+          (is (= @ran 3))
+          (swap! v1 inc)
+          (rflush)
+          (is (= @ran 5))
+          (swap! v2 inc)
+          (swap! v1 inc)
+          (rflush)
+          (is (= @ran 7))
+          (swap! v1 inc)
+          (swap! v1 inc)
+          (swap! v2 inc)
+          (rflush)
+          (is (= @ran 9)))))))
 
 (deftest init-state-test
   (when isClient
@@ -130,6 +174,69 @@
         (fn [c div]
           (swap! ran inc)
           (is (found-in #"this is foobar" div))))
+      (is (= 2 @ran)))))
+
+(deftest shoud-update-test
+  (when isClient
+    (let [parent-ran (atom 0)
+          child-ran (atom 0)
+          child-props (atom nil)
+          f (fn [])
+          f1 (fn [])
+          child (fn [p]
+                  (swap! child-ran inc)
+                  [:div (:val p)])
+          parent(fn []
+                  (swap! parent-ran inc)
+                  [:div "child-foo" [child @child-props]])]
+      (with-mounted-component [parent nil nil]
+        (fn [c div]
+          (rflush)
+          (is (= @child-ran 1))
+          (is (found-in #"child-foo" div))
+          (do (reset! child-props {:style {:display :none}})
+              (rflush))
+          (is (= @child-ran 2))
+          (do (reset! child-props {:style {:display :none}})
+              (rflush))
+          (is (= @child-ran 2) "keyw is equal")
+          (do (reset! child-props {:class :foo}) (rflush))
+          (is (= @child-ran 3))
+          (do (reset! child-props {:class :foo}) (rflush))
+          (is (= @child-ran 3))
+          (do (reset! child-props {:class 'foo}) (rflush))
+          (is (= @child-ran 4) "symbols are different from keyw")
+          (do (reset! child-props {:class 'foo}) (rflush))
+          (is (= @child-ran 4) "symbols are equal")
+          (do (reset! child-props {:style {:color 'red}}) (rflush))
+          (is (= @child-ran 5))
+          (do (reset! child-props {:on-change (reagent/partial f)})
+              (rflush))
+          (is (= @child-ran 6))
+          (do (reset! child-props {:on-change (reagent/partial f)})
+              (rflush))
+          (is (= @child-ran 6))
+          (do (reset! child-props {:on-change (reagent/partial f1)})
+              (rflush))
+          (is (= @child-ran 7)))))))
+
+(deftest dirty-test
+  (when isClient
+    (let [ran (atom 0)
+          state (atom 0)
+          really-simple (fn [props children this]
+                          (swap! ran inc)
+                          (if (= @state 1)
+                            (reset! state 3))
+                          [:div (str "state=" @state)])]
+      (with-mounted-component [really-simple nil nil]
+        (fn [c div]
+          (is (= 1 @ran))
+          (is (found-in #"state=0" div))
+          (reset! state 1)
+          (rflush)
+          (is (= 2 @ran))
+          (is (found-in #"state=3" div))))
       (is (= 2 @ran)))))
 
 (defn as-string [comp]
