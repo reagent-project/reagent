@@ -220,6 +220,24 @@
               (rflush))
           (is (= @child-ran 7)))))))
 
+(deftest dirty-test
+  (when isClient
+    (let [ran (atom 0)
+          state (atom 0)
+          really-simple (fn [props children this]
+                          (swap! ran inc)
+                          (if (= @state 1)
+                            (reset! state 3))
+                          [:div (str "state=" @state)])]
+      (with-mounted-component [really-simple nil nil]
+        (fn [c div]
+          (is (= 1 @ran))
+          (is (found-in #"state=0" div))
+          (reset! state 1)
+          (rflush)
+          (is (= 2 @ran))
+          (is (found-in #"state=3" div))))
+      (is (= 2 @ran)))))
 
 (defn as-string [comp]
   (reagent/render-component-to-string comp))
