@@ -222,12 +222,7 @@
   (let [spec (cljsify body)
         res (.createClass React spec)
         f (fn [& args]
-            (let [props (nth args 0 nil)
-                  hasmap (map? props)
-                  first-child (if (or hasmap (nil? props)) 1 0)]
-              (res (js-obj cljs-props    (if hasmap props)
-                           cljs-children (if (> (count args) first-child)
-                                           (subvec args first-child))))))]
+            (tmpl/as-component (apply vector res args)))]
     (set! (.-cljsReactClass f) res)
     (set! (.-cljsReactClass res) res)
     f))
