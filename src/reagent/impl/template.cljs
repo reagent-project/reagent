@@ -7,8 +7,7 @@
 
 (def React reactimport/React)
 
-(def cljs-props "cljsProps")
-(def cljs-children "cljsChildren")
+(def cljs-argv "cljsArgv")
 (def cljs-level "cljsLevel")
 
 (def isClient (not (nil? (try (.-document js/window)
@@ -88,8 +87,12 @@
 (def input-components #{(aget DOM "input")
                         (aget DOM "textarea")})
 
+(defn extract-props [v]
+  (let [p (get v 1)]
+    (if (map? p) p)))
+
 (defn get-props [this]
-  (-> this (aget "props") (aget cljs-props)))
+  (-> this (aget "props") (aget cljs-argv) extract-props))
 
 (defn input-initial-state [this]
   (let [props (get-props this)]
@@ -106,7 +109,7 @@
       (on-change e))))
 
 (defn input-will-receive-props [this new-props]
-  (let [props (aget new-props cljs-props)]
+  (let [props (-> new-props (aget cljs-argv) extract-props)]
     (.setState this #js {:value (:value props)
                          :checked (:checked props)})))
 
@@ -119,12 +122,16 @@
 
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
-        props (aget inprops cljs-props)
+        argv (aget inprops cljs-argv)
         level (aget inprops cljs-level)
+        props (get argv 1)
         hasprops (or (nil? props) (map? props))
-        jsargs (->> (aget inprops cljs-children)
-                    (map-into-array as-component (inc level)))
-        jsprops (convert-props props id-class)]
+        first-child (if hasprops 2 1)
+        jsargs (if (> (count argv) first-child)
+                 (map-into-array as-component (inc level)
+                                 (subvec argv first-child))
+                 (array))
+        jsprops (convert-props (if hasprops props) id-class)]
     (when (input-components comp)
       (input-render-setup this jsprops))
     (.unshift jsargs jsprops)
@@ -132,11 +139,9 @@
 
 (defn wrapped-should-update [C nextprops nextstate]
   (let [inprops (aget C "props")
-        p1 (aget inprops cljs-props)
-        c1 (aget inprops cljs-children)
-        p2 (aget nextprops cljs-props)
-        c2 (aget nextprops cljs-children)]
-    (not (util/equal-args p1 c1 p2 c2))))
+        a1 (aget inprops cljs-argv)
+        a2 (aget nextprops cljs-argv)]
+    (not (util/equal-args a1 a2))))
 
 (defn wrap-component [comp extras name]
   (let [def #js {:render
@@ -175,7 +180,7 @@
 
 (defn fn-to-class [f]
   (let [spec (meta f)
-        withrender (merge spec {:render f})
+        withrender (assoc spec :component-function f)
         res (reagent.core/create-class withrender)
         wrapf (.-cljsReactClass res)]
     (set! (.-cljsReactClass f) wrapf)
@@ -195,15 +200,11 @@
 
 (defn vec-to-comp [v level]
   (assert (pos? (count v)))
-  (let [[tag props] v
-        hasmap (map? props)
-        first-child (if (or hasmap (nil? props)) 2 1)
-        c (as-class tag)
-        jsprops (js-obj cljs-props    (if hasmap props)
-                        cljs-children (if (> (count v) first-child)
-                                        (subvec v first-child))
-                        cljs-level    level)]
-    (when hasmap
+  (let [props (get v 1)
+        c (as-class (v 0))
+        jsprops (js-obj cljs-argv v
+                        cljs-level level)]
+    (when (map? props)
       (let [key (:key props)]
         (when-not (nil? key)
           (aset jsprops "key" key))))

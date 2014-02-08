@@ -51,25 +51,28 @@
   (when isClient
     (let [ran (atom 0)
           comp (reagent/create-class
-                       {:component-did-mount #(swap! ran inc)
-                        :render (fn [props children this]
-                                  (assert (map? props))
-                                  (swap! ran inc)
-                                  [:div (str "hi " (:foo props) ".")])})]
+                {:component-did-mount #(swap! ran inc)
+                 :render
+                 (fn [this]
+                   (let [props (reagent/props this)]
+                     (assert (map? props))
+                     (assert (= props ((reagent/argv this) 1)))
+                     (swap! ran inc)
+                     [:div (str "hi " (:foo props) ".")]))})]
       (with-mounted-component (comp {:foo "you"})
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi you" div))
-          
-          (reagent/set-props C {:foo "there"})
+
+          (reagent/replace-args C [{:foo "there"}])
           (is (found-in #"hi there" div))
 
           (let [runs @ran]
-            (reagent/set-props C {:foo "there"})
+            (reagent/replace-args C [{:foo "there"}])
             (is (found-in #"hi there" div))
             (is (= runs @ran)))
 
-          (reagent/replace-props C {:foobar "not used"})
+          (reagent/replace-args C [{:foobar "not used"}])
           (is (found-in #"hi ." div))))
       (is (= 5 @ran)))))
 
@@ -77,10 +80,12 @@
   (when isClient
     (let [ran (atom 0)
           comp (reagent/create-class
-                       {:get-initial-state (fn [])
-                        :render (fn [props children this]
-                                  (swap! ran inc)
-                                  [:div (str "hi " (:foo (reagent/state this)))])})]
+                {:get-initial-state (fn [])
+                 :render
+                 (fn []
+                   (let [this (reagent/current-component)]
+                     (swap! ran inc)
+                     [:div (str "hi " (:foo (reagent/state this)))]))})]
       (with-mounted-component (comp)
         (fn [C div]
           (swap! ran inc)
@@ -164,12 +169,13 @@
 (deftest init-state-test
   (when isClient
     (let [ran (atom 0)
-          really-simple (fn [props children this]
-                          (swap! ran inc)
-                          (reagent/set-state this {:foo "foobar"})
-                          (fn []
-                            [:div (str "this is "
-                                       (:foo (reagent/state this)))]))]
+          really-simple (fn []
+                          (let [this (reagent/current-component)]
+                            (swap! ran inc)
+                            (reagent/set-state this {:foo "foobar"})
+                            (fn []
+                              [:div (str "this is "
+                                         (:foo (reagent/state this)))])))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)

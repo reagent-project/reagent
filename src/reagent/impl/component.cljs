@@ -2,11 +2,12 @@
 (ns reagent.impl.component
   (:refer-clojure :exclude [flush])
   (:require [reagent.impl.template :as tmpl
-             :refer [cljs-props cljs-children cljs-level React]]
+             :refer [cljs-argv cljs-level React]]
             [reagent.impl.util :as util]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
 
+(declare ^:dynamic *current-component*)
 
 (def cljs-state "cljsState")
 
@@ -29,20 +30,29 @@
 (defn js-props [C]
   (aget C "props"))
 
-(defn props-in-props [props]
-  (aget props cljs-props))
+(defn extract-props [v]
+  (let [p (get v 1)]
+    (if (map? p) p)))
+
+(defn extract-children [v]
+  (let [first-child (if (-> v (get 1) map?) 2 1)]
+    (if (> (count v) first-child)
+      (subvec v first-child))))
+
+(defn get-argv [C]
+  (-> C js-props (aget cljs-argv)))
 
 (defn get-props [C]
-  (-> C js-props props-in-props))
+  (-> C get-argv extract-props))
 
 (defn get-children [C]
-  (-> C js-props (aget cljs-children)))
+  (-> C get-argv extract-children))
 
-(defn replace-props [C newprops]
-  (.setProps C (js-obj cljs-props newprops)))
+(defn set-args [C new-args]
+  (let [argv (get-argv C)]
+    (.setProps C (js-obj cljs-argv
+                         (into [(argv 0)] new-args)))))
 
-(defn set-props [C newprops]
-  (replace-props C (merge (get-props C) newprops)))
 
 ;;; Rendering
 
@@ -98,17 +108,25 @@
 
 (defn do-render [C f]
   (set! (.-cljsIsDirty C) false)
-  (let [p (js-props C)
-        props (props-in-props p)
-        children (aget p cljs-children)
-        ;; Call render function with props, children, component
-        res (f props children C)
-        conv (if (vector? res)
-               (tmpl/as-component res (aget p cljs-level))
-               (if (fn? res)
-                 (do-render C (set! (.-cljsRenderFn C) res))
-                 res))]
-    conv))
+  (binding [*current-component* C]
+    (let [p (js-props C)
+          argv (aget p cljs-argv)
+          n (count argv)
+          res (if (nil? (aget C "componentFunction"))
+                (f C)
+                (case n
+                  1 (f)
+                  2 (f (argv 1))
+                  3 (f (argv 1) (argv 2))
+                  4 (f (argv 1) (argv 2) (argv 3))
+                  5 (f (argv 1) (argv 2) (argv 3) (argv 4))
+                  (apply f (subvec argv 1))))
+          conv (if (vector? res)
+                 (tmpl/as-component res (aget p cljs-level))
+                 (if (fn? res)
+                   (do-render C (set! (.-cljsRenderFn C) res))
+                   res))]
+      conv)))
 
 (defn render [C]
   (assert C)
@@ -136,33 +154,28 @@
 
     :componentWillReceiveProps
     (fn [C props]
-      (when f (f C (props-in-props props))))
+      (when f (f C (aget props cljs-argv))))
 
     :shouldComponentUpdate
     (fn [C nextprops nextstate]
       ;; Don't care about nextstate here, we use forceUpdate
       ;; when only when state has changed anyway.
       (let [inprops (js-props C)
-            p1 (aget inprops cljs-props)
-            c1 (aget inprops cljs-children)
-            p2 (aget nextprops cljs-props)
-            c2 (aget nextprops cljs-children)]
+            old-argv (aget inprops cljs-argv)
+            new-argv (aget nextprops cljs-argv)]
         (if (nil? f)
-          (not (util/equal-args p1 c1 p2 c2))
-          ;; call f with oldprops newprops oldchildren newchildren
-          (f C p1 p2 c1 c2))))
+          (not (util/equal-args old-argv new-argv))
+          (f C old-argv new-argv))))
 
     :componentWillUpdate
     (fn [C nextprops]
-      (let [p (aget nextprops cljs-props)
-            c (aget nextprops cljs-children)]
-        (f C p c)))
+      (let [next-argv (aget nextprops cljs-argv)]
+        (f C next-argv)))
 
     :componentDidUpdate
     (fn [C oldprops]
-      (let [p (aget oldprops cljs-props)
-            c (aget oldprops cljs-children)]
-        (f C p c)))
+      (let [old-argv (aget oldprops cljs-argv)]
+        (f C old-argv)))
 
     :componentWillUnmount
     (fn [C]
@@ -202,11 +215,15 @@
 
 (defn wrap-funs [fun-map]
   (let [name (or (:displayName fun-map)
-                 (when-let [r (:render fun-map)]
+                 (when-let [r (or (:componentFunction fun-map)
+                                  (:render fun-map))]
                    (or (.-displayName r)
                        (.-name r))))
-        name1 (if (empty? name) (str (gensym "reagent")) name)]
-    (into {} (for [[k v] (assoc fun-map :displayName name1)]
+        name1 (if (empty? name) (str (gensym "reagent")) name)
+        fmap (if-let [cf (:componentFunction fun-map)]
+               (assoc fun-map :render cf)
+               fun-map)]
+    (into {} (for [[k v] (assoc fmap :displayName name1)]
                [k (get-wrapper k v name1)]))))
 
 (defn cljsify [body]

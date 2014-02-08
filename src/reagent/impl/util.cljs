@@ -35,18 +35,6 @@
       (assert (map? p1))
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
-(defn identical-parts [v1 v2]
-  ;; Compare two vectors using identical?
-  (or (identical? v1 v2)
-      (let [end (count v1)]
-        (and (== end (count v2))
-             (loop [n 0]
-               (if (>= n end)
-                 true
-                 (if (identical? (nth v1 n) (nth v2 n))
-                   (recur (inc n))
-                   false)))))))
-
 (def -not-found (js-obj))
 
 (defn shallow-equal-maps [x y]
@@ -70,7 +58,16 @@
                             (reduced false))))
                       true x))))
 
-(defn equal-args [p1 c1 p2 c2]
-  [p1 c1 p2 c2]
-  (and (identical-parts c1 c2)
-       (shallow-equal-maps p1 p2)))
+(defn equal-args [v1 v2]
+  ;; Compare two vectors using identical?
+  (or (identical? v1 v2)
+      (let [end (count v1)]
+        (and (== end (count v2))
+             (loop [n 1]
+               (if (>= n end)
+                 true
+                 (if (or (identical? (v1 n) (v2 n))
+                         (and (== 1 n)
+                              (shallow-equal-maps (v1 1) (v2 1))))
+                   (recur (inc n))
+                   false)))))))

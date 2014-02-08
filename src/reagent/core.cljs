@@ -41,14 +41,14 @@ Returns the mounted component instance."
   "Create a component, React style. Should be called with a map,
 looking like this:
 {:get-initial-state (fn [this])
-:component-will-receive-props (fn [this new-props])
-:should-component-update (fn [this old-props new-props old-children new-children])
+:component-will-receive-props (fn [this new-argv])
+:should-component-update (fn [this old-argv new-argv])
 :component-will-mount (fn [this])
 :component-did-mount (fn [this])
-:component-will-update (fn [this new-props new-children])
-:component-did-update (fn [this old-props old-children])
+:component-will-update (fn [this new-argv])
+:component-did-update (fn [this old-argv])
 :component-will-unmount (fn [this])
-:render (fn [props children this])}
+:render (fn [this])}
 
 Everything is optional, except :render.
 "
@@ -56,16 +56,12 @@ Everything is optional, except :render.
   (comp/create-class spec))
 
 
+(defn replace-args [comp new-args]
+  (assert (vector? new-args))
+  (comp/set-args comp new-args))
 
-(defn set-props
-  "Merge the props of a mounted, top-level component."
-  [comp props]
-  (comp/set-props comp props))
-
-(defn replace-props
-  "Set the props of a mounted, top-level component."
-  [comp props]
-  (comp/replace-props comp props))
+(defn current-component []
+  comp/*current-component*)
 
 
 (defn state
@@ -93,6 +89,11 @@ Everything is optional, except :render.
   "Returns the children passed to a component."
   [this]
   (comp/get-children this))
+
+(defn argv
+  "Returns the entire Hiccup form passed to the component."
+  [this]
+  (comp/get-argv this))
 
 (defn dom-node
   "Returns the root DOM node of a mounted component."
