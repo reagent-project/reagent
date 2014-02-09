@@ -28,6 +28,9 @@
 (defn root []
   [:g
    [c/triangle @p1 @p2 @p3]
+   [c/circle @p1 @p2]
+   [c/circle @p2 @p3]
+   [c/circle @p3 @p1]
    [c/draggable-point p1 mouse-info]
    [c/draggable-point p2 mouse-info]
    [c/draggable-point p3 mouse-info]])
@@ -48,4 +51,3 @@
      "The corners are draggable"]
     [root]]  
    (by-id "app")))
-

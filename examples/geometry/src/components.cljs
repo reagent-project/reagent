@@ -1,6 +1,6 @@
 (ns components
   (:require [reagent.core :as r]
-            [geometry :refer [x y] :as g]))
+            [geometry :refer [x y dist] :as g]))
 
 (def point-defaults
   {:stroke "black"
@@ -46,3 +46,13 @@
    [segment a b]
    [segment b c]
    [segment c a]])
+
+
+(defn circle [c r]
+  [:circle
+   {:cx (x c)
+    :cy (y c)
+    :r (dist c r)
+    :stroke-width 2
+    :stroke "black"
+    :fill "rgba(0,0,0,0)"}])

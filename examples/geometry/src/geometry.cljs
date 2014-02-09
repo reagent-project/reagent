@@ -24,5 +24,7 @@
   (rand-point -1 2 -1 2))
 
 
-
+(defn dist [p1 p2]
+  (js/Math.sqrt (+ (js/Math.pow (- (x p2) (x p1)) 2)
+                   (js/Math.pow (- (y p2) (y p1)) 2))))
 
