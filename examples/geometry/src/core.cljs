@@ -24,13 +24,16 @@
 (def p1 (r/atom (g/point 100 100)))
 (def p2 (r/atom (g/point 200 200)))
 (def p3 (r/atom (g/point 100 200)))
+(def c (r/atom (g/point 250 250)))
+(def p (r/atom (g/point 250 300)))
 
 (defn root []
   [:g
    [c/triangle @p1 @p2 @p3]
-   [c/circle @p1 @p2]
-   [c/circle @p2 @p3]
-   [c/circle @p3 @p1]
+   [c/circle @p @c]
+   [c/segment @p @c]
+   [c/draggable-point c mouse-info]
+   [c/draggable-point p mouse-info]
    [c/draggable-point p1 mouse-info]
    [c/draggable-point p2 mouse-info]
    [c/draggable-point p3 mouse-info]])
@@ -43,11 +46,12 @@
    [:svg {:on-mouse-down on-mouse-down
           :on-mouse-up on-mouse-up
           :on-mouse-move on-mouse-move
-          :width 400
-          :height 400
+          :width 800
+          :height 600
           :style {:border "1px solid black"}}
-    [:text {:style {:-webkit-user-select "none"} 
+    [:text {:style {:-webkit-user-select "none"
+                    :-moz-user-select "none"} 
             :x 20 :y 20 :font-size 20}
-     "The corners are draggable"]
-    [root]]  
+     "The points are draggable"]
+    [root]]
    (by-id "app")))

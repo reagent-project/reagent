@@ -8,8 +8,13 @@
    :fill "blue"
    :r 5})
 
-(def line-defaults
+(def segment-defaults
   {:stroke "black"
+   :stroke-width 2})
+
+(def circle-defaults
+  {:fill "rgba(255,0,0,0.1)"
+   :stroke "black"
    :stroke-width 2})
 
 (defn point [p]
@@ -21,8 +26,7 @@
   (when (:mouse-down? @mouse-info)
     (reset! p (g/point (:x @mouse-info)
                        (:y @mouse-info)))
-    (.requestAnimationFrame
-     js/window
+    (r/next-tick
      (fn []
        (drag mouse-info p)))))
 
@@ -37,7 +41,7 @@
 
 (defn segment [from to]
   [:line 
-   (merge line-defaults
+   (merge segment-defaults
           {:x1 (x from) :y1 (y from)
            :x2 (x to) :y2 (y to)})])
 
@@ -47,12 +51,9 @@
    [segment b c]
    [segment c a]])
 
-
 (defn circle [c r]
   [:circle
-   {:cx (x c)
-    :cy (y c)
-    :r (dist c r)
-    :stroke-width 2
-    :stroke "black"
-    :fill "rgba(0,0,0,0)"}])
+   (merge circle-defaults
+          {:cx (x c)
+           :cy (y c)
+           :r (dist c r)})])
