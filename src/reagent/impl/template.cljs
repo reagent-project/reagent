@@ -190,7 +190,6 @@
   (if (keyword? tag)
     (cached-wrapper tag)
     (do
-      (assert (fn? tag))
       (let [cached-class (.-cljsReactClass tag)]
         (if-not (nil? cached-class)
           cached-class
@@ -199,7 +198,11 @@
             (fn-to-class tag)))))))
 
 (defn vec-to-comp [v level]
-  (assert (pos? (count v)))
+  (assert (pos? (count v)) "Hiccup form should not be empty")
+  (assert (let [tag (v 0)]
+            (or (keyword? tag)
+                (fn? tag)))
+          (str "Invalid Hiccup form: " (pr-str v)))
   (let [props (get v 1)
         c (as-class (v 0))
         jsprops (js-obj cljs-argv v
