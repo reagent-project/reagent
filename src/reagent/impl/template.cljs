@@ -123,14 +123,14 @@
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
         argv (aget inprops cljs-argv)
-        level (aget inprops cljs-level)
         props (get argv 1)
         hasprops (or (nil? props) (map? props))
         first-child (if hasprops 2 1)
-        jsargs (if (> (count argv) first-child)
-                 (map-into-array as-component (inc level)
-                                 (subvec argv first-child))
-                 (array))
+        children (if (> (count argv) first-child)
+                   (subvec argv first-child))
+        jsargs (map-into-array as-component
+                               (inc (aget inprops cljs-level))
+                               children)
         jsprops (convert-props (if hasprops props) id-class)]
     (when (input-components comp)
       (input-render-setup this jsprops))

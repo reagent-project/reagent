@@ -35,7 +35,8 @@
     (if (map? p) p)))
 
 (defn extract-children [v]
-  (let [first-child (if (-> v (get 1) map?) 2 1)]
+  (let [p (get v 1)
+        first-child (if (or (nil? p) (map? p)) 2 1)]
     (if (> (count v) first-child)
       (subvec v first-child))))
 
