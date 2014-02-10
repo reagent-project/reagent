@@ -6,6 +6,8 @@
   (:require [cemerick.cljs.test :as t]
             [reagent.ratom :as rv]))
 
+(set! rv/debug true)
+
 (defn running [] (rv/running))
 (defn dispose [v] (rv/dispose! v))
 

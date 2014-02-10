@@ -4,11 +4,13 @@
 
 (declare ^:dynamic *ratom-context*)
 
+(def debug false)
+
 (def -running (clojure.core/atom 0))
 
 (defn running [] @-running)
 
-(defn- capture-derefed [f obj]
+(defn capture-derefed [f obj]
   (set! (.-captured obj) nil)
   (binding [*ratom-context* obj]
     (f)))
@@ -115,7 +117,7 @@
       (when (not= derefed watching)
         (-update-watching this derefed))
       (when-not active?
-        (swap! -running inc)
+        (when debug (swap! -running inc))
         (set! active? true))
       (set! dirty? false)
       (set! state res)
@@ -142,7 +144,7 @@
     (set! state nil)
     (set! dirty? true)
     (when active?
-      (swap! -running dec)
+      (when debug (swap! -running dec))
       (set! active? false))
     (when on-dispose
       (on-dispose)))
@@ -159,8 +161,14 @@
   IHash
   (-hash [this] (goog/getUid this)))
 
-(defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
-  (let [runner (if (= auto-run true) run auto-run)]
-    (Reaction. f nil true false
-               nil {}
-               runner on-set on-dispose)))
+(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed]}]
+  (let [runner (if (= auto-run true) run auto-run)
+        active (not (nil? derefed))
+        dirty (not active)
+        reaction (Reaction. f nil dirty active
+                            nil {}
+                            runner on-set on-dispose)]
+    (when-not (nil? derefed)
+      (when debug (swap! -running inc))
+      (-update-watching reaction derefed))
+    reaction))

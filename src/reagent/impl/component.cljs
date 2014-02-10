@@ -128,16 +128,22 @@
             (do-render C))
           res)))))
 
+(defn run-reactively [C run on-dirty]
+  (let [rat (.-cljsRatom C)]
+    (if (nil? rat)
+      (let [res (ratom/capture-derefed run C)
+            derefed (.-captured C)]
+        (when (and (not (nil? derefed))
+                   tmpl/isClient)
+          (set! (.-cljsRatom C)
+                (ratom/make-reaction run
+                                     :auto-run on-dirty
+                                     :derefed derefed)))
+        res)
+      (ratom/run rat))))
+
 (defn reactive-render [C]
-  (assert C)
-  (when (nil? (.-cljsRatom C))
-    (set! (.-cljsRatom C)
-          (ratom/make-reaction
-           #(do-render C)
-           :auto-run (if tmpl/isClient
-                       #(queue-render C)
-                       identity))))
-  (ratom/run (.-cljsRatom C)))
+  (run-reactively C #(do-render C) #(queue-render C)))
 
 
 ;;; Function wrapping
@@ -179,7 +185,9 @@
 
     :componentWillUnmount
     (fn [C]
-      (ratom/dispose! (.-cljsRatom C))
+      (let [ratom (.-cljsRatom C)]
+        (if-not (nil? ratom)
+          (ratom/dispose! ratom)))
       (set! (.-cljsIsDirty C) false)
       (when f (f C)))
 
