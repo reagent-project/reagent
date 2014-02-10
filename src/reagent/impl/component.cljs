@@ -142,9 +142,6 @@
         res)
       (ratom/run rat))))
 
-(defn reactive-render [C]
-  (run-reactively C #(do-render C) #(queue-render C)))
-
 
 ;;; Function wrapping
 
@@ -154,42 +151,48 @@
     (assert false "getDefaultProps not supported yet")
     
     :getInitialState
-    (fn [C]
-      (when f
-        (aset C cljs-state (merge (state C) (f C)))))
+    (fn []
+      (this-as C
+               (when f
+                 (aset C cljs-state (merge (state C) (f C))))))
 
     :componentWillReceiveProps
-    (fn [C props]
-      (when f (f C (aget props cljs-argv))))
+    (fn [props]
+      (this-as C
+               (when f (f C (aget props cljs-argv)))))
 
     :shouldComponentUpdate
-    (fn [C nextprops nextstate]
-      ;; Don't care about nextstate here, we use forceUpdate
-      ;; when only when state has changed anyway.
-      (let [inprops (js-props C)
-            old-argv (aget inprops cljs-argv)
-            new-argv (aget nextprops cljs-argv)]
-        (if (nil? f)
-          (not (util/equal-args old-argv new-argv))
-          (f C old-argv new-argv))))
+    (fn [nextprops nextstate]
+      (this-as C
+               ;; Don't care about nextstate here, we use forceUpdate
+               ;; when only when state has changed anyway.
+               (let [inprops (js-props C)
+                     old-argv (aget inprops cljs-argv)
+                     new-argv (aget nextprops cljs-argv)]
+                 (if (nil? f)
+                   (not (util/equal-args old-argv new-argv))
+                   (f C old-argv new-argv)))))
 
     :componentWillUpdate
-    (fn [C nextprops]
-      (let [next-argv (aget nextprops cljs-argv)]
-        (f C next-argv)))
+    (fn [nextprops]
+      (this-as C
+               (let [next-argv (aget nextprops cljs-argv)]
+                 (f C next-argv))))
 
     :componentDidUpdate
-    (fn [C oldprops]
-      (let [old-argv (aget oldprops cljs-argv)]
-        (f C old-argv)))
+    (fn [oldprops]
+      (this-as C
+               (let [old-argv (aget oldprops cljs-argv)]
+                 (f C old-argv))))
 
     :componentWillUnmount
-    (fn [C]
-      (let [ratom (.-cljsRatom C)]
-        (if-not (nil? ratom)
-          (ratom/dispose! ratom)))
-      (set! (.-cljsIsDirty C) false)
-      (when f (f C)))
+    (fn []
+      (this-as C
+               (let [ratom (.-cljsRatom C)]
+                 (if-not (nil? ratom)
+                   (ratom/dispose! ratom)))
+               (set! (.-cljsIsDirty C) false)
+               (when f (f C))))
 
     nil))
 
@@ -199,7 +202,7 @@
       (this-as C (apply f C args)))
     f))
 
-(def dont-wrap #{:cljsRender})
+(def dont-wrap #{:cljsRender :render})
 
 (defn get-wrapper [key f name]
   (if (dont-wrap key)
@@ -209,7 +212,7 @@
       (when (and wrap f)
         (assert (fn? f)
                 (str "Expected function in " name key " but got " f)))
-      (default-wrapper (or wrap f)))))
+      (or wrap (default-wrapper f)))))
 
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
@@ -224,7 +227,10 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render reactive-render))
+    :render (fn []
+              (this-as C
+                       (run-reactively
+                        C #(do-render C) #(queue-render C))))))
 
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
