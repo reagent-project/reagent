@@ -15,6 +15,11 @@
 
 (def dont-camel-case #{"aria" "data"})
 
+(defn capitalize [s]
+  (if (< (count s) 2)
+    (string/upper-case s)
+    (str (string/upper-case (subs s 0 1)) (subs s 1))))
+
 (defn dash-to-camel [dashed]
   (if (string? dashed)
     dashed
@@ -22,7 +27,7 @@
           [start & parts] (string/split name-str #"-")]
       (if (dont-camel-case start)
         name-str
-        (apply str start (map string/capitalize parts))))))
+        (apply str start (map capitalize parts))))))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
