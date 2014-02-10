@@ -11,20 +11,20 @@
 (defn running [] @-running)
 
 (defn capture-derefed [f obj]
-  (set! (.-captured obj) nil)
+  (set! (.-cljsCaptured obj) nil)
   (binding [*ratom-context* obj]
     (f)))
 
 (defn captured [obj]
-  (let [c (.-captured obj)]
-    (set! (.-captured obj) nil)
+  (let [c (.-cljsCaptured obj)]
+    (set! (.-cljsCaptured obj) nil)
     c))
 
 (defn- notify-deref-watcher! [derefable]
   (let [obj *ratom-context*]
     (when-not (nil? obj)
-      (let [captured (.-captured obj)]
-        (set! (.-captured obj)
+      (let [captured (.-cljsCaptured obj)]
+        (set! (.-cljsCaptured obj)
               (conj (if (nil? captured) #{} captured)
                     derefable))))))
 
@@ -118,7 +118,7 @@
   (run [this]
     (let [oldstate state
           res (capture-derefed f this)
-          derefed (.-captured this)]
+          derefed (captured this)]
       (when (not= derefed watching)
         (-update-watching this derefed))
       (when-not active?
