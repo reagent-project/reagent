@@ -10,6 +10,7 @@
 (declare ^:dynamic *current-component*)
 
 (def cljs-state "cljsState")
+(def cljs-render "cljsRender")
 
 ;;; Accessors
 
@@ -102,34 +103,37 @@
   (set! (.-cljsIsDirty C) true)
   (.queue-render render-queue C))
 
-(defn do-render [C f]
+(defn do-render [C]
   (set! (.-cljsIsDirty C) false)
   (binding [*current-component* C]
-    (let [p (js-props C)
-          argv (aget p cljs-argv)
-          n (count argv)
+    (let [f (aget C cljs-render)
+          _ (assert (fn? f))
+          p (js-props C)
           res (if (nil? (aget C "componentFunction"))
                 (f C)
-                (case n
-                  1 (f)
-                  2 (f (argv 1))
-                  3 (f (argv 1) (argv 2))
-                  4 (f (argv 1) (argv 2) (argv 3))
-                  5 (f (argv 1) (argv 2) (argv 3) (argv 4))
-                  (apply f (subvec argv 1))))
-          conv (if (vector? res)
-                 (tmpl/as-component res (aget p cljs-level))
-                 (if (fn? res)
-                   (do-render C (set! (.-cljsRenderFn C) res))
-                   res))]
-      conv)))
+                (let [argv (aget p cljs-argv)
+                      n (count argv)]
+                  (case n
+                    1 (f)
+                    2 (f (argv 1))
+                    3 (f (argv 1) (argv 2))
+                    4 (f (argv 1) (argv 2) (argv 3))
+                    5 (f (argv 1) (argv 2) (argv 3) (argv 4))
+                    (apply f (subvec argv 1)))))]
+      (if (vector? res)
+        (tmpl/as-component res (aget p cljs-level))
+        (if (fn? res)
+          (do
+            (aset C cljs-render res)
+            (do-render C))
+          res)))))
 
-(defn render [C]
+(defn reactive-render [C]
   (assert C)
   (when (nil? (.-cljsRatom C))
     (set! (.-cljsRatom C)
           (ratom/make-reaction
-           #(do-render C (.-cljsRenderFn C))
+           #(do-render C)
            :auto-run (if tmpl/isClient
                        #(queue-render C)
                        identity))))
@@ -179,11 +183,6 @@
       (set! (.-cljsIsDirty C) false)
       (when f (f C)))
 
-    :render
-    (fn [C]
-      (if (nil? (.-cljsRenderFn C))
-        (set! (.-cljsRenderFn C) f))
-      (render C))
     nil))
 
 (defn default-wrapper [f]
@@ -192,12 +191,17 @@
       (this-as C (apply f C args)))
     f))
 
+(def dont-wrap #{:cljsRender})
+
 (defn get-wrapper [key f name]
-  (let [wrap (custom-wrapper key f)]
-    (when (and wrap f)
-      (assert (fn? f)
-              (str "Expected function in " name key " but got " f)))
-    (default-wrapper (or wrap f))))
+  (if (dont-wrap key)
+    (doto f
+      (aset "__reactDontBind" true))
+    (let [wrap (custom-wrapper key f)]
+      (when (and wrap f)
+        (assert (fn? f)
+                (str "Expected function in " name key " but got " f)))
+      (default-wrapper (or wrap f)))))
 
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
@@ -209,18 +213,24 @@
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
 
+(defn add-render [fun-map render-f]
+  (assoc fun-map
+    :cljsRender render-f
+    :render reactive-render))
+
 (defn wrap-funs [fun-map]
-  (let [name (or (:displayName fun-map)
-                 (when-let [r (or (:componentFunction fun-map)
-                                  (:render fun-map))]
-                   (or (.-displayName r)
-                       (.-name r))))
-        name1 (if (empty? name) (str (gensym "reagent")) name)
-        fmap (if-let [cf (:componentFunction fun-map)]
-               (assoc fun-map :render cf)
-               fun-map)]
-    (into {} (for [[k v] (assoc fmap :displayName name1)]
-               [k (get-wrapper k v name1)]))))
+  (let [render-fun (or (:componentFunction fun-map)
+                       (:render fun-map))
+        _ (assert (ifn? render-fun))
+        name (or (:displayName fun-map)
+                 (.-displayName render-fun)
+                 (.-name render-fun))
+        name' (if (empty? name) (str (gensym "reagent")) name)
+        fmap (-> fun-map
+                 (assoc :displayName name')
+                 (add-render render-fun))]
+    (into {} (for [[k v] fmap]
+               [k (get-wrapper k v name')]))))
 
 (defn cljsify [body]
   (-> body
