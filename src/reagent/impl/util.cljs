@@ -1,5 +1,67 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg]]))
+  (:refer-clojure :exclude [flush])
+  (:require [reagent.debug :refer-macros [dbg]]
+            [reagent.ratom :as ratom]))
+
+(def isClient (not (nil? (try (.-document js/window)
+                              (catch js/Object e nil)))))
+
+(def cljs-level "cljsLevel")
+
+;;; Update batching
+
+(defn fake-raf [f]
+  (js/setTimeout f 16))
+
+(def next-tick
+  (if-not isClient
+    fake-raf
+    (let [w js/window]
+      (or (.-requestAnimationFrame w)
+          (.-webkitRequestAnimationFrame w)
+          (.-mozRequestAnimationFrame w)
+          (.-msRequestAnimationFrame w)
+          fake-raf))))
+
+(defn compare-levels [c1 c2]
+  (- (-> c1 (aget "props") (aget cljs-level))
+     (-> c2 (aget "props") (aget cljs-level))))
+
+(defn run-queue [a]
+  ;; sort components by level, to make sure parents
+  ;; are rendered before children
+  (.sort a compare-levels)
+  (dotimes [i (alength a)]
+    (let [C (aget a i)]
+      (when (.-cljsIsDirty C)
+        (.forceUpdate C)))))
+
+(deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
+  Object
+  (queue-render [this C]
+    (.push queue C)
+    (.schedule this))
+  (schedule [this]
+    (when-not scheduled?
+      (set! scheduled? true)
+      (next-tick #(.run-queue this))))
+  (run-queue [_]
+    (let [q queue]
+      (set! queue (array))
+      (set! scheduled? false)
+      (run-queue q))))
+
+(def render-queue (RenderQueue. (array) false))
+
+(defn flush []
+  (.run-queue render-queue))
+
+(defn queue-render [C]
+  (set! (.-cljsIsDirty C) true)
+  (.queue-render render-queue C))
+
+
+;; Misc utilities
 
 (deftype partial-ifn [f args ^:mutable p]
   IFn
@@ -34,6 +96,9 @@
     (do
       (assert (map? p1))
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
+
+
+;;; Helpers for shouldComponentUpdate
 
 (def -not-found (js-obj))
 
@@ -71,3 +136,20 @@
                               (shallow-equal-maps (v1 1) (v2 1))))
                    (recur (inc n))
                    false)))))))
+
+
+;; Render helper
+
+(defn run-reactively [C run on-dirty]
+  (let [rat (.-cljsRatom C)]
+    (if (nil? rat)
+      (let [res (ratom/capture-derefed run C)
+            derefed (.-captured C)]
+        (when (not (nil? derefed))
+          (set! (.-cljsRatom C)
+                (ratom/make-reaction run
+                                     :auto-run on-dirty
+                                     :derefed derefed)))
+        res)
+      (ratom/run rat))))
+

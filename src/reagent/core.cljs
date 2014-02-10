@@ -9,7 +9,7 @@
 
 (def React tmpl/React)
 
-(def is-client tmpl/isClient)
+(def is-client util/isClient)
 
 (defn render-component
   "Render a Reagent component into the DOM. The first argument may be either a
@@ -110,7 +110,7 @@ specially, like React's transferPropsTo."
 Note that this may not work in event handlers, since React.js does
 batching of updates there."
   []
-  (comp/flush))
+  (util/flush))
 
 
 
@@ -129,7 +129,7 @@ re-rendered."
 (defn next-tick
   "Run f using requestAnimationFrame or equivalent."
   [f]
-  (comp/next-tick f))
+  (util/next-tick f))
 
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and

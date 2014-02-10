@@ -2,16 +2,14 @@
 (ns reagent.impl.template
   (:require [clojure.string :as string]
             [reagent.impl.reactimport :as reactimport]
-            [reagent.impl.util :as util]
+            [reagent.impl.util :as util :refer [cljs-level]]
             [reagent.debug :refer-macros [dbg prn println log]]))
 
 (def React reactimport/React)
 
 (def cljs-argv "cljsArgv")
-(def cljs-level "cljsLevel")
 
-(def isClient (not (nil? (try (.-document js/window)
-                              (catch js/Object e nil)))))
+(def isClient util/isClient)
 
 (def dont-camel-case #{"aria" "data"})
 

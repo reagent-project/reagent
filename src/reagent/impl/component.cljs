@@ -1,9 +1,8 @@
 
 (ns reagent.impl.component
-  (:refer-clojure :exclude [flush])
   (:require [reagent.impl.template :as tmpl
              :refer [cljs-argv cljs-level React]]
-            [reagent.impl.util :as util]
+            [reagent.impl.util :as util :refer [cljs-level]]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
 
@@ -53,55 +52,6 @@
 
 ;;; Rendering
 
-(defn fake-raf [f]
-  (js/setTimeout f 16))
-
-(def next-tick
-  (if-not tmpl/isClient
-    fake-raf
-    (let [w js/window]
-      (or (.-requestAnimationFrame w)
-          (.-webkitRequestAnimationFrame w)
-          (.-mozRequestAnimationFrame w)
-          (.-msRequestAnimationFrame w)
-          fake-raf))))
-
-(defn compare-levels [c1 c2]
-  (- (-> c1 js-props (aget cljs-level))
-     (-> c2 js-props (aget cljs-level))))
-
-(defn run-queue [a]
-  ;; sort components by level, to make sure parents
-  ;; are rendered before children
-  (.sort a compare-levels)
-  (dotimes [i (alength a)]
-    (let [C (aget a i)]
-      (when (.-cljsIsDirty C)
-        (.forceUpdate C)))))
-
-(deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
-  Object
-  (queue-render [this C]
-    (.push queue C)
-    (.schedule this))
-  (schedule [this]
-    (when-not scheduled?
-      (set! scheduled? true)
-      (next-tick #(.run-queue this))))
-  (run-queue [_]
-    (let [q queue]
-      (set! queue (array))
-      (set! scheduled? false)
-      (run-queue q))))
-
-(def render-queue (RenderQueue. (array) false))
-
-(defn flush []
-  (.run-queue render-queue))
-
-(defn queue-render [C]
-  (set! (.-cljsIsDirty C) true)
-  (.queue-render render-queue C))
 
 (defn do-render [C]
   (set! (.-cljsIsDirty C) false)
@@ -127,20 +77,6 @@
             (aset C cljs-render res)
             (do-render C))
           res)))))
-
-(defn run-reactively [C run on-dirty]
-  (let [rat (.-cljsRatom C)]
-    (if (nil? rat)
-      (let [res (ratom/capture-derefed run C)
-            derefed (.-captured C)]
-        (when (and (not (nil? derefed))
-                   tmpl/isClient)
-          (set! (.-cljsRatom C)
-                (ratom/make-reaction run
-                                     :auto-run on-dirty
-                                     :derefed derefed)))
-        res)
-      (ratom/run rat))))
 
 
 ;;; Function wrapping
@@ -227,10 +163,12 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render (fn []
-              (this-as C
-                       (run-reactively
-                        C #(do-render C) #(queue-render C))))))
+    :render (if util/isClient
+              (fn []
+                (this-as C
+                         (util/run-reactively
+                          C #(do-render C) #(util/queue-render C))))
+              (fn [] (this-as C (do-render C))))))
 
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
