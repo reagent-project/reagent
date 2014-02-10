@@ -56,10 +56,6 @@ Everything is optional, except :render.
   (comp/create-class spec))
 
 
-(defn replace-args [comp new-args]
-  (assert (vector? new-args))
-  (comp/set-args comp new-args))
-
 (defn current-component []
   comp/*current-component*)
 

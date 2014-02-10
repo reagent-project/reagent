@@ -62,19 +62,8 @@
       (with-mounted-component (comp {:foo "you"})
         (fn [C div]
           (swap! ran inc)
-          (is (found-in #"hi you" div))
-
-          (reagent/replace-args C [{:foo "there"}])
-          (is (found-in #"hi there" div))
-
-          (let [runs @ran]
-            (reagent/replace-args C [{:foo "there"}])
-            (is (found-in #"hi there" div))
-            (is (= runs @ran)))
-
-          (reagent/replace-args C [{:foobar "not used"}])
-          (is (found-in #"hi ." div))))
-      (is (= 5 @ran)))))
+          (is (found-in #"hi you" div))))
+      (is (= 3 @ran)))))
 
 (deftest test-state-change
   (when isClient

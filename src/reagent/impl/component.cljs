@@ -49,11 +49,6 @@
 (defn get-children [C]
   (-> C get-argv extract-children))
 
-(defn set-args [C new-args]
-  (let [argv (get-argv C)]
-    (.setProps C (js-obj cljs-argv
-                         (into [(argv 0)] new-args)))))
-
 
 ;;; Rendering
 
