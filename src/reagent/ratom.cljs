@@ -8,14 +8,18 @@
 
 (defn running [] @-running)
 
-(defn- capture-derefed [f]
-  ;; TODO: Get rid of allocation.
-  (binding [*ratom-context* (clojure.core/atom #{})]
-    [(f) @*ratom-context*]))
+(defn- capture-derefed [f obj]
+  (set! (.-captured obj) nil)
+  (binding [*ratom-context* obj]
+    (f)))
 
 (defn- notify-deref-watcher! [derefable]
-  (when-not (nil? *ratom-context*)
-    (swap! *ratom-context* conj derefable)))
+  (let [obj *ratom-context*]
+    (when-not (nil? obj)
+      (let [captured (.-captured obj)]
+        (set! (.-captured obj)
+              (conj (if (nil? captured) #{} captured)
+                    derefable))))))
 
 (deftype RAtom [state meta validator watches]
   IEquiv
@@ -106,7 +110,8 @@
   IRunnable
   (run [this]
     (let [oldstate state
-          [res derefed] (capture-derefed f)]
+          res (capture-derefed f this)
+          derefed (.-captured this)]
       (when (not= derefed watching)
         (-update-watching this derefed))
       (when-not active?
@@ -157,5 +162,5 @@
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
   (let [runner (if (= auto-run true) run auto-run)]
     (Reaction. f nil true false
-               #{} {}
+               nil {}
                runner on-set on-dispose)))
