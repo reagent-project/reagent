@@ -85,11 +85,10 @@
              ;; First title on a page wins
              (reset! title-atom "")))
 
-(defn title [props children]
-  (let [name (first children)]
-    (when (= @title-atom "")
-      (if reagent/is-client
-        (let [title (aget (.getElementsByTagName js/document "title") 0)]
-          (set! (.-innerHTML title) name)))
-      (reset! title-atom name))
-    [:div]))
+(defn title [name]
+  (when (= @title-atom "")
+    (if reagent/is-client
+      (let [title (aget (.getElementsByTagName js/document "title") 0)]
+        (set! (.-innerHTML title) name)))
+    (reset! title-atom name))
+  [:div])

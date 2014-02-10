@@ -54,7 +54,6 @@
 
 
 (defn do-render [C]
-  (set! (.-cljsIsDirty C) false)
   (binding [*current-component* C]
     (let [f (aget C cljs-render)
           _ (assert (fn? f))
@@ -124,10 +123,7 @@
     :componentWillUnmount
     (fn []
       (this-as C
-               (let [ratom (.-cljsRatom C)]
-                 (if-not (nil? ratom)
-                   (ratom/dispose! ratom)))
-               (set! (.-cljsIsDirty C) false)
+               (util/dispose C)
                (when f (f C))))
 
     nil))
@@ -166,8 +162,7 @@
     :render (if util/isClient
               (fn []
                 (this-as C
-                         (util/run-reactively
-                          C #(do-render C) #(util/queue-render C))))
+                         (util/run-reactively C #(do-render C))))
               (fn [] (this-as C (do-render C))))))
 
 (defn wrap-funs [fun-map]

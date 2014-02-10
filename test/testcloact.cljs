@@ -219,7 +219,7 @@
   (when isClient
     (let [ran (atom 0)
           state (atom 0)
-          really-simple (fn [props children this]
+          really-simple (fn []
                           (swap! ran inc)
                           (if (= @state 1)
                             (reset! state 3))

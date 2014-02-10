@@ -15,6 +15,11 @@
   (binding [*ratom-context* obj]
     (f)))
 
+(defn captured [obj]
+  (let [c (.-captured obj)]
+    (set! (.-captured obj) nil)
+    c))
+
 (defn- notify-deref-watcher! [derefable]
   (let [obj *ratom-context*]
     (when-not (nil? obj)

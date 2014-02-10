@@ -38,9 +38,9 @@
         tweak #(-> % (+ (rnd)) (/ 2) js/Math.floor)]
     {:red (tweak red) :green (tweak green) :blue (tweak blue)}))
 
-(defn reset-random-colors []
+(defn reset-random-colors [color]
   (reset! random-colors
-          (repeatedly #(-> @base-color tweak-color to-rgb))))
+          (repeatedly #(-> color tweak-color to-rgb))))
 
 (defn color-choose [{color-part :color-part}]
   [:div.color-slider
@@ -50,7 +50,7 @@
             :on-change (fn [e]
                          (swap! base-color assoc
                                 color-part (-> e .-target .-value int))
-                         (reset-random-colors))}]])
+                         (reset-random-colors @base-color))}]])
 
 (defn ncolors-choose []
   [:div.color-slider
@@ -77,7 +77,7 @@
                    (take n @random-colors))]]))
 
 (defn color-demo []
-  (reset-random-colors)
+  (reset-random-colors @base-color)
   (fn []
     [:div
      [:h2 "Matching colors"]

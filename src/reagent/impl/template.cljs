@@ -3,9 +3,13 @@
   (:require [clojure.string :as string]
             [reagent.impl.reactimport :as reactimport]
             [reagent.impl.util :as util :refer [cljs-level]]
+            [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn println log]]))
 
 (def React reactimport/React)
+
+(def debug false)
+(assert (set! debug true))
 
 (def cljs-argv "cljsArgv")
 
@@ -148,7 +152,8 @@
 
 (defn wrap-component [comp extras name]
   (let [def #js {:render
-                 #(this-as C (wrapped-render C comp extras))
+                 (fn []
+                   (this-as C (wrapped-render C comp extras)))
                  :shouldComponentUpdate
                  #(this-as C (wrapped-should-update C %1 %2))
                  :displayName (or name "ComponentWrapper")}]
@@ -216,9 +221,27 @@
           (aset jsprops "key" key))))
     (c jsprops)))
 
+(def tmp #js {})
+
+(defn warn-on-deref [x]
+  (when-not (.-warned tmp)
+    (log "Warning: Reactive deref not supported in seq in "
+         (pr-str x))
+    (set! (.-warned tmp) true)))
+
+(defn expand-seq [x level]
+  (map-into-array as-component (inc level) x))
+
 (defn as-component
   ([x] (as-component x 0))
   ([x level]
      (cond (vector? x) (vec-to-comp x level)
-           (seq? x) (map-into-array as-component level x)
+           (seq? x) (if-not (and debug (nil? ratom/*ratom-context*))
+                      (expand-seq x level)
+                      (let [s (ratom/capture-derefed
+                               #(expand-seq x level)
+                               tmp)]
+                        (when (ratom/captured tmp)
+                          (warn-on-deref x))
+                        s))
            true x)))

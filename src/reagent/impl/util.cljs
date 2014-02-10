@@ -1,6 +1,6 @@
 (ns reagent.impl.util
   (:refer-clojure :exclude [flush])
-  (:require [reagent.debug :refer-macros [dbg]]
+  (:require [reagent.debug :refer-macros [dbg log]]
             [reagent.ratom :as ratom]))
 
 (def isClient (not (nil? (try (.-document js/window)
@@ -59,6 +59,35 @@
 (defn queue-render [C]
   (set! (.-cljsIsDirty C) true)
   (.queue-render render-queue C))
+
+
+;; Render helper
+
+(defn is-reagent-component [C]
+  (and (not (nil? C))
+       (aget C "props")
+       (-> C (aget "props") (aget "cljsArgv"))))
+
+(defn run-reactively [C run]
+  (assert (is-reagent-component C))
+  (set! (.-cljsIsDirty C) false)
+  (let [rat (.-cljsRatom C)]
+    (if (nil? rat)
+      (let [res (ratom/capture-derefed run C)
+            derefed (ratom/captured C)]
+        (when (not (nil? derefed))
+          (set! (.-cljsRatom C)
+                (ratom/make-reaction run
+                                     :auto-run #(queue-render C)
+                                     :derefed derefed)))
+        res)
+      (ratom/run rat))))
+
+(defn dispose [C]
+  (let [ratom (.-cljsRatom C)]
+                 (if-not (nil? ratom)
+                   (ratom/dispose! ratom)))
+  (set! (.-cljsIsDirty C) false))
 
 
 ;; Misc utilities
@@ -136,20 +165,3 @@
                               (shallow-equal-maps (v1 1) (v2 1))))
                    (recur (inc n))
                    false)))))))
-
-
-;; Render helper
-
-(defn run-reactively [C run on-dirty]
-  (let [rat (.-cljsRatom C)]
-    (if (nil? rat)
-      (let [res (ratom/capture-derefed run C)
-            derefed (.-captured C)]
-        (when (not (nil? derefed))
-          (set! (.-cljsRatom C)
-                (ratom/make-reaction run
-                                     :auto-run on-dirty
-                                     :derefed derefed)))
-        res)
-      (ratom/run rat))))
-
