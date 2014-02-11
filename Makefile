@@ -36,6 +36,7 @@ install: leinbuild
 
 preclean:
 	rm -rf repl .repl target out
+	mkdir -p vendor/reagent
 
 clean: preclean
 	rm -rf news assets
@@ -53,13 +54,13 @@ veryclean: clean
 bower_components:
 	bower install react#v0.8.0
 
-src/reagent/react.min.js: bower_components/react/react.min.js Makefile
+vendor/reagent/react.min.js: bower_components/react/react.min.js Makefile
 	cp $< $@
 
-src/reagent/react.js: bower_components/react/react.js Makefile
+vendor/reagent/react.js: bower_components/react/react.js Makefile
 	cp $< $@
 
-copyjs: bower_components src/reagent/react.min.js src/reagent/react.js
+copyjs: bower_components vendor/reagent/react.min.js vendor/reagent/react.js
 
 gensite:
 	node bin/gen-site.js

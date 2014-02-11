@@ -28,6 +28,7 @@
                          {:source-map "target/cljs-client.js.map"
                           :source-map-path "client"}}}}}}
   :source-paths ["src"]
+  :resource-paths ["vendor"]
   :cljsbuild
   {:builds
    {:client {:source-paths ["src" "demo" "examples/todomvc/src"
