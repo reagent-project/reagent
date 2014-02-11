@@ -8,7 +8,7 @@
 (def funmap (-> "reagentdemo/news/async.cljs" get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
 
-(defn timing-wrapper [{f :component-fn}]
+(defn timing-wrapper [f]
   (let [start-time (atom nil)
         render-time (atom nil)
         now #(.now js/Date)
@@ -19,10 +19,10 @@
                    :component-will-update start
                    :component-did-mount stop
                    :component-did-update stop})]
-    (fn [props children]
+    (fn []
       [:div
        [:p [:em "render time: " @render-time "ms"]]
-       (into [timed-f props] children)])))
+       [timed-f]])))
 
 (def base-color (atom {:red 130 :green 160 :blue 120}))
 (def ncolors (atom 20))
@@ -42,7 +42,7 @@
   (reset! random-colors
           (repeatedly #(-> color tweak-color to-rgb))))
 
-(defn color-choose [{color-part :color-part}]
+(defn color-choose [color-part]
   [:div.color-slider
    (name color-part) " " (color-part @base-color)
    [:input {:type "range" :min 0 :max 255
@@ -81,11 +81,11 @@
   (fn []
     [:div
      [:h2 "Matching colors"]
-     [color-choose {:color-part :red}]
-     [color-choose {:color-part :green}]
-     [color-choose {:color-part :blue}]
+     [color-choose :red]
+     [color-choose :green]
+     [color-choose :blue]
      [ncolors-choose]
-     [timing-wrapper {:component-fn palette}]]))
+     [timing-wrapper palette]]))
 
 (defn main [{:keys [summary]}]
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
