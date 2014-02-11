@@ -284,3 +284,19 @@
                  (as-string [:div [comp :foo]])))
     (is (re-find #"bardiv"
                  (as-string [:div [comp :bar]])))))
+
+(deftest symbol-string-tag []
+  (is (re-find #"foobar"
+               (as-string ['div "foobar"])))
+  (is (re-find #"foobar"
+               (as-string ["div" "foobar"])))
+  (is (re-find #"id=.foo"
+               (as-string ['div#foo "x"])))
+  (is (re-find #"id=.foo"
+               (as-string ["div#foo" "x"])))
+  (is (re-find #"class=.foo bar"
+               (as-string ['div.foo {:class "bar"}])))
+  (is (re-find #"class=.foo bar"
+               (as-string ["div.foo.bar"])))
+  (is (re-find #"id=.foo"
+               (as-string ['div#foo.foo.bar]))))

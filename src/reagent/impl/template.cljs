@@ -17,6 +17,15 @@
 
 (def dont-camel-case #{"aria" "data"})
 
+(defn hiccup-tag? [x]
+  (or (keyword? x)
+      (symbol? x)
+      (string? x)))
+
+(defn valid-tag? [x]
+  (or (hiccup-tag? x)
+      (ifn? x)))
+
 (defn capitalize [s]
   (if (< (count s) 2)
     (string/upper-case s)
@@ -195,7 +204,7 @@
     wrapf))
 
 (defn as-class [tag]
-  (if (keyword? tag)
+  (if (hiccup-tag? tag)
     (cached-wrapper tag)
     (do
       (let [cached-class (.-cljsReactClass tag)]
@@ -207,9 +216,7 @@
 
 (defn vec-to-comp [v level]
   (assert (pos? (count v)) "Hiccup form should not be empty")
-  (assert (let [tag (v 0)]
-            (or (keyword? tag)
-                (ifn? tag)))
+  (assert (valid-tag? (v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
   (let [props (get v 1)
         c (as-class (v 0))
