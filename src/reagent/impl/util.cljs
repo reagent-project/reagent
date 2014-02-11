@@ -154,14 +154,15 @@
 
 (defn equal-args [v1 v2]
   ;; Compare two vectors using identical?
+  (assert (vector? v1))
+  (assert (vector? v2))
   (or (identical? v1 v2)
-      (let [end (count v1)]
-        (and (== end (count v2))
-             (loop [n 1]
-               (if (>= n end)
-                 true
-                 (if (or (identical? (v1 n) (v2 n))
-                         (and (== 1 n)
-                              (shallow-equal-maps (v1 1) (v2 1))))
-                   (recur (inc n))
-                   false)))))))
+      (and (== (count v1) (count v2))
+           (reduce-kv (fn [res k v]
+                        (let [v' (v2 k)]
+                          (if (or (identical? v v')
+                                  (and (== 1 k)
+                                       (shallow-equal-maps v v')))
+                            res
+                            (reduced false))))
+                      true v1))))

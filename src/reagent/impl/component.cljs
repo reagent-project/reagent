@@ -149,9 +149,10 @@
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
 
-(defn camelify-map-keys [m]
-  (into {} (for [[k v] m]
-             [(-> k tmpl/dash-to-camel keyword) v])))
+(defn camelify-map-keys [fun-map]
+  (reduce-kv (fn [m k v]
+               (assoc m (-> k tmpl/dash-to-camel keyword) v))
+             {} fun-map))
 
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
@@ -178,8 +179,9 @@
         fmap (-> fun-map
                  (assoc :displayName name')
                  (add-render render-fun))]
-    (into {} (for [[k v] fmap]
-               [k (get-wrapper k v name')]))))
+    (reduce-kv (fn [m k v]
+                 (assoc m k (get-wrapper k v name')))
+               {} fmap)))
 
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
