@@ -209,7 +209,7 @@
   (assert (pos? (count v)) "Hiccup form should not be empty")
   (assert (let [tag (v 0)]
             (or (keyword? tag)
-                (fn? tag)))
+                (ifn? tag)))
           (str "Invalid Hiccup form: " (pr-str v)))
   (let [props (get v 1)
         c (as-class (v 0))

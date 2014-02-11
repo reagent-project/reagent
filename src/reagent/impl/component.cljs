@@ -56,7 +56,7 @@
 (defn do-render [C]
   (binding [*current-component* C]
     (let [f (aget C cljs-render)
-          _ (assert (fn? f))
+          _ (assert (ifn? f))
           p (js-props C)
           res (if (nil? (aget C "componentFunction"))
                 (f C)
@@ -71,7 +71,7 @@
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
         (tmpl/as-component res (aget p cljs-level))
-        (if (fn? res)
+        (if (ifn? res)
           (do
             (aset C cljs-render res)
             (do-render C))
@@ -129,7 +129,7 @@
     nil))
 
 (defn default-wrapper [f]
-  (if (fn? f)
+  (if (ifn? f)
     (fn [& args]
       (this-as C (apply f C args)))
     f))
@@ -142,7 +142,7 @@
       (aset "__reactDontBind" true))
     (let [wrap (custom-wrapper key f)]
       (when (and wrap f)
-        (assert (fn? f)
+        (assert (ifn? f)
                 (str "Expected function in " name key " but got " f)))
       (or wrap (default-wrapper f)))))
 
@@ -168,7 +168,9 @@
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
                        (:render fun-map))
-        _ (assert (ifn? render-fun))
+        _ (assert (ifn? render-fun)
+                  (str "Render must be a function, not "
+                       (pr-str render-fun)))
         name (or (:displayName fun-map)
                  (.-displayName render-fun)
                  (.-name render-fun))
@@ -179,12 +181,18 @@
     (into {} (for [[k v] fmap]
                [k (get-wrapper k v name')]))))
 
+(defn map-to-js [m]
+  (reduce-kv (fn [o k v]
+               (doto o
+                 (aset (name k) v)))
+             #js {} m))
+
 (defn cljsify [body]
   (-> body
       camelify-map-keys
       add-obligatory
       wrap-funs
-      clj->js))
+      map-to-js))
 
 (defn create-class
   [body]

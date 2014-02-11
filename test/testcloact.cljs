@@ -276,3 +276,11 @@
   (is (re-find #"id=.foo"
                (as-string [:div#bar {:id "foo"}]))
       "Dynamic id overwrites static"))
+
+(deftest ifn-component []
+  (let [comp {:foo [:div "foodiv"]
+              :bar [:div "bardiv"]}]
+    (is (re-find #"foodiv"
+                 (as-string [:div [comp :foo]])))
+    (is (re-find #"bardiv"
+                 (as-string [:div [comp :bar]])))))
