@@ -194,18 +194,22 @@
             (set! (.-cljsReactClass tag) (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
+(defn get-key [x]
+  (when (map? x) (get x :key)))
+
 (defn vec-to-comp [v level]
   (assert (pos? (count v)) "Hiccup form should not be empty")
   (assert (valid-tag? (v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
-  (let [props (get v 1)
-        c (as-class (v 0))
+  (let [c (as-class (v 0))
         jsprops (js-obj cljs-argv v
                         cljs-level level)]
-    (when (map? props)
-      (let [key (:key props)]
-        (when-not (nil? key)
-          (aset jsprops "key" key))))
+    (let [k (-> v meta get-key)
+          k' (if (nil? k)
+               (-> v (get 1) get-key)
+               k)]
+      (when-not (nil? k')
+        (aset jsprops "key" k')))
     (c jsprops)))
 
 (def tmp #js {})

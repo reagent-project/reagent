@@ -59,7 +59,7 @@
             :value @ncolors
             :on-change #(reset! ncolors (-> % .-target .-value))}]])
 
-(defn color-plate [{color :color}]
+(defn color-plate [color]
   [:div.color-plate
    {:style {:background-color color}}])
 
@@ -69,11 +69,12 @@
     [:div
      [:div
       [:p "base color: "]
-      [color-plate {:color (to-rgb color)}]]
+      [color-plate (to-rgb color)]]
      [:div.color-samples
       [:p n " random matching colors:"]
       (map-indexed (fn [k v]
-                     [color-plate {:key k :color v}])
+                     (with-meta [color-plate v]
+                       {:key k}))
                    (take n @random-colors))]]))
 
 (defn color-demo []
