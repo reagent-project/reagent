@@ -1,21 +1,15 @@
 
 (ns reagent.impl.template
   (:require [clojure.string :as string]
-            [reagent.impl.reactimport :as reactimport]
-            [reagent.impl.util :as util :refer [cljs-level]]
+            [reagent.impl.util :as util
+             :refer [cljs-level cljs-argv is-client React]]
+            [reagent.impl.component :as comp]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn println log]]))
 
-(def React reactimport/React)
 
 (def debug false)
 (assert (set! debug true))
-
-(def cljs-argv "cljsArgv")
-
-(def isClient util/isClient)
-
-(def dont-camel-case #{"aria" "data"})
 
 (defn hiccup-tag? [x]
   (or (keyword? x)
@@ -26,30 +20,16 @@
   (or (hiccup-tag? x)
       (ifn? x)))
 
-(defn capitalize [s]
-  (if (< (count s) 2)
-    (string/upper-case s)
-    (str (string/upper-case (subs s 0 1)) (subs s 1))))
-
-(defn dash-to-camel [dashed]
-  (if (string? dashed)
-    dashed
-    (let [name-str (name dashed)
-          [start & parts] (string/split name-str #"-")]
-      (if (dont-camel-case start)
-        name-str
-        (apply str start (map capitalize parts))))))
-
 (def attr-aliases {:class "className"
                    :for "htmlFor"
                    :charset "charSet"})
 
 (defn undash-prop-name [n]
   (or (attr-aliases n)
-      (dash-to-camel n)))
+      (util/dash-to-camel n)))
 
 (def cached-prop-name (memoize undash-prop-name))
-(def cached-style-name (memoize dash-to-camel))
+(def cached-style-name (memoize util/dash-to-camel))
 
 (defn to-js-val [v]
   (if-not (ifn? v)
@@ -198,7 +178,7 @@
 (defn fn-to-class [f]
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
-        res (reagent.core/create-class withrender)
+        res (comp/create-class withrender as-component)
         wrapf (.-cljsReactClass res)]
     (set! (.-cljsReactClass f) wrapf)
     wrapf))

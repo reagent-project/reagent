@@ -7,9 +7,9 @@
             [reagent.impl.util :as util]
             [reagent.ratom :as ratom]))
 
-(def React tmpl/React)
+(def React util/React)
 
-(def is-client util/isClient)
+(def is-client util/is-client)
 
 (defn render-component
   "Render a Reagent component into the DOM. The first argument may be either a
@@ -53,7 +53,7 @@ looking like this:
 Everything is optional, except :render.
 "
   [spec]
-  (comp/create-class spec))
+  (comp/create-class spec tmpl/as-component))
 
 
 (defn current-component []

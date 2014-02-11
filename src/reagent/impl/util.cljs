@@ -1,12 +1,16 @@
 (ns reagent.impl.util
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg log]]
-            [reagent.ratom :as ratom]))
+            [reagent.ratom :as ratom]
+            [reagent.impl.reactimport :as reactimport]
+            [clojure.string :as string]))
 
-(def isClient (not (nil? (try (.-document js/window)
-                              (catch js/Object e nil)))))
+(def is-client (not (nil? (try (.-document js/window)
+                               (catch js/Object e nil)))))
 
 (def cljs-level "cljsLevel")
+(def cljs-argv "cljsArgv")
+(def React reactimport/React)
 
 ;;; Update batching
 
@@ -14,7 +18,7 @@
   (js/setTimeout f 16))
 
 (def next-tick
-  (if-not isClient
+  (if-not is-client
     fake-raf
     (let [w js/window]
       (or (.-requestAnimationFrame w)
@@ -91,6 +95,23 @@
 
 
 ;; Misc utilities
+
+(def dont-camel-case #{"aria" "data"})
+
+(defn capitalize [s]
+  (if (< (count s) 2)
+    (string/upper-case s)
+    (str (string/upper-case (subs s 0 1)) (subs s 1))))
+
+(defn dash-to-camel [dashed]
+  (if (string? dashed)
+    dashed
+    (let [name-str (name dashed)
+          [start & parts] (string/split name-str #"-")]
+      (if (dont-camel-case start)
+        name-str
+        (apply str start (map capitalize parts))))))
+
 
 (deftype partial-ifn [f args ^:mutable p]
   IFn

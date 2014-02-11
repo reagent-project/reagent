@@ -1,8 +1,6 @@
 
 (ns reagent.impl.component
-  (:require [reagent.impl.template :as tmpl
-             :refer [cljs-argv cljs-level React]]
-            [reagent.impl.util :as util :refer [cljs-level]]
+  (:require [reagent.impl.util :as util :refer [cljs-level cljs-argv React]]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
 
@@ -70,7 +68,7 @@
                     5 (f (argv 1) (argv 2) (argv 3) (argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
-        (tmpl/as-component res (aget p cljs-level))
+        (.asComponent C res (aget p cljs-level))
         (if (ifn? res)
           (do
             (aset C cljs-render res)
@@ -134,12 +132,15 @@
       (this-as C (apply f C args)))
     f))
 
-(def dont-wrap #{:cljsRender :render})
+(def dont-wrap #{:cljsRender :render :componentFunction})
+
+(defn dont-bind [f]
+  (doto f
+    (aset "__reactDontBind" true)))
 
 (defn get-wrapper [key f name]
   (if (dont-wrap key)
-    (doto f
-      (aset "__reactDontBind" true))
+    (dont-bind f)
     (let [wrap (custom-wrapper key f)]
       (when (and wrap f)
         (assert (ifn? f)
@@ -151,7 +152,7 @@
 
 (defn camelify-map-keys [fun-map]
   (reduce-kv (fn [m k v]
-               (assoc m (-> k tmpl/dash-to-camel keyword) v))
+               (assoc m (-> k util/dash-to-camel keyword) v))
              {} fun-map))
 
 (defn add-obligatory [fun-map]
@@ -160,7 +161,7 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render (if util/isClient
+    :render (if util/is-client
               (fn []
                 (this-as C
                          (util/run-reactively C #(do-render C))))
@@ -197,12 +198,13 @@
       map-to-js))
 
 (defn create-class
-  [body]
+  [body as-component]
   (assert (map? body))
   (let [spec (cljsify body)
+        _ (set! (.-asComponent spec) (dont-bind as-component))
         res (.createClass React spec)
         f (fn [& args]
-            (tmpl/as-component (apply vector res args)))]
+            (as-component (apply vector res args)))]
     (set! (.-cljsReactClass f) res)
     (set! (.-cljsReactClass res) res)
     f))
