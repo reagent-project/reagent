@@ -5,6 +5,7 @@
   (:require [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
+            [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]))
 
 (def React util/React)
@@ -110,7 +111,7 @@ specially, like React's transferPropsTo."
 Note that this may not work in event handlers, since React.js does
 batching of updates there."
   []
-  (util/flush))
+  (batch/flush))
 
 
 

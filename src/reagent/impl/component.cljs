@@ -1,6 +1,7 @@
 
 (ns reagent.impl.component
   (:require [reagent.impl.util :as util :refer [cljs-level cljs-argv React]]
+            [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]))
 
@@ -121,7 +122,7 @@
     :componentWillUnmount
     (fn []
       (this-as C
-               (util/dispose C)
+               (batch/dispose C)
                (when f (f C))))
 
     nil))
@@ -150,9 +151,11 @@
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
 
+(def dash-to-camel (memoize util/dash-to-camel))
+
 (defn camelify-map-keys [fun-map]
   (reduce-kv (fn [m k v]
-               (assoc m (-> k util/dash-to-camel keyword) v))
+               (assoc m (-> k dash-to-camel keyword) v))
              {} fun-map))
 
 (defn add-obligatory [fun-map]
@@ -164,7 +167,7 @@
     :render (if util/is-client
               (fn []
                 (this-as C
-                         (util/run-reactively C #(do-render C))))
+                         (batch/run-reactively C #(do-render C))))
               (fn [] (this-as C (do-render C))))))
 
 (defn wrap-funs [fun-map]
