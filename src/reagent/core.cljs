@@ -130,7 +130,7 @@ re-rendered."
 (defn next-tick
   "Run f using requestAnimationFrame or equivalent."
   [f]
-  (util/next-tick f))
+  (batch/next-tick f))
 
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and
