@@ -131,29 +131,31 @@
 
 (def -not-found (js-obj))
 
+(defn identical-ish? [x y]
+  (or (keyword-identical? x y)
+      (and (or (symbol? x)
+               (identical? (type x) partial-ifn))
+           (= x y))))
+
 (defn shallow-equal-maps [x y]
-  ;; Compare two maps, using keyword-identical? on all values
+  ;; Compare two maps, using identical-ish? on all values
   (or (identical? x y)
       (and (map? x)
            (map? y)
            (== (count x) (count y))
            (reduce-kv (fn [res k v]
                         (let [yv (get y k -not-found)]
-                          (if (or (keyword-identical? v yv)
-                                  ;; Allow :style maps, symbols
-                                  ;; and reagent/partial
-                                  ;; to be compared properly
+                          (if (or (identical? v yv)
+                                  (identical-ish? v yv)
+                                  ;; Handle :style maps specially
                                   (and (keyword-identical? k :style)
-                                       (shallow-equal-maps v yv))
-                                  (and (or (identical? (type v) partial-ifn)
-                                           (symbol? v))
-                                       (= v yv)))
+                                       (shallow-equal-maps v yv)))
                             res
                             (reduced false))))
                       true x))))
 
 (defn equal-args [v1 v2]
-  ;; Compare two vectors using identical?
+  ;; Compare two vectors using identical-ish?
   (assert (vector? v1))
   (assert (vector? v2))
   (or (identical? v1 v2)
@@ -161,6 +163,7 @@
            (reduce-kv (fn [res k v]
                         (let [v' (v2 k)]
                           (if (or (identical? v v')
+                                  (identical-ish? v v')
                                   (and (== 1 k)
                                        (shallow-equal-maps v v')))
                             res
