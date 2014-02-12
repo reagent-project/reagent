@@ -73,8 +73,7 @@
      [:div.color-samples
       [:p n " random matching colors:"]
       (map-indexed (fn [k v]
-                     (with-meta [color-plate v]
-                       {:key k}))
+                     ^{:key k} [color-plate v])
                    (take n @random-colors))]]))
 
 (defn color-demo []

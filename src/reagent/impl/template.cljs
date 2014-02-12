@@ -56,19 +56,20 @@
                               class))))
 
 (defn convert-props [props id-class]
-  (let [is-empty (empty? props)]
-    (cond
-     (and is-empty (nil? id-class)) nil
-     (identical? (type props) js/Object) props
-     :else (let [objprops (js-obj)]
-             (when-not is-empty
+  (cond
+   (and (empty? props) (nil? id-class)) nil
+   (identical? (type props) js/Object) props
+   :else (let [objprops
                (reduce-kv (fn [o k v]
-                            (doto o (aset (cached-prop-name k)
-                                          (convert-prop-value v))))
-                          objprops props))
-             (when-not (nil? id-class)
-               (set-id-class objprops id-class))
-             objprops))))
+                            (let [pname (cached-prop-name k)]
+                              (if-not (identical? pname "key")
+                                ;; Skip key, it is set by parent
+                                (aset o pname (convert-prop-value v))))
+                            o)
+                          #js {} props)]
+           (when-not (nil? id-class)
+             (set-id-class objprops id-class))
+           objprops)))
 
 (defn map-into-array [f arg coll]
   (reduce (fn [a x]
