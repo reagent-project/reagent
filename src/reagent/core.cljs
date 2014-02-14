@@ -64,33 +64,39 @@ Everything is optional, except :render.
 (defn state
   "Returns the state of a component, as set with replace-state or set-state."
   [this]
+  (assert (util/reagent-component? this))
   (comp/state this))
 
 (defn replace-state
   "Set state of a component."
   [this new-state]
+  (assert (util/reagent-component? this))
   (comp/replace-state this new-state))
 
 (defn set-state
   "Merge component state with new-state."
   [this new-state]
+  (assert (util/reagent-component? this))
   (comp/set-state this new-state))
 
 
 (defn props
   "Returns the props passed to a component."
   [this]
-  (comp/get-props this))
+  (assert (util/reagent-component? this))
+  (util/get-props this))
 
 (defn children
   "Returns the children passed to a component."
   [this]
-  (comp/get-children this))
+  (assert (util/reagent-component? this))
+  (util/get-children this))
 
 (defn argv
   "Returns the entire Hiccup form passed to the component."
   [this]
-  (comp/get-argv this))
+  (assert (util/reagent-component? this))
+  (util/get-argv this))
 
 (defn dom-node
   "Returns the root DOM node of a mounted component."

@@ -10,7 +10,7 @@
 (def cljs-state "cljsState")
 (def cljs-render "cljsRender")
 
-;;; Accessors
+;;; State
 
 (defn state [this]
   (aget this cljs-state))
@@ -26,37 +26,14 @@
 (defn set-state [this new-state]
   (replace-state this (merge (state this) new-state)))
 
-(defn js-props [C]
-  (aget C "props"))
-
-(defn extract-props [v]
-  (let [p (get v 1)]
-    (if (map? p) p)))
-
-(defn extract-children [v]
-  (let [p (get v 1)
-        first-child (if (or (nil? p) (map? p)) 2 1)]
-    (if (> (count v) first-child)
-      (subvec v first-child))))
-
-(defn get-argv [C]
-  (-> C js-props (aget cljs-argv)))
-
-(defn get-props [C]
-  (-> C get-argv extract-props))
-
-(defn get-children [C]
-  (-> C get-argv extract-children))
-
 
 ;;; Rendering
-
 
 (defn do-render [C]
   (binding [*current-component* C]
     (let [f (aget C cljs-render)
           _ (assert (ifn? f))
-          p (js-props C)
+          p (util/js-props C)
           res (if (nil? (aget C "componentFunction"))
                 (f C)
                 (let [argv (aget p cljs-argv)
@@ -77,7 +54,7 @@
           res)))))
 
 
-;;; Function wrapping
+;;; Method wrapping
 
 (defn custom-wrapper [key f]
   (case key
@@ -100,7 +77,7 @@
       (this-as C
                ;; Don't care about nextstate here, we use forceUpdate
                ;; when only when state has changed anyway.
-               (let [inprops (js-props C)
+               (let [inprops (util/js-props C)
                      old-argv (aget inprops cljs-argv)
                      new-argv (aget nextprops cljs-argv)]
                  (if (nil? f)

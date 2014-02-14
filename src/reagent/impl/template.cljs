@@ -43,13 +43,6 @@
           (coll? v) (clj->js v)
           :else (fn [& args] (apply v args)))))
 
-(defn extract-props [v]
-  (let [p (get v 1)]
-    (if (map? p) p)))
-
-(defn get-props [this]
-  (-> this (aget "props") (aget cljs-argv) extract-props))
-
 (defn undash-prop-name [n]
   (or (attr-aliases n)
       (util/dash-to-camel n)))
@@ -94,12 +87,12 @@
 ;;; Specialization for input components
 
 (defn input-initial-state [this]
-  (let [props (get-props this)]
+  (let [props (util/get-props this)]
     #js {:value (:value props)
          :checked (:checked props)}))
 
 (defn input-handle-change [this e]
-  (let [props (get-props this)
+  (let [props (util/get-props this)
         on-change (or (props :on-change) (props "onChange"))]
     (when-not (nil? on-change)
       (let [target (.-target e)]
@@ -108,7 +101,7 @@
       (on-change e))))
 
 (defn input-will-receive-props [this new-props]
-  (let [props (-> new-props (aget cljs-argv) extract-props)]
+  (let [props (-> new-props (aget cljs-argv) util/extract-props)]
     (.setState this #js {:value (:value props)
                          :checked (:checked props)})))
 
@@ -127,7 +120,7 @@
 (declare as-component)
 
 (defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (aget this "props")
+  (let [inprops (util/js-props this)
         argv (aget inprops cljs-argv)
         props (get argv 1)
         hasprops (or (nil? props) (map? props))
@@ -144,7 +137,7 @@
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [C nextprops nextstate]
-  (let [inprops (aget C "props")
+  (let [inprops (util/js-props C)
         a1 (aget inprops cljs-argv)
         a2 (aget nextprops cljs-argv)]
     (not (util/equal-args a1 a2))))

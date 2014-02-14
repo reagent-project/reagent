@@ -6,9 +6,38 @@
 (def is-client (not (nil? (try (.-document js/window)
                                (catch js/Object e nil)))))
 
+(def React reactimport/React)
+
+;;; Props accessors
+
+(def props "props")
 (def cljs-level "cljsLevel")
 (def cljs-argv "cljsArgv")
-(def React reactimport/React)
+
+(defn js-props [C]
+  (aget C props))
+
+(defn extract-props [v]
+  (let [p (get v 1)]
+    (if (map? p) p)))
+
+(defn extract-children [v]
+  (let [p (get v 1)
+        first-child (if (or (nil? p) (map? p)) 2 1)]
+    (if (> (count v) first-child)
+      (subvec v first-child))))
+
+(defn get-argv [C]
+  (-> C (aget props) (aget cljs-argv)))
+
+(defn get-props [C]
+  (-> C (aget props) (aget cljs-argv) extract-props))
+
+(defn get-children [C]
+  (-> C (aget props) (aget cljs-argv) extract-children))
+
+(defn reagent-component? [C]
+  (-> C get-argv nil? not))
 
 
 ;; Misc utilities
