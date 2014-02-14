@@ -18,6 +18,8 @@
                    :for "htmlFor"
                    :charset "charSet"})
 
+;;; Common utilities
+
 (defn hiccup-tag? [x]
   (or (keyword? x)
       (symbol? x)
@@ -27,12 +29,11 @@
   (or (hiccup-tag? x)
       (ifn? x)))
 
-(defn undash-prop-name [n]
-  (or (attr-aliases n)
-      (util/dash-to-camel n)))
-
-(def cached-prop-name (memoize undash-prop-name))
-(def cached-style-name (memoize util/dash-to-camel))
+(defn map-into-array [f arg coll]
+  (reduce (fn [a x]
+            (doto a
+              (.push (f x arg))))
+          #js [] coll))
 
 (defn to-js-val [v]
   (if-not (ifn? v)
@@ -41,6 +42,22 @@
           (symbol? v) (str v)
           (coll? v) (clj->js v)
           :else (fn [& args] (apply v args)))))
+
+(defn extract-props [v]
+  (let [p (get v 1)]
+    (if (map? p) p)))
+
+(defn get-props [this]
+  (-> this (aget "props") (aget cljs-argv) extract-props))
+
+(defn undash-prop-name [n]
+  (or (attr-aliases n)
+      (util/dash-to-camel n)))
+
+;;; Props conversion
+
+(def cached-prop-name (memoize undash-prop-name))
+(def cached-style-name (memoize util/dash-to-camel))
 
 (defn convert-prop-value [val]
   (if (map? val)
@@ -74,18 +91,7 @@
              (set-id-class objprops id-class))
            objprops)))
 
-(defn map-into-array [f arg coll]
-  (reduce (fn [a x]
-            (doto a
-              (.push (f x arg))))
-          #js [] coll))
-
-(defn extract-props [v]
-  (let [p (get v 1)]
-    (if (map? p) p)))
-
-(defn get-props [this]
-  (-> this (aget "props") (aget cljs-argv) extract-props))
+;;; Specialization for input components
 
 (defn input-initial-state [this]
   (let [props (get-props this)]
@@ -116,9 +122,11 @@
 (def input-components #{(aget DOM "input")
                         (aget DOM "textarea")})
 
+;;; Wrapping of native components
+
 (declare as-component)
 
-(defn wrapped-render [this comp id-class]
+(defn wrapped-render [this comp id-class input-setup]
   (let [inprops (aget this "props")
         argv (aget inprops cljs-argv)
         props (get argv 1)
@@ -130,8 +138,8 @@
                                (inc (aget inprops cljs-level))
                                children)
         jsprops (convert-props (if hasprops props) id-class)]
-    (when (input-components comp)
-      (input-render-setup this jsprops))
+    (when-not (nil? input-setup)
+      (input-setup this jsprops))
     (.unshift jsargs jsprops)
     (.apply comp nil jsargs)))
 
@@ -141,21 +149,27 @@
         a2 (aget nextprops cljs-argv)]
     (not (util/equal-args a1 a2))))
 
+(defn add-input-methods [spec]
+  (doto spec
+    (aset "shouldComponentUpdate" nil)
+    (aset "getInitialState" #(this-as C (input-initial-state C)))
+    (aset "handleChange" #(this-as C (input-handle-change C %)))
+    (aset "componentWillReceiveProps"
+          #(this-as C (input-will-receive-props C %)))))
+
+;;; Conversion from Hiccup forms
+
 (defn wrap-component [comp extras name]
-  (let [def #js {:render
-                 (fn []
-                   (this-as C (wrapped-render C comp extras)))
+  (let [input? (input-components comp)
+        input-setup (if input? input-render-setup)
+        spec #js {:render
+                 #(this-as C (wrapped-render C comp extras input-setup))
                  :shouldComponentUpdate
                  #(this-as C (wrapped-should-update C %1 %2))
                  :displayName (or name "ComponentWrapper")}]
-    (when (input-components comp)
-      (doto def
-        (aset "shouldComponentUpdate" nil)
-        (aset "getInitialState" #(this-as C (input-initial-state C)))
-        (aset "handleChange" #(this-as C (input-handle-change C %)))
-        (aset "componentWillReceiveProps"
-              #(this-as C (input-will-receive-props C %)))))
-    (.createClass React def)))
+    (when input?
+      (add-input-methods spec))
+    (.createClass React spec)))
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
@@ -172,10 +186,13 @@
 
 (def cached-wrapper (memoize get-wrapper))
 
+(defn create-class [spec]
+  (comp/create-class spec as-component))
+
 (defn fn-to-class [f]
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
-        res (comp/create-class withrender as-component)
+        res (create-class withrender)
         wrapf (.-cljsReactClass res)]
     (set! (.-cljsReactClass f) wrapf)
     wrapf))

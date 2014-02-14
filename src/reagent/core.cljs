@@ -54,7 +54,7 @@ looking like this:
 Everything is optional, except :render.
 "
   [spec]
-  (comp/create-class spec tmpl/as-component))
+  (tmpl/create-class spec))
 
 
 (defn current-component []
