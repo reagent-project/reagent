@@ -33,3 +33,8 @@ as well as package name and line number. Returns x."
                      ": "
                      (pr-str x#)))
        x#)))
+
+(defmacro dev?
+  "True if assertions are enabled."
+  []
+  (if *assert* true false))

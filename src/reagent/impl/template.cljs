@@ -5,11 +5,18 @@
              :refer [cljs-level cljs-argv is-client React]]
             [reagent.impl.component :as comp]
             [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg prn println log]]))
+            [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
+;; From Weavejester's Hiccup, via pump:
+(def ^{:doc "Regular expression that parses a CSS-style id and class
+             from a tag name."}
+  re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(def debug false)
-(assert (set! debug true))
+(def DOM (aget React "DOM"))
+
+(def attr-aliases {:class "className"
+                   :for "htmlFor"
+                   :charset "charSet"})
 
 (defn hiccup-tag? [x]
   (or (keyword? x)
@@ -19,10 +26,6 @@
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
       (ifn? x)))
-
-(def attr-aliases {:class "className"
-                   :for "htmlFor"
-                   :charset "charSet"})
 
 (defn undash-prop-name [n]
   (or (attr-aliases n)
@@ -77,13 +80,6 @@
               (.push (f x arg))))
           #js [] coll))
 
-(declare as-component)
-
-(def DOM (aget React "DOM"))
-
-(def input-components #{(aget DOM "input")
-                        (aget DOM "textarea")})
-
 (defn extract-props [v]
   (let [p (get v 1)]
     (if (map? p) p)))
@@ -116,6 +112,11 @@
       (aset "value" (.-value state))
       (aset "checked" (.-checked state))
       (aset "onChange" (aget this "handleChange")))))
+
+(def input-components #{(aget DOM "input")
+                        (aget DOM "textarea")})
+
+(declare as-component)
 
 (defn wrapped-render [this comp id-class]
   (let [inprops (aget this "props")
@@ -155,11 +156,6 @@
         (aset "componentWillReceiveProps"
               #(this-as C (input-will-receive-props C %)))))
     (.createClass React def)))
-
-;; From Weavejester's Hiccup, via pump:
-(def ^{:doc "Regular expression that parses a CSS-style id and class
-             from a tag name."}
-  re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
@@ -228,7 +224,7 @@
   ([x] (as-component x 0))
   ([x level]
      (cond (vector? x) (vec-to-comp x level)
-           (seq? x) (if-not (and debug (nil? ratom/*ratom-context*))
+           (seq? x) (if-not (and (dev?) (nil? ratom/*ratom-context*))
                       (expand-seq x level)
                       (let [s (ratom/capture-derefed
                                #(expand-seq x level)
