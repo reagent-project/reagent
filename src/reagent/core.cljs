@@ -144,10 +144,4 @@ the result can be compared with ="
   [f & args]
   (util/partial-ifn. f args nil))
 
-(let [p1 (partial vector 1 2)]
-  (assert (= (p1 3) [1 2 3]))
-  (assert (= p1 (partial vector 1 2)))
-  (assert (ifn? p1))
-  (assert (= (partial vector 1 2) p1))
-  (assert (not= p1 (partial vector 1 3))))
 

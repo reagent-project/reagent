@@ -55,11 +55,13 @@
                  :render
                  (fn [this]
                    (let [props (reagent/props this)]
-                     (assert (map? props))
-                     (assert (= props ((reagent/argv this) 1)))
+                     (is (map? props))
+                     (is (= props ((reagent/argv this) 1)))
+                     (is (= 1 (first (reagent/children this))))
+                     (is (= 1 (count (reagent/children this))))
                      (swap! ran inc)
                      [:div (str "hi " (:foo props) ".")]))})]
-      (with-mounted-component (comp {:foo "you"})
+      (with-mounted-component (comp {:foo "you"} 1)
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi you" div))))
@@ -128,7 +130,7 @@
           v2 (atom 0)
           c2 (fn [{val :val}]
                (swap! ran inc)
-               (assert (= @v1 val))
+               (is (= @v1 val))
                [:div @v2])
           c1 (fn []
                (swap! ran inc)
@@ -300,3 +302,11 @@
                (as-string ["div.foo.bar"])))
   (is (re-find #"id=.foo"
                (as-string ['div#foo.foo.bar]))))
+
+(deftest partial-test []
+  (let [p1 (reagent/partial vector 1 2)]
+    (is (= (p1 3) [1 2 3]))
+    (is (= p1 (reagent/partial vector 1 2)))
+    (is (ifn? p1))
+    (is (= (reagent/partial vector 1 2) p1))
+    (is (not= p1 (reagent/partial vector 1 3)))))
