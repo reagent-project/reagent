@@ -1,6 +1,6 @@
-(ns components
+(ns geometry.components
   (:require [reagent.core :as r]
-            [geometry :refer [x y dist] :as g]))
+            [geometry.geometry :refer [x y dist] :as g]))
 
 (def point-defaults
   {:stroke "black"

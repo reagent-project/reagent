@@ -1,8 +1,8 @@
-(ns core
+(ns geometry.core
   (:require 
    [reagent.core :as r]
-   [components :as c]
-   [geometry :as g]))
+   [geometry.components :as c]
+   [geometry.geometry :as g]))
 
 (enable-console-print!)
 
@@ -12,8 +12,11 @@
            :y 0
            :mouse-down? false}))
 
-(defn on-mouse-move [evt]
-  (swap! mouse-info assoc :x (.-clientX evt) :y (.-clientY evt)))
+(defn on-mouse-move [evt node]
+  (let [bcr (-> node .getBoundingClientRect)]
+    (swap! mouse-info assoc
+           :x (- (.-clientX evt) (.-left bcr))
+           :y (- (.-clientY evt) (.-top bcr)))))
 
 (defn on-mouse-up [evt]
   (swap! mouse-info assoc :mouse-down? false))
@@ -38,20 +41,24 @@
    [c/draggable-point p2 mouse-info]
    [c/draggable-point p3 mouse-info]])
 
+(defn main [{:keys [width height]}]
+  (let [this (r/current-component)]
+    [:svg {:on-mouse-down on-mouse-down
+           :on-mouse-up on-mouse-up
+           :on-mouse-move #(on-mouse-move % (r/dom-node this))
+           :width (or width 800)
+           :height (or height 600)
+           :style {:border "1px solid black"}}
+     [:text {:style {:-webkit-user-select "none"
+                     :-moz-user-select "none"}
+             :x 20 :y 20 :font-size 20}
+      "The points are draggable"]
+     [root]]))
+
 (defn by-id [id]
   (.getElementById js/document id))
 
 (defn ^:export run []
   (r/render-component 
-   [:svg {:on-mouse-down on-mouse-down
-          :on-mouse-up on-mouse-up
-          :on-mouse-move on-mouse-move
-          :width 800
-          :height 600
-          :style {:border "1px solid black"}}
-    [:text {:style {:-webkit-user-select "none"
-                    :-moz-user-select "none"} 
-            :x 20 :y 20 :font-size 20}
-     "The points are draggable"]
-    [root]]
+   [main]
    (by-id "app")))

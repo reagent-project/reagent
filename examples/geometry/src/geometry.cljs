@@ -1,4 +1,4 @@
-(ns geometry)
+(ns geometry.geometry)
 
 (defprotocol IPoint 
   (x [p])
