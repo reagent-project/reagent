@@ -72,7 +72,7 @@
     :componentWillReceiveProps
     (fn [props]
       (this-as C
-               (when f (f C (aget props cljs-argv)))))
+               (f C (aget props cljs-argv))))
 
     :shouldComponentUpdate
     (fn [nextprops nextstate]
@@ -102,7 +102,8 @@
     (fn []
       (this-as C
                (batch/dispose C)
-               (when f (f C))))
+               (when-not (nil? f)
+                 (f C))))
 
     nil))
 
