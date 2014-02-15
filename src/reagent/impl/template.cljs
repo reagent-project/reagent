@@ -18,6 +18,7 @@
                    :for "htmlFor"
                    :charset "charSet"})
 
+
 ;;; Common utilities
 
 (defn hiccup-tag? [x]
@@ -46,6 +47,7 @@
 (defn undash-prop-name [n]
   (or (attr-aliases n)
       (util/dash-to-camel n)))
+
 
 ;;; Props conversion
 
@@ -84,6 +86,7 @@
              (set-id-class objprops id-class))
            objprops)))
 
+
 ;;; Specialization for input components
 
 (defn input-initial-state [this]
@@ -114,6 +117,7 @@
 
 (def input-components #{(aget DOM "input")
                         (aget DOM "textarea")})
+
 
 ;;; Wrapping of native components
 
@@ -150,8 +154,6 @@
     (aset "componentWillReceiveProps"
           #(this-as C (input-will-receive-props C %)))))
 
-;;; Conversion from Hiccup forms
-
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
         input-setup (if input? input-render-setup)
@@ -163,6 +165,54 @@
     (when input?
       (add-input-methods spec))
     (.createClass React spec)))
+
+(defn create-class [spec]
+  (comp/create-class spec as-component))
+
+
+;;; Ref support
+
+(def cljs-refs "cljsRefs")
+
+(defn update-ref [this]
+  (let [rd (-> this util/get-props :ref-data)
+        {:keys [parent ref]} rd
+        refed (-> this (aget "refs") (aget (name ref)))]
+    (aset parent cljs-refs
+          (-> (aget parent cljs-refs)
+              (assoc (keyword ref) refed)))))
+
+(def ref-component
+  (create-class
+   {:displayName "ref-component"
+    :component-did-mount update-ref
+    :component-did-update update-ref
+    :component-will-unmount
+    (fn [this]
+      (let [rd (-> this util/get-props :ref-data)
+            {:keys [parent ref]} rd
+            refed (-> this (aget "refs") (aget (name ref)))]
+        (aset parent cljs-refs
+              (-> (aget parent cljs-refs)
+                  (dissoc (keyword ref))))))
+    :render
+    (fn [this]
+      (let [rd (-> this util/get-props :ref-data)
+            {:keys [parent ref child]} rd
+            react-comp (as-component child)]
+        (-> react-comp (aget "props") (aset "ref" (name ref)))
+        react-comp))}))
+
+(defn make-ref-component [parent ref child]
+  [ref-component {:ref-data {:parent parent
+                             :ref ref
+                             :child child}}])
+
+(defn get-refs [this]
+  (aget this cljs-refs))
+
+
+;;; Conversion from Hiccup forms
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
@@ -178,9 +228,6 @@
     (wrap-component comp id-class (str tag))))
 
 (def cached-wrapper (memoize get-wrapper))
-
-(defn create-class [spec]
-  (comp/create-class spec as-component))
 
 (defn fn-to-class [f]
   (let [spec (meta f)

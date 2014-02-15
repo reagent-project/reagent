@@ -113,8 +113,10 @@
 (def dont-wrap #{:cljsRender :render :componentFunction})
 
 (defn dont-bind [f]
-  (doto f
-    (aset "__reactDontBind" true)))
+  (if (ifn? f)
+    (doto f
+      (aset "__reactDontBind" true))
+    f))
 
 (defn get-wrapper [key f name]
   (if (dont-wrap key)

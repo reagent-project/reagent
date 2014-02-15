@@ -103,6 +103,14 @@ Everything is optional, except :render.
   [this]
   (.getDOMNode this))
 
+(defn ref [parent ref child]
+  (assert (util/reagent-component? parent))
+  (assert (keyword? ref) (str "Ref must be a keyword, not " (pr-str ref)))
+  (tmpl/make-ref-component parent ref child))
+
+(defn refs [this]
+  (assert (util/reagent-component? this))
+  (tmpl/get-refs this))
 
 
 (defn merge-props
