@@ -9,8 +9,8 @@
   ;; Update the time every 1/10 second to be accurate...
   (js/setTimeout #(reset! time (js/Date.)) 100))
 
-(defn greeting [props]
-  [:h1 (:message props)])
+(defn greeting [message]
+  [:h1 message])
 
 (defn clock []
   (update-time timer)
@@ -28,7 +28,7 @@
 
 (defn simple-example []
   [:div
-   [greeting {:message "Hello world, it is now"}]
+   [greeting "Hello world, it is now"]
    [clock]
    [color-input]])
 

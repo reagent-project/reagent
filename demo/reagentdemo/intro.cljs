@@ -19,15 +19,21 @@
    [:p "I include simple-component."]
    [simple-component]])
 
-(defn lister [props]
+(defn hello-component [name]
+  [:p "Hello, " name "!"])
+
+(defn say-hello []
+  [hello-component "world"])
+
+(defn lister [items]
   [:ul
-   (for [item (:items props)]
-     [:li {:key item} "Item " item])])
+   (for [item items]
+     ^{:key item} [:li "Item " item])])
 
 (defn lister-user []
   [:div
    "Here is a list:"
-   [lister {:items (range 3)}]])
+   [lister (range 3)]])
 
 (def click-count (atom 0))
 
@@ -38,7 +44,7 @@
    [:input {:type "button" :value "Click me!"
             :on-click #(swap! click-count inc)}]])
 
-(defn atom-input [{:keys [value]}]
+(defn atom-input [value]
   [:input {:type "text"
            :value @value
            :on-change #(reset! value (-> % .-target .-value))}])
@@ -48,8 +54,7 @@
     (fn []
       [:div
        [:p "The value is now: " @val]
-       [:p "Change it here: "
-        [atom-input {:value val}]]])))
+       [:p "Change it here: " [atom-input val]]])))
 
 (defn timer-component []
   (let [seconds-elapsed (atom 0)]
@@ -62,26 +67,25 @@
   (reagent/render-component [simple-component]
                             (.-body js/document)))
 
-(defn calc-bmi [params to-calc]
-  (let [{:keys [height weight bmi]} params
+(def bmi-data (atom {:height 180 :weight 80}))
+
+(defn calc-bmi []
+  (let [{:keys [height weight bmi] :as data} @bmi-data
         h (/ height 100)]
-    (case to-calc
-      :bmi (assoc params :bmi (/ weight (* h h)))
-      :weight (assoc params :weight (* bmi h h)))))
+    (if (nil? bmi)
+      (assoc data :bmi (/ weight (* h h)))
+      (assoc data :weight (* bmi h h)))))
 
-(def bmi-data (atom (calc-bmi {:height 180 :weight 80} :bmi)))
-
-(defn set-bmi [key val]
-  (swap! bmi-data #(calc-bmi (assoc % key val)
-                             (case key :bmi :weight :bmi))))
-
-(defn slider [{:keys [value min max param]}]
-  [:input {:type "range" :value value :min min :max max
-           :style {:width "100%"}
-           :on-change #(set-bmi param (-> % .-target .-value))}])
+(defn slider [param value min max]
+  (let [reset (case param :bmi :weight :bmi)]
+    [:input {:type "range" :value value :min min :max max
+             :style {:width "100%"}
+             :on-change #(swap! bmi-data assoc
+                                param (-> % .-target .-value)
+                                reset nil)}]))
 
 (defn bmi-component []
-  (let [{:keys [weight height bmi]} @bmi-data
+  (let [{:keys [weight height bmi]} (calc-bmi)
         [color diagnose] (cond
                           (< bmi 18.5) ["orange" "underweight"]
                           (< bmi 25) ["inherit" "normal"]
@@ -91,14 +95,14 @@
      [:h3 "BMI calculator"]
      [:div
       "Height: " (int height) "cm"
-      [slider {:value height :min 100 :max 220 :param :height}]]
+      [slider :height height 100 220]]
      [:div
       "Weight: " (int weight) "kg"
-      [slider {:value weight :min 30 :max 150 :param :weight}]]
+      [slider :weight weight 30 150]]
      [:div
       "BMI: " (int bmi) " "
       [:span {:style {:color color}} diagnose]
-      [slider {:value bmi :min 10 :max 50 :param :bmi}]]]))
+      [slider :bmi bmi 10 50]]]))
 
 (def funmap (-> "reagentdemo/intro.cljs" get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
@@ -107,7 +111,8 @@
   (let [github {:href "https://github.com/holmsand/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
         react {:href "http://facebook.github.io/react/"}
-        hiccup {:href "https://github.com/weavejester/hiccup"}]
+        hiccup {:href "https://github.com/weavejester/hiccup"}
+        dynamic-children {:href "http://facebook.github.io/react/docs/multiple-components.html#dynamic-children"}]
     [:div.demo-text
 
      [:h2 "Introduction to Reagent"]
@@ -134,18 +139,26 @@
                       :src (src-for [:simple-parent])}]
 
      [:p "Data is passed to child components using plain old Clojure
-     maps. For example, here is a component that shows items in a "
+     data types. Like this:"]
+
+     [demo-component {:comp say-hello
+                      :src (src-for [:hello-component :say-hello])}]
+
+     [:p "Here is another example that shows items in a "
      [:code "seq"] ":" ]
 
      [demo-component {:comp lister-user
                       :src (src-for [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
-     "The " [:code "{:key item}"] " part of the " [:code ":li"] "
-     isn’t really necessary in this simple example, but passing a
-     unique key for every item in a dynamically generated list of
-     components is good practice, and helps React to improve
-     performance for large lists."]]))
+     "The " [:code "^{:key item}"] " part isn’t really necessary in
+     this simple example, but passing a unique key for every item in a
+     dynamically generated list of components is good practice, and
+     helps React to improve performance for large lists. The key can
+     be given either (as in this example) as meta-data, or as a "
+     [:code ":key"] " item in the first argument to a component (if it
+     is a map). See React’s " [:a dynamic-children "documentation"] "
+     for more info."]]))
 
 (defn managing-state []
   [:div.demo-text
@@ -171,24 +184,24 @@
    [demo-component {:comp timer-component
                     :src (src-for [:timer-component])}]
    
-   [:p "The previous example also uses another feature of Reagent: a component
-   function can return another function, that is used to do the actual
-   rendering. This allows you to perform some setup of newly
-   created components, without resorting to React’s lifecycle
-   events."]
+   [:p "The previous example also uses another feature of Reagent: a
+   component function can return another function, that is used to do
+   the actual rendering. This function is called with the same
+   arguments as the first one."]
+
+   [:p "This allows you to perform some setup of newly created
+   components without resorting to React’s lifecycle events."]
 
    [:p "By simply passing atoms around you can share state management
    between components, like this:"]
    [demo-component {:comp shared-state
                     :src (src-for [:ns :atom-input :shared-state])}]
 
-   [:p [:strong "Note: "] "Component functions (including the ones
-    returned by other component functions) are called with three
-    arguments: "]
-   [:ul
-    [:li [:code "props"] ": a map passed from a parent" ]
-    [:li [:code "children"] ": a vector of the children passed to the component"]
-    [:li [:code "this"] ": the actual React component"]]])
+   [:p [:strong "Note: "] "Component functions can be called with any
+   arguments – as long as they are immutable. You *could* use mutable
+   objects as well, but then you have to make sure that the component
+   is updated when your data changes. Reagent assumes by default that
+   two objects are equal if they are the same object."]])
 
 (defn essential-api []
   [:div.demo-text
@@ -214,13 +227,13 @@
 
    [:p "Mounted components are only re-rendered when their parameters
    have changed. The change could come from a deref’ed "
-   [:code "atom"] ", the arguments passed to the component (i.e the
-   ”props” map and children) or component state."]
+   [:code "atom"] ", the arguments passed to the component or
+   component state."]
 
    [:p "All of these are checked for changes with a simple "
    [:code "identical?"] " which is basically only a pointer
-   comparison, so the overhead is very low (even if the components of
-   the props map are compared separately, and "
+   comparison, so the overhead is very low (even if the entries of
+   the first argument, if it is a map, are compared separately, and "
    [:code ":style"] " attributes are handled specially). Even the
    built-in React components are handled the same way."]
 
@@ -259,7 +272,7 @@
    with height, weight and BMI as keys."]
 
    [demo-component {:comp bmi-component
-                    :src (src-for [:ns :calc-bmi :bmi-data :set-bmi :slider
+                    :src (src-for [:ns :bmi-data :calc-bmi :slider
                                    :bmi-component])}]])
 
 (defn complete-simple-demo []

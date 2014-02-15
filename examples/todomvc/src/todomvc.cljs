@@ -20,6 +20,8 @@
 
 (add-todo "Rename Cloact to Reagent")
 (add-todo "Add undo demo")
+(add-todo "Make all rendering async")
+(add-todo "Allow any arguments to component functions")
 (complete-all true)
 
 (defn todo-input [{:keys [title on-save on-stop]}]
@@ -58,7 +60,7 @@
 
 (defn todo-item []
   (let [editing (atom false)]
-    (fn [{{:keys [id done title]} :todo}]
+    (fn [{:keys [id done title]}]
       [:li {:class (str (if done "completed ")
                         (if @editing "editing"))}
        [:div.view
@@ -95,7 +97,7 @@
                                     :active (complement :done)
                                     :done :done
                                     :all identity) items)]
-                 [todo-item {:key (:id todo) :todo todo}])]]
+                 ^{:key (:id todo)} [todo-item todo])]]
              [:footer#footer
               [todo-stats {:active active :done done :filt filt}]]])]
          [:footer#info
