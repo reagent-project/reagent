@@ -20,7 +20,8 @@
                      {:client {:source-paths ^:replace
                                ["test" "src" "demo"
                                 "examples/todomvc/src"
-                                "examples/simple/src"]}}}}
+                                "examples/simple/src"
+                                "examples/geometry/src"]}}}}
              :srcmap {:cljsbuild
                       {:builds
                        {:client
@@ -32,7 +33,8 @@
   :cljsbuild
   {:builds
    {:client {:source-paths ["src" "demo" "examples/todomvc/src"
-                            "examples/simple/src"]
+                            "examples/simple/src"
+                            "examples/geometry/src"]
              :notify-command ["node" "./bin/gen-site.js"]
              :compiler
              {:preamble ["reagent/react.js"]

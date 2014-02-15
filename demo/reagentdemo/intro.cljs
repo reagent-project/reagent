@@ -152,7 +152,7 @@
 
      [:p [:strong "Note: "]
      "The " [:code "^{:key item}"] " part isn’t really necessary in
-     this simple example, but passing a unique key for every item in a
+     this simple example, but attaching a unique key to every item in a
      dynamically generated list of components is good practice, and
      helps React to improve performance for large lists. The key can
      be given either (as in this example) as meta-data, or as a "

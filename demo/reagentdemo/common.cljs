@@ -15,16 +15,21 @@
     (into {} (for [x parts]
                [(->> x (re-seq ws) second keyword) x]))))
 
-(def nssrc
+(def ns-src
   "(ns example
   (:require [reagent.core :as reagent :refer [atom]]))
+")
+
+(def nsr-src
+  "(ns example
+  (:require [reagent.core :as r :refer [atom]]))
 ")
 
 (defn src-for-names [srcmap names]
   (string/join "\n" (map srcmap names)))
 
 (defn fun-map [src]
-  (-> src src-parts src-defs (assoc :ns nssrc)))
+  (-> src src-parts src-defs (assoc :ns ns-src :nsr nsr-src)))
 
 (defn src-for [funmap defs]
   [:pre (-> funmap (src-for-names defs) syntaxify)])
@@ -45,7 +50,9 @@
             (if-not complete
               [:div.simple-demo [comp]]
               [comp]))])
-       (when @showing
-         [:div.demo-source.clearfix
-          [:h3.demo-heading "Source"]
-          src])])))
+       (if @showing
+         (if src
+           [:div.demo-source.clearfix
+            [:h3.demo-heading "Source"]
+            src]
+           [:div.clearfix]))])))
