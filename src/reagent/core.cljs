@@ -71,12 +71,14 @@ Everything is optional, except :render.
   "Set state of a component."
   [this new-state]
   (assert (util/reagent-component? this))
+  (assert (or (nil? new-state) (map? new-state)))
   (comp/replace-state this new-state))
 
 (defn set-state
   "Merge component state with new-state."
   [this new-state]
   (assert (util/reagent-component? this))
+  (assert (or (nil? new-state) (map? new-state)))
   (comp/set-state this new-state))
 
 
@@ -103,10 +105,10 @@ Everything is optional, except :render.
   [this]
   (.getDOMNode this))
 
-(defn ref [parent ref child]
+(defn ref [parent key child]
   (assert (util/reagent-component? parent))
-  (assert (keyword? ref) (str "Ref must be a keyword, not " (pr-str ref)))
-  (tmpl/make-ref-component parent ref child))
+  (assert (keyword? key) (str "Key must be a keyword, not " (pr-str key)))
+  (tmpl/make-ref-component parent key child))
 
 (defn refs [this]
   (assert (util/reagent-component? this))

@@ -12,19 +12,22 @@
 
 ;;; State
 
+(defn state-atom [this]
+  (let [sa (aget this cljs-state)]
+    (if-not (nil? sa)
+      sa
+      (aset this cljs-state (ratom/atom nil)))))
+
 (defn state [this]
-  (aget this cljs-state))
+  (deref (state-atom this)))
 
 (defn replace-state [this new-state]
   ;; Don't use React's replaceState, since it doesn't play well
   ;; with clojure maps
-  (let [old-state (state this)]
-    (when-not (identical? old-state new-state)
-      (aset this cljs-state new-state)
-      (.forceUpdate this))))
+  (reset! (state-atom this) new-state))
 
 (defn set-state [this new-state]
-  (replace-state this (merge (state this) new-state)))
+  (swap! (state-atom this) merge new-state))
 
 
 ;;; Rendering
@@ -64,8 +67,7 @@
     :getInitialState
     (fn []
       (this-as C
-               (when f
-                 (aset C cljs-state (merge (state C) (f C))))))
+               (set-state C (f C))))
 
     :componentWillReceiveProps
     (fn [props]

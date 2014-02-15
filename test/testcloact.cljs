@@ -71,7 +71,7 @@
   (when isClient
     (let [ran (atom 0)
           comp (reagent/create-class
-                {:get-initial-state (fn [])
+                {:get-initial-state (fn [] {:foo "initial"})
                  :render
                  (fn []
                    (let [this (reagent/current-component)]
@@ -80,12 +80,14 @@
       (with-mounted-component (comp)
         (fn [C div]
           (swap! ran inc)
-          (is (found-in #"hi " div))
+          (is (found-in #"hi initial" div))
 
-          (reagent/set-state C {:foo "there"})
+          (reagent/replace-state C {:foo "there"})
+          (rflush)
           (is (found-in #"hi there" div))
 
           (reagent/set-state C {:foo "you"})
+          (rflush)
           (is (found-in #"hi you" div))))
       (is (= 4 @ran)))))
 
