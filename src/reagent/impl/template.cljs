@@ -170,48 +170,6 @@
   (comp/create-class spec as-component))
 
 
-;;; Ref support
-
-(def cljs-refs "cljsRefs")
-
-(defn update-ref [this]
-  (let [rd (-> this util/get-props :ref-data)
-        {:keys [parent ref]} rd
-        refed (-> this (aget "refs") (aget (name ref)))]
-    (aset parent cljs-refs
-          (-> (aget parent cljs-refs)
-              (assoc (keyword ref) refed)))))
-
-(def ref-component
-  (create-class
-   {:displayName "ref-component"
-    :component-did-mount update-ref
-    :component-did-update update-ref
-    :component-will-unmount
-    (fn [this]
-      (let [rd (-> this util/get-props :ref-data)
-            {:keys [parent ref]} rd
-            refed (-> this (aget "refs") (aget (name ref)))]
-        (aset parent cljs-refs
-              (-> (aget parent cljs-refs)
-                  (dissoc (keyword ref))))))
-    :render
-    (fn [this]
-      (let [rd (-> this util/get-props :ref-data)
-            {:keys [parent ref child]} rd
-            react-comp (as-component child)]
-        (-> react-comp (aget "props") (aset "ref" (name ref)))
-        react-comp))}))
-
-(defn make-ref-component [parent ref child]
-  [ref-component {:ref-data {:parent parent
-                             :ref ref
-                             :child child}}])
-
-(defn get-refs [this]
-  (aget this cljs-refs))
-
-
 ;;; Conversion from Hiccup forms
 
 (defn parse-tag [hiccup-tag]

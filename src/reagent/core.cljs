@@ -105,15 +105,6 @@ Everything is optional, except :render.
   [this]
   (.getDOMNode this))
 
-(defn ref [parent key child]
-  (assert (util/reagent-component? parent))
-  (assert (keyword? key) (str "Key must be a keyword, not " (pr-str key)))
-  (tmpl/make-ref-component parent key child))
-
-(defn refs [this]
-  (assert (util/reagent-component? this))
-  (tmpl/get-refs this))
-
 
 (defn merge-props
   "Utility function that merges two maps, handling :class and :style
