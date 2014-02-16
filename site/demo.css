@@ -124,6 +124,13 @@ ul.nav > li.brand > a {
     color: #444;
 }
 
+.demo-text > p > code, .demo-text > ul > li > code {
+    font-size: 17px;
+    color: #554;
+    background-color: #f6f6f2;
+    padding: 0 2px;
+}
+
 .demo-text > ul > li {
     margin-bottom: 1em;
 }

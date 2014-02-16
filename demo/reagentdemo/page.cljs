@@ -64,21 +64,21 @@
   (let [depth (-> #"/" (re-seq @page) count)]
     (str (->> "../" (repeat depth) (apply str)) href)))
 
-(defn link [props children]
+(defn link [props child]
   (let [rpm @reverse-page-map
         href (-> props :href rpm)]
     (assert (string? href))
-    (apply vector
-           :a (assoc props
-                :href (prefix href)
-                :on-click (if history
-                            (fn [e]
-                              (.preventDefault e)
-                              (reset! page href)
-                              (set! (.-scrollTop (.-body js/document))
-                                    0))
-                            identity))
-           children)))
+    [:a (assoc props
+          :href (prefix href)
+          :on-click (if history
+                      (fn [e]
+                        (.preventDefault e)
+                        (reset! page href)
+                        (reagent/flush)
+                        (set! (.-scrollTop (.-body js/document))
+                              0))
+                      identity))
+     child]))
 
 (add-watch page ::title-watch
            (fn [_ _ _ p]

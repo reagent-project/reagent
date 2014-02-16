@@ -192,16 +192,17 @@
    [:p "This allows you to perform some setup of newly created
    components without resorting to React’s lifecycle events."]
 
-   [:p "By simply passing atoms around you can share state management
-   between components, like this:"]
+   [:p "By simply passing an "[:code "atom"]" around you can share
+   state management between components, like this:"]
+
    [demo-component {:comp shared-state
                     :src (src-for [:ns :atom-input :shared-state])}]
 
    [:p [:strong "Note: "] "Component functions can be called with any
-   arguments – as long as they are immutable. You *could* use mutable
-   objects as well, but then you have to make sure that the component
-   is updated when your data changes. Reagent assumes by default that
-   two objects are equal if they are the same object."]])
+   arguments – as long as they are immutable. You "[:em "could"]" use
+   mutable objects as well, but then you have to make sure that the
+   component is updated when your data changes. Reagent assumes by
+   default that two objects are equal if they are the same object."]])
 
 (defn essential-api []
   [:div.demo-text
@@ -242,11 +243,12 @@
    – it will be fast enough."]
 
    [:p "There are a couple of situations that you might have to care
-   about, though. If you give Reagent big " [:code "seq"] "s of
+   about, though. If you give Reagent a big " [:code "seq"] " of
    components to render, you might have to supply all of them with a
-   unique " [:code ":key"] " attribute to speed up rendering. Also note
-   that anonymous functions are not, in general, equal to each other
-   even if they represent the same code and closure."]
+   unique " [:code ":key"] " attribute to speed up rendering (see
+   above). Also note that anonymous functions are not, in general,
+   equal to each other even if they represent the same code and
+   closure."]
 
    [:p "But again, in general you should just trust that React and
    Reagent will be fast enough. This very page is composed of a single

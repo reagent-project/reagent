@@ -38,16 +38,19 @@
      [:h1 [link {:href main} head]]
      [title (str "Reagent 0.4.0: " head)]
      [:div.demo-text
-      
-      [:p "Reagent 0.4.0 lets component functions take any kinds of
-      arguments, and not just maps and vectors matching Hiccup’s
-      calling conventions. Before 0.4.0, component functions were
-      always called with three arguments: a map (called props), a
-      vector of ”children”, and a the current component (a.k.a
-      ”this”)."]
 
-      [:p "This was confusing, so now component functions get exactly
-      the same arguments you pass to them."]
+      [:h2 "If it looks like a function…"]
+
+      [:p "Calling a component in Reagent looks a lot like a function
+      call. Now it also " [:em "works"] " like one."]
+      
+      [:p "Before 0.4.0, component functions were always called with
+      three arguments: a map of attributes, a vector of ”children”,
+      and the current React component."]
+
+      [:p "This was confusing, and an unnecessary limitation, so now
+      component functions get exactly the same arguments you pass to
+      them."]
 
       (if summary
         [link {:href main
@@ -59,22 +62,64 @@
                           :src (src-for [:hello-component :say-hello])}]
 
          [:p "In the above example, it wouldn’t make any difference at
-         all if " [:code "hello-component"] " had been called as a
-         function, i.e with parenthesis instead of brackets (except
-         for performance, since components are cached between renders
-         if the arguments to them don’t change)."]
+          all if " [:code "hello-component"] " had been called as a
+          function, i.e with parentheses instead of brackets (except
+          for performance, since components are cached between renders
+          if the arguments to them don’t change)."]
 
          [:p "But there is one drawback: component function no longer
-         receives the ”current component” as a parameter. Instead
-         you’ll have to use "
-         [:code "reagent.core/current-component"] " in order to get
-         that. Beware that " [:code "current-component"] " must be
-         used outside of e.g event handlers and " [:code "for"] "
-         expressions, so it’s safest to always put it at the top, like
-         this:"]
+          receives the ”current component” as a parameter. Instead
+          you’ll have to use "
+          [:code "reagent.core/current-component"]
+          " in order to get that. Beware that "
+          [:code "current-component"] " is only valid in component
+          functions, and must be called outside of e.g event handlers
+          and " [:code "for"] " expressions, so it’s safest to always
+          put the call at the top, as in " [:code "my-div"] " here:"]
 
          [demo-component {:comp call-my-div
                           :src (src-for [:nsr :my-div :call-my-div])}]
+
+         [:p [:em "Note: "] [:code "r/props"] " and "
+         [:code "r/children"] " correspond to React’s "
+         [:code "this.props"] " and " [:code "this.props.children"] ",
+         respectively. They may be convenient to use when wrapping
+         native React components, since they follow the same
+         conventions when interpreting the arguments given."]
+
+         [:h2 "Other news in 0.4.0"]
+
+         [:ul
+
+          [:li "You can now use any object that satisfies "
+           [:code "ifn?"] " as a component function, and not just
+           plain functions. That includes functions defined with "
+           [:code "deftype"] ", " [:code "defrecord"] ", etc, as well
+           as collections like maps."]
+
+          [:li
+           [:code "reagent.core/set-state"] " and "
+           [:code "reagent.core/replace-state"] " are now implemented
+           using an " [:code "reagent.core/atom"] ", and are
+           consequently async."]
+
+          [:li "Keys associated with items in a seq (e.g ”dynamic
+           children” in React parlance) can now be specified with
+           meta-data, as well as with a " [:code ":key"] " item in the
+           first parameter as before. In other words, these two forms
+           are now equivalent: " [:code "^{:key foo} [:li bar]"] "
+           and " [:code "[:li {:key foo} bar]"] "."]
+
+          [:li "Performance has been improved even further. For
+           example, there is now practically no overhead for
+           tracking derefs in components that don’t use "
+           [:code "atom"] "s. Allocations and memory use have also
+           been reduced."]
+
+          [:li "Intro and examples have been tweaked a little to take
+          advantage of the new calling conventions."]]
+
+         [:h2 "New svg example"]
 
          [:p "There is also a new, elegant and simple "
           [:a geometry "example"] " of using svg with Reagent, written
