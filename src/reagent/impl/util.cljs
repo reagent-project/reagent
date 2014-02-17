@@ -131,7 +131,7 @@
                         (let [v' (v2 k)]
                           (if (or (identical? v v')
                                   (identical-ish? v v')
-                                  (and (== 1 k)
+                                  (and (map? v)
                                        (shallow-equal-maps v v')))
                             res
                             (reduced false))))

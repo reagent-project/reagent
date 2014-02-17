@@ -231,15 +231,15 @@
    [:code "atom"] ", the arguments passed to the component or
    component state."]
 
-   [:p "All of these are checked for changes with a simple "
+   [:p "All of these are checked for changes with "
    [:code "identical?"] " which is basically only a pointer
-   comparison, so the overhead is very low (even if the entries of
-   the first argument, if it is a map, are compared separately, and "
-   [:code ":style"] " attributes are handled specially). Even the
-   built-in React components are handled the same way."]
+   comparison, so the overhead is very low. Maps passed as arguments
+   to components are compared the same way: they are considered equal
+   if all their entries are identical. This also applies to built-in
+   React components like " [:code ":div"] ", " [:code ":p"] ", etc."]
 
-   [:p "All this means that you (hopefully) simply won’t have to care
-   about performance most of the time. Just define your UI however you like
+   [:p "All this means that you simply won’t have to care about
+   performance most of the time. Just define your UI however you like
    – it will be fast enough."]
 
    [:p "There are a couple of situations that you might have to care
