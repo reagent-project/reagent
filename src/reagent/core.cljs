@@ -32,11 +32,7 @@ Returns the mounted component instance."
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
-     (let [res (clojure.core/atom nil)]
-       (render-component-to-string component #(reset! res %))
-       @res))
-  ([component callback]
-     (.renderComponentToString React (tmpl/as-component component) callback)))
+     (.renderComponentToString React (tmpl/as-component component))))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
