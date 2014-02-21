@@ -91,6 +91,8 @@
 
          [:ul
 
+          [:li "React has been updated to version 0.9.0."]
+
           [:li "You can now use any object that satisfies "
            [:code "ifn?"] " as a component function, and not just
            plain functions. That includes functions defined with "

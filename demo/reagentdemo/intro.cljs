@@ -144,6 +144,15 @@
      [demo-component {:comp say-hello
                       :src (src-for [:hello-component :say-hello])}]
 
+     [:p [:strong "Note: "]
+      "In the example above, " [:code "hello-component"] " might just
+      as well have been called as a normal Clojure function instead of
+      as a Reagent component, i.e with parenthesis instead of square
+      brackets. The only difference would have been performance, since
+      ”real” Reagent components are only re-rendered when their data
+      have changed. More advanced components though (see below) must
+      be called with square brackets."]
+
      [:p "Here is another example that shows items in a "
      [:code "seq"] ":" ]
 
@@ -151,11 +160,11 @@
                       :src (src-for [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
-     "The " [:code "^{:key item}"] " part isn’t really necessary in
-     this simple example, but attaching a unique key to every item in a
-     dynamically generated list of components is good practice, and
-     helps React to improve performance for large lists. The key can
-     be given either (as in this example) as meta-data, or as a "
+     "The " [:code "^{:key item}"] " part above isn’t really necessary
+     in this simple example, but attaching a unique key to every item
+     in a dynamically generated list of components is good practice,
+     and helps React to improve performance for large lists. The key
+     can be given either (as in this example) as meta-data, or as a "
      [:code ":key"] " item in the first argument to a component (if it
      is a map). See React’s " [:a dynamic-children "documentation"] "
      for more info."]]))
