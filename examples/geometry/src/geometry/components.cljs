@@ -1,6 +1,8 @@
 (ns geometry.components
   (:require [reagent.core :as r]
-            [geometry.geometry :refer [x y dist] :as g]))
+            [goog.events :as events]
+            [geometry.geometry :refer [x y dist] :as g])
+  (:import [goog.events EventType]))
 
 (def point-defaults
   {:stroke "black"
@@ -17,27 +19,29 @@
    :stroke "black"
    :stroke-width 2})
 
-(defn point [p]
-  [:circle
-   (merge point-defaults
-          {:cx (x p) :cy (y p)})])
+(defn drag-move-fn [on-drag]
+  (fn [evt]
+    (on-drag (.-clientX evt) (.-clientY evt))))
 
-(defn drag [mouse-info p]
-  (when (:mouse-down? @mouse-info)
-    (reset! p (g/point (:x @mouse-info)
-                       (:y @mouse-info)))
-    (r/next-tick
-     (fn []
-       (drag mouse-info p)))))
+(defn drag-end-fn [drag-move drag-end]
+  (fn [evt]
+    (events/unlisten js/window EventType/MOUSEMOVE drag-move)
+    (events/unlisten js/window EventType/MOUSEUP @drag-end)))
 
-(defn draggable-point [p mouse-info]
+(defn dragging [on-drag]
+  (let [drag-move (drag-move-fn on-drag)
+        drag-end-atom (atom nil)
+        drag-end (drag-end-fn drag-move drag-end-atom)]
+    (reset! drag-end-atom drag-end)
+    (events/listen js/window EventType/MOUSEMOVE drag-move)
+    (events/listen js/window EventType/MOUSEUP drag-end)))
+
+(defn point [{:keys [on-drag]} p]
   [:circle 
    (merge point-defaults
-          {:on-mouse-down #(do 
-                             (swap! mouse-info assoc :mouse-down? true)
-                             (drag mouse-info p))
-           :cx (x @p)
-           :cy (y @p)})])
+          {:on-mouse-down #(dragging on-drag)
+           :cx (x p)
+           :cy (y p)})])
 
 (defn segment [from to]
   [:line 
