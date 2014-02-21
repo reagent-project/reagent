@@ -12,6 +12,11 @@
 
 (def is-client util/is-client)
 
+(defn as-component
+  "Turns a vector of Hiccup syntax into a React component. Returns form unchanged if it is not a vector."
+  [form]
+  (tmpl/as-component form))
+
 (defn render-component
   "Render a Reagent component into the DOM. The first argument may be either a
 vector (using Reagent's Hiccup syntax), or a React component. The second argument should be a DOM node.
@@ -22,7 +27,7 @@ Returns the mounted component instance."
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
-     (.renderComponent React (tmpl/as-component comp) container callback)))
+     (.renderComponent React (as-component comp) container callback)))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
@@ -32,7 +37,7 @@ Returns the mounted component instance."
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
-     (.renderComponentToString React (tmpl/as-component component))))
+     (.renderComponentToString React (as-component component))))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
@@ -53,7 +58,10 @@ Everything is optional, except :render.
   (tmpl/create-class spec))
 
 
-(defn current-component []
+(defn current-component
+  "Returns the current React component (a.k.a this) in a component
+  function."
+  []
   comp/*current-component*)
 
 
@@ -140,5 +148,4 @@ re-rendered."
 the result can be compared with ="
   [f & args]
   (util/partial-ifn. f args nil))
-
 
