@@ -35,8 +35,8 @@
 
 (defn main [{:keys [width height]}]
   [:svg 
-   {:width width
-    :height height
+   {:width (or width 800)
+    :height (or height 600)
     :style {:border "1px solid black"}}
    [:text {:style {:-webkit-user-select "none"
                    :-moz-user-select "none"}
