@@ -21,19 +21,21 @@
               (.setUseFragment false)))
         (History.)))))
 
+(def history (create-history))
+
 (defn setup-history []
-  (when-let [h (create-history)]
+  (when-let [h history]
     (events/listen h hevt/NAVIGATE
                    (fn [e]
                      (reset! page (subs (.-token e)
                                         (count @base-path)))
                      (reagent/flush)))
     (add-watch page ::history (fn [_ _ oldp newp]
-                                (.setToken h (str @base-path newp))))
-    (.setEnabled h true)
-    h))
+                                (when-not (= oldp newp)
+                                  (.setToken h (str @base-path newp)))))
+    (.setEnabled h true)))
 
-(def history (setup-history))
+(js/setTimeout setup-history 100)
 
 (defn set-start-page [p]
   (when html5-history
@@ -74,9 +76,8 @@
                       (fn [e]
                         (.preventDefault e)
                         (reset! page href)
-                        (reagent/flush)
-                        (set! (.-scrollTop (.-body js/document))
-                              0))
+                        (reagent/next-tick
+                         #(set! (.-scrollTop (.-body js/document)) 0)))
                       identity))
      child]))
 
