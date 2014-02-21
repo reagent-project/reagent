@@ -31,10 +31,10 @@
       (ifn? x)))
 
 (defn map-into-array [f arg coll]
-  (reduce (fn [a x]
-            (doto a
-              (.push (f x arg))))
-          #js [] coll))
+  (let [a (into-array coll)]
+    (dotimes [i (alength a)]
+      (aset a i (f (aget a i) arg)))
+    a))
 
 (defn to-js-val [v]
   (if-not (ifn? v)
