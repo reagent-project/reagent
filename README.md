@@ -19,7 +19,7 @@ to the *:compiler* section of project.clj, as shown in the examples
 directory (or "reagent/react.min.js" in production). You could also
 add
 
-    <script src="http://fb.me/react-0.8.0.js"></script>
+    <script src="http://fb.me/react-0.9.0.js"></script>
 
 directly to your html.
 
@@ -49,12 +49,11 @@ You can use one component inside another:
 And pass properties from one component to another:
 
 ```clj
-(defn child [props]
-  [:p "Hi, I am "
-   (:name props)])
+(defn child [name]
+  [:p "Hi, I am " name])
 
 (defn childcaller []
-  [child {:name "Foo"}])
+  [child "Foo Bar"])
 ```
 
 You mount the component into the DOM like this:
@@ -102,7 +101,7 @@ But you can still use them if you want to, either using `reagent.core/create-cla
 ```clj
 (def my-html (atom ""))
 
-(defn plain-component [props this]
+(defn plain-component []
   [:p "My html is " @my-html])
 
 (def component-with-callback
