@@ -4,8 +4,10 @@
 A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to
 [React](http://facebook.github.io/react/).
 
-[Reagent](http://holmsand.github.io/reagent/) provides a way to write efficient
-React components using (almost) nothing but plain ClojureScript functions.
+Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
+
+  * **[Detailed intro with live examples](http://holmsand.github.io/reagent/)**
+  * **[News](http://holmsand.github.io/reagent/news/index.html)**
 
 To use Reagent you add this to your dependencies in `project.clj`:
 
