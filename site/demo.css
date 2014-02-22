@@ -185,3 +185,46 @@ ul.nav > li.brand > a {
     clear: both;
     padding-top: 0.5em;
 }
+
+/* Binary clock */
+
+.clock.main {
+    background: #333;
+    color: #cdcdcd;
+    padding-top: 20px;
+    padding-left: 20px;
+    float: left;
+    font-size: 28px;
+    line-height: 34px;
+    width: 620px;
+}
+.clock.main.wide {
+    width: 800px;
+}
+.clock.cell {
+    width: 55px;
+    height: 55px;
+    text-align: center;
+    margin: 0 20px 20px 0;
+}
+.clock.cell.dark {
+    background-color: #454545;
+}
+.clock.cell.light {
+    background-color: #eee;
+}
+.clock.col {
+    margin: 0;
+    float: left;
+}
+.clock.legend>.cell {
+    margin-top: "10px"
+}
+.clock.colpair {
+    margin: 0;
+    float: left;
+}
+.clock.colpair:not(:last-child) {
+    margin-right: 20px;
+    border-right 1px solid #454545;
+}

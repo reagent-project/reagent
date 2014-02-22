@@ -5,10 +5,12 @@
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.anyargs :as anyargs]
             [reagentdemo.news.async :as async]
-            [reagentdemo.news.undodemo :as undodemo]))
+            [reagentdemo.news.undodemo :as undodemo]
+            [reagentdemo.news.clockpost :as clock]))
 
 (defn main []
   [:div
+   [clock/main {:summary true}]
    [anyargs/main {:summary true}]
    [async/main {:summary true}]
    [undodemo/main {:summary true}]])
