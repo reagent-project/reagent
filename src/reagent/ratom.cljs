@@ -28,7 +28,9 @@
               (conj (if (nil? captured) #{} captured)
                     derefable))))))
 
-(deftype RAtom [state meta validator watches]
+(deftype RAtom [^:mutable state meta validator ^:mutable watches]
+  IAtom
+
   IEquiv
   (-equiv [o other] (identical? o other))
 
@@ -36,6 +38,26 @@
   (-deref [this]
     (notify-deref-watcher! this)
     state)
+
+  IReset
+  (-reset! [a new-value]
+    (when-not (nil? validator)
+      (assert (validator new-value) "Validator rejected reference state"))
+    (let [old-value state]
+      (set! state new-value)
+      (when-not (nil? watches)
+        (-notify-watches a old-value new-value))
+      new-value))
+
+  ISwap
+  (-swap! [a f]
+    (-reset! a (f state)))
+  (-swap! [a f x]
+    (-reset! a (f state x)))
+  (-swap! [a f x y]
+    (-reset! a (f state x y)))
+  (-swap! [a f x y more]
+    (-reset! a (apply f state x y more)))
 
   IMeta
   (-meta [_] meta)
@@ -53,9 +75,9 @@
                  nil)
                nil watches))
   (-add-watch [this key f]
-    (set! (.-watches this) (assoc watches key f)))
+    (set! watches (assoc watches key f)))
   (-remove-watch [this key]
-    (set! (.-watches this) (dissoc watches key)))
+    (set! watches (dissoc watches key)))
 
   IHash
   (-hash [this] (goog/getUid this)))
@@ -83,8 +105,10 @@
              nil watches))
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
-                       ^:mutable watching ^:mutable watches
-                       auto-run on-set on-dispose]
+                   ^:mutable watching ^:mutable watches
+                   auto-run on-set on-dispose]
+  IAtom
+
   IWatchable
   (-notify-watches [this oldval newval]
     (when on-set
@@ -98,6 +122,23 @@
     (set! watches (dissoc watches k))
     (when (empty? watches)
       (dispose! this)))
+
+  IReset
+  (-reset! [a new-value]
+    (let [old-value state]
+      (set! state new-value)
+      (-notify-watches a old-value new-value)
+      new-value))
+
+  ISwap
+  (-swap! [a f]
+    (-reset! a (f state)))
+  (-swap! [a f x]
+    (-reset! a (f state x)))
+  (-swap! [a f x y]
+    (-reset! a (f state x y)))
+  (-swap! [a f x y more]
+    (-reset! a (apply f state x y more)))
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
