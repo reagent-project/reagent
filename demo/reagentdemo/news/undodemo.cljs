@@ -1,4 +1,4 @@
-(ns reagentdemo.news.undo-demo
+(ns reagentdemo.news.undodemo
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
@@ -6,7 +6,7 @@
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc :as todomvc]))
 
-(def funmap (-> "reagentdemo/news/undo-demo.cljs" get-source common/fun-map))
+(def funmap (-> ::this get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
 
 (def state todomvc/todos)

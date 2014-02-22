@@ -77,7 +77,8 @@
                         (.preventDefault e)
                         (reset! page href)
                         (reagent/next-tick
-                         #(set! (.-scrollTop (.-body js/document)) 0)))
+                         #(set! (.-scrollTop (.-documentElement js/document))
+                                0)))
                       identity))
      child]))
 
@@ -89,7 +90,6 @@
 (defn title [name]
   (when (= @title-atom "")
     (if reagent/is-client
-      (let [title (aget (.getElementsByTagName js/document "title") 0)]
-        (set! (.-innerHTML title) name)))
+      (set! (.-title js/document) name))
     (reset! title-atom name))
   [:div])
