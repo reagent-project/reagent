@@ -77,7 +77,7 @@
                         (.preventDefault e)
                         (reset! page href)
                         (reagent/next-tick
-                         #(set! (.-scrollTop (.-documentElement js/document))
+                         #(set! (.-scrollTop (.-body js/document))
                                 0)))
                       identity))
      child]))
