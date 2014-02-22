@@ -34,7 +34,7 @@
 (defn src-for [funmap defs]
   [:pre (-> funmap (src-for-names defs) syntaxify)])
 
-(defn demo-component [{:keys [comp src complete]}]
+(defn demo-component [{:keys [comp src complete no-heading]}]
   (let [showing (atom true)]
     (fn []
       [:div
@@ -45,7 +45,8 @@
                                              (swap! showing not)
                                              false)}
            (if @showing "hide" "show")]
-          [:h3.demo-heading "Example "]
+          (when-not no-heading
+            [:h3.demo-heading "Example "])
           (when @showing
             (if-not complete
               [:div.simple-demo [comp]]
@@ -53,6 +54,7 @@
        (if @showing
          (if src
            [:div.demo-source.clearfix
-            [:h3.demo-heading "Source"]
+            (when-not no-heading
+              [:h3.demo-heading "Source"])
             src]
            [:div.clearfix]))])))

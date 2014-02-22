@@ -9,7 +9,8 @@
                "filter" "vals" "count" "complement" "identity" "dotimes"
                "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
                "=" "partial" "first" "second" "rest" "list" "conj"
-               "drop" "when-let" "if-let" "add-watch"})
+               "drop" "when-let" "if-let" "add-watch" "mod" "quot"
+               "bit-test" "vector"})
 
 (def styles {:comment  {:style {:color "gray"
                                 :font-style "italic"}}

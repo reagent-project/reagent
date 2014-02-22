@@ -188,43 +188,44 @@ ul.nav > li.brand > a {
 
 /* Binary clock */
 
-.clock.main {
+.clock-main {
     background: #333;
     color: #cdcdcd;
-    padding-top: 20px;
+    padding-top: 55px;
     padding-left: 20px;
     float: left;
     font-size: 28px;
     line-height: 34px;
     width: 620px;
+    cursor: pointer;
 }
-.clock.main.wide {
-    width: 800px;
+.clock-main.wide {
+    width: 790px;
 }
-.clock.cell {
+.clock-cell {
     width: 55px;
     height: 55px;
     text-align: center;
     margin: 0 20px 20px 0;
 }
-.clock.cell.dark {
+.clock-cell.dark {
     background-color: #454545;
 }
-.clock.cell.light {
+.clock-cell.light {
     background-color: #eee;
 }
-.clock.col {
+.clock-col {
     margin: 0;
     float: left;
 }
-.clock.legend>.cell {
-    margin-top: "10px"
+.clock-legend > .clock-cell {
+    margin-top: 10px;
 }
-.clock.colpair {
+.clock-pair {
     margin: 0;
     float: left;
 }
-.clock.colpair:not(:last-child) {
+.clock-pair:not(:last-child) {
     margin-right: 20px;
-    border-right 1px solid #454545;
+    /* border-right: 1px solid #454545; */
 }
