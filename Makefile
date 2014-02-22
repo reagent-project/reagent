@@ -7,7 +7,7 @@ PROF = dev
 CLJSBUILD = client
 CLJSDIRS = src test
 
-VERSION = 0.4.0
+VERSION = 0.4.1
 
 all: buildrun
 
