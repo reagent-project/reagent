@@ -19,7 +19,8 @@
         lexclock {:href "http://www.lexicallyscoped.com/2014/01/23/clojurescript-react-om-binary-clock.html"}
         hopclock {:href "http://pmbauer.github.io/2014/01/27/hoplon-binary-clock/"}
         om {:href "https://github.com/swannodette/om"}
-        hoplon {:href "http://hoplon.io"}]
+        hoplon {:href "http://hoplon.io"}
+        clocksrc {:href "https://github.com/holmsand/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
     
     [:div.reagent-demo
      [:h1 [link {:href main} head]]
@@ -84,6 +85,9 @@
          [:code "requestAnimationFrame"] "):"]
 
          [fn-src :main]
+
+         [:p "The entire source is also available " [:a
+         clocksrc "here"] "."]
 
          [:h2 "How it all works"]
 
