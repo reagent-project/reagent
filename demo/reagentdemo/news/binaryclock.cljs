@@ -45,6 +45,6 @@
   (let [{:keys [time show-100s]} @clock-state]
     (if show-100s
       (r/next-tick update-time)
-      (js/setTimeout update-time 333))
+      (js/setTimeout update-time 1000))
     [clock time show-100s
      #(swap! clock-state update-in [:show-100s] not)]))

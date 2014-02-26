@@ -10,6 +10,7 @@
 
 (defn main []
   [:div
+   [title "Reagent news"]
    [clock/main {:summary true}]
    [anyargs/main {:summary true}]
    [async/main {:summary true}]
