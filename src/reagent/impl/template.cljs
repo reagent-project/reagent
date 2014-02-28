@@ -4,6 +4,7 @@
             [reagent.impl.util :as util
              :refer [cljs-level cljs-argv is-client React]]
             [reagent.impl.component :as comp]
+            [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
@@ -89,31 +90,32 @@
 
 ;;; Specialization for input components
 
-(defn input-initial-state [this]
-  (let [props (util/get-props this)]
-    #js {:value (:value props)
-         :checked (:checked props)}))
+(defn input-handle-change [this on-change e]
+  (let [res (on-change e)]
+    ;; Make sure the input is re-rendered, in case on-change
+    ;; wants to keep the value unchanged
+    (batch/queue-render this)
+    res))
 
-(defn input-handle-change [this e]
-  (let [props (util/get-props this)
-        on-change (or (props :on-change) (props "onChange"))]
-    (when-not (nil? on-change)
-      (let [target (.-target e)]
-        (.setState this #js {:value (.-value target)
-                             :checked (.-checked target)}))
-      (on-change e))))
-
-(defn input-will-receive-props [this new-props]
-  (let [props (-> new-props (aget cljs-argv) util/extract-props)]
-    (.setState this #js {:value (:value props)
-                         :checked (:checked props)})))
+(defn input-did-update [this]
+  (let [value (.-cljsInputValue this)]
+    (when-not (nil? value)
+      (let [node (.getDOMNode this)]
+        (when (not= value (.-value node))
+          (set! (.-value node) value))))))
 
 (defn input-render-setup [this jsprops]
-  (let [state (aget this "state")]
-    (doto jsprops
-      (aset "value" (.-value state))
-      (aset "checked" (.-checked state))
-      (aset "onChange" (aget this "handleChange")))))
+  ;; Don't rely on React for updating "controlled inputs", since it
+  ;; doesn't play well with async rendering (misses keystrokes).
+  (let [on-change (aget jsprops "onChange")
+        value (when-not (nil? on-change)
+                (aget jsprops "value"))]
+    (set! (.-cljsInputValue this) value)
+    (when-not (nil? value)
+      (doto jsprops
+        (aset "defaultValue" value)
+        (aset "value" nil)
+        (aset "onChange" #(input-handle-change this on-change %))))))
 
 (def input-components #{(aget DOM "input")
                         (aget DOM "textarea")})
@@ -148,11 +150,8 @@
 
 (defn add-input-methods [spec]
   (doto spec
-    (aset "shouldComponentUpdate" nil)
-    (aset "getInitialState" #(this-as C (input-initial-state C)))
-    (aset "handleChange" #(this-as C (input-handle-change C %)))
-    (aset "componentWillReceiveProps"
-          #(this-as C (input-will-receive-props C %)))))
+    (aset "componentDidUpdate" #(this-as C (input-did-update C)))
+    (aset "componentWillUnmount" #(this-as C (batch/dispose C)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
