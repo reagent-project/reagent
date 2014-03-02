@@ -57,6 +57,8 @@
   (set! (.-cljsIsDirty C) true)
   (.queue-render render-queue C))
 
+(defn mark-rendered [C]
+  (set! (.-cljsIsDirty C) false))
 
 ;; Render helper
 
@@ -67,7 +69,7 @@
 
 (defn run-reactively [C run]
   (assert (is-reagent-component C))
-  (set! (.-cljsIsDirty C) false)
+  (mark-rendered C)
   (let [rat (.-cljsRatom C)]
     (if (nil? rat)
       (let [res (ratom/capture-derefed run C)
@@ -84,5 +86,5 @@
   (let [ratom (.-cljsRatom C)]
                  (if-not (nil? ratom)
                    (ratom/dispose! ratom)))
-  (set! (.-cljsIsDirty C) false))
+  (mark-rendered C))
 

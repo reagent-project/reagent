@@ -112,6 +112,7 @@
                 (aget jsprops "value"))]
     (set! (.-cljsInputValue this) value)
     (when-not (nil? value)
+      (batch/mark-rendered this)
       (doto jsprops
         (aset "defaultValue" value)
         (aset "value" nil)
