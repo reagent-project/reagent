@@ -70,6 +70,13 @@
   IHash
   (-hash [_] (hash [f args])))
 
+; patch for CLJS-777; Can be replaced with clojure.core/ifn? after updating
+; ClojureScript to a version that includes the fix:
+; https://github.com/clojure/clojurescript/commit/525154f2a4874cf3b88ac3d5755794de425a94cb
+(defn clj-ifn? [x]
+  (or (ifn? x)
+      (satisfies? IMultiFn x)))
+
 (defn- merge-class [p1 p2]
   (let [class (when-let [c1 (:class p1)]
                 (when-let [c2 (:class p2)]

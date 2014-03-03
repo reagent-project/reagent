@@ -282,12 +282,18 @@
       "Dynamic id overwrites static"))
 
 (deftest ifn-component []
+  (defmulti my-div :type)
+  (defmethod my-div :fooish [child] [:div.foo (:content child)])
+  (defmethod my-div :barish [child] [:div.bar (:content child)])
+
   (let [comp {:foo [:div "foodiv"]
               :bar [:div "bardiv"]}]
     (is (re-find #"foodiv"
                  (as-string [:div [comp :foo]])))
     (is (re-find #"bardiv"
-                 (as-string [:div [comp :bar]])))))
+                 (as-string [:div [comp :bar]])))
+    (is (re-find #"class=.foo"
+                 (as-string [my-div {:type :fooish :content "inner"}])))))
 
 (deftest symbol-string-tag []
   (is (re-find #"foobar"

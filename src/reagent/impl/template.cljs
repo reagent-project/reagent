@@ -29,7 +29,7 @@
 
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
-      (ifn? x)))
+      (util/clj-ifn? x)))
 
 (defn map-into-array [f arg coll]
   (let [a (into-array coll)]
