@@ -35,7 +35,7 @@
 (defn do-render [C]
   (binding [*current-component* C]
     (let [f (aget C cljs-render)
-          _ (assert (ifn? f))
+          _ (assert (util/clj-ifn? f))
           p (util/js-props C)
           res (if (nil? (aget C "componentFunction"))
                 (f C)
@@ -155,7 +155,7 @@
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
                        (:render fun-map))
-        _ (assert (ifn? render-fun)
+        _ (assert (util/clj-ifn? render-fun)
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
         name (or (:displayName fun-map)
