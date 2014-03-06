@@ -22,6 +22,16 @@
 
 ;;; Common utilities
 
+(defn memoize-1 [f]
+  (let [mem (atom {})]
+    (fn [arg]
+      (let [v (get @mem arg)]
+        (if-not (nil? v)
+          v
+          (let [ret (f arg)]
+            (swap! mem assoc arg ret)
+            ret))))))
+
 (defn hiccup-tag? [x]
   (or (keyword? x)
       (symbol? x)
@@ -52,8 +62,8 @@
 
 ;;; Props conversion
 
-(def cached-prop-name (memoize undash-prop-name))
-(def cached-style-name (memoize util/dash-to-camel))
+(def cached-prop-name (memoize-1 undash-prop-name))
+(def cached-style-name (memoize-1 util/dash-to-camel))
 
 (defn convert-prop-value [val]
   (if (map? val)
@@ -61,15 +71,17 @@
                  (doto res
                    (aset (cached-prop-name k)
                          (to-js-val v))))
-               (js-obj) val)
+               #js {} val)
     (to-js-val val)))
 
 (defn set-id-class [props [id class]]
-  (aset props "id" (or (aget props "id") id))
-  (when class
-    (aset props "className" (if-let [old (aget props "className")]
-                              (str class " " old)
-                              class))))
+  (let [pid (aget props "id")]
+    (aset props "id" (if-not (nil? pid) pid id))
+    (when-not (nil? class)
+      (aset props "className" (let [old (aget props "className")]
+                                (if-not (nil? old)
+                                  (str class " " old)
+                                  class))))))
 
 (defn convert-props [props id-class]
   (cond
@@ -129,7 +141,7 @@
 (defn wrapped-render [this comp id-class input-setup]
   (let [inprops (util/js-props this)
         argv (aget inprops cljs-argv)
-        props (get argv 1)
+        props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         first-child (if hasprops 2 1)
         children (if (> (count argv) first-child)
@@ -185,7 +197,7 @@
   (let [[comp id-class] (parse-tag tag)]
     (wrap-component comp id-class (str tag))))
 
-(def cached-wrapper (memoize get-wrapper))
+(def cached-wrapper (memoize-1 get-wrapper))
 
 (defn fn-to-class [f]
   (let [spec (meta f)
@@ -211,14 +223,14 @@
 
 (defn vec-to-comp [v level]
   (assert (pos? (count v)) "Hiccup form should not be empty")
-  (assert (valid-tag? (v 0))
+  (assert (valid-tag? (nth v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
-  (let [c (as-class (v 0))
+  (let [c (as-class (nth v 0))
         jsprops (js-obj cljs-argv v
                         cljs-level level)]
     (let [k (-> v meta get-key)
           k' (if (nil? k)
-               (-> v (get 1) get-key)
+               (-> v (nth 1 nil) get-key)
                k)]
       (when-not (nil? k')
         (aset jsprops "key" k')))
