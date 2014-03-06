@@ -43,10 +43,10 @@
                       n (count argv)]
                   (case n
                     1 (f)
-                    2 (f (argv 1))
-                    3 (f (argv 1) (argv 2))
-                    4 (f (argv 1) (argv 2) (argv 3))
-                    5 (f (argv 1) (argv 2) (argv 3) (argv 4))
+                    2 (f (nth argv 1))
+                    3 (f (nth argv 1) (nth argv 2))
+                    4 (f (nth argv 1) (nth argv 2) (nth argv 3))
+                    5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
         (.asComponent C res (aget p cljs-level))

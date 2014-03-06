@@ -18,11 +18,11 @@
   (aget C props))
 
 (defn extract-props [v]
-  (let [p (get v 1)]
+  (let [p (nth v 1 nil)]
     (if (map? p) p)))
 
 (defn extract-children [v]
-  (let [p (get v 1)
+  (let [p (nth v 1 nil)
         first-child (if (or (nil? p) (map? p)) 2 1)]
     (if (> (count v) first-child)
       (subvec v first-child))))
@@ -135,7 +135,7 @@
   (or (identical? v1 v2)
       (and (== (count v1) (count v2))
            (reduce-kv (fn [res k v]
-                        (let [v' (v2 k)]
+                        (let [v' (nth v2 k)]
                           (if (or (identical? v v')
                                   (identical-ish? v v')
                                   (and (map? v)
