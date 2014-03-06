@@ -42,6 +42,16 @@
 
 ;; Misc utilities
 
+(defn memoize-1 [f]
+  (let [mem (atom {})]
+    (fn [arg]
+      (let [v (get @mem arg)]
+        (if-not (nil? v)
+          v
+          (let [ret (f arg)]
+            (swap! mem assoc arg ret)
+            ret))))))
+
 (def dont-camel-case #{"aria" "data"})
 
 (defn capitalize [s]

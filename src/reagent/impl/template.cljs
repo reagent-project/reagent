@@ -22,16 +22,6 @@
 
 ;;; Common utilities
 
-(defn memoize-1 [f]
-  (let [mem (atom {})]
-    (fn [arg]
-      (let [v (get @mem arg)]
-        (if-not (nil? v)
-          v
-          (let [ret (f arg)]
-            (swap! mem assoc arg ret)
-            ret))))))
-
 (defn hiccup-tag? [x]
   (or (keyword? x)
       (symbol? x)
@@ -56,8 +46,8 @@
 
 ;;; Props conversion
 
-(def cached-prop-name (memoize-1 undash-prop-name))
-(def cached-style-name (memoize-1 util/dash-to-camel))
+(def cached-prop-name (util/memoize-1 undash-prop-name))
+(def cached-style-name (util/memoize-1 util/dash-to-camel))
 
 (defn convert-prop-value [val]
   (if (map? val)
@@ -185,7 +175,7 @@
   (let [[comp id-class] (parse-tag tag)]
     (wrap-component comp id-class (str tag))))
 
-(def cached-wrapper (memoize-1 get-wrapper))
+(def cached-wrapper (util/memoize-1 get-wrapper))
 
 (declare create-class)
 

@@ -133,7 +133,7 @@
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillUnmount nil})
 
-(def dash-to-camel (memoize util/dash-to-camel))
+(def dash-to-camel (util/memoize-1 util/dash-to-camel))
 
 (defn camelify-map-keys [fun-map]
   (reduce-kv (fn [m k v]
