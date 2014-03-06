@@ -1,6 +1,14 @@
 
 # Changelog
 
+## 0.4.2
+
+- Allow multi-methods as component functions.
+
+- Tweak performance by avoiding `clojure.core/memoize`.
+
+- Bugfix: Allow on-change handler on controlled inputs to keep value unchanged.
+
 
 ## 0.4.1
 
