@@ -41,12 +41,6 @@
   (or (hiccup-tag? x)
       (util/clj-ifn? x)))
 
-(defn map-into-array [f arg coll]
-  (let [a (into-array coll)]
-    (dotimes [i (alength a)]
-      (aset a i (f (aget a i) arg)))
-    a))
-
 (defn to-js-val [v]
   (if-not (ifn? v)
     v
@@ -136,23 +130,20 @@
 
 ;;; Wrapping of native components
 
-(declare as-component)
+(declare convert-args)
 
 (defn wrapped-render [this comp id-class input-setup]
   (let [inprops (util/js-props this)
         argv (aget inprops cljs-argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
-        first-child (if hasprops 2 1)
-        children (if (> (count argv) first-child)
-                   (subvec argv first-child))
-        jsargs (map-into-array as-component
-                               (inc (aget inprops cljs-level))
-                               children)
+        jsargs (convert-args argv
+                             (if hasprops 2 1)
+                             (inc (aget inprops cljs-level)))
         jsprops (convert-props (if hasprops props) id-class)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
-    (.unshift jsargs jsprops)
+    (aset jsargs 0 jsprops)
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [C nextprops nextstate]
@@ -178,9 +169,6 @@
       (add-input-methods spec))
     (.createClass React spec)))
 
-(defn create-class [spec]
-  (comp/create-class spec as-component))
-
 
 ;;; Conversion from Hiccup forms
 
@@ -198,6 +186,8 @@
     (wrap-component comp id-class (str tag))))
 
 (def cached-wrapper (memoize-1 get-wrapper))
+
+(declare create-class)
 
 (defn fn-to-class [f]
   (let [spec (meta f)
@@ -244,8 +234,7 @@
          (pr-str x))
     (set! (.-warned tmp) true)))
 
-(defn expand-seq [x level]
-  (map-into-array as-component (inc level) x))
+(declare expand-seq)
 
 (defn as-component
   ([x] (as-component x 0))
@@ -260,3 +249,22 @@
                           (warn-on-deref x))
                         s))
            true x)))
+
+(defn create-class [spec]
+  (comp/create-class spec as-component))
+
+(defn expand-seq [s level]
+  (let [a (into-array s)
+        level' (inc level)]
+    (dotimes [i (alength a)]
+      (aset a i (as-component (aget a i) level')))
+    a))
+
+(defn convert-args [argv first-child level]
+  (let [a (into-array argv)]
+    (dotimes [i (alength a)]
+      (when (>= i first-child)
+        (aset a i (as-component (aget a i) level))))
+    (when (== first-child 2)
+      (.shift a))
+    a))
