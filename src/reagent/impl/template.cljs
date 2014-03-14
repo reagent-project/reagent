@@ -6,7 +6,7 @@
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [jget jset jcall]]
+            [reagent.interop :refer-macros [get. set. call.]]
             [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
 ;; From Weavejester's Hiccup, via pump:
@@ -14,7 +14,7 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(def DOM (jget React :DOM))
+(def DOM (get. React :DOM))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
@@ -60,10 +60,10 @@
     (to-js-val val)))
 
 (defn set-id-class [props [id class]]
-  (let [pid (jget props :id)]
-    (jset props :id (if-not (nil? pid) pid id))
+  (let [pid (get. props :id)]
+    (set. props :id (if-not (nil? pid) pid id))
     (when-not (nil? class)
-      (jset props :className (let [old (jget props :className)]
+      (set. props :className (let [old (get. props :className)]
                                 (if-not (nil? old)
                                   (str class " " old)
                                   class))))))
@@ -95,28 +95,28 @@
     res))
 
 (defn input-did-update [this]
-  (let [value (jget this :cljsInputValue)]
+  (let [value (get. this :cljsInputValue)]
     (when-not (nil? value)
-      (let [node (jcall this :getDOMNode)]
-        (when (not= value (jget node :value))
-          (jset node :value value))))))
+      (let [node (call. this :getDOMNode)]
+        (when (not= value (get. node :value))
+          (set. node :value value))))))
 
 (defn input-render-setup [this jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
-  (let [on-change (jget jsprops :onChange)
+  (let [on-change (get. jsprops :onChange)
         value (when-not (nil? on-change)
-                (jget jsprops :value))]
-    (jset this :cljsInputValue value)
+                (get. jsprops :value))]
+    (set. this :cljsInputValue value)
     (when-not (nil? value)
       (batch/mark-rendered this)
       (doto jsprops
-        (jset :defaultValue value)
-        (jset :value nil)
-        (jset :onChange #(input-handle-change this on-change %))))))
+        (set. :defaultValue value)
+        (set. :value nil)
+        (set. :onChange #(input-handle-change this on-change %))))))
 
-(def input-components #{(jget DOM :input)
-                        (jget DOM :textarea)})
+(def input-components #{(get. DOM :input)
+                        (get. DOM :textarea)})
 
 
 ;;; Wrapping of native components
@@ -125,12 +125,12 @@
 
 (defn wrapped-render [this comp id-class input-setup]
   (let [inprops (util/js-props this)
-        argv (jget inprops :argv)
+        argv (get. inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsargs (convert-args argv
                              (if hasprops 2 1)
-                             (inc (jget inprops :level)))
+                             (inc (get. inprops :level)))
         jsprops (convert-props (if hasprops props) id-class)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
@@ -139,14 +139,14 @@
 
 (defn wrapped-should-update [C nextprops nextstate]
   (let [inprops (util/js-props C)
-        a1 (jget inprops :argv)
-        a2 (jget nextprops :argv)]
+        a1 (get. inprops :argv)
+        a2 (get. nextprops :argv)]
     (not (util/equal-args a1 a2))))
 
 (defn add-input-methods [spec]
   (doto spec
-    (jset :componentDidUpdate #(this-as C (input-did-update C)))
-    (jset :componentWillUnmount #(this-as C (batch/dispose C)))))
+    (set. :componentDidUpdate #(this-as C (input-did-update C)))
+    (set. :componentWillUnmount #(this-as C (batch/dispose C)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
@@ -158,7 +158,7 @@
                   :displayName (or name "ComponentWrapper")}]
     (when input?
       (add-input-methods spec))
-    (jcall React :createClass spec)))
+    (call. React :createClass spec)))
 
 
 ;;; Conversion from Hiccup forms
@@ -195,7 +195,7 @@
       (let [cached-class (.-cljsReactClass tag)]
         (if-not (nil? cached-class)
           cached-class
-          (if (jcall React :isValidClass tag)
+          (if (call. React :isValidClass tag)
             (set! (.-cljsReactClass tag) (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 

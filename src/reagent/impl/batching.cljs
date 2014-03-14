@@ -1,7 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg log]]
-            [reagent.interop :refer-macros [jget jset jcall]]
+            [reagent.interop :refer-macros [get. set. call.]]
             [reagent.ratom :as ratom]
             [reagent.impl.util :refer [cljs-level is-client]]
             [clojure.string :as string]))
@@ -22,8 +22,8 @@
           fake-raf))))
 
 (defn compare-levels [c1 c2]
-  (- (jget c1 [:props :level])
-     (jget c2 [:props :level])))
+  (- (get. c1 [:props :level])
+     (get. c2 [:props :level])))
 
 (defn run-queue [a]
   ;; sort components by level, to make sure parents
@@ -31,8 +31,8 @@
   (.sort a compare-levels)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (jget c :cljsIsDirty)
-        (jcall c :forceUpdate)))))
+      (when (get. c :cljsIsDirty)
+        (call. c :forceUpdate)))))
 
 (deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
   Object
@@ -55,26 +55,26 @@
   (.run-queue render-queue))
 
 (defn queue-render [c]
-  (jset c :cljsIsDirty true)
+  (set. c :cljsIsDirty true)
   (.queue-render render-queue c))
 
 (defn mark-rendered [c]
-  (jset c :cljsIsDirty false))
+  (set. c :cljsIsDirty false))
 
 ;; Render helper
 
 (defn is-reagent-component [c]
-  (some-> c (jget :props) (jget :argv)))
+  (some-> c (get. :props) (get. :argv)))
 
 (defn run-reactively [c run]
   (assert (is-reagent-component c))
   (mark-rendered c)
-  (let [rat (jget c :cljsRatom)]
+  (let [rat (get. c :cljsRatom)]
     (if (nil? rat)
       (let [res (ratom/capture-derefed run c)
             derefed (ratom/captured c)]
         (when (not (nil? derefed))
-          (jset c :cljsRatom
+          (set. c :cljsRatom
                 (ratom/make-reaction run
                                      :auto-run #(queue-render c)
                                      :derefed derefed)))
@@ -82,7 +82,7 @@
       (ratom/run rat))))
 
 (defn dispose [c]
-  (some-> (jget c :cljsRatom)
+  (some-> (get. c :cljsRatom)
           ratom/dispose!)
   (mark-rendered c))
 

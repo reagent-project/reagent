@@ -15,15 +15,15 @@
   (->> (if (vector? k) k [k])
        (map from-keyword)))
 
-(defmacro jget
+(defmacro get.
   [o k]
   `(aget ~o ~@(get-names k)))
 
-(defmacro jset
+(defmacro set.
   [o k v]
   `(aset ~o ~@(get-names k) ~v))
 
-(defmacro jcall
+(defmacro call.
   [o k & args]
   (let [names (get-names k)
         f (if (empty? names)
