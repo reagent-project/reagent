@@ -1,5 +1,6 @@
 (ns reagent.impl.util
   (:require [reagent.debug :refer-macros [dbg log]]
+            [reagent.interop :refer-macros [jget jset jcall]]
             [reagent.impl.reactimport :as reactimport]
             [clojure.string :as string]))
 
@@ -11,11 +12,11 @@
 ;;; Props accessors
 
 (def props "props")
-(def cljs-level "cljsLevel")
-(def cljs-argv "cljsArgv")
+(def cljs-level "level")
+(def cljs-argv "argv")
 
 (defn js-props [C]
-  (aget C props))
+  (jget C :props))
 
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
@@ -28,16 +29,16 @@
       (subvec v first-child))))
 
 (defn get-argv [C]
-  (-> C (aget props) (aget cljs-argv)))
+  (jget C [:props :argv]))
 
 (defn get-props [C]
-  (-> C (aget props) (aget cljs-argv) extract-props))
+  (-> (jget C [:props :argv]) extract-props))
 
 (defn get-children [C]
-  (-> C (aget props) (aget cljs-argv) extract-children))
+  (-> (jget C [:props :argv]) extract-children))
 
 (defn reagent-component? [C]
-  (-> C get-argv nil? not))
+  (-> (jget C [:props :argv]) nil? not))
 
 
 ;; Misc utilities

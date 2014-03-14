@@ -1,6 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg log]]
+            [reagent.interop :refer-macros [jget jset jcall]]
             [reagent.ratom :as ratom]
             [reagent.impl.util :refer [cljs-level is-client]]
             [clojure.string :as string]))
@@ -21,22 +22,22 @@
           fake-raf))))
 
 (defn compare-levels [c1 c2]
-  (- (-> c1 (aget "props") (aget cljs-level))
-     (-> c2 (aget "props") (aget cljs-level))))
+  (- (jget c1 [:props :level])
+     (jget c2 [:props :level])))
 
 (defn run-queue [a]
   ;; sort components by level, to make sure parents
   ;; are rendered before children
   (.sort a compare-levels)
   (dotimes [i (alength a)]
-    (let [C (aget a i)]
-      (when (.-cljsIsDirty C)
-        (.forceUpdate C)))))
+    (let [c (aget a i)]
+      (when (jget c :cljsIsDirty)
+        (jcall c :forceUpdate)))))
 
 (deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
   Object
-  (queue-render [this C]
-    (.push queue C)
+  (queue-render [this c]
+    (.push queue c)
     (.schedule this))
   (schedule [this]
     (when-not scheduled?
@@ -53,38 +54,35 @@
 (defn flush []
   (.run-queue render-queue))
 
-(defn queue-render [C]
-  (set! (.-cljsIsDirty C) true)
-  (.queue-render render-queue C))
+(defn queue-render [c]
+  (jset c :cljsIsDirty true)
+  (.queue-render render-queue c))
 
-(defn mark-rendered [C]
-  (set! (.-cljsIsDirty C) false))
+(defn mark-rendered [c]
+  (jset c :cljsIsDirty false))
 
 ;; Render helper
 
-(defn is-reagent-component [C]
-  (and (not (nil? C))
-       (aget C "props")
-       (-> C (aget "props") (aget "cljsArgv"))))
+(defn is-reagent-component [c]
+  (some-> c (jget :props) (jget :argv)))
 
-(defn run-reactively [C run]
-  (assert (is-reagent-component C))
-  (mark-rendered C)
-  (let [rat (.-cljsRatom C)]
+(defn run-reactively [c run]
+  (assert (is-reagent-component c))
+  (mark-rendered c)
+  (let [rat (jget c :cljsRatom)]
     (if (nil? rat)
-      (let [res (ratom/capture-derefed run C)
-            derefed (ratom/captured C)]
+      (let [res (ratom/capture-derefed run c)
+            derefed (ratom/captured c)]
         (when (not (nil? derefed))
-          (set! (.-cljsRatom C)
+          (jset c :cljsRatom
                 (ratom/make-reaction run
-                                     :auto-run #(queue-render C)
+                                     :auto-run #(queue-render c)
                                      :derefed derefed)))
         res)
       (ratom/run rat))))
 
-(defn dispose [C]
-  (let [ratom (.-cljsRatom C)]
-                 (if-not (nil? ratom)
-                   (ratom/dispose! ratom)))
-  (mark-rendered C))
+(defn dispose [c]
+  (some-> (jget c :cljsRatom)
+          ratom/dispose!)
+  (mark-rendered c))
 
