@@ -182,19 +182,19 @@
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
         res (create-class withrender)
-        wrapf (.-cljsReactClass res)]
-    (set! (.-cljsReactClass f) wrapf)
+        wrapf (util/cached-react-class res)]
+    (util/cache-react-class f wrapf)
     wrapf))
 
 (defn as-class [tag]
   (if (hiccup-tag? tag)
     (cached-wrapper tag)
     (do
-      (let [cached-class (.-cljsReactClass tag)]
+      (let [cached-class (util/cached-react-class tag)]
         (if-not (nil? cached-class)
           cached-class
           (if (call. React :isValidClass tag)
-            (set! (.-cljsReactClass tag) (wrap-component tag nil nil))
+            (util/cache-react-class tag (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
 (defn get-key [x]
@@ -215,13 +215,13 @@
         (set. jsprops :key k')))
     (c jsprops)))
 
-(def tmp #js {})
+(def seq-ctx #js {})
 
 (defn warn-on-deref [x]
-  (when-not (.-warned tmp)
+  (when-not (get. seq-ctx :warned)
     (log "Warning: Reactive deref not supported in seq in "
          (pr-str x))
-    (set! (.-warned tmp) true)))
+    (set. seq-ctx :warned true)))
 
 (declare expand-seq)
 
@@ -233,8 +233,8 @@
                       (expand-seq x level)
                       (let [s (ratom/capture-derefed
                                #(expand-seq x level)
-                               tmp)]
-                        (when (ratom/captured tmp)
+                               seq-ctx)]
+                        (when (ratom/captured seq-ctx)
                           (warn-on-deref x))
                         s))
            true x)))

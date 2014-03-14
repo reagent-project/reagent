@@ -5,7 +5,7 @@
 (defmacro log
   "Print with console.log, if it exists."
   [& forms]
-  `(when (not (nil? (.-log js/console)))
+  `(when (clojure.core/exists? js/console)
      (.log js/console ~@forms)))
 
 (defmacro println

@@ -1,13 +1,12 @@
 (ns reagent.impl.util
   (:require [reagent.debug :refer-macros [dbg log]]
-            [reagent.interop :refer-macros [get. set. call.]]
-            [reagent.impl.reactimport :as reactimport]
+            [reagent.interop :refer-macros [get. set. call. jval]]
             [clojure.string :as string]))
 
-(def is-client (not (nil? (try (.-document js/window)
-                               (catch js/Object e nil)))))
+(def is-client (not (nil? (some-> (jval :window)
+                                  (get. :document)))))
 
-(def React reactimport/React)
+(def React js/React)
 
 ;;; Props accessors
 
@@ -33,6 +32,11 @@
 (defn reagent-component? [c]
   (-> (get. c [:props :argv]) nil? not))
 
+(defn cached-react-class [c]
+  (get. c :cljsReactClass))
+
+(defn cache-react-class [c constructor]
+  (set. c :cljsReactClass constructor))
 
 ;; Misc utilities
 

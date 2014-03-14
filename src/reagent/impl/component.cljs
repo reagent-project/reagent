@@ -113,7 +113,7 @@
 (defn dont-bind [f]
   (if (ifn? f)
     (doto f
-      (aset "__reactDontBind" true))
+      (set. :__reactDontBind true))
     f))
 
 (defn get-wrapper [key f name]
@@ -185,6 +185,6 @@
         res (call. React :createClass spec)
         f (fn [& args]
             (as-component (apply vector res args)))]
-    (set! (.-cljsReactClass f) res)
-    (set! (.-cljsReactClass res) res)
+    (util/cache-react-class f res)
+    (util/cache-react-class res res)
     f))
