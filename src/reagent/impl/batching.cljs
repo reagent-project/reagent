@@ -3,7 +3,7 @@
   (:require [reagent.debug :refer-macros [dbg log]]
             [reagent.interop :refer-macros [get. set. call.]]
             [reagent.ratom :as ratom]
-            [reagent.impl.util :refer [cljs-level is-client]]
+            [reagent.impl.util :refer [is-client]]
             [clojure.string :as string]))
 
 ;;; Update batching

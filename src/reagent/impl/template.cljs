@@ -1,8 +1,7 @@
 
 (ns reagent.impl.template
   (:require [clojure.string :as string]
-            [reagent.impl.util :as util
-             :refer [cljs-level cljs-argv is-client React]]
+            [reagent.impl.util :as util :refer [is-client React]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
@@ -124,7 +123,7 @@
 (declare convert-args)
 
 (defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (util/js-props this)
+  (let [inprops (get. this :props)
         argv (get. inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
@@ -137,16 +136,15 @@
     (aset jsargs 0 jsprops)
     (.apply comp nil jsargs)))
 
-(defn wrapped-should-update [C nextprops nextstate]
-  (let [inprops (util/js-props C)
-        a1 (get. inprops :argv)
+(defn wrapped-should-update [c nextprops nextstate]
+  (let [a1 (get. c [:props :argv])
         a2 (get. nextprops :argv)]
     (not (util/equal-args a1 a2))))
 
 (defn add-input-methods [spec]
   (doto spec
-    (set. :componentDidUpdate #(this-as C (input-did-update C)))
-    (set. :componentWillUnmount #(this-as C (batch/dispose C)))))
+    (set. :componentDidUpdate #(this-as c (input-did-update c)))
+    (set. :componentWillUnmount #(this-as c (batch/dispose c)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
@@ -207,14 +205,14 @@
   (assert (valid-tag? (nth v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
   (let [c (as-class (nth v 0))
-        jsprops (js-obj cljs-argv v
-                        cljs-level level)]
+        jsprops #js {:argv v
+                     :level level}]
     (let [k (-> v meta get-key)
           k' (if (nil? k)
                (-> v (nth 1 nil) get-key)
                k)]
       (when-not (nil? k')
-        (aset jsprops "key" k')))
+        (set. jsprops :key k')))
     (c jsprops)))
 
 (def tmp #js {})

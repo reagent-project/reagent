@@ -11,13 +11,6 @@
 
 ;;; Props accessors
 
-(def props "props")
-(def cljs-level "level")
-(def cljs-argv "argv")
-
-(defn js-props [C]
-  (get. C :props))
-
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
     (if (map? p) p)))
@@ -28,17 +21,17 @@
     (if (> (count v) first-child)
       (subvec v first-child))))
 
-(defn get-argv [C]
-  (get. C [:props :argv]))
+(defn get-argv [c]
+  (get. c [:props :argv]))
 
-(defn get-props [C]
-  (-> (get. C [:props :argv]) extract-props))
+(defn get-props [c]
+  (-> (get. c [:props :argv]) extract-props))
 
-(defn get-children [C]
-  (-> (get. C [:props :argv]) extract-children))
+(defn get-children [c]
+  (-> (get. c [:props :argv]) extract-children))
 
-(defn reagent-component? [C]
-  (-> (get. C [:props :argv]) nil? not))
+(defn reagent-component? [c]
+  (-> (get. c [:props :argv]) nil? not))
 
 
 ;; Misc utilities
