@@ -32,12 +32,14 @@
       (util/clj-ifn? x)))
 
 (defn to-js-val [v]
-  (if-not (ifn? v)
-    v
-    (cond (keyword? v) (name v)
-          (symbol? v) (str v)
-          (coll? v) (clj->js v)
-          :else (fn [& args] (apply v args)))))
+  (cond
+   (string? v) v
+   (number? v) v
+   (keyword? v) (name v)
+   (symbol? v) (str v)
+   (coll? v) (clj->js v)
+   (ifn? v) (fn [& args] (apply v args))
+   :else v))
 
 (defn undash-prop-name [n]
   (or (attr-aliases n)
@@ -49,23 +51,24 @@
 (def cached-prop-name (util/memoize-1 undash-prop-name))
 (def cached-style-name (util/memoize-1 util/dash-to-camel))
 
-(defn convert-prop-value [val]
-  (if (map? val)
-    (reduce-kv (fn [res k v]
-                 (doto res
-                   (aset (cached-prop-name k)
-                         (to-js-val v))))
-               #js {} val)
-    (to-js-val val)))
+(defn convert-prop-value [x]
+  (cond (string? x) x
+        (number? x) x
+        (map? x) (reduce-kv (fn [o k v]
+                              (doto o
+                                (aset (cached-prop-name k)
+                                      (to-js-val v))))
+                            #js {} x)
+        :else (to-js-val x)))
 
 (defn set-id-class [props [id class]]
   (let [pid (get. props :id)]
     (set. props :id (if-not (nil? pid) pid id))
     (when-not (nil? class)
-      (set. props :className (let [old (get. props :className)]
-                                (if-not (nil? old)
-                                  (str class " " old)
-                                  class))))))
+      (let [old (get. props :className)]
+        (set. props :className (if-not (nil? old)
+                                 (str class " " old)
+                                 class))))))
 
 (defn convert-props [props id-class]
   (cond
@@ -228,7 +231,8 @@
 (defn as-component
   ([x] (as-component x 0))
   ([x level]
-     (cond (vector? x) (vec-to-comp x level)
+     (cond (string? x) x
+           (vector? x) (vec-to-comp x level)
            (seq? x) (if-not (and (dev?) (nil? ratom/*ratom-context*))
                       (expand-seq x level)
                       (let [s (ratom/capture-derefed
@@ -250,10 +254,11 @@
     a))
 
 (defn convert-args [argv first-child level]
-  (let [a (into-array argv)]
-    (dotimes [i (alength a)]
-      (when (>= i first-child)
-        (aset a i (as-component (aget a i) level))))
-    (when (== first-child 2)
-      (.shift a))
-    a))
+  (if (== (count argv) (inc first-child))
+    ;; Optimize common case of one child
+    #js [nil (as-component (nth argv first-child) level)]
+    (reduce-kv (fn [a k v]
+                 (when (>= k first-child)
+                   (.push a (as-component v level)))
+                 a)
+               #js [nil] argv)))
