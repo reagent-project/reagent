@@ -3,7 +3,7 @@
   (:require [reagent.impl.util :as util :refer [React]]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [get. set. call.]]
+            [reagent.interop :refer-macros [oget oset odo]]
             [reagent.debug :refer-macros [dbg prn]]))
 
 (declare ^:dynamic *current-component*)
@@ -11,10 +11,10 @@
 ;;; State
 
 (defn state-atom [this]
-  (let [sa (get. this :cljsState)]
+  (let [sa (oget this :cljsState)]
     (if-not (nil? sa)
       sa
-      (set. this :cljsState (ratom/atom nil)))))
+      (oset this :cljsState (ratom/atom nil)))))
 
 (defn state [this]
   (deref (state-atom this)))
@@ -32,12 +32,12 @@
 
 (defn do-render [c]
   (binding [*current-component* c]
-    (let [f (get. c :cljsRender)
+    (let [f (oget c :cljsRender)
           _ (assert (util/clj-ifn? f))
-          p (get. c :props)
-          res (if (nil? (get. c :componentFunction))
+          p (oget c :props)
+          res (if (nil? (oget c :componentFunction))
                 (f c)
-                (let [argv (get. p :argv)
+                (let [argv (oget p :argv)
                       n (count argv)]
                   (case n
                     1 (f)
@@ -47,10 +47,10 @@
                     5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
-        (call. c :asComponent res (get. p :level))
+        (odo c :asComponent res (oget p :level))
         (if (ifn? res)
           (do
-            (set. c :cljsRender res)
+            (oset c :cljsRender res)
             (do-render c))
           res)))))
 
@@ -70,15 +70,15 @@
     :componentWillReceiveProps
     (fn [props]
       (this-as c
-               (f c (get. props :argv))))
+               (f c (oget props :argv))))
 
     :shouldComponentUpdate
     (fn [nextprops nextstate]
       (this-as c
                ;; Don't care about nextstate here, we use forceUpdate
                ;; when only when state has changed anyway.
-               (let [old-argv (get. c [:props :argv])
-                     new-argv (get. nextprops :argv)]
+               (let [old-argv (oget c :props :argv)
+                     new-argv (oget nextprops :argv)]
                  (if (nil? f)
                    (not (util/equal-args old-argv new-argv))
                    (f c old-argv new-argv)))))
@@ -86,12 +86,12 @@
     :componentWillUpdate
     (fn [nextprops]
       (this-as c
-               (f c (get. nextprops :argv))))
+               (f c (oget nextprops :argv))))
 
     :componentDidUpdate
     (fn [oldprops]
       (this-as c
-               (f c (get. oldprops :argv))))
+               (f c (oget oldprops :argv))))
 
     :componentWillUnmount
     (fn []
@@ -113,7 +113,7 @@
 (defn dont-bind [f]
   (if (ifn? f)
     (doto f
-      (set. :__reactDontBind true))
+      (oset :__reactDontBind true))
     f))
 
 (defn get-wrapper [key f name]
@@ -154,8 +154,8 @@
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
         name (or (:displayName fun-map)
-                 (get. render-fun :displayName)
-                 (get. render-fun :name))
+                 (oget render-fun :displayName)
+                 (oget render-fun :name))
         name' (if (empty? name) (str (gensym "reagent")) name)
         fmap (-> fun-map
                  (assoc :displayName name')
@@ -168,7 +168,7 @@
   (reduce-kv (fn [o k v]
                (doto o
                  (aset (name k) v)))
-             #js {} m))
+             #js{} m))
 
 (defn cljsify [body]
   (-> body
@@ -181,8 +181,8 @@
   [body as-component]
   (assert (map? body))
   (let [spec (cljsify body)
-        _ (set. spec :asComponent (dont-bind as-component))
-        res (call. React :createClass spec)
+        _ (oset spec :asComponent (dont-bind as-component))
+        res (odo React :createClass spec)
         f (fn [& args]
             (as-component (apply vector res args)))]
     (util/cache-react-class f res)

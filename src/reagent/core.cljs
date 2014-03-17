@@ -7,7 +7,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]
-            [reagent.interop :refer-macros [set. get. call.]]))
+            [reagent.interop :refer-macros [oset oget odo]]))
 
 (def React util/React)
 
@@ -28,18 +28,18 @@ Returns the mounted component instance."
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
-     (call. React :renderComponent
-            (as-component comp) container callback)))
+     (odo React :renderComponent
+          (as-component comp) container callback)))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
   [container]
-  (call. React :unmountComponentAtNode container))
+  (odo React :unmountComponentAtNode container))
 
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
-     (call. React :renderComponentToString (as-component component))))
+     (odo React :renderComponentToString (as-component component))))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
@@ -109,7 +109,7 @@ Everything is optional, except :render.
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  (call. this :getDOMNode))
+  (odo this :getDOMNode))
 
 
 (defn merge-props

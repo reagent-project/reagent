@@ -5,7 +5,7 @@
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [get. set. call.]]
+            [reagent.interop :refer-macros [oget oset odo]]
             [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
 ;; From Weavejester's Hiccup, via pump:
@@ -13,7 +13,7 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(def DOM (get. React :DOM))
+(def DOM (oget React :DOM))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
@@ -58,15 +58,15 @@
                               (doto o
                                 (aset (cached-prop-name k)
                                       (to-js-val v))))
-                            #js {} x)
+                            #js{} x)
         :else (to-js-val x)))
 
 (defn set-id-class [props [id class]]
-  (let [pid (get. props :id)]
-    (set. props :id (if-not (nil? pid) pid id))
+  (let [pid (oget props :id)]
+    (oset props :id (if-not (nil? pid) pid id))
     (when-not (nil? class)
-      (let [old (get. props :className)]
-        (set. props :className (if-not (nil? old)
+      (let [old (oget props :className)]
+        (oset props :className (if-not (nil? old)
                                  (str class " " old)
                                  class))))))
 
@@ -81,7 +81,7 @@
                                 ;; Skip key, it is set by parent
                                 (aset o pname (convert-prop-value v))))
                             o)
-                          #js {} props)]
+                          #js{} props)]
            (when-not (nil? id-class)
              (set-id-class objprops id-class))
            objprops)))
@@ -97,28 +97,28 @@
     res))
 
 (defn input-did-update [this]
-  (let [value (get. this :cljsInputValue)]
+  (let [value (oget this :cljsInputValue)]
     (when-not (nil? value)
-      (let [node (call. this :getDOMNode)]
-        (when (not= value (get. node :value))
-          (set. node :value value))))))
+      (let [node (odo this :getDOMNode)]
+        (when (not= value (oget node :value))
+          (oset node :value value))))))
 
 (defn input-render-setup [this jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
-  (let [on-change (get. jsprops :onChange)
+  (let [on-change (oget jsprops :onChange)
         value (when-not (nil? on-change)
-                (get. jsprops :value))]
-    (set. this :cljsInputValue value)
+                (oget jsprops :value))]
+    (oset this :cljsInputValue value)
     (when-not (nil? value)
       (batch/mark-rendered this)
       (doto jsprops
-        (set. :defaultValue value)
-        (set. :value nil)
-        (set. :onChange #(input-handle-change this on-change %))))))
+        (oset :defaultValue value)
+        (oset :value nil)
+        (oset :onChange #(input-handle-change this on-change %))))))
 
-(def input-components #{(get. DOM :input)
-                        (get. DOM :textarea)})
+(def input-components #{(oget DOM :input)
+                        (oget DOM :textarea)})
 
 
 ;;; Wrapping of native components
@@ -126,13 +126,13 @@
 (declare convert-args)
 
 (defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (get. this :props)
-        argv (get. inprops :argv)
+  (let [inprops (oget this :props)
+        argv (oget inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsargs (convert-args argv
                              (if hasprops 2 1)
-                             (inc (get. inprops :level)))
+                             (inc (oget inprops :level)))
         jsprops (convert-props (if hasprops props) id-class)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
@@ -140,26 +140,26 @@
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [c nextprops nextstate]
-  (let [a1 (get. c [:props :argv])
-        a2 (get. nextprops :argv)]
+  (let [a1 (oget c :props :argv)
+        a2 (oget nextprops :argv)]
     (not (util/equal-args a1 a2))))
 
 (defn add-input-methods [spec]
   (doto spec
-    (set. :componentDidUpdate #(this-as c (input-did-update c)))
-    (set. :componentWillUnmount #(this-as c (batch/dispose c)))))
+    (oset :componentDidUpdate #(this-as c (input-did-update c)))
+    (oset :componentWillUnmount #(this-as c (batch/dispose c)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
         input-setup (if input? input-render-setup)
-        spec #js {:render
-                  #(this-as C (wrapped-render C comp extras input-setup))
-                  :shouldComponentUpdate
-                  #(this-as C (wrapped-should-update C %1 %2))
-                  :displayName (or name "ComponentWrapper")}]
+        spec #js{:render
+                 #(this-as C (wrapped-render C comp extras input-setup))
+                 :shouldComponentUpdate
+                 #(this-as C (wrapped-should-update C %1 %2))
+                 :displayName (or name "ComponentWrapper")}]
     (when input?
       (add-input-methods spec))
-    (call. React :createClass spec)))
+    (odo React :createClass spec)))
 
 
 ;;; Conversion from Hiccup forms
@@ -196,7 +196,7 @@
       (let [cached-class (util/cached-react-class tag)]
         (if-not (nil? cached-class)
           cached-class
-          (if (call. React :isValidClass tag)
+          (if (odo React :isValidClass tag)
             (util/cache-react-class tag (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
@@ -208,23 +208,23 @@
   (assert (valid-tag? (nth v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
   (let [c (as-class (nth v 0))
-        jsprops #js {:argv v
-                     :level level}]
+        jsprops #js{:argv v
+                    :level level}]
     (let [k (-> v meta get-key)
           k' (if (nil? k)
                (-> v (nth 1 nil) get-key)
                k)]
       (when-not (nil? k')
-        (set. jsprops :key k')))
+        (oset jsprops :key k')))
     (c jsprops)))
 
-(def seq-ctx #js {})
+(def seq-ctx #js{})
 
 (defn warn-on-deref [x]
-  (when-not (get. seq-ctx :warned)
+  (when-not (oget seq-ctx :warned)
     (log "Warning: Reactive deref not supported in seq in "
          (pr-str x))
-    (set. seq-ctx :warned true)))
+    (oset seq-ctx :warned true)))
 
 (declare expand-seq)
 
@@ -256,9 +256,9 @@
 (defn convert-args [argv first-child level]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
-    #js [nil (as-component (nth argv first-child) level)]
+    #js[nil (as-component (nth argv first-child) level)]
     (reduce-kv (fn [a k v]
                  (when (>= k first-child)
                    (.push a (as-component v level)))
                  a)
-               #js [nil] argv)))
+               #js[nil] argv)))

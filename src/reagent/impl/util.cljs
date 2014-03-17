@@ -1,10 +1,10 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg log]]
-            [reagent.interop :refer-macros [get. set. call. jval]]
+  (:require [reagent.debug :refer-macros [dbg]]
+            [reagent.interop :refer-macros [oget oset odo]]
             [clojure.string :as string]))
 
-(def is-client (not (nil? (some-> (jval :window)
-                                  (get. :document)))))
+(def is-client (and (exists? js/window)
+                    (-> js/window (oget :document) nil? not)))
 
 (def React js/React)
 
@@ -21,22 +21,22 @@
       (subvec v first-child))))
 
 (defn get-argv [c]
-  (get. c [:props :argv]))
+  (oget c :props :argv))
 
 (defn get-props [c]
-  (-> (get. c [:props :argv]) extract-props))
+  (-> (oget c :props :argv) extract-props))
 
 (defn get-children [c]
-  (-> (get. c [:props :argv]) extract-children))
+  (-> (oget c :props :argv) extract-children))
 
 (defn reagent-component? [c]
-  (-> (get. c [:props :argv]) nil? not))
+  (-> (oget c :props :argv) nil? not))
 
 (defn cached-react-class [c]
-  (get. c :cljsReactClass))
+  (oget c :cljsReactClass))
 
 (defn cache-react-class [c constructor]
-  (set. c :cljsReactClass constructor))
+  (oset c :cljsReactClass constructor))
 
 ;; Misc utilities
 
