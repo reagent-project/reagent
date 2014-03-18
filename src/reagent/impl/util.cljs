@@ -1,5 +1,5 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg]]
+  (:require [reagent.debug :refer-macros [dbg log]]
             [reagent.interop :refer-macros [oget oset odo]]
             [clojure.string :as string]))
 
@@ -108,6 +108,60 @@
       (assert (map? p1))
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
+
+(declare ^:dynamic *always-update*)
+
+(def doc-node-type 9)
+(def react-id-name "data-reactid")
+
+(defn get-react-node [cont]
+  (when-not (nil? cont)
+    (if (== doc-node-type (oget cont :nodeType))
+      (oget cont :documentElement)
+      (oget cont :firstChild))))
+
+(defn get-root-id [cont]
+  (some-> (get-react-node cont)
+          (odo :getAttribute react-id-name)))
+
+(def roots (atom {}))
+
+(defn re-render-component [comp container]
+  (try
+    (odo React :renderComponent comp container)
+    (catch js/Object e
+      (do
+        (try
+          (odo React :unmountComponentAtNode container)
+          (catch js/Object e
+            (log e)))
+        (when-let [n (get-react-node container)]
+          (odo n :removeAttribute react-id-name)
+          (oset n :innerHTML ""))
+        (throw e)))))
+
+(defn render-component [comp container callback]
+  (odo React :renderComponent
+       comp container
+       (fn []
+         (let [id (get-root-id container)]
+           (when-not (nil? id)
+             (swap! roots assoc id
+                    #(re-render-component comp container))))
+         (when-not (nil? callback)
+           (callback)))))
+
+(defn unmount-component-at-node [container]
+  (let [id (get-root-id container)]
+    (when-not (nil? id)
+      (swap! roots dissoc id)))
+  (odo React :unmountComponentAtNode container))
+
+(defn force-update-all []
+  (binding [*always-update* true]
+    (doseq [f (vals @roots)]
+      (f)))
+  "Updated")
 
 ;;; Helpers for shouldComponentUpdate
 

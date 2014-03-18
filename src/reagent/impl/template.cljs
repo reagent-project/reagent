@@ -140,9 +140,10 @@
     (.apply comp nil jsargs)))
 
 (defn wrapped-should-update [c nextprops nextstate]
-  (let [a1 (oget c :props :argv)
-        a2 (oget nextprops :argv)]
-    (not (util/equal-args a1 a2))))
+  (or util/*always-update*
+      (let [a1 (oget c :props :argv)
+            a2 (oget nextprops :argv)]
+        (not (util/equal-args a1 a2)))))
 
 (defn add-input-methods [spec]
   (doto spec

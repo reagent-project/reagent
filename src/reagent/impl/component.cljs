@@ -74,14 +74,15 @@
 
     :shouldComponentUpdate
     (fn [nextprops nextstate]
-      (this-as c
-               ;; Don't care about nextstate here, we use forceUpdate
-               ;; when only when state has changed anyway.
-               (let [old-argv (oget c :props :argv)
-                     new-argv (oget nextprops :argv)]
-                 (if (nil? f)
-                   (not (util/equal-args old-argv new-argv))
-                   (f c old-argv new-argv)))))
+      (or util/*always-update*
+          (this-as c
+                   ;; Don't care about nextstate here, we use forceUpdate
+                   ;; when only when state has changed anyway.
+                   (let [old-argv (oget c :props :argv)
+                         new-argv (oget nextprops :argv)]
+                     (if (nil? f)
+                       (not (util/equal-args old-argv new-argv))
+                       (f c old-argv new-argv))))))
 
     :componentWillUpdate
     (fn [nextprops]

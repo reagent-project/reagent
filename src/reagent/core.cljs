@@ -28,18 +28,20 @@ Returns the mounted component instance."
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
-     (odo React :renderComponent
-          (as-component comp) container callback)))
+     (util/render-component (as-component comp) container callback)))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
   [container]
-  (odo React :unmountComponentAtNode container))
+  (util/unmount-component-at-node container))
 
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
      (odo React :renderComponentToString (as-component component))))
+
+(defn ^:export force-update-all []
+  (util/force-update-all))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
