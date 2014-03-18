@@ -35,7 +35,8 @@
    [demo/demo]])
 
 (defn ^:export mounttests []
-  (reagent/render-component [test-demo] (.-body js/document)))
+  (reagent/render-component (fn [] [test-demo])
+                            (.-body js/document)))
 
 (defn ^:export run-all-tests []
   (println "-----------------------------------------")

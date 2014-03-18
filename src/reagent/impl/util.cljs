@@ -128,7 +128,7 @@
 
 (defn re-render-component [comp container]
   (try
-    (odo React :renderComponent comp container)
+    (odo React :renderComponent (comp) container)
     (catch js/Object e
       (do
         (try
@@ -141,8 +141,7 @@
         (throw e)))))
 
 (defn render-component [comp container callback]
-  (odo React :renderComponent
-       comp container
+  (odo React :renderComponent (comp) container
        (fn []
          (let [id (get-root-id container)]
            (when-not (nil? id)

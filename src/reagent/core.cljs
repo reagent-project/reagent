@@ -28,7 +28,9 @@ Returns the mounted component instance."
   ([comp container]
      (render-component comp container nil))
   ([comp container callback]
-     (util/render-component (as-component comp) container callback)))
+   (let [f (fn []
+             (as-component (if (fn? comp) (comp) comp)))]
+     (util/render-component f container callback))))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."

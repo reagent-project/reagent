@@ -14,6 +14,7 @@ openbrowser:
 	(sleep 1 && open example.html) &
 
 autocompile:
+	rm -rf target
 	lein with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
 
 clean:
