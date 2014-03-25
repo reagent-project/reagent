@@ -6,8 +6,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2173"]]
   :plugins [[lein-cljsbuild "1.0.2"]
-            [com.cemerick/clojurescript.test "0.2.2"]]
-  :profiles {:prod {:cljsbuild
+            [com.cemerick/clojurescript.test "0.3.0"]]
+  :profiles {:dev {:source-paths ["src" "demo"]}
+             :prod {:cljsbuild
                     {:builds
                      {:client {:compiler
                                {:optimizations :advanced
