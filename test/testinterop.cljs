@@ -1,7 +1,7 @@
 (ns testinterop
   (:require [cemerick.cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .! oget oset odo]]))
+            [reagent.interop :refer-macros [.' .! fvar fvar? oget oset odo]]))
 
 (deftest interop-basic
   (let [o #js{:foo "foo"
@@ -88,3 +88,16 @@
 
     (is (= "1bar2" (.' (.' o :foo)
                        call o 1)))))
+
+(def f nil)
+
+(deftest interop-fvar
+  (set! f (fn [] "foo"))
+  (let [f' (fvar f)]
+    (is (= "foo" (f')))
+
+    (set! f (fn [] "foobar"))
+    (is (= "foobar" (f')))
+
+    (is (identical? f' (fvar f)))))
+

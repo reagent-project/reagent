@@ -49,6 +49,37 @@
     `(aset ~object ~@names ~value)))
 
 
+(defn- has-fvar [] *assert*)
+
+(defmacro fvar
+  [f]
+  (assert (symbol? f))
+  (if-not (has-fvar)
+    f
+    (let [fref (str *ns* "/" f)]
+      `(let [f# (aget reagent.interop/fvars ~fref)]
+         (if-not (nil? f#)
+           f#
+           (do
+             (assert (not (nil? ~f))
+                     ~(str "undefined fn: " f))
+             (let [old# (aget ~f "-fvar")
+                   v# (if (not (nil? old#))
+                        old#
+                        (doto #(.apply ~f nil (~'js* "arguments"))
+                          (aset "name" (.-name ~f))
+                          (aset "fvar" true)))]
+               (aset ~f "-fvar" v#)
+               (aset reagent.interop/fvars ~fref v#))))))))
+
+(defmacro fvar?
+  [f]
+  (if (has-fvar)
+    `(and (fn? ~f)
+          (not (nil? (aget ~f "fvar"))))
+    `(fn? f)))
+
+
 (defn- kwd [k]
   (if (keyword? k) (name k) k))
 
