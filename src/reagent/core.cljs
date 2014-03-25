@@ -75,6 +75,7 @@ Everything is optional, except :render.
   "Returns the state of a component, as set with replace-state or set-state."
   [this]
   (assert (util/reagent-component? this))
+  ;; TODO: Warn if top-level component
   (comp/state this))
 
 (defn replace-state

@@ -70,11 +70,13 @@
 (deftest test-state-change
   (when isClient
     (let [ran (atom 0)
+          self (atom nil)
           comp (reagent/create-class
                 {:get-initial-state (fn [] {:foo "initial"})
                  :render
                  (fn []
                    (let [this (reagent/current-component)]
+                     (reset! self this)
                      (swap! ran inc)
                      [:div (str "hi " (:foo (reagent/state this)))]))})]
       (with-mounted-component (comp)
@@ -82,13 +84,16 @@
           (swap! ran inc)
           (is (found-in #"hi initial" div))
 
-          (reagent/replace-state C {:foo "there"})
+          (reagent/replace-state @self {:foo "there"})
+          (reagent/state @self)
+
           (rflush)
           (is (found-in #"hi there" div))
 
-          (reagent/set-state C {:foo "you"})
+          (reagent/set-state @self {:foo "you"})
           (rflush)
-          (is (found-in #"hi you" div))))
+          (is (found-in #"hi you" div))
+          ))
       (is (= 4 @ran)))))
 
 (deftest test-ratom-change
