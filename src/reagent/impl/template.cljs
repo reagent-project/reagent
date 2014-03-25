@@ -5,7 +5,7 @@
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [oget oset odo]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
 ;; From Weavejester's Hiccup, via pump:
@@ -13,7 +13,7 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(def DOM (oget React :DOM))
+(def DOM (.' React :DOM))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
@@ -62,11 +62,11 @@
         :else (to-js-val x)))
 
 (defn set-id-class [props [id class]]
-  (let [pid (oget props :id)]
-    (oset props :id (if-not (nil? pid) pid id))
+  (let [pid (.' props :id)]
+    (.! props :id (if-not (nil? pid) pid id))
     (when-not (nil? class)
-      (let [old (oget props :className)]
-        (oset props :className (if-not (nil? old)
+      (let [old (.' props :className)]
+        (.! props :className (if-not (nil? old)
                                  (str class " " old)
                                  class))))))
 
@@ -97,28 +97,28 @@
     res))
 
 (defn input-did-update [this]
-  (let [value (oget this :cljsInputValue)]
+  (let [value (.' this :cljsInputValue)]
     (when-not (nil? value)
-      (let [node (odo this :getDOMNode)]
-        (when (not= value (oget node :value))
-          (oset node :value value))))))
+      (let [node (.' this getDOMNode)]
+        (when (not= value (.' node :value))
+          (.! node :value value))))))
 
 (defn input-render-setup [this jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
-  (let [on-change (oget jsprops :onChange)
+  (let [on-change (.' jsprops :onChange)
         value (when-not (nil? on-change)
-                (oget jsprops :value))]
-    (oset this :cljsInputValue value)
+                (.' jsprops :value))]
+    (.! this :cljsInputValue value)
     (when-not (nil? value)
       (batch/mark-rendered this)
       (doto jsprops
-        (oset :defaultValue value)
-        (oset :value nil)
-        (oset :onChange #(input-handle-change this on-change %))))))
+        (.! :defaultValue value)
+        (.! :value nil)
+        (.! :onChange #(input-handle-change this on-change %))))))
 
-(def input-components #{(oget DOM :input)
-                        (oget DOM :textarea)})
+(def input-components #{(.' DOM :input)
+                        (.' DOM :textarea)})
 
 
 ;;; Wrapping of native components
@@ -126,13 +126,13 @@
 (declare convert-args)
 
 (defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (oget this :props)
-        argv (oget inprops :argv)
+  (let [inprops (.' this :props)
+        argv (.' inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsargs (convert-args argv
                              (if hasprops 2 1)
-                             (inc (oget inprops :level)))
+                             (inc (.' inprops :level)))
         jsprops (convert-props (if hasprops props) id-class)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
@@ -141,14 +141,14 @@
 
 (defn wrapped-should-update [c nextprops nextstate]
   (or util/*always-update*
-      (let [a1 (oget c :props :argv)
-            a2 (oget nextprops :argv)]
+      (let [a1 (.' c :props.argv)
+            a2 (.' nextprops :argv)]
         (not (util/equal-args a1 a2)))))
 
 (defn add-input-methods [spec]
   (doto spec
-    (oset :componentDidUpdate #(this-as c (input-did-update c)))
-    (oset :componentWillUnmount #(this-as c (batch/dispose c)))))
+    (.! :componentDidUpdate #(this-as c (input-did-update c)))
+    (.! :componentWillUnmount #(this-as c (batch/dispose c)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-components comp)
@@ -160,7 +160,7 @@
                  :displayName (or name "ComponentWrapper")}]
     (when input?
       (add-input-methods spec))
-    (odo React :createClass spec)))
+    (.' React createClass spec)))
 
 
 ;;; Conversion from Hiccup forms
@@ -197,7 +197,7 @@
       (let [cached-class (util/cached-react-class tag)]
         (if-not (nil? cached-class)
           cached-class
-          (if (odo React :isValidClass tag)
+          (if (.' React isValidClass tag)
             (util/cache-react-class tag (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
@@ -216,16 +216,16 @@
                (-> v (nth 1 nil) get-key)
                k)]
       (when-not (nil? k')
-        (oset jsprops :key k')))
+        (.! jsprops :key k')))
     (c jsprops)))
 
 (def seq-ctx #js{})
 
 (defn warn-on-deref [x]
-  (when-not (oget seq-ctx :warned)
+  (when-not (.' seq-ctx :warned)
     (log "Warning: Reactive deref not supported in seq in "
          (pr-str x))
-    (oset seq-ctx :warned true)))
+    (.! seq-ctx :warned true)))
 
 (declare expand-seq)
 

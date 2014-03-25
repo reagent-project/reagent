@@ -1,7 +1,7 @@
 
 (ns runtests
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [oget oset odo]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [demo :as demo]
             [cemerick.cljs.test :as t]))

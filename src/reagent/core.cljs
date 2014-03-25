@@ -7,7 +7,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg prn]]
-            [reagent.interop :refer-macros [oset oget odo]]))
+            [reagent.interop :refer-macros [.' .!]]))
 
 (def React util/React)
 
@@ -40,7 +40,7 @@ Returns the mounted component instance."
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
-     (odo React :renderComponentToString (as-component component))))
+     (.' React renderComponentToString (as-component component))))
 
 (defn ^:export force-update-all []
   (util/force-update-all))
@@ -114,8 +114,7 @@ Everything is optional, except :render.
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  (odo this :getDOMNode))
-
+  (.' this getDOMNode))
 
 (defn merge-props
   "Utility function that merges two maps, handling :class and :style

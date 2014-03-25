@@ -1,10 +1,10 @@
 (ns reagent.impl.util
   (:require [reagent.debug :refer-macros [dbg log]]
-            [reagent.interop :refer-macros [oget oset odo]]
+            [reagent.interop :refer-macros [.' .!]]
             [clojure.string :as string]))
 
 (def is-client (and (exists? js/window)
-                    (-> js/window (oget :document) nil? not)))
+                    (-> js/window (.' :document) nil? not)))
 
 (def React js/React)
 
@@ -21,22 +21,22 @@
       (subvec v first-child))))
 
 (defn get-argv [c]
-  (oget c :props :argv))
+  (.' c :props.argv))
 
 (defn get-props [c]
-  (-> (oget c :props :argv) extract-props))
+  (-> (.' c :props.argv) extract-props))
 
 (defn get-children [c]
-  (-> (oget c :props :argv) extract-children))
+  (-> (.' c :props.argv) extract-children))
 
 (defn reagent-component? [c]
-  (-> (oget c :props :argv) nil? not))
+  (-> (.' c :props.argv) nil? not))
 
 (defn cached-react-class [c]
-  (oget c :cljsReactClass))
+  (.' c :cljsReactClass))
 
 (defn cache-react-class [c constructor]
-  (oset c :cljsReactClass constructor))
+  (.! c :cljsReactClass constructor))
 
 ;; Misc utilities
 
@@ -116,32 +116,32 @@
 
 (defn get-react-node [cont]
   (when-not (nil? cont)
-    (if (== doc-node-type (oget cont :nodeType))
-      (oget cont :documentElement)
-      (oget cont :firstChild))))
+    (if (== doc-node-type (.' cont :nodeType))
+      (.' cont :documentElement)
+      (.' cont :firstChild))))
 
 (defn get-root-id [cont]
   (some-> (get-react-node cont)
-          (odo :getAttribute react-id-name)))
+          (.' getAttribute react-id-name)))
 
 (def roots (atom {}))
 
 (defn re-render-component [comp container]
   (try
-    (odo React :renderComponent (comp) container)
+    (.' React renderComponent (comp) container)
     (catch js/Object e
       (do
         (try
-          (odo React :unmountComponentAtNode container)
+          (.' React unmountComponentAtNode container)
           (catch js/Object e
             (log e)))
         (when-let [n (get-react-node container)]
-          (odo n :removeAttribute react-id-name)
-          (oset n :innerHTML ""))
+          (.' n removeAttribute react-id-name)
+          (.! n :innerHTML ""))
         (throw e)))))
 
 (defn render-component [comp container callback]
-  (odo React :renderComponent (comp) container
+  (.' React renderComponent (comp) container
        (fn []
          (let [id (get-root-id container)]
            (when-not (nil? id)
@@ -154,7 +154,7 @@
   (let [id (get-root-id container)]
     (when-not (nil? id)
       (swap! roots dissoc id)))
-  (odo React :unmountComponentAtNode container))
+  (.' React unmountComponentAtNode container))
 
 (defn force-update-all []
   (binding [*always-update* true]

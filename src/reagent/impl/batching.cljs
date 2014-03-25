@@ -1,7 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [oget oset odo]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.ratom :as ratom]
             [reagent.impl.util :refer [is-client]]
             [clojure.string :as string]))
@@ -15,15 +15,15 @@
   (if-not is-client
     fake-raf
     (let [w js/window]
-      (or (oget w :requestAnimationFrame)
-          (oget w :webkitRequestAnimationFrame)
-          (oget w :mozRequestAnimationFrame)
-          (oget w :msRequestAnimationFrame)
+      (or (.' w :requestAnimationFrame)
+          (.' w :webkitRequestAnimationFrame)
+          (.' w :mozRequestAnimationFrame)
+          (.' w :msRequestAnimationFrame)
           fake-raf))))
 
 (defn compare-levels [c1 c2]
-  (- (oget c1 :props :level)
-     (oget c2 :props :level)))
+  (- (.' c1 :props.level)
+     (.' c2 :props.level)))
 
 (defn run-queue [a]
   ;; sort components by level, to make sure parents
@@ -31,8 +31,8 @@
   (.sort a compare-levels)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (oget c :cljsIsDirty)
-        (odo c :forceUpdate)))))
+      (when (.' c :cljsIsDirty)
+        (.' c forceUpdate)))))
 
 (deftype RenderQueue [^:mutable queue ^:mutable scheduled?]
   Object
@@ -55,34 +55,34 @@
   (.run-queue render-queue))
 
 (defn queue-render [c]
-  (oset c :cljsIsDirty true)
+  (.! c :cljsIsDirty true)
   (.queue-render render-queue c))
 
 (defn mark-rendered [c]
-  (oset c :cljsIsDirty false))
+  (.! c :cljsIsDirty false))
 
 ;; Render helper
 
 (defn is-reagent-component [c]
-  (some-> c (oget :props) (oget :argv)))
+  (some-> c (.' :props) (.' :argv)))
 
 (defn run-reactively [c run]
   (assert (is-reagent-component c))
   (mark-rendered c)
-  (let [rat (oget c :cljsRatom)]
+  (let [rat (.' c :cljsRatom)]
     (if (nil? rat)
       (let [res (ratom/capture-derefed run c)
             derefed (ratom/captured c)]
         (when (not (nil? derefed))
-          (oset c :cljsRatom
-                (ratom/make-reaction run
-                                     :auto-run #(queue-render c)
-                                     :derefed derefed)))
+          (.! c :cljsRatom
+              (ratom/make-reaction run
+                                   :auto-run #(queue-render c)
+                                   :derefed derefed)))
         res)
       (ratom/run rat))))
 
 (defn dispose [c]
-  (some-> (oget c :cljsRatom)
+  (some-> (.' c :cljsRatom)
           ratom/dispose!)
   (mark-rendered c))
 
