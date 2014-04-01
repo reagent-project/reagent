@@ -1,5 +1,6 @@
 (ns reagentdemo.page
   (:require [reagent.core :as reagent :refer [atom partial]]
+            [reagent.interop :refer-macros [.' .! fvar fvar?]]
             [reagent.debug :refer-macros [dbg]]
             [clojure.string :as string]
             [goog.events :as events]

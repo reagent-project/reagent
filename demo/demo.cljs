@@ -1,5 +1,6 @@
 (ns demo
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [clojure.string :as string]
             [reagentdemo.page :as page :refer [page-map page link prefix]]
             [reagentdemo.common :as common :refer [demo-component]]
@@ -8,8 +9,8 @@
             [reagent.debug :refer-macros [dbg println]]))
 
 (swap! page-map assoc
-       "index.html" intro/main
-       "news/index.html" news/main)
+       "index.html" (fvar intro/main)
+       "news/index.html" (fvar news/main))
 
 (def github {:href "https://github.com/holmsand/reagent"})
 
@@ -24,11 +25,11 @@
   [:div
    [:div.nav
     [:ul.nav
-     [:li.brand [link {:href intro/main} "Reagent:"]]
-     [:li [link {:href intro/main} "Intro"]]
-     [:li [link {:href news/main} "News"]]
+     [:li.brand [link {:href (fvar intro/main)} "Reagent:"]]
+     [:li [link {:href (fvar intro/main)} "Intro"]]
+     [:li [link {:href (fvar news/main)} "News"]]
      [:li [:a github "GitHub"]]]]
-   (let [comp (get @page-map @page intro/main)]
+   (let [comp (get @page-map @page (fvar intro/main))]
      [comp])
    [github-badge]])
 

@@ -34,9 +34,9 @@
 (defn src-for [funmap defs]
   [:pre (-> funmap (src-for-names defs) syntaxify)])
 
-(defn demo-component [{:keys [comp src complete no-heading]}]
+(defn demo-component []
   (let [showing (atom true)]
-    (fn []
+    (fn [{:keys [comp src complete no-heading]}]
       [:div
        (when comp
          [:div.demo-example.clearfix

@@ -1,6 +1,7 @@
 
 (ns reagentdemo.intro
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
@@ -10,7 +11,7 @@
 (defn simple-component []
   [:div
    [:p "I am a component!"]
-   [:p.someclass 
+   [:p.someclass
     "I have " [:strong "bold"]
     [:span {:style {:color "red"}} " and red "] "text."]])
 
@@ -104,8 +105,8 @@
       [:span {:style {:color color}} diagnose]
       [slider :bmi bmi 10 50]]]))
 
-(def funmap (-> "reagentdemo/intro.cljs" get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
+(defonce funmap (-> "reagentdemo/intro.cljs" get-source common/fun-map))
+(defonce src-for (partial common/src-for funmap))
 
 (defn intro []
   (let [github {:href "https://github.com/holmsand/reagent"}
@@ -189,10 +190,10 @@
    [:p "Here is an example of that, where we call "
     [:code "setTimeout"] " every time the component is rendered to
    update a counter:"]
-   
+
    [demo-component {:comp timer-component
                     :src (src-for [:timer-component])}]
-   
+
    [:p "The previous example also uses another feature of Reagent: a
    component function can return another function, that is used to do
    the actual rendering. This function is called with the same
@@ -275,7 +276,7 @@
 (defn bmi-demo []
   [:div.demo-text
    [:h2 "Putting it all together"]
-   
+
    [:p "Here is a slightly less contrived example: a simple BMI
    calculator."]
 
@@ -293,7 +294,7 @@
    [:p "Reagent comes with a couple of complete examples, with
    Leiningen project files and everything. Here’s one of them in
    action:"]
-   
+
    [demo-component {:comp simpleexample/simple-example
                     :complete true
                     :src (-> "simpleexample.cljs"
@@ -307,7 +308,7 @@
    [:p "The obligatory todo list looks roughly like this in
    Reagent (cheating a little bit by skipping routing and
    persistence):"]
-   
+
    [demo-component {:comp todomvc/todo-app
                     :complete true
                     :src (-> "todomvc.cljs"

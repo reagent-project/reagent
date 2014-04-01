@@ -1,5 +1,6 @@
 (ns reagentdemo.news.anyargs
   (:require [reagent.core :as r :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [title link page-map]]
@@ -33,9 +34,8 @@
   (let [head "All arguments allowed"
         geometry {:href "https://github.com/holmsand/reagent/tree/master/examples/geometry"}
         jonase {:href "https://github.com/jonase"}]
-    
     [:div.reagent-demo
-     [:h1 [link {:href main} head]]
+     [:h1 [link {:href (fvar main)} head]]
      [title (str "Reagent 0.4.0: " head)]
      [:div.demo-text
 
@@ -43,7 +43,7 @@
 
       [:p "Calling a component in Reagent looks a lot like a function
       call. Now it also " [:em "works"] " like one."]
-      
+
       [:p "Before 0.4.0, component functions were always called with
       three arguments: a map of attributes, a vector of ”children”,
       and the current React component."]
@@ -53,12 +53,12 @@
       them."]
 
       (if summary
-        [link {:href main
+        [link {:href (fvar main)
                :class 'news-read-more} "Read more"]
         [:div.demo-text
          [:p "In other words, you can now do this:"]
 
-         [demo-component {:comp say-hello
+         [demo-component {:comp (fvar say-hello)
                           :src (src-for [:hello-component :say-hello])}]
 
          [:p "In the above example, it wouldn’t make any difference at
@@ -77,7 +77,7 @@
           and " [:code "for"] " expressions, so it’s safest to always
           put the call at the top, as in " [:code "my-div"] " here:"]
 
-         [demo-component {:comp call-my-div
+         [demo-component {:comp (fvar call-my-div)
                           :src (src-for [:nsr :my-div :call-my-div])}]
 
          [:p [:em "Note: "] [:code "r/props"] " and "
@@ -129,7 +129,7 @@
           use Reagent’s new calling convensions, and looks like
           this:"]
 
-         [demo-component {:comp geometry-example}]])]]))
+         [demo-component {:comp (fvar geometry-example)}]])]]))
 
 (swap! page-map assoc
-       "news/any-arguments.html" main)
+       "news/any-arguments.html" (fvar main))

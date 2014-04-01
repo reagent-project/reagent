@@ -61,8 +61,8 @@
          (do
            (assert (not (nil? ~f))
                    ~(str "undefined fn: " f))
-           (assert (identical? ~f ~(symbol fns (name f)))
-                   ~(str "Not in a namespace: " f))
+;;            (assert (identical? ~f ~(symbol fns (name f)))
+;;                    ~(str "Not in a namespace: " f))
            (let [old# (aget ~f "-fvar")
                  v# (if (not (nil? old#))
                       old#

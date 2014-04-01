@@ -1,5 +1,6 @@
 (ns reagentdemo.news.async
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [title link page-map]]
@@ -91,13 +92,13 @@
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
     [:div.reagent-demo
      [title "Reagent: Faster by waiting"]
-     [:h1 [link {:href main} "Faster by waiting"]]
+     [:h1 [link {:href (fvar main)} "Faster by waiting"]]
      [:div.demo-text
       [:h2 "Reagent gets async rendering"]
 
       [:p "Reagent already separates state from components. Now they
       are also separated in time."]
-     
+
       [:p "From version 0.3.0, changes in application state (as
       represented by Reagent’s " [:code "atom"] "s) are no longer
       rendered immediately to the DOM. Instead, Reagent waits until
@@ -105,13 +106,13 @@
       changes are rendered in one single go."]
 
       (if summary
-        [link {:href main
+        [link {:href (fvar main)
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
          [:p "This is good for all sorts of reasons:"]
          [:ul
-      
+
           [:li "Reagent doesn't have to spend time doing renderings
           that no one would ever see (because changes to application
           state happened faster than the browser could repaint)."]
@@ -194,4 +195,4 @@
                   :palette :color-demo])}]])]]))
 
 (swap! page-map assoc
-       "news/reagent-is-async.html" main)
+       "news/reagent-is-async.html" (fvar main))

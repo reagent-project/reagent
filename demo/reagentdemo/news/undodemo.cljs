@@ -1,5 +1,6 @@
 (ns reagentdemo.news.undodemo
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [title link page-map]]
@@ -47,11 +48,11 @@
 (defn main [{:keys [summary]}]
   (let [head "Cloact becomes Reagent: Undo is trivial"]
     [:div.reagent-demo
-     [:h1 [link {:href main} head]]
+     [:h1 [link {:href (fvar main)} head]]
      [title head]
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
-      
+
       [:p "It turns out that ”Cloact” was a really, really bad
       name. It made some people think about birds’ behinds, in
       possibly unhealthy ways, which even Google suggested they
@@ -64,7 +65,7 @@
       search-and-replace should suffice."]
 
       (if summary
-        [link {:href main
+        [link {:href (fvar main)
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
@@ -86,4 +87,4 @@
          [undo-demo-cleanup]])]]))
 
 (swap! page-map assoc
-       "news/cloact-reagent-undo-demo.html" main)
+       "news/cloact-reagent-undo-demo.html" (fvar main))

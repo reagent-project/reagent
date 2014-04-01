@@ -1,5 +1,6 @@
 (ns reagentdemo.news
   (:require [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.page :refer [title link page-map]]
             [reagentdemo.common :as common :refer [demo-component]]

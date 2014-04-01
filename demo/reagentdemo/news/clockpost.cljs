@@ -1,5 +1,6 @@
 (ns reagentdemo.news.clockpost
   (:require [reagent.core :as r :refer [atom]]
+            [reagent.interop :refer-macros [.' .! fvar]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [title link page-map]]
@@ -21,9 +22,9 @@
         om {:href "https://github.com/swannodette/om"}
         hoplon {:href "http://hoplon.io"}
         clocksrc {:href "https://github.com/holmsand/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
-    
+
     [:div.reagent-demo
-     [:h1 [link {:href main} head]]
+     [:h1 [link {:href (fvar main)} head]]
      [title head]
      [:div.demo-text
 
@@ -39,9 +40,9 @@
       hoplon "Hoplon"] ", can be seen " [:a hopclock "here"] ")."]
 
       [:p "So, without further ado, here is a binary clock using Reagent."]
-      
+
       (if summary
-        [link {:href main
+        [link {:href (fvar main)
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
@@ -119,4 +120,4 @@
          to React to actually display that UI."]])]]))
 
 (swap! page-map assoc
-       "news/binary-clock.html" main)
+       "news/binary-clock.html" (fvar main))
