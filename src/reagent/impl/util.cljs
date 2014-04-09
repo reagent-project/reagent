@@ -6,8 +6,6 @@
 (def is-client (and (exists? js/window)
                     (-> js/window (.' :document) nil? not)))
 
-(def React js/React)
-
 ;;; Props accessors
 
 (defn extract-props [v]
@@ -128,11 +126,11 @@
 
 (defn re-render-component [comp container]
   (try
-    (.' React renderComponent (comp) container)
+    (.' js/React renderComponent (comp) container)
     (catch js/Object e
       (do
         (try
-          (.' React unmountComponentAtNode container)
+          (.' js/React unmountComponentAtNode container)
           (catch js/Object e
             (log e)))
         (when-let [n (get-react-node container)]
@@ -141,7 +139,7 @@
         (throw e)))))
 
 (defn render-component [comp container callback]
-  (.' React renderComponent (comp) container
+  (.' js/React renderComponent (comp) container
        (fn []
          (let [id (get-root-id container)]
            (when-not (nil? id)
@@ -154,7 +152,7 @@
   (let [id (get-root-id container)]
     (when-not (nil? id)
       (swap! roots dissoc id)))
-  (.' React unmountComponentAtNode container))
+  (.' js/React unmountComponentAtNode container))
 
 (defn force-update-all []
   (binding [*always-update* true]

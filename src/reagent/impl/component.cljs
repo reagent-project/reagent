@@ -1,6 +1,6 @@
 
 (ns reagent.impl.component
-  (:require [reagent.impl.util :as util :refer [React]]
+  (:require [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
@@ -183,7 +183,7 @@
   (assert (map? body))
   (let [spec (cljsify body)
         _ (.! spec :asComponent (dont-bind as-component))
-        res (.' React createClass spec)
+        res (.' js/React createClass spec)
         f (fn [& args]
             (as-component (apply vector res args)))]
     (util/cache-react-class f res)

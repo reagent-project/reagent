@@ -1,12 +1,14 @@
 (ns demo
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
+            [reagent.interop :as i :refer-macros [.' .! fvar]]
             [clojure.string :as string]
             [reagentdemo.page :as page :refer [page-map page link prefix]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
             [reagent.debug :refer-macros [dbg println]]))
+
+(i/import-react)
 
 (swap! page-map assoc
        "index.html" (fvar intro/main)

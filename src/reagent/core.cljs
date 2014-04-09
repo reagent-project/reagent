@@ -9,8 +9,6 @@
             [reagent.debug :refer-macros [dbg prn]]
             [reagent.interop :refer-macros [.' .!]]))
 
-(def React util/React)
-
 (def is-client util/is-client)
 
 (defn as-component
@@ -40,7 +38,7 @@ Returns the mounted component instance."
 (defn render-component-to-string
   "Turns a component into an HTML string."
   ([component]
-     (.' React renderComponentToString (as-component component))))
+     (.' js/React renderComponentToString (as-component component))))
 
 (defn ^:export force-update-all []
   (util/force-update-all))

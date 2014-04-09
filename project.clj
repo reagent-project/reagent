@@ -13,7 +13,6 @@
                      {:client {:compiler
                                {:optimizations :advanced
                                 :elide-asserts true
-                                :preamble ^:replace ["reagent/react.min.js"]
                                 :pretty-print false}}}}}
              :test {:cljsbuild
                     {:builds
@@ -37,7 +36,6 @@
                             "examples/geometry/src"]
              :notify-command ["node" "./bin/gen-site.js"]
              :compiler
-             {:preamble ["reagent/react.js"]
-              :output-dir "target/client"
+             {:output-dir "target/client"
               :output-to "target/cljs-client.js"
               :pretty-print true}}}})

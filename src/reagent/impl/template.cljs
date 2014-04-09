@@ -1,19 +1,18 @@
 
 (ns reagent.impl.template
   (:require [clojure.string :as string]
-            [reagent.impl.util :as util :refer [is-client React]]
+            [reagent.impl.util :as util :refer [is-client]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg prn println log dev?]]))
 
+
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
-
-(def DOM (.' React :DOM))
 
 (def attr-aliases {:class "className"
                    :for "htmlFor"
@@ -117,8 +116,10 @@
         (.! :value nil)
         (.! :onChange #(input-handle-change this on-change %))))))
 
-(def input-components #{(.' DOM :input)
-                        (.' DOM :textarea)})
+(defn input-component? [x]
+  (let [DOM (.' js/React :DOM)]
+    (or (identical? x (.' DOM :input))
+        (identical? x (.' DOM :textarea)))))
 
 
 ;;; Wrapping of native components
@@ -151,7 +152,7 @@
     (.! :componentWillUnmount #(this-as c (batch/dispose c)))))
 
 (defn wrap-component [comp extras name]
-  (let [input? (input-components comp)
+  (let [input? (input-component? comp)
         input-setup (if input? input-render-setup)
         spec #js{:render
                  #(this-as C (wrapped-render C comp extras input-setup))
@@ -160,14 +161,14 @@
                  :displayName (or name "ComponentWrapper")}]
     (when input?
       (add-input-methods spec))
-    (.' React createClass spec)))
+    (.' js/React createClass spec)))
 
 
 ;;; Conversion from Hiccup forms
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
-        comp (aget DOM tag)
+        comp (aget (.' js/React :DOM) tag)
         class' (when class
                  (string/replace class #"\." " "))]
     (assert comp (str "Unknown tag: '" hiccup-tag "'"))
@@ -197,7 +198,7 @@
       (let [cached-class (util/cached-react-class tag)]
         (if-not (nil? cached-class)
           cached-class
-          (if (.' React isValidClass tag)
+          (if (.' js/React isValidClass tag)
             (util/cache-react-class tag (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
