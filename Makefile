@@ -36,31 +36,22 @@ install: leinbuild
 
 preclean:
 	rm -rf repl .repl target out
-	mkdir -p vendor/reagent
 
 clean: preclean
 	rm -rf news assets
 	lein -o clean
 
-setup: preclean copyjs
+setup: preclean
 	mkdir -p news assets
 
 show-outdated:
 	lein ancient :all
 
 veryclean: clean
-	rm -rf bower_components
+	rm -rf resources
 
-bower_components:
-	bower install react#v0.10.0
-
-vendor/reagent/react.min.js: bower_components/react/react.min.js Makefile
-	cp $< $@
-
-vendor/reagent/react.js: bower_components/react/react.js Makefile
-	cp $< $@
-
-copyjs: bower_components vendor/reagent/react.min.js vendor/reagent/react.js
+bower:
+	lein -o bower install
 
 gensite:
 	node bin/gen-site.js
