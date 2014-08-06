@@ -242,7 +242,7 @@
                         (when (ratom/captured seq-ctx)
                           (warn-on-deref x))
                         s))
-           true x)))
+           :else x)))
 
 (defn create-class [spec]
   (comp/create-class spec as-component))
