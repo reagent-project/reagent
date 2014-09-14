@@ -52,7 +52,7 @@ veryclean: clean
 	rm -rf bower_components
 
 bower_components:
-	bower install react#v0.10.0
+	bower install react#v0.11.1
 
 vendor/reagent/react.min.js: bower_components/react/react.min.js Makefile
 	cp $< $@
