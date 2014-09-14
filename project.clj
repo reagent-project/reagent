@@ -3,10 +3,10 @@
   :url "http://github.com/holmsand/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2202"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/clojurescript "0.0-2322"]]
   :plugins [[lein-cljsbuild "1.0.3"]
-            [com.cemerick/clojurescript.test "0.3.0"]]
+            [com.cemerick/clojurescript.test "0.3.1"]]
   :profiles {:dev {:source-paths ["src" "demo"]}
              :prod {:cljsbuild
                     {:builds
