@@ -323,3 +323,12 @@
     (is (ifn? p1))
     (is (= (reagent/partial vector 1 2) p1))
     (is (not= p1 (reagent/partial vector 1 3)))))
+
+(deftest test-null-component
+  (let [null-comp (fn [do-show]
+                    (when do-show
+                      [:div "div in test-null-component"]))]
+    (is (not (re-find #"test-null-component"
+                      (as-string [null-comp false]))))
+    (is (re-find #"test-null-component"
+                 (as-string [null-comp true])))))
