@@ -139,6 +139,20 @@ re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 
+;; RCursor
+
+(defn cursor
+  "Provide a cursor into a Reagent atom.
+
+Behaves like a Reagent atom but focuses updates and derefs to
+the specified path within the wrapped Reagent atom. e.g.,
+  (let [c (cursor [:nested :content] ra)]
+    ... @c ;; equivalent to (get-in @ra [:nested :content])
+    ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
+    ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
+    )"
+  ([path] (fn [ra] (cursor path ra)))
+  ([path ra] (ratom/cursor path ra)))
 
 ;; Utilities
 
