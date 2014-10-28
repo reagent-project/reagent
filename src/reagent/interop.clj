@@ -73,7 +73,6 @@
                       console.log('WARNING: React is already defined');
                       }"
                       src "; \n"
-                      "console.log('importing');"
                       "if (typeof module != 'undefined' &&
                       typeof global != 'undefined' &&
                       module.exports && module.exports.DOM) {

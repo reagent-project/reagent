@@ -1,6 +1,19 @@
 
 # Changelog
 
+## 0.4.3
+
+- React updated to 0.11.2
+
+- Add reagent.core/cursor
+
+- Add javascript interop macros .' and .!
+
+- Add force-update-all to make LightTable integration easier
+
+- Some performance optimizations
+
+
 ## 0.4.2
 
 - Allow multi-methods as component functions.
