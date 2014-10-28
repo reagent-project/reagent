@@ -1,9 +1,9 @@
 
 
-(defproject geometry-reagent "0.4.2"
+(defproject geometry-reagent "0.4.3"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2173"]
-                 [reagent "0.4.2"]]
+                 [reagent "0.4.3"]]
   :plugins [[lein-cljsbuild "1.0.2"]]
   :hooks [leiningen.cljsbuild]
   :profiles {:prod {:cljsbuild

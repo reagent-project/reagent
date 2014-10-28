@@ -11,7 +11,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
 To use Reagent you add this to your dependencies in `project.clj`:
 
-    [reagent "0.4.2"]
+    [reagent "0.4.3"]
 
 You also need to include react.js itself. One way to do this is to add
 
