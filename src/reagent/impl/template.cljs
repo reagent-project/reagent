@@ -198,7 +198,7 @@
       (let [cached-class (util/cached-react-class tag)]
         (if-not (nil? cached-class)
           cached-class
-          (if (.' js/React isValidClass tag)
+          (if (.' js/React isValidElement tag)
             (util/cache-react-class tag (wrap-component tag nil nil))
             (fn-to-class tag)))))))
 
@@ -218,7 +218,7 @@
                k)]
       (when-not (nil? k')
         (.! jsprops :key k')))
-    (c jsprops)))
+    (.' js/React createElement c jsprops)))
 
 (def seq-ctx #js{})
 
