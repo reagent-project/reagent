@@ -118,26 +118,27 @@
 
 (defn input-component? [x]
   (let [DOM (.' js/React :DOM)]
-    (or (identical? x (.' DOM :input))
+    (or (= x "input")
+        (= x "textarea")
+        (identical? x (.' DOM :input))
         (identical? x (.' DOM :textarea)))))
 
 
 ;;; Wrapping of native components
 
-(declare convert-args)
+(declare make-element)
 
 (defn wrapped-render [this comp id-class input-setup]
   (let [inprops (.' this :props)
         argv (.' inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
-        jsprops (convert-props (if hasprops props) id-class)
-        jsargs (convert-args argv comp jsprops
-                             (if hasprops 2 1)
-                             (inc (.' inprops :level)))]
+        jsprops (convert-props (if hasprops props) id-class)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
-    (.apply (.' js/React :createElement) nil jsargs)))
+    (make-element argv comp jsprops
+                  (if hasprops 2 1)
+                  (inc (.' inprops :level)))))
 
 (defn wrapped-should-update [c nextprops nextstate]
   (or util/*always-update*
@@ -191,14 +192,13 @@
 
 (defn as-class [tag]
   (if (hiccup-tag? tag)
-    (cached-wrapper tag)
-    (do
-      (let [cached-class (util/cached-react-class tag)]
-        (if-not (nil? cached-class)
-          cached-class
-          (if (.' js/React isValidElement tag)
-            (util/cache-react-class tag (wrap-component tag nil nil))
-            (fn-to-class tag)))))))
+    (cached-wrapper tag)    
+    (let [cached-class (util/cached-react-class tag)]
+      (if-not (nil? cached-class)
+        cached-class
+        (if (.' js/React isValidElement tag)
+          (util/cache-react-class tag (wrap-component tag nil nil))
+          (fn-to-class tag))))))
 
 (defn get-key [x]
   (when (map? x) (get x :key)))
@@ -253,12 +253,14 @@
       (aset a i (as-component (aget a i) level')))
     a))
 
-(defn convert-args [argv comp jsprops first-child level]
+(defn make-element [argv comp jsprops first-child level]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
-    #js[comp jsprops (as-component (nth argv first-child) level)]
-    (reduce-kv (fn [a k v]
-                 (when (>= k first-child)
-                   (.push a (as-component v level)))
-                 a)
-               #js[comp jsprops] argv)))
+    (.' js/React createElement comp jsprops
+        (as-component (nth argv first-child) level))
+    (.apply (.' js/React :createElement) nil
+            (reduce-kv (fn [a k v]
+                         (when (>= k first-child)
+                           (.push a (as-component v level)))
+                         a)
+                       #js[comp jsprops] argv))))
