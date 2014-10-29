@@ -131,14 +131,13 @@
         argv (.' inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
-        jsargs (convert-args argv
+        jsprops (convert-props (if hasprops props) id-class)
+        jsargs (convert-args argv comp jsprops
                              (if hasprops 2 1)
-                             (inc (.' inprops :level)))
-        jsprops (convert-props (if hasprops props) id-class)]
+                             (inc (.' inprops :level)))]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
-    (aset jsargs 0 jsprops)
-    (.apply comp nil jsargs)))
+    (.apply (.' js/React :createElement) nil jsargs)))
 
 (defn wrapped-should-update [c nextprops nextstate]
   (or util/*always-update*
@@ -168,12 +167,11 @@
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
-        comp (aget (.' js/React :DOM) tag)
         class' (when class
                  (string/replace class #"\." " "))]
-    (assert comp (str "Unknown tag: '" hiccup-tag "'"))
-    [comp (when (or id class')
-            [id class'])]))
+    (assert tag (str "Unknown tag: '" hiccup-tag "'"))
+    [tag (when (or id class')
+           [id class'])]))
 
 (defn get-wrapper [tag]
   (let [[comp id-class] (parse-tag tag)]
@@ -255,12 +253,12 @@
       (aset a i (as-component (aget a i) level')))
     a))
 
-(defn convert-args [argv first-child level]
+(defn convert-args [argv comp jsprops first-child level]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
-    #js[nil (as-component (nth argv first-child) level)]
+    #js[comp jsprops (as-component (nth argv first-child) level)]
     (reduce-kv (fn [a k v]
                  (when (>= k first-child)
                    (.push a (as-component v level)))
                  a)
-               #js[nil] argv)))
+               #js[comp jsprops] argv)))
