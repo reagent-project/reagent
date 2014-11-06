@@ -16,7 +16,7 @@
   [form]
   (tmpl/as-component form))
 
-(defn render-component
+(defn render
   "Render a Reagent component into the DOM. The first argument may be either a
 vector (using Reagent's Hiccup syntax), or a React component. The second argument should be a DOM node.
 
@@ -24,21 +24,32 @@ Optionally takes a callback that is called when the component is in place.
 
 Returns the mounted component instance."
   ([comp container]
-     (render-component comp container nil))
+     (render comp container nil))
   ([comp container callback]
    (let [f (fn []
              (as-component (if (fn? comp) (comp) comp)))]
      (util/render-component f container callback))))
+
+;; For backward compatibility
+(def render-component render)
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
   [container]
   (util/unmount-component-at-node container))
 
-(defn render-component-to-string
+(defn render-to-string
   "Turns a component into an HTML string."
   ([component]
-     (.' js/React renderComponentToString (as-component component))))
+     (.' js/React renderToString (as-component component))))
+
+;; For backward compatibility
+(def render-component-to-string render-to-string)
+
+(defn render-to-static-markup
+  "Turns a component into an HTML string, without data-react-id attributes, etc."
+  ([component]
+     (.' js/React renderToStaticMarkup (as-component component))))
 
 (defn ^:export force-update-all []
   (util/force-update-all))

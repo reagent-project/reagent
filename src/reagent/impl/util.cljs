@@ -126,7 +126,7 @@
 
 (defn re-render-component [comp container]
   (try
-    (.' js/React renderComponent (comp) container)
+    (.' js/React render (comp) container)
     (catch js/Object e
       (do
         (try
@@ -139,7 +139,7 @@
         (throw e)))))
 
 (defn render-component [comp container callback]
-  (.' js/React renderComponent (comp) container
+  (.' js/React render (comp) container
        (fn []
          (let [id (get-root-id container)]
            (when-not (nil? id)
