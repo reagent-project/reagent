@@ -32,7 +32,7 @@
 
 (defn main [{:keys [summary]}]
   (let [head "All arguments allowed"
-        geometry {:href "https://github.com/holmsand/reagent/tree/master/examples/geometry"}
+        geometry {:href "https://github.com/reagent-project/reagent/tree/master/examples/geometry"}
         jonase {:href "https://github.com/jonase"}]
     [:div.reagent-demo
      [:h1 [link {:href (fvar main)} head]]

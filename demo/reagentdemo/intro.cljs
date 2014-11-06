@@ -109,7 +109,7 @@
 (defonce src-for (partial common/src-for funmap))
 
 (defn intro []
-  (let [github {:href "https://github.com/holmsand/reagent"}
+  (let [github {:href "https://github.com/reagent-project/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
         react {:href "http://facebook.github.io/react/"}
         hiccup {:href "https://github.com/weavejester/hiccup"}

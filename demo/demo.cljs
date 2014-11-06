@@ -14,7 +14,7 @@
        "index.html" (fvar intro/main)
        "news/index.html" (fvar news/main))
 
-(def github {:href "https://github.com/holmsand/reagent"})
+(def github {:href "https://github.com/reagent-project/reagent"})
 
 (defn github-badge []
   [:a.github-badge

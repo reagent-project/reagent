@@ -21,7 +21,7 @@
         hopclock {:href "http://pmbauer.github.io/2014/01/27/hoplon-binary-clock/"}
         om {:href "https://github.com/swannodette/om"}
         hoplon {:href "http://hoplon.io"}
-        clocksrc {:href "https://github.com/holmsand/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
+        clocksrc {:href "https://github.com/reagent-project/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
 
     [:div.reagent-demo
      [:h1 [link {:href (fvar main)} head]]
