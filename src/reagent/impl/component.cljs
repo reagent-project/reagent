@@ -8,6 +8,8 @@
 
 (declare ^:dynamic *current-component*)
 
+(declare ^:dynamic *non-reactive*)
+
 ;;; State
 
 (defn state-atom [this]
@@ -142,7 +144,7 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render (if util/is-client
+    :render (if-not *non-reactive*
               (fn []
                 (this-as c
                          (batch/run-reactively c #(do-render c))))

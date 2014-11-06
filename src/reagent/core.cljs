@@ -41,7 +41,8 @@ Returns the mounted component instance."
 (defn render-to-string
   "Turns a component into an HTML string."
   ([component]
-     (.' js/React renderToString (as-component component))))
+     (binding [comp/*non-reactive* true]
+       (.' js/React renderToString (as-component component)))))
 
 ;; For backward compatibility
 (def render-component-to-string render-to-string)
@@ -49,7 +50,8 @@ Returns the mounted component instance."
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
   ([component]
-     (.' js/React renderToStaticMarkup (as-component component))))
+     (binding [comp/*non-reactive* true]
+       (.' js/React renderToStaticMarkup (as-component component)))))
 
 (defn ^:export force-update-all []
   (util/force-update-all))

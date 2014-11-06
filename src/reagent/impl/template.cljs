@@ -233,14 +233,16 @@
   ([x level]
      (cond (string? x) x
            (vector? x) (vec-to-comp x level)
-           (seq? x) (if-not (and (dev?) (nil? ratom/*ratom-context*))
-                      (expand-seq x level)
-                      (let [s (ratom/capture-derefed
-                               #(expand-seq x level)
-                               seq-ctx)]
-                        (when (ratom/captured seq-ctx)
-                          (warn-on-deref x))
-                        s))
+           (seq? x) (if (dev?)
+                      (if (nil? ratom/*ratom-context*)
+                        (expand-seq x level)
+                        (let [s (ratom/capture-derefed
+                                 #(expand-seq x level)
+                                 seq-ctx)]
+                          (when (ratom/captured seq-ctx)
+                            (warn-on-deref x))
+                          s))
+                      (expand-seq x level))
            true x)))
 
 (defn create-class [spec]

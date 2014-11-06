@@ -339,4 +339,8 @@
           [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
          (reagent/render-to-static-markup
-          [:div.bar [:p "foo"]]))))
+          [:div.bar [:p "foo"]])))
+  (is (= "<div class=\"bar\"><p>foobar</p></div>"
+         (reagent/render-to-static-markup
+          [:div.bar {:dangerously-set-inner-HTML
+                     {:__html "<p>foobar</p>"}} ]))))
