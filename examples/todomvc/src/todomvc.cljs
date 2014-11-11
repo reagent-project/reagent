@@ -35,10 +35,10 @@
       [:input (merge props
                      {:type "text" :value @val :on-blur save
                       :on-change #(reset! val (-> % .-target .-value))
-                      :on-key-up #(case (.-which %)
-                                    13 (save)
-                                    27 (stop)
-                                    nil)})])))
+                      :on-key-down #(case (.-which %)
+                                      13 (save)
+                                      27 (stop)
+                                      nil)})])))
 
 (def todo-edit (with-meta todo-input
                  {:component-did-mount #(.focus (reagent/dom-node %))}))
