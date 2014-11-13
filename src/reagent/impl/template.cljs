@@ -88,33 +88,39 @@
 
 ;;; Specialization for input components
 
+(defn input-unmount [this]
+  (.! this :cljsInputValue nil))
+
+(defn input-set-value [this]
+  (when-some [value (.' this :cljsInputValue)]
+    (.! this :cljsInputDirty false)
+    (let [node (.' this getDOMNode)]
+      (when (not= value (.' node :value))
+        (.! node :value value)))))
+
 (defn input-handle-change [this on-change e]
   (let [res (on-change e)]
     ;; Make sure the input is re-rendered, in case on-change
     ;; wants to keep the value unchanged
-    (batch/queue-render this)
+    (when-not (.' this :cljsInputDirty)
+      (.! this :cljsInputDirty true)
+      (batch/do-later #(input-set-value this)))
     res))
-
-(defn input-did-update [this]
-  (let [value (.' this :cljsInputValue)]
-    (when-not (nil? value)
-      (let [node (.' this getDOMNode)]
-        (when (not= value (.' node :value))
-          (.! node :value value))))))
 
 (defn input-render-setup [this jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
-  (let [on-change (.' jsprops :onChange)
-        value (when-not (nil? on-change)
-                (.' jsprops :value))]
-    (.! this :cljsInputValue value)
-    (when-not (nil? value)
-      (batch/mark-rendered this)
+  (if (and (.' jsprops hasOwnProperty "onChange")
+           (.' jsprops hasOwnProperty "value"))
+    (let [v (.' jsprops :value)
+          value (if (nil? v) "" v)
+          on-change (.' jsprops :onChange)]
+      (.! this :cljsInputValue value)
+      (js-delete jsprops "value")
       (doto jsprops
         (.! :defaultValue value)
-        (.! :value nil)
-        (.! :onChange #(input-handle-change this on-change %))))))
+        (.! :onChange #(input-handle-change this on-change %))))
+    (.! this :cljsInputValue nil)))
 
 (defn input-component? [x]
   (let [DOM (.' js/React :DOM)]
@@ -148,8 +154,8 @@
 
 (defn add-input-methods [spec]
   (doto spec
-    (.! :componentDidUpdate #(this-as c (input-did-update c)))
-    (.! :componentWillUnmount #(this-as c (batch/dispose c)))))
+    (.! :componentDidUpdate #(this-as c (input-set-value c)))
+    (.! :componentWillUnmount #(this-as c (input-unmount c)))))
 
 (defn wrap-component [comp extras name]
   (let [input? (input-component? comp)
