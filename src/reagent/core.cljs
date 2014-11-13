@@ -152,6 +152,12 @@ re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 
+
+(defn wrap
+  [value reset-fn & args]
+  (util/make-wrapper value reset-fn args))
+
+
 ;; RCursor
 
 (defn cursor
@@ -165,7 +171,8 @@ the specified path within the wrapped Reagent atom. e.g.,
     ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
     )"
   ([path] (fn [ra] (cursor path ra)))
-  ([path ra] (ratom/cursor path ra)))
+  ([path ra] (ratom/cursor path ra))
+  ([path ra reset-fn & args] (ratom/cursor path ra reset-fn args)))
 
 ;; Utilities
 
