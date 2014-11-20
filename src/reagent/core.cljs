@@ -154,7 +154,23 @@ re-rendered."
 
 
 (defn wrap
+  "Provide a combination of value and callback, that looks like an atom.
+
+  The first argument can be any value, that will be returned when the
+  result is deref'ed.
+
+  The second argument should be a function, that is called with the
+  optional extra arguments provided to wrap, and the new value of the
+  resulting 'atom'.
+
+  Use for example like this:
+
+  (wrap (:foo @state)
+        swap! state assoc :foo)
+
+  Probably useful only for passing to child components."
   [value reset-fn & args]
+  (assert (ifn? reset-fn))
   (util/make-wrapper value reset-fn args))
 
 
@@ -169,10 +185,20 @@ the specified path within the wrapped Reagent atom. e.g.,
     ... @c ;; equivalent to (get-in @ra [:nested :content])
     ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
     ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
-    )"
+    )
+The third argument may be a function, that is called with
+optional extra arguments provided to cursor, and the new value of the
+resulting 'atom'. If such a function is given, it should update the
+given Reagent atom.
+"
   ([path] (fn [ra] (cursor path ra)))
-  ([path ra] (ratom/cursor path ra))
-  ([path ra reset-fn & args] (ratom/cursor path ra reset-fn args)))
+  ([path ra]
+   (assert (satisfies? IDeref ra))
+   (ratom/cursor path ra))
+  ([path ra reset-fn & args]
+   (assert (satisfies? IDeref ra))
+   (assert (ifn? reset-fn))
+   (ratom/cursor path ra reset-fn args)))
 
 ;; Utilities
 
