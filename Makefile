@@ -9,7 +9,7 @@ CLJSDIRS = src test
 
 VERSION = 0.4.3
 
-REACT_VERSION = 0.12.0
+REACT_VERSION = 0.12.1
 
 all: buildrun
 
