@@ -344,3 +344,63 @@
          (reagent/render-to-static-markup
           [:div.bar {:dangerously-set-inner-HTML
                      {:__html "<p>foobar</p>"}} ]))))
+
+(deftest test-return-class
+  (when isClient
+    (let [ran (atom 0)
+          top-ran (atom 0)
+          comp (fn []
+                 (swap! top-ran inc)
+                 (reagent/create-class
+                  {:component-did-mount #(swap! ran inc)
+                   :render
+                   (fn [this]
+                     (let [props (reagent/props this)]
+                       (is (map? props))
+                       (is (= props ((reagent/argv this) 1)))
+                       (is (= 1 (first (reagent/children this))))
+                       (is (= 1 (count (reagent/children this))))
+                       (swap! ran inc)
+                       [:div (str "hi " (:foo props) ".")]))}))
+          prop (atom {:foo "you"})
+          parent (fn [] [comp @prop 1])]
+      (with-mounted-component [parent]
+        (fn [C div]
+          (swap! ran inc)
+          (is (found-in #"hi you" div))
+          (is (= 1 @top-ran))
+          (is (= 3 @ran))
+
+          (swap! prop assoc :foo "me")
+          (reagent/flush)
+          (is (found-in #"hi me" div))
+          (is (= 1 @top-ran))
+          (is (= 4 @ran)))))))
+
+(deftest test-return-class-fn
+  (when isClient
+    (let [ran (atom 0)
+          top-ran (atom 0)
+          comp (fn []
+                 (swap! top-ran inc)
+                 (reagent/create-class
+                  {:component-did-mount #(swap! ran inc)
+                   :component-function
+                   (fn [p a]
+                     (is (= 1 a))
+                     (swap! ran inc)
+                     [:div (str "hi " (:foo p) ".")])}))
+          prop (atom {:foo "you"})
+          parent (fn [] [comp @prop 1])]
+      (with-mounted-component [parent]
+        (fn [C div]
+          (swap! ran inc)
+          (is (found-in #"hi you" div))
+          (is (= 1 @top-ran))
+          (is (= 3 @ran))
+
+          (swap! prop assoc :foo "me")
+          (reagent/flush)
+          (is (found-in #"hi me" div))
+          (is (= 1 @top-ran))
+          (is (= 4 @ran)))))))
