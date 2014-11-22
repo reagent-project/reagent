@@ -8,10 +8,10 @@
 
 ;;; Update batching
 
-(defonce mount-count #js {:count 0})
+(defonce mount-count 0)
 
 (defn next-mount-count []
-  (.! mount-count :count (inc (.' mount-count :count))))
+  (set! mount-count (inc mount-count)))
 
 (defn fake-raf [f]
   (js/setTimeout f 16))
