@@ -289,3 +289,18 @@
 
     (reset! c3 "foo")
     (is (= @a {:foo "bar" :foobar "foo"}))))
+
+(deftest test-wrap
+  (let [a (atom {:foo "bar"})
+        w (r/wrap (:foo @a) swap! a assoc :foo)]
+    (is (= @w "bar"))
+    (is (= w (r/wrap "bar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "foobar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "bar" swap! a assoc :foobar)))
+    (is (not= w (r/wrap "bar" reset! a assoc :foo)))
+
+    (reset! w "foobar")
+    (is (= @w "foobar"))
+    (is (= @a {:foo "foobar"}))
+    (is (not= w (r/wrap "bar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "foobar" swap! a assoc :foo)))))
