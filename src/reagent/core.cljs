@@ -72,7 +72,7 @@ looking like this:
 Everything is optional, except :render.
 "
   [spec]
-  (tmpl/create-class spec))
+  (comp/create-class spec))
 
 
 (defn current-component

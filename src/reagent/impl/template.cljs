@@ -185,12 +185,10 @@
 
 (def cached-wrapper (util/memoize-1 get-wrapper))
 
-(declare create-class)
-
 (defn fn-to-class [f]
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
-        res (create-class withrender)
+        res (comp/create-class withrender)
         wrapf (util/cached-react-class res)]
     (util/cache-react-class f wrapf)
     wrapf))
@@ -248,8 +246,8 @@
                    (expand-seq x))
         true x))
 
-(defn create-class [spec]
-  (comp/create-class spec as-component))
+;; Cheat, to avoid ugly circular dependency
+(set! reagent.impl.component/as-component as-component)
 
 (defn expand-seq [s]
   (let [a (into-array s)]
