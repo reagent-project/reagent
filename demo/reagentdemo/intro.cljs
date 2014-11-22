@@ -6,7 +6,9 @@
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
             [reagentdemo.page :refer [link title]]
-            [reagentdemo.common :as common :refer [demo-component]]))
+            [reagentdemo.common :as common :refer [demo-component]]
+            [simpleexample :as simple]
+            [todomvc :as todo]))
 
 (defn simple-component []
   [:div
@@ -295,7 +297,7 @@
    Leiningen project files and everything. Here’s one of them in
    action:"]
 
-   [demo-component {:comp simpleexample/simple-example
+   [demo-component {:comp simple/simple-example
                     :complete true
                     :src (-> "simpleexample.cljs"
                              get-source
@@ -309,7 +311,7 @@
    Reagent (cheating a little bit by skipping routing and
    persistence):"]
 
-   [demo-component {:comp todomvc/todo-app
+   [demo-component {:comp todo/todo-app
                     :complete true
                     :src (-> "todomvc.cljs"
                              get-source
