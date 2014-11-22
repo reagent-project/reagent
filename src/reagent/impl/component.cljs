@@ -49,7 +49,7 @@
                     5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
-        (.' c asComponent res (.' p :level))
+        (.' c asComponent res)
         (if (ifn? res)
           (do
             (.! c :cljsRender res)
@@ -96,6 +96,13 @@
       (this-as c
                (f c (.' oldprops :argv))))
 
+    :componentDidMount
+    (fn []
+      (this-as c
+               (.! c :cljsMountOrder (batch/next-mount-count))
+               (when-not (nil? f)
+                 (f c))))
+
     :componentWillUnmount
     (fn []
       (this-as c
@@ -129,6 +136,7 @@
       (or wrap (default-wrapper f)))))
 
 (def obligatory {:shouldComponentUpdate nil
+                 :componentDidMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-camel (util/memoize-1 util/dash-to-camel))

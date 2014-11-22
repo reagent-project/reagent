@@ -143,8 +143,7 @@
     (when-not (nil? input-setup)
       (input-setup this jsprops))
     (make-element argv comp jsprops
-                  (if hasprops 2 1)
-                  (inc (.' inprops :level)))))
+                  (if hasprops 2 1))))
 
 (defn wrapped-should-update [c nextprops nextstate]
   (or util/*always-update*
@@ -198,7 +197,7 @@
 
 (defn as-class [tag]
   (if (hiccup-tag? tag)
-    (cached-wrapper tag)    
+    (cached-wrapper tag)
     (let [cached-class (util/cached-react-class tag)]
       (if-not (nil? cached-class)
         cached-class
@@ -209,13 +208,12 @@
 (defn get-key [x]
   (when (map? x) (get x :key)))
 
-(defn vec-to-comp [v level]
+(defn vec-to-comp [v]
   (assert (pos? (count v)) "Hiccup form should not be empty")
   (assert (valid-tag? (nth v 0))
           (str "Invalid Hiccup form: " (pr-str v)))
   (let [c (as-class (nth v 0))
-        jsprops #js{:argv v
-                    :level level}]
+        jsprops #js{:argv v}]
     (let [k (-> v meta get-key)
           k' (if (nil? k)
                (-> v (nth 1 nil) get-key)
@@ -235,40 +233,38 @@
 (declare expand-seq)
 
 (defn as-component
-  ([x] (as-component x 0))
-  ([x level]
-     (cond (string? x) x
-           (vector? x) (vec-to-comp x level)
-           (seq? x) (if (dev?)
-                      (if (nil? ratom/*ratom-context*)
-                        (expand-seq x level)
-                        (let [s (ratom/capture-derefed
-                                 #(expand-seq x level)
-                                 seq-ctx)]
-                          (when (ratom/captured seq-ctx)
-                            (warn-on-deref x))
-                          s))
-                      (expand-seq x level))
-           true x)))
+  [x]
+  (cond (string? x) x
+        (vector? x) (vec-to-comp x)
+        (seq? x) (if (dev?)
+                   (if (nil? ratom/*ratom-context*)
+                     (expand-seq x)
+                     (let [s (ratom/capture-derefed
+                              #(expand-seq x)
+                              seq-ctx)]
+                       (when (ratom/captured seq-ctx)
+                         (warn-on-deref x))
+                       s))
+                   (expand-seq x))
+        true x))
 
 (defn create-class [spec]
   (comp/create-class spec as-component))
 
-(defn expand-seq [s level]
-  (let [a (into-array s)
-        level' (inc level)]
+(defn expand-seq [s]
+  (let [a (into-array s)]
     (dotimes [i (alength a)]
-      (aset a i (as-component (aget a i) level')))
+      (aset a i (as-component (aget a i))))
     a))
 
-(defn make-element [argv comp jsprops first-child level]
+(defn make-element [argv comp jsprops first-child]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
     (.' js/React createElement comp jsprops
-        (as-component (nth argv first-child) level))
+        (as-component (nth argv first-child)))
     (.apply (.' js/React :createElement) nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                           (.push a (as-component v level)))
+                           (.push a (as-component v)))
                          a)
                        #js[comp jsprops] argv))))
