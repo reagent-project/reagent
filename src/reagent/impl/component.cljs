@@ -61,6 +61,13 @@
 
 ;;; Method wrapping
 
+(def static-fns {:render
+                 (fn []
+                   (this-as c
+                            (if-not *non-reactive*
+                              (batch/run-reactively c #(do-render c))
+                              (do-render c))))})
+
 (defn custom-wrapper [key f]
   (case key
     :getDefaultProps
@@ -154,11 +161,7 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render (if-not *non-reactive*
-              (fn []
-                (this-as c
-                         (batch/run-reactively c #(do-render c))))
-              (fn [] (this-as c (do-render c))))))
+    :render (:render static-fns)))
 
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
