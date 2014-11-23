@@ -160,6 +160,54 @@
       (f)))
   "Updated")
 
+
+;;; Wrapper
+
+(deftype Wrapper [^:mutable state callback ^:mutable changed]
+
+  IAtom
+
+  IDeref
+  (-deref [this] state)
+
+  IReset
+  (-reset! [this newval]
+           (set! changed true)
+           (set! state newval)
+           (callback newval))
+
+  ISwap
+  (-swap! [a f]
+    (-reset! a (f state)))
+  (-swap! [a f x]
+    (-reset! a (f state x)))
+  (-swap! [a f x y]
+    (-reset! a (f state x y)))
+  (-swap! [a f x y more]
+    (-reset! a (apply f state x y more)))
+
+  IEquiv
+  (-equiv [_ other]
+          (and (instance? Wrapper other)
+               ;; If either of the wrappers have changed, equality
+               ;; cannot be relied on.
+               (not changed)
+               (not (.-changed other))
+               (= state (.-state other))
+               (= callback (.-callback other))))
+
+  IPrintWithWriter
+  (-pr-writer [_ writer opts]
+    (-write writer "#<wrap: ")
+    (pr-writer state writer opts)
+    (-write writer ">")))
+
+(defn make-wrapper [value callback-fn args]
+  (Wrapper. value
+            (partial-ifn. callback-fn args nil)
+            false))
+
+
 ;;; Helpers for shouldComponentUpdate
 
 (defn equal-args [v1 v2]
