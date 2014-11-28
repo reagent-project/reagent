@@ -7,8 +7,8 @@ The main repository for Reagent is now located [here](https://github.com/reagent
 
 Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
-  * **[Detailed intro with live examples](http://holmsand.github.io/reagent/)**
-  * **[News](http://holmsand.github.io/reagent/news/index.html)**
+  * **[Detailed intro with live examples](http://reagent-project.github.io/)**
+  * **[News](http://reagent-project.github.io/news/index.html)**
 
 To use Reagent you add this to your dependencies in `project.clj`:
 
