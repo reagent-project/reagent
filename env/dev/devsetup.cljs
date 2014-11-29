@@ -1,16 +1,12 @@
 (ns devsetup
-  (:require
-   [demo :as site]
-   [runtests]
-   [reagent.core :as r]
-   [figwheel.client :as fw :include-macros true]))
-
-(defn test! []
-  (runtests/run-tests))
+  (:require [demo :as site]
+            [runtests]
+            [reagent.core :as r]
+            [figwheel.client :as fw :include-macros true]))
 
 (defn on-update []
   (r/force-update-all)
-  (test!))
+  (runtests/run-tests))
 
 (when r/is-client
   (fw/watch-and-reload
@@ -19,4 +15,4 @@
 
 (demo/start! {:test-results (fn []
                               [runtests/test-output-mini])})
-(test!)
+(runtests/run-tests)

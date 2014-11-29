@@ -1,8 +1,8 @@
 (ns envsetup
-  (:require [mysite]))
+  (:require [demo :as site]
+            [reagent.core :as r]))
 
-(mysite/start!)
+(site/start! nil)
 
-(when
-  (exists? js/runtests)
-  (js/runtests.main))
+(when (exists? js/runtests)
+  (js/runtests.run-tests))

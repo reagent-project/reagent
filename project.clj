@@ -10,7 +10,20 @@
   :resource-paths ["vendor"]
   :source-paths ["src"]
   
-  :profiles {:dev-base {:dependencies
+  :profiles {:base {:cljsbuild {:builds
+                                    {:client
+                                     {:source-paths
+                                      ["src"
+                                       "demo"
+                                       "examples/todomvc/src"
+                                       "examples/simple/src"
+                                       "examples/geometry/src"]}}}}
+
+             :test {:dependencies [[com.cemerick/clojurescript.test "0.3.1"]]
+                    :cljsbuild {:builds
+                                {:client {:source-paths ["test"]}}}}
+
+             :dev-base {:dependencies
                         [[figwheel "0.1.5-SNAPSHOT"]]
                         :plugins [[lein-figwheel "0.1.5-SNAPSHOT"]]
                         :resource-paths ["site" "outsite"]
@@ -36,14 +49,11 @@
                                   {:source-paths ["env/prod"]
                                    :compiler {:optimizations :advanced
                                               :elide-asserts true
+                                              :pseudo-names true
                                               :output-dir "target/client"}}}}}]
              
-             :test {:dependencies [[com.cemerick/clojurescript.test "0.3.1"]]
-                    :cljsbuild {:builds
-                                {:client {:source-paths ["test"]}}}}
-             
-             :dev [:dev-base :test]
-             :prod-test [:prod :test]}
+             :dev [:test :base :dev-base]
+             :prod-test [:test :prod]}
 
   :clean-targets ^{:protect false} [:target-path :compile-path
                                     "outsite/public/js"
@@ -53,47 +63,8 @@
                                     "out"]
 
   :cljsbuild {:builds
-              {:client {:source-paths ["src"
-                                       "demo"
-                                       "examples/todomvc/src"
-                                       "examples/simple/src"
-                                       "examples/geometry/src"]
-                        :compiler
+              {:client {:compiler
                         {:output-to "outsite/public/js/main.js"}}}}
   
   :figwheel {:http-server-root "public" ;; assumes "resources"
-             :server-port 3449}
-
-  ;-------------------
-  
-  ;; :profiles {:dev {:source-paths ["src" "demo"]}
-  ;;            :prod {:cljsbuild
-  ;;                   {:builds
-  ;;                    {:client {:compiler
-  ;;                              {:optimizations :advanced
-  ;;                               :elide-asserts true
-  ;;                               :pretty-print false}}}}}
-  ;;            :test {:cljsbuild
-  ;;                   {:builds
-  ;;                    {:client {:source-paths ^:replace
-  ;;                              ["test" "src" "demo"
-  ;;                               "examples/todomvc/src"
-  ;;                               "examples/simple/src"
-  ;;                               "examples/geometry/src"]}}}}
-  ;;            :srcmap {:cljsbuild
-  ;;                     {:builds
-  ;;                      {:client
-  ;;                       {:compiler
-  ;;                        {:source-map "target/cljs-client.js.map"
-  ;;                         :source-map-path "client"}}}}}}
-  ;; :cljsbuild
-  ;; {:builds
-  ;;  {:client {:source-paths ["src" "demo" "examples/todomvc/src"
-  ;;                           "examples/simple/src"
-  ;;                           "examples/geometry/src"]
-  ;;            :notify-command ["node" "./bin/gen-site.js"]
-  ;;            :compiler
-  ;;            {:output-dir "target/client"
-  ;;             :output-to "target/cljs-client.js"
-  ;;             :pretty-print true}}}}
-  )
+             :server-port 3449})

@@ -25,7 +25,7 @@ runprod: clean
 
 # production build with auto-rebuild and testing
 runprodtest: clean
-	@$(MAKE) serve-site PROF=prod,test,$(PROF)
+	@$(MAKE) serve-site PROF=prod-test,$(PROF)
 
 clean:
 	lein clean

@@ -28,7 +28,6 @@
                        :css-file "css/built.css"
                        :js-file "js/main.js"
                        :js-dir "js/out"
-                       :default-title ""
                        :allow-html5-history false}))
 
 (defonce page (atom "index.html"))
@@ -78,7 +77,8 @@
 
 (defn get-title []
   (get-in @config [:page-titles @page]
-          (:default-title @config)))
+          (or (get-in @config [:page-titles "index.html"])
+              "")))
 
 (defn default-content []
   [:div "Empty"])

@@ -1,16 +1,18 @@
 
 (ns runtests
-  (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg println]]
-            [demo :as demo]
-            [cemerick.cljs.test :as t]
+  (:require [demo]
             [testreagent]
             [testcursor]
             [testinterop]
-            [testratom]))
+            [testratom]
+            [cemerick.cljs.test :as t]
+            [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .!]]
+            [reagent.debug :refer-macros [dbg println]]
+            ;; [demo :as demo]
+            ))
 
-(enable-console-print!)
+;; (enable-console-print!)
 
 (def test-results (atom nil))
 
@@ -57,7 +59,7 @@
         (reset! test-results {:error e}))))
   (println "-----------------------------------------"))
 
-(defn run-tests []
+(defn ^:export run-tests []
   (if reagent/is-client
     (do
       (reset! test-results nil)
