@@ -23,7 +23,7 @@
                                                  :output-dir
                                                  "outsite/public/js/out"}}}}}
              
-             :site {:resource-paths ^:replace ["outsite"]
+             :site {:resource-paths ^:replace ["outsite" "vendor"]
                     :figwheel {:css-dirs ^:replace ["outsite/public/css"]}
                     :cljsbuild {:builds
                                 {:client

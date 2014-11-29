@@ -3,11 +3,12 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [sitetools :as tools :refer [title link]]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
 
 (def url "news/any-arguments.html")
+(def title "All arguments allowed")
 
 (def funmap (-> ::this get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
@@ -33,12 +34,10 @@
     [:p "Some other text in bold."]]])
 
 (defn main [{:keys [summary]}]
-  (let [head "All arguments allowed"
-        geometry {:href "https://github.com/reagent-project/reagent/tree/master/examples/geometry"}
+  (let [geometry {:href "https://github.com/reagent-project/reagent/tree/master/examples/geometry"}
         jonase {:href "https://github.com/jonase"}]
     [:div.reagent-demo
-     [:h1 [link {:href url} head]]
-     [title (str "Reagent 0.4.0: " head)]
+     [:h1 [link {:href url} title]]
      [:div.demo-text
 
       [:h2 "If it looks like a function…"]
@@ -132,4 +131,5 @@
 
          [demo-component {:comp geometry-example}]])]]))
 
-(tools/register-page url (fn [] [main]))
+(tools/register-page url (fn [] [main])
+                     (str "Reagent: " title))

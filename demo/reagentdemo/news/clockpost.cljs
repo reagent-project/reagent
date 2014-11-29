@@ -3,11 +3,12 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [sitetools :as tools :refer [title link]]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
 
 (def url "news/binary-clock.html")
+(def title "A binary clock")
 
 (def funmap (-> "reagentdemo/news/binaryclock.cljs"
                 get-source common/fun-map))
@@ -18,16 +19,14 @@
                    :no-heading true}])
 
 (defn main [{:keys [summary]}]
-  (let [head "A binary clock"
-        lexclock {:href "http://www.lexicallyscoped.com/2014/01/23/clojurescript-react-om-binary-clock.html"}
+  (let [lexclock {:href "http://www.lexicallyscoped.com/2014/01/23/clojurescript-react-om-binary-clock.html"}
         hopclock {:href "http://pmbauer.github.io/2014/01/27/hoplon-binary-clock/"}
         om {:href "https://github.com/swannodette/om"}
         hoplon {:href "http://hoplon.io"}
         clocksrc {:href "https://github.com/reagent-project/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
 
     [:div.reagent-demo
-     [:h1 [link {:href url} head]]
-     [title head]
+     [:h1 [link {:href url} title]]
      [:div.demo-text
 
       (when-not summary
@@ -121,4 +120,5 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(tools/register-page url (fn [] [main]))
+(tools/register-page url (fn [] [main])
+                     (str "Reagent: " title))

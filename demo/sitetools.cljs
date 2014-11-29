@@ -21,6 +21,7 @@
 
 (defonce config (atom {:page-map {"index.html"
                                   (fn [] [:div "Empty"])}
+                       :page-titles {}
                        :body (fn [] [:div (page-content)])
                        :site-dir "outsite/public"
                        :css-infiles ["site/public/css/main.css"]
@@ -31,14 +32,19 @@
                        :allow-html5-history false}))
 
 (defonce page (atom "index.html"))
-(defonce page-title (atom (:default-title @config)))
 (defonce page-state (atom {:has-history false}))
 
-(defn register-page [pageurl comp]
-  (assert (string? pageurl) (str "expected string, not " pageurl))
-  (assert (fn? comp))
-  (swap! config update-in [:page-map] assoc pageurl comp))
-
+(defn register-page
+  ([pageurl comp]
+   (register-page pageurl comp nil))
+  ([pageurl comp title]
+   (assert (string? pageurl)
+           (str "expected string, not " pageurl))
+   (assert (fn? comp))
+   (assert (or (nil? title)
+               (string? title)))
+   (swap! config update-in [:page-map] assoc pageurl comp)
+   (swap! config update-in [:page-titles] assoc pageurl title)))
 
 
 ;;; Components
@@ -61,14 +67,6 @@
                       identity))
      child]))
 
-(defn title [name]
-  (when (= @page-title "")
-    ;; First title on a page wins
-    (reset! page-title name)
-    (when reagent/is-client
-      (set! (.-title js/document) @page-title)))
-  nil)
-
 (defn page-content []
   [(get-in @config [:page-map @page]
            (get-in @config [:page-map "index.html"]))])
@@ -78,13 +76,19 @@
 
 ;;; Implementation:
 
+(defn get-title []
+  (get-in @config [:page-titles @page]
+          (:default-title @config)))
+
 (defn default-content []
   [:div "Empty"])
 
 (add-watch page ::title-watch
            (fn [_ _ _ p]
+             (when reagent/is-client
+               (set! (.-title js/document) (get-title)))
              ;; First title on a page wins
-             (reset! page-title "")))
+             #_(reset! page-title "")))
 
 ;;; History
 
@@ -185,7 +189,7 @@
   (reset! page page-name)
   (let [b (reagent/render-component-to-string (body))]
     (str "<!doctype html>"
-         (html-template {:title @page-title
+         (html-template {:title (get-title)
                          :body b
                          :page-conf {:allow-html5-history true
                                      :page-name page-name}
@@ -255,5 +259,6 @@
         (set-start-page page-name))
       (swap! config merge conf)
       (setup-history)
+      (set! (.-title js/document) (get-title))
       (reagent/render-component (body)
                                 (.' js/document :body)))))

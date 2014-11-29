@@ -3,10 +3,11 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [sitetools :as tools :refer [title link]]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "news/reagent-is-async.html")
+(def title "Faster by waiting")
 
 (def funmap (-> "reagentdemo/news/async.cljs" get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
@@ -93,8 +94,7 @@
 (defn main [{:keys [summary]}]
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
     [:div.reagent-demo
-     [title "Reagent: Faster by waiting"]
-     [:h1 [link {:href url} "Faster by waiting"]]
+     [:h1 [link {:href url} title]]
      [:div.demo-text
       [:h2 "Reagent gets async rendering"]
 
@@ -196,4 +196,5 @@
                   :reset-random-colors :color-choose :ncolors-choose
                   :palette :color-demo])}]])]]))
 
-(tools/register-page url (fn [] [main]))
+(tools/register-page url (fn [] [main])
+                     (str "Reagent: " title))

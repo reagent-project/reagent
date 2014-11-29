@@ -46,8 +46,9 @@ serve-site: trigger-build
 trigger-build:
         # always trigger build to make sure page-generation works
 	@echo "(ns empty.generated.ns)" > demo/empty.cljs
-	cat examples/todomvc/todos.css examples/simple/example.css \
-		> site/public/css/examples.css
+	@(echo "/* Generated, do not modify */\n\n" && \
+            cat examples/todomvc/todos.css examples/simple/example.css)  \
+            > site/public/css/examples.css
 
 
 

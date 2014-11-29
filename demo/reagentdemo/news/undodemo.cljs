@@ -3,11 +3,12 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [sitetools :as tools :refer [title link]]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc :as todomvc]))
 
 (def url "news/cloact-reagent-undo-demo.html")
+(def title "Cloact becomes Reagent: Undo is trivial")
 
 (def funmap (-> ::this get-source common/fun-map))
 (def src-for (partial common/src-for funmap))
@@ -48,10 +49,9 @@
                           (remove-watch state ::undo-watcher))}))
 
 (defn main [{:keys [summary]}]
-  (let [head "Cloact becomes Reagent: Undo is trivial"]
+  (let [head title]
     [:div.reagent-demo
      [:h1 [link {:href url} head]]
-     [title head]
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
 
@@ -88,4 +88,4 @@
 
          [undo-demo-cleanup]])]]))
 
-(tools/register-page url (fn [] [main]))
+(tools/register-page url (fn [] [main]) title)

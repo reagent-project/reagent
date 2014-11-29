@@ -5,7 +5,7 @@
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [sitetools :refer [link title]]
+            [sitetools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample :as simple]
             [todomvc :as todo]))
@@ -323,7 +323,6 @@
     (js/setTimeout #(reset! show-all true) 500)
     (fn []
       [:div.reagent-demo
-       [title head]
        [:h1 head]
        [intro]
        [managing-state]
