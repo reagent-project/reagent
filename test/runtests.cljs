@@ -1,18 +1,15 @@
 
 (ns runtests
-  (:require [demo]
-            [testreagent]
+  (:require [testreagent]
             [testcursor]
             [testinterop]
             [testratom]
             [cemerick.cljs.test :as t]
             [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg println]]
-            ;; [demo :as demo]
-            ))
+            [reagent.debug :refer-macros [dbg println]]))
 
-;; (enable-console-print!)
+(enable-console-print!)
 
 (def test-results (atom nil))
 
@@ -39,15 +36,6 @@
          "All tests ok"]
         [test-output])
       [:div {:style test-box} "testing"])))
-
-(defn test-demo []
-  [:div
-   [test-output]
-   [demo/demo]])
-
-(defn ^:export mounttests []
-  (reagent/render-component (fn [] [test-demo])
-                            (.-body js/document)))
 
 (defn ^:export run-all-tests []
   (println "-----------------------------------------")

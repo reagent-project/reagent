@@ -4,5 +4,9 @@
 
 (site/start! nil)
 
-(when (exists? js/runtests)
-  (js/runtests.run-tests))
+(defn do-test []
+  (when (exists? js/runtests)
+    (js/runtests.run-tests)))
+
+;; Wait for tests to be defined
+(r/next-tick do-test)
