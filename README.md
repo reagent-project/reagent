@@ -9,6 +9,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
+  * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
 
 To use Reagent you add this to your dependencies in `project.clj`:
 
