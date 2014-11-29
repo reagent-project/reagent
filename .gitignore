@@ -6,3 +6,9 @@ pom.xml
 .lein-repl-history
 pom.xml.asc
 .nrepl-port
+demo/empty.cljs
+outsite/public/index.html
+outsite/public/js
+outsite/public/news
+outsite/public/css
+out

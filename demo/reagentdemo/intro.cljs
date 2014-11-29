@@ -1,11 +1,11 @@
 
 (ns reagentdemo.intro
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.page :refer [link title]]
+            [sitetools :refer [link title]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample :as simple]
             [todomvc :as todo]))

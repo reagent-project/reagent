@@ -1,53 +1,31 @@
-#! /usr/bin/env node
 
-var fs = require("fs");
-var vm = require('vm');
+var cljsLoad = require("./cljs-load");
 
-var cssFiles = ['examples/todomvc/todos.css',
-                'examples/todomvc/todosanim.css',
-                'examples/simple/example.css',
-                'site/demo.css'];
+var srcFile = "outsite/public/js/main.js";
+var outputDirectory = "outsite/public/js/out/";
+var moduleName = "devsetup";
 
-var srcFile = "target/cljs-client.js";
-var src = fs.readFileSync(srcFile);
+var beep = "\u0007";
 
-var clj_genpages = function (profile) {
-    if (typeof demo === 'undefined') {
-        vm.runInThisContext(src, srcFile);
-    }
-    return demo.genpages(profile);
+var gensite = function () {
+    console.log("Loading " + srcFile);
+    var optNone = cljsLoad.load(srcFile, outputDirectory, moduleName);
+    sitetools.genpages({"opt-none": optNone});
 }
 
-var generate = function () {
-    var pages = clj_genpages();
-    Object.keys(pages).map(function (page) {
-        fs.writeFileSync(page, pages[page]);
-    });
-    fs.writeFileSync("assets/demo.js", src);
-    fs.writeFileSync("assets/demo.css",
-                     cssFiles.map(function (x) {
-                         return fs.readFileSync(x);
-                     }).join("\n"));
-    console.log('Wrote site');
-};
-
-var compileOk = function () {
-    var msg = process.argv[2];
-    if (msg && msg.match(/failed/)) {
-        console.log("Compilation failed");
-        // beep
-        console.log('\u0007');
-        return false;
-    }
+var compileFail = function () {
+  var msg = process.argv[process.argv.length - 1];
+  if (msg && msg.match(/failed/)) {
+    console.log("Compilation failed" + beep);
     return true;
+  }
 };
 
-if (compileOk()) {
-    console.log('Writing site');
-    try {
-        generate();
-    } catch (e) {
-        console.log('\u0007');
-        console.error(e.stack);
-    }
+if (!compileFail()) {
+  try {
+    gensite();
+  } catch (e) {
+    console.log(e + beep);
+    console.error(e.stack);
+  }
 }

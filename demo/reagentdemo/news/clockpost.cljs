@@ -1,11 +1,13 @@
 (ns reagentdemo.news.clockpost
   (:require [reagent.core :as r :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.page :refer [title link page-map]]
+            [sitetools :as tools :refer [title link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
+
+(def url "news/binary-clock.html")
 
 (def funmap (-> "reagentdemo/news/binaryclock.cljs"
                 get-source common/fun-map))
@@ -24,7 +26,7 @@
         clocksrc {:href "https://github.com/reagent-project/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
 
     [:div.reagent-demo
-     [:h1 [link {:href (fvar main)} head]]
+     [:h1 [link {:href url} head]]
      [title head]
      [:div.demo-text
 
@@ -42,8 +44,8 @@
       [:p "So, without further ado, here is a binary clock using Reagent."]
 
       (if summary
-        [link {:href (fvar main)
-               :class 'news-read-more} "Read more"]
+        [link {:href url
+               :class 'news-read-mode} "Read more"]
         [:div.demo-text
 
          [fn-src :nsr]
@@ -119,5 +121,4 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(swap! page-map assoc
-       "news/binary-clock.html" (fvar main))
+(tools/register-page url (fn [] [main]))

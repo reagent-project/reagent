@@ -2,7 +2,6 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
-            [reagentdemo.page :as rpage]
             [reagentdemo.syntax :as syntax]))
 
 (def syntaxify (memoize syntax/syntaxify))
