@@ -187,6 +187,7 @@
 (def cached-wrapper (util/memoize-1 get-wrapper))
 
 (defn fn-to-class [f]
+  (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
         res (comp/create-class withrender)
@@ -200,9 +201,7 @@
     (let [cached-class (util/cached-react-class tag)]
       (if-not (nil? cached-class)
         cached-class
-        (if (.' js/React isValidElement tag)
-          (util/cache-react-class tag (wrap-component tag nil nil))
-          (fn-to-class tag))))))
+        (fn-to-class tag)))))
 
 (def cached-parse (util/memoize-1 parse-tag))
 
