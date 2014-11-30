@@ -124,50 +124,28 @@
     (.! this :cljsInputValue nil)))
 
 (defn input-component? [x]
-  (let [DOM (.' js/React :DOM)]
-    (or (= x "input")
-        (= x "textarea")
-        (identical? x (.' DOM :input))
-        (identical? x (.' DOM :textarea)))))
+  (or (= x "input")
+      (= x "textarea")))
 
-
-;;; Wrapping of native components
+(def reagent-input-class nil)
 
 (declare make-element)
 
-(defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (.' this :props)
-        argv (.' inprops :argv)
-        props (nth argv 1 nil)
-        hasprops (or (nil? props) (map? props))
-        jsprops (convert-props (if hasprops props) id-class false)]
-    (when-not (nil? input-setup)
-      (input-setup this jsprops))
-    (make-element argv comp jsprops
-                  (if hasprops 2 1))))
+(def input-spec
+  {:display-name "ReagentInput"
+   :component-did-update input-set-value
+   :component-will-unmount input-unmount
+   :component-function
+   (fn [argv comp jsprops first-child]
+     (let [this comp/*current-component*]
+       (input-render-setup this jsprops)
+       (make-element argv comp jsprops first-child)))})
 
-(defn wrapped-should-update [c nextprops nextstate]
-  (or util/*always-update*
-      (let [a1 (.' c :props.argv)
-            a2 (.' nextprops :argv)]
-        (not (util/equal-args a1 a2)))))
-
-(defn add-input-methods [spec]
-  (doto spec
-    (.! :componentDidUpdate #(this-as c (input-set-value c)))
-    (.! :componentWillUnmount #(this-as c (input-unmount c)))))
-
-(defn wrap-component [comp extras name]
-  (let [input? (input-component? comp)
-        input-setup (if input? input-render-setup)
-        spec #js{:render
-                 #(this-as C (wrapped-render C comp extras input-setup))
-                 :shouldComponentUpdate
-                 #(this-as C (wrapped-should-update C %1 %2))
-                 :displayName (or name "ComponentWrapper")}]
-    (when input?
-      (add-input-methods spec))
-    (.' js/React createClass spec)))
+(defn reagent-input [argv comp jsprops first-child]
+  (when (nil? reagent-input-class)
+    (set! reagent-input-class
+          (comp/create-class input-spec)))
+  (reagent-input-class argv comp jsprops first-child))
 
 
 ;;; Conversion from Hiccup forms
@@ -180,12 +158,6 @@
     [tag (when (or id class')
            [id class'])]))
 
-(defn get-wrapper [tag]
-  (let [[comp id-class] (parse-tag tag)]
-    (wrap-component comp id-class (str tag))))
-
-(def cached-wrapper (util/memoize-1 get-wrapper))
-
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
   (let [spec (meta f)
@@ -196,25 +168,24 @@
     wrapf))
 
 (defn as-class [tag]
-  (if (hiccup-tag? tag)
-    (cached-wrapper tag)
-    (let [cached-class (util/cached-react-class tag)]
-      (if-not (nil? cached-class)
-        cached-class
-        (fn-to-class tag)))))
+  (let [cached-class (util/cached-react-class tag)]
+    (if-not (nil? cached-class)
+      cached-class
+      (fn-to-class tag))))
 
 (def cached-parse (util/memoize-1 parse-tag))
 
 (defn native-element [tag argv]
   (when (hiccup-tag? tag)
     (let [[comp id-class] (cached-parse tag)]
-      (when-not (input-component? comp)
-        (let [props (nth argv 1 nil)
-              hasprops (or (nil? props) (map? props))
-              jsprops (convert-props (if hasprops props) id-class true)]
-          ;; TODO: Meta key
-          (make-element argv comp jsprops
-                        (if hasprops 2 1)))))))
+      (let [props (nth argv 1 nil)
+            hasprops (or (nil? props) (map? props))
+            jsprops (convert-props (if hasprops props) id-class true)
+            first-child (if hasprops 2 1)]
+        ;; TODO: Meta key
+        (if (input-component? comp)
+          (reagent-input argv comp jsprops first-child)
+          (make-element argv comp jsprops first-child))))))
 
 (defn get-key [x]
   (when (map? x) (get x :key)))
