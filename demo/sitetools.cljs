@@ -99,12 +99,14 @@
            (.isSupported Html5History)
            (#{"http:" "https:"} proto)))))
 
-(defn create-history []
+(defn create-history [p]
   (if (use-html5-history)
     (doto (Html5History.)
       (.setUseFragment false))
-    (doto (History.)
-      (.setToken @page))))
+    (let [h (History.)]
+      (when p
+        (.setToken h p))
+      h)))
 
 (def history nil)
 
@@ -112,9 +114,9 @@
   (if (use-html5-history)
     (:base-path @config)))
 
-(defn setup-history []
+(defn setup-history [p]
   (when (nil? history)
-    (set! history (create-history))
+    (set! history (create-history p))
     (swap! page-state assoc :has-history (some? history))
     (when-let [h history]
       (evt/listen h hevt/NAVIGATE
@@ -259,7 +261,7 @@
       (swap! config merge conf)
       (when page-name
         (set-start-page page-name))
-      (setup-history)
+      (setup-history page-name)
       (set! (.-title js/document) (get-title))
       (reagent/render-component (body)
                                 (.' js/document :body)))))
