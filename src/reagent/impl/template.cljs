@@ -213,6 +213,7 @@
         (let [props (nth argv 1 nil)
               hasprops (or (nil? props) (map? props))
               jsprops (convert-props (if hasprops props) id-class true)]
+          ;; TODO: Meta key
           (make-element argv comp jsprops
                         (if hasprops 2 1)))))))
 
@@ -227,7 +228,7 @@
     (let [ne (native-element tag v)]
       (if (some? ne)
         ne
-        (let [c (as-class (nth v 0))
+        (let [c (as-class tag)
               jsprops #js{:argv v}]
           (let [k (-> v meta get-key)
                 k' (if (nil? k)
