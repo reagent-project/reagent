@@ -34,11 +34,11 @@ clean:
 ## Subtargets
 
 figwheel: trigger-build
-	@echo "Will start figwheel server at:\nhttp://127.0.0.1:$(PORT)\n\n"
+	@echo "Will start figwheel server at: http://127.0.0.1:$(PORT)\n"
 	lein with-profile $(PROF), figwheel
 
 serve-site: trigger-build
-	@echo "Starting site at:\nhttp://127.0.0.1:$(PORT)/public\n\n"
+	@echo "Starting site at: http://127.0.0.1:$(PORT)/public\n"
 	( trap "kill 0" SIGINT SIGTERM EXIT; \
 	  ( cd $(SITEDIR)/.. && python -m SimpleHTTPServer $(PORT) & ); \
 	  lein with-profile $(PROF), cljsbuild auto )

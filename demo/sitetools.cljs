@@ -103,7 +103,8 @@
   (if (use-html5-history)
     (doto (Html5History.)
       (.setUseFragment false))
-    (History.)))
+    (doto (History.)
+      (.setToken @page))))
 
 (def history nil)
 
@@ -119,9 +120,9 @@
       (evt/listen h hevt/NAVIGATE
                   (fn [e]
                     (let [t (.-token e)
-                          bp (token-base)]
-                      (reset! page (if (and bp (== 0 (.indexOf t bp)))
-                                     (subs t (count bp))
+                          tb (token-base)]
+                      (reset! page (if (and tb (== 0 (.indexOf t tb)))
+                                     (subs t (count tb))
                                      t)))
                     (reagent/flush)))
       (add-watch page ::history
@@ -255,9 +256,9 @@
     (let [conf (when (exists? js/pageConfig)
                  (js->clj js/pageConfig :keywordize-keys true))
           page-name (:page-name conf)]
+      (swap! config merge conf)
       (when page-name
         (set-start-page page-name))
-      (swap! config merge conf)
       (setup-history)
       (set! (.-title js/document) (get-title))
       (reagent/render-component (body)
