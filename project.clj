@@ -49,7 +49,6 @@
                                   {:source-paths ["env/prod"]
                                    :compiler {:optimizations :advanced
                                               :elide-asserts true
-                                              :pseudo-names true
                                               :output-dir "target/client"}}}}}]
              
              :dev [:test :base :dev-base]
