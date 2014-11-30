@@ -69,14 +69,15 @@
                                  (str class " " old)
                                  class))))))
 
-(defn convert-props [props id-class]
+(defn convert-props [props id-class allow-key]
   (cond
    (and (empty? props) (nil? id-class)) nil
    (identical? (type props) js/Object) props
    :else (let [objprops
                (reduce-kv (fn [o k v]
                             (let [pname (cached-prop-name k)]
-                              (if-not (identical? pname "key")
+                              (if (or allow-key
+                                      (not (identical? pname "key")))
                                 ;; Skip key, it is set by parent
                                 (aset o pname (convert-prop-value v))))
                             o)
@@ -139,7 +140,7 @@
         argv (.' inprops :argv)
         props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
-        jsprops (convert-props (if hasprops props) id-class)]
+        jsprops (convert-props (if hasprops props) id-class false)]
     (when-not (nil? input-setup)
       (input-setup this jsprops))
     (make-element argv comp jsprops
@@ -203,22 +204,38 @@
           (util/cache-react-class tag (wrap-component tag nil nil))
           (fn-to-class tag))))))
 
+(def cached-parse (util/memoize-1 parse-tag))
+
+(defn native-element [tag argv]
+  (when (hiccup-tag? tag)
+    (let [[comp id-class] (cached-parse tag)]
+      (when-not (input-component? comp)
+        (let [props (nth argv 1 nil)
+              hasprops (or (nil? props) (map? props))
+              jsprops (convert-props (if hasprops props) id-class true)]
+          (make-element argv comp jsprops
+                        (if hasprops 2 1)))))))
+
 (defn get-key [x]
   (when (map? x) (get x :key)))
 
 (defn vec-to-comp [v]
   (assert (pos? (count v)) "Hiccup form should not be empty")
-  (assert (valid-tag? (nth v 0))
-          (str "Invalid Hiccup form: " (pr-str v)))
-  (let [c (as-class (nth v 0))
-        jsprops #js{:argv v}]
-    (let [k (-> v meta get-key)
-          k' (if (nil? k)
-               (-> v (nth 1 nil) get-key)
-               k)]
-      (when-not (nil? k')
-        (.! jsprops :key k')))
-    (.' js/React createElement c jsprops)))
+  (let [tag (nth v 0)]
+    (assert (valid-tag? tag)
+            (str "Invalid Hiccup form: " (pr-str v)))
+    (let [ne (native-element tag v)]
+      (if (some? ne)
+        ne
+        (let [c (as-class (nth v 0))
+              jsprops #js{:argv v}]
+          (let [k (-> v meta get-key)
+                k' (if (nil? k)
+                     (-> v (nth 1 nil) get-key)
+                     k)]
+            (when-not (nil? k')
+              (.! jsprops :key k')))
+          (.' js/React createElement c jsprops))))))
 
 (def seq-ctx #js{})
 
