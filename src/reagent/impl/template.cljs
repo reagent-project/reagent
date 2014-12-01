@@ -62,29 +62,25 @@
 
 (defn set-id-class [props [id class]]
   (let [pid (.' props :id)]
-    (.! props :id (if-not (nil? pid) pid id))
-    (when-not (nil? class)
+    (.! props :id (if (some? pid) pid id))
+    (when (some? class)
       (let [old (.' props :className)]
-        (.! props :className (if-not (nil? old)
-                                 (str class " " old)
-                                 class))))))
+        (.! props :className (if (some? old)
+                               (str class " " old)
+                               class))))))
 
-(defn convert-props [props id-class allow-key]
-  (cond
-   (and (empty? props) (nil? id-class)) nil
-   (identical? (type props) js/Object) props
-   :else (let [objprops
-               (reduce-kv (fn [o k v]
-                            (let [pname (cached-prop-name k)]
-                              (if (or allow-key
-                                      (not (identical? pname "key")))
-                                ;; Skip key, it is set by parent
-                                (aset o pname (convert-prop-value v))))
-                            o)
-                          #js{} props)]
-           (when-not (nil? id-class)
-             (set-id-class objprops id-class))
-           objprops)))
+(defn convert-props [props id-class]
+  (if (and (empty? props) (nil? id-class))
+    nil
+    (let [objprops
+          (reduce-kv (fn [o k v]
+                       (let [pname (cached-prop-name k)]
+                         (aset o pname (convert-prop-value v)))
+                       o)
+                     #js{} props)]
+      (when (some? id-class)
+        (set-id-class objprops id-class))
+      objprops)))
 
 
 ;;; Specialization for input components
@@ -168,10 +164,9 @@
     wrapf))
 
 (defn as-class [tag]
-  (let [cached-class (util/cached-react-class tag)]
-    (if-not (nil? cached-class)
-      cached-class
-      (fn-to-class tag))))
+  (if-some [cached-class (util/cached-react-class tag)]
+    cached-class
+    (fn-to-class tag)))
 
 (def cached-parse (util/memoize-1 parse-tag))
 
@@ -180,7 +175,7 @@
     (let [[comp id-class] (cached-parse tag)]
       (let [props (nth argv 1 nil)
             hasprops (or (nil? props) (map? props))
-            jsprops (convert-props (if hasprops props) id-class true)
+            jsprops (convert-props (if hasprops props) id-class)
             first-child (if hasprops 2 1)]
         ;; TODO: Meta key
         (if (input-component? comp)
@@ -195,18 +190,17 @@
   (let [tag (nth v 0)]
     (assert (valid-tag? tag)
             (str "Invalid Hiccup form: " (pr-str v)))
-    (let [ne (native-element tag v)]
-      (if (some? ne)
-        ne
-        (let [c (as-class tag)
-              jsprops #js{:argv v}]
-          (let [k (-> v meta get-key)
-                k' (if (nil? k)
-                     (-> v (nth 1 nil) get-key)
-                     k)]
-            (when-not (nil? k')
-              (.! jsprops :key k')))
-          (.' js/React createElement c jsprops))))))
+    (if-some [ne (native-element tag v)]
+      ne
+      (let [c (as-class tag)
+            jsprops #js{:argv v}]
+        (let [k (-> v meta get-key)
+              k' (if (nil? k)
+                   (-> v (nth 1 nil) get-key)
+                   k)]
+          (when (some? k')
+            (.! jsprops :key k')))
+        (.' js/React createElement c jsprops)))))
 
 (def seq-ctx #js{})
 
@@ -218,8 +212,7 @@
 
 (declare expand-seq)
 
-(defn as-component
-  [x]
+(defn as-component [x]
   (cond (string? x) x
         (vector? x) (vec-to-comp x)
         (seq? x) (if (dev?)
