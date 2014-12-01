@@ -27,8 +27,8 @@
           fake-raf))))
 
 (defn compare-mount-order [c1 c2]
-  (- (.' c2 :cljsMountOrder)
-     (.' c1 :cljsMountOrder)))
+  (- (.' c1 :cljsMountOrder)
+     (.' c2 :cljsMountOrder)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents

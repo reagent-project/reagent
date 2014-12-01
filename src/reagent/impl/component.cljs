@@ -105,7 +105,7 @@
       (this-as c
                (f c (.' oldprops :argv))))
 
-    :componentDidMount
+    :componentWillMount
     (fn []
       (this-as c
                (.! c :cljsMountOrder (batch/next-mount-count))
@@ -145,7 +145,7 @@
       (or wrap (default-wrapper f)))))
 
 (def obligatory {:shouldComponentUpdate nil
-                 :componentDidMount nil
+                 :componentWillMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-camel (util/memoize-1 util/dash-to-camel))
