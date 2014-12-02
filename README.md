@@ -29,7 +29,7 @@ to the *:compiler* section of project.clj, as shown in the examples
 directory (or "reagent/react.min.js" in production). You could also
 add
 
-    <script src="http://fb.me/react-0.9.0.js"></script>
+    <script src="http://fb.me/react-0.12.1.js"></script>
 
 directly to your html.
 
