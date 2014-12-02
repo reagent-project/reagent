@@ -11,7 +11,13 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **[News](http://reagent-project.github.io/news/index.html)**
   * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
 
-To use Reagent you add this to your dependencies in `project.clj`:
+To create a new Reagent project simply run:
+
+    lein new reagent myproject
+    
+This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template). 
+
+To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
     [reagent "0.4.3"]
 
@@ -26,7 +32,6 @@ add
     <script src="http://fb.me/react-0.9.0.js"></script>
 
 directly to your html.
-
 
 ## Examples
 
