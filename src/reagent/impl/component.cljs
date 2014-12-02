@@ -31,7 +31,7 @@
 
 ;; ugly circular dependency
 (defn as-element [x]
-  (reagent.impl.template/as-element x))
+  (js/reagent.impl.template.as-element x))
 
 ;;; Rendering
 

@@ -173,16 +173,16 @@
 
 (defn reag-element [tag v]
   (let [c (as-class tag)
-            jsprops #js{:argv v}]
-        (let [k (-> v meta get-key)
-              k' (if (nil? k)
-                   (-> v (nth 1 nil) get-key)
-                   k)]
-          (when (some? k')
-            (.! jsprops :key k')))
-        (.' js/React createElement c jsprops)))
+        jsprops #js{:argv v}]
+    (let [key (if-some [k (some-> (meta v) get-key)]
+                k
+                (-> v (nth 1 nil) get-key))]
+      (some->> key (.! jsprops :key)))
+    (.' js/React createElement c jsprops)))
 
 (def cached-parse (util/memoize-1 parse-tag))
+
+(declare as-element)
 
 (defn native-element [tag argv]
   (when (hiccup-tag? tag)
@@ -191,10 +191,15 @@
             hasprops (or (nil? props) (map? props))
             jsprops (convert-props (if hasprops props) id-class)
             first-child (if hasprops 2 1)]
-        ;; TODO: Meta key
         (if (input-component? comp)
-          (reagent-input argv comp jsprops first-child)
-          (make-element argv comp jsprops first-child))))))
+          (-> [reagent-input argv comp jsprops first-child]
+              (with-meta (meta argv))
+              as-element)
+          (let [p (if-some [key (some-> (meta argv) get-key)]
+                    (doto (if (nil? jsprops) #js{} jsprops)
+                      (.! :key key))
+                    jsprops)]
+            (make-element argv comp p first-child)))))))
 
 (defn vec-to-elem [v]
   (assert (pos? (count v)) "Hiccup form should not be empty")
