@@ -207,8 +207,3 @@
             (partial-ifn. callback-fn args nil)
             false))
 
-
-;;; Helpers for shouldComponentUpdate
-
-(defn equal-args [v1 v2]
-  (= v1 v2))

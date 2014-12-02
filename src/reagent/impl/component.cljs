@@ -29,8 +29,9 @@
 (defn set-state [this new-state]
   (swap! (state-atom this) merge new-state))
 
-;; set from template, to avoid circular deps
-(def as-element nil)
+;; ugly circular dependency
+(defn as-element [x]
+  (reagent.impl.template/as-element x))
 
 ;;; Rendering
 
@@ -92,7 +93,9 @@
                    (let [old-argv (.' c :props.argv)
                          new-argv (.' nextprops :argv)]
                      (if (nil? f)
-                       (not (util/equal-args old-argv new-argv))
+                       (or (nil? old-argv)
+                           (nil? new-argv)
+                           (not= old-argv new-argv))
                        (f c old-argv new-argv))))))
 
     :componentWillUpdate

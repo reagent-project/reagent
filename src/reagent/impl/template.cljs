@@ -230,9 +230,6 @@
                    (expand-seq x))
         true x))
 
-;; Cheat, to avoid ugly circular dependency
-(set! reagent.impl.component/as-element as-element)
-
 (defn expand-seq [s]
   (let [a (into-array s)]
     (dotimes [i (alength a)]
