@@ -30,7 +30,7 @@
   (swap! (state-atom this) merge new-state))
 
 ;; set from template, to avoid circular deps
-(def as-component nil)
+(def as-element nil)
 
 ;;; Rendering
 
@@ -51,7 +51,7 @@
                     5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
-        (as-component res)
+        (as-element res)
         (if (ifn? res)
           (do
             (.! c :cljsRender res)
@@ -199,7 +199,7 @@
   (let [spec (cljsify body)
         res (.' js/React createClass spec)
         f (fn [& args]
-            (as-component (apply vector res args)))]
+            (as-element (apply vector res args)))]
     (util/cache-react-class f res)
     (util/cache-react-class res res)
     f))

@@ -11,10 +11,10 @@
 
 (def is-client util/is-client)
 
-(defn as-component
+(defn as-element
   "Turns a vector of Hiccup syntax into a React component. Returns form unchanged if it is not a vector."
   [form]
-  (tmpl/as-component form))
+  (tmpl/as-element form))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be either a
@@ -27,11 +27,8 @@ Returns the mounted component instance."
      (render comp container nil))
   ([comp container callback]
    (let [f (fn []
-             (as-component (if (fn? comp) (comp) comp)))]
+             (as-element (if (fn? comp) (comp) comp)))]
      (util/render-component f container callback))))
-
-;; For backward compatibility
-(def render-component render)
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
@@ -42,16 +39,18 @@ Returns the mounted component instance."
   "Turns a component into an HTML string."
   ([component]
      (binding [comp/*non-reactive* true]
-       (.' js/React renderToString (as-component component)))))
+       (.' js/React renderToString (as-element component)))))
 
 ;; For backward compatibility
+(def as-component as-element)
+(def render-component render)
 (def render-component-to-string render-to-string)
 
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
   ([component]
      (binding [comp/*non-reactive* true]
-       (.' js/React renderToStaticMarkup (as-component component)))))
+       (.' js/React renderToStaticMarkup (as-element component)))))
 
 (defn ^:export force-update-all []
   (util/force-update-all))

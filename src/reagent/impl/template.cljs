@@ -212,7 +212,7 @@
 
 (declare expand-seq)
 
-(defn as-component [x]
+(defn as-element [x]
   (cond (string? x) x
         (vector? x) (vec-to-comp x)
         (seq? x) (if (dev?)
@@ -228,22 +228,22 @@
         true x))
 
 ;; Cheat, to avoid ugly circular dependency
-(set! reagent.impl.component/as-component as-component)
+(set! reagent.impl.component/as-element as-element)
 
 (defn expand-seq [s]
   (let [a (into-array s)]
     (dotimes [i (alength a)]
-      (aset a i (as-component (aget a i))))
+      (aset a i (as-element (aget a i))))
     a))
 
 (defn make-element [argv comp jsprops first-child]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
     (.' js/React createElement comp jsprops
-        (as-component (nth argv first-child)))
+        (as-element (nth argv first-child)))
     (.apply (.' js/React :createElement) nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                           (.push a (as-component v)))
+                           (.push a (as-element v)))
                          a)
                        #js[comp jsprops] argv))))
