@@ -168,6 +168,20 @@
     cached-class
     (fn-to-class tag)))
 
+(defn get-key [x]
+  (when (map? x) (get x :key)))
+
+(defn reag-element [tag v]
+  (let [c (as-class tag)
+            jsprops #js{:argv v}]
+        (let [k (-> v meta get-key)
+              k' (if (nil? k)
+                   (-> v (nth 1 nil) get-key)
+                   k)]
+          (when (some? k')
+            (.! jsprops :key k')))
+        (.' js/React createElement c jsprops)))
+
 (def cached-parse (util/memoize-1 parse-tag))
 
 (defn native-element [tag argv]
@@ -182,25 +196,14 @@
           (reagent-input argv comp jsprops first-child)
           (make-element argv comp jsprops first-child))))))
 
-(defn get-key [x]
-  (when (map? x) (get x :key)))
-
-(defn vec-to-comp [v]
+(defn vec-to-elem [v]
   (assert (pos? (count v)) "Hiccup form should not be empty")
   (let [tag (nth v 0)]
     (assert (valid-tag? tag)
             (str "Invalid Hiccup form: " (pr-str v)))
     (if-some [ne (native-element tag v)]
       ne
-      (let [c (as-class tag)
-            jsprops #js{:argv v}]
-        (let [k (-> v meta get-key)
-              k' (if (nil? k)
-                   (-> v (nth 1 nil) get-key)
-                   k)]
-          (when (some? k')
-            (.! jsprops :key k')))
-        (.' js/React createElement c jsprops)))))
+      (reag-element tag v))))
 
 (def seq-ctx #js{})
 
@@ -214,7 +217,7 @@
 
 (defn as-element [x]
   (cond (string? x) x
-        (vector? x) (vec-to-comp x)
+        (vector? x) (vec-to-elem x)
         (seq? x) (if (dev?)
                    (if (nil? ratom/*ratom-context*)
                      (expand-seq x)
