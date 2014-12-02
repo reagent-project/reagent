@@ -404,3 +404,29 @@
           (is (found-in #"hi me" div))
           (is (= 1 @top-ran))
           (is (= 4 @ran)))))))
+
+(defn rstr [react-elem]
+  (reagent/render-to-static-markup react-elem))
+
+(deftest test-create-element
+  (let [ae reagent/as-element
+        ce reagent/create-element]
+    (is (= (rstr (ae [:div]))
+           (rstr (ce "div" nil))))
+    (is (= (rstr (ae [:div "foo"]))
+           (rstr (ce "div" nil "foo"))))
+    (is (= (rstr (ae [:div "foo" "bar"]))
+           (rstr (ce "div" nil "foo" "bar"))))
+    (is (= (rstr (ae [:div "foo" "bar" "foobar"]))
+           (rstr (ce "div" nil "foo" "bar" "foobar"))))
+
+    (is (= (rstr (ae [:div.foo "bar"]))
+           (rstr (ce "div" #js{:className "foo"} "bar"))))
+
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ce "div" nil (ce "div" nil "foo")))))
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ce "div" nil (ae [:div "foo"])))))
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ae [:div (ce "div" nil "foo")]))))))
+

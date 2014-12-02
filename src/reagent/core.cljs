@@ -11,14 +11,26 @@
 
 (def is-client util/is-client)
 
+(defn create-element
+  "Create a native React element, by calling React.createElement directly."
+  ([type props]
+   (assert (not (map? props)))
+   (js/React.createElement type props))
+  ([type props child]
+   (assert (not (map? props)))
+   (js/React.createElement type props child))
+  ([type props child & children]
+   (assert (not (map? props)))
+   (apply js/React.createElement type props child children)))
+
 (defn as-element
-  "Turns a vector of Hiccup syntax into a React component. Returns form unchanged if it is not a vector."
+  "Turns a vector of Hiccup syntax into a React element. Returns form unchanged if it is not a vector."
   [form]
   (tmpl/as-element form))
 
 (defn render
-  "Render a Reagent component into the DOM. The first argument may be either a
-vector (using Reagent's Hiccup syntax), or a React component. The second argument should be a DOM node.
+  "Render a Reagent component into the DOM. The first argument may be 
+either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
 
 Optionally takes a callback that is called when the component is in place.
 
