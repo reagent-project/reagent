@@ -15,7 +15,8 @@
     (let [div (add-test-div "_testreagent")]
       (let [comp (r/render-component comp div #(f comp div))]
         (r/unmount-component-at-node div)
-        (r/flush)))))
+        (r/flush)
+        (.removeChild (.-body js/document) div)))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
