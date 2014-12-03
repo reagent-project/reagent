@@ -4,6 +4,7 @@
             [testcursor]
             [testinterop]
             [testratom]
+            [testwrap]
             [cemerick.cljs.test :as t]
             [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
