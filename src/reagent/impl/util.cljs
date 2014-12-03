@@ -174,7 +174,8 @@
   (-reset! [this newval]
            (set! changed true)
            (set! state newval)
-           (callback newval))
+           (callback newval)
+           state)
 
   ISwap
   (-swap! [a f]

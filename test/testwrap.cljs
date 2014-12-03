@@ -48,11 +48,13 @@
     (let [w1 (ws) w2 (ws)]
       (is (= @w1 1))
       (is (= w1 w2))
+      (is (= w2 w1))
       (reset! w1 2)
       (is (= @w1 2))
       (is (= (:foo @state) 2))
       (is (not= @w1 @w2))
       (is (not= w1 w2))
+      (is (not= w2 w1))
       (reset! w1 1)
       (is (= (:foo @state) 1)))
 
@@ -67,6 +69,47 @@
       (is (= @w1 @w2))
       (is (not= w1 w2))
       (reset! w1 1))))
+
+(deftest test-wrap-equality
+  (let [a (atom 1)
+        b (atom 2)]
+    (is (= (r/wrap @a swap! a assoc :foo)
+           (r/wrap @a swap! a assoc :foo)))
+    (is (not= (r/wrap @a swap! a assoc :foo)
+              (r/wrap @b swap! a assoc :foo)))
+    (is (not= (r/wrap @a swap! a assoc :foo)
+              (r/wrap @a swap! b assoc :foo)))
+    (is (not= (r/wrap @a swap! a assoc :foo)
+              (r/wrap @a swap! a identity :foo)))
+    (is (not= (r/wrap @a swap! a assoc :foo)
+              (r/wrap @a swap! a assoc :bar)))
+
+    (is (= (r/wrap @a update-in [:foo :bar] inc)
+           (r/wrap @a update-in [:foo :bar] inc)))
+
+    (is (= (r/wrap @a identity)
+           (r/wrap @a identity)))
+    (is (not= (r/wrap @a identity)
+              (r/wrap @b identity)))
+
+    (is (= (r/wrap @a reset! a)
+           (r/wrap @a reset! a)))))
+
+(deftest test-wrap-returns
+  (let [n (fn [] :foobar)
+        a (atom {:k 1})
+        b (wrap {:k 1} n)]
+    (is (not= a b))
+    (is (not= b a))
+    (is (= (swap! a update-in [:k] inc)
+           (swap! b update-in [:k] inc)))
+    (is (= @a @b {:k 2}))
+    (is (= (reset! a 23)
+           (reset! b 23)))
+    (is (= @a @b))
+    (is (= (swap! a inc)
+           (swap! b inc)))
+    (is (= @a @b 24))))
 
 (deftest test-wrap
   (when r/is-client
