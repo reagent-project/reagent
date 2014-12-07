@@ -113,7 +113,7 @@
 (def react-id-name "data-reactid")
 
 (defn get-react-node [cont]
-  (when-not (nil? cont)
+  (when (some? cont)
     (if (== doc-node-type (.' cont :nodeType))
       (.' cont :documentElement)
       (.' cont :firstChild))))
@@ -122,42 +122,42 @@
   (some-> (get-react-node cont)
           (.' getAttribute react-id-name)))
 
-(def roots (atom {}))
+(defonce roots (atom {}))
+
+(defn clear-container [node]
+  ;; If render throws, React may get confused, and throw on
+  ;; unmount as well, so try to force React to start over.
+  (try
+    (.' js/React unmountComponentAtNode node)
+    (catch js/Object e
+      (log e)))
+  (when-let [n (get-react-node node)]
+    (.' n removeAttribute react-id-name)
+    (.! n :innerHTML "")))
+
+(defn render-component [comp container callback force-update]
+  (try
+    (binding [*always-update* force-update]
+      (.' js/React render (comp) container
+          (fn []
+            (binding [*always-update* false]
+              (swap! roots assoc container [comp container])
+              (if (some? callback)
+                (callback))))))
+    (catch js/Object e
+      (do (clear-container container)
+          (throw e)))))
 
 (defn re-render-component [comp container]
-  (try
-    (.' js/React render (comp) container)
-    (catch js/Object e
-      (do
-        (try
-          (.' js/React unmountComponentAtNode container)
-          (catch js/Object e
-            (log e)))
-        (when-let [n (get-react-node container)]
-          (.' n removeAttribute react-id-name)
-          (.! n :innerHTML ""))
-        (throw e)))))
-
-(defn render-component [comp container callback]
-  (.' js/React render (comp) container
-       (fn []
-         (let [id (get-root-id container)]
-           (when-not (nil? id)
-             (swap! roots assoc id
-                    #(re-render-component comp container))))
-         (when-not (nil? callback)
-           (callback)))))
+  (render-component comp container nil true))
 
 (defn unmount-component-at-node [container]
-  (let [id (get-root-id container)]
-    (when-not (nil? id)
-      (swap! roots dissoc id)))
+  (swap! roots dissoc container)
   (.' js/React unmountComponentAtNode container))
 
 (defn force-update-all []
-  (binding [*always-update* true]
-    (doseq [f (vals @roots)]
-      (f)))
+  (doseq [v (vals @roots)]
+    (apply re-render-component v))
   "Updated")
 
 

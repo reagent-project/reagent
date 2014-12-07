@@ -3,6 +3,8 @@
 
 ## Upcoming
 
+- `render` now forces a deep update of all components by default, to make it more convenient to use with e.g. figwheel.
+
 - Renamed `as-component` to `as-element`, to match React's new terminology better (old name still works, though, for backward compatiblity).
 
 - Stop wrapping native components. This reduces the number of components created a lot, and can speed some things up substantially (especially render-to-string, that is not bound by browser performance). This is made possible by a new way of keeping track of which order to re-render dirty components.
