@@ -2,14 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]))
 
-(defmacro get-source [srcfile]
-  (let [s (if-not (keyword? srcfile)
-            srcfile
-            (-> srcfile
-                namespace
-                (string/replace #"[.]" "/")
-                (str ".cljs")))]
-    (-> s io/resource slurp)))
 
 ;;;;; Colorization
 
@@ -91,10 +83,14 @@
           (recur remain
                  (if (= kind :other) prev val)
                  level'
-                 (conj res (if (nil? style)
-                             val
-                             (list style val))))
+                 (if (nil? style)
+                   (let [old (peek res)]
+                     (if (string? old)
+                       (conj (pop res) (str old val))
+                       (conj res val)))
+                   (conj res (list style val))))
           (apply vector :pre res))))))
+
 
 ;;;; Source splitting
 

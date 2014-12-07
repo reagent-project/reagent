@@ -2,7 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :refer-macros [get-source]]
+            [reagentdemo.syntax :as s :include-macros true]
             [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
@@ -10,8 +10,8 @@
 (def url "news/any-arguments.html")
 (def title "All arguments allowed")
 
-(def funmap (-> ::this get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
+(def ns-src (s/syntaxed "(ns example
+  (:require [reagent.core :as r :refer [atom]]))"))
 
 (defn hello-component [name]
   [:p "Hello, " name "!"])
@@ -59,7 +59,7 @@
          [:p "In other words, you can now do this:"]
 
          [demo-component {:comp say-hello
-                          :src (src-for [:hello-component :say-hello])}]
+                          :src (s/src-of [:hello-component :say-hello])}]
 
          [:p "In the above example, it wouldn’t make any difference at
           all if " [:code "hello-component"] " had been called as a
@@ -78,11 +78,13 @@
           put the call at the top, as in " [:code "my-div"] " here:"]
 
          [demo-component {:comp call-my-div
-                          :src (src-for [:nsr :my-div :call-my-div])}]
+                          :src [:pre
+                                ns-src
+                                (s/src-of [:my-div :call-my-div])]}]
 
          [:p [:em "Note: "] [:code "r/props"] " and "
-         [:code "r/children"] " correspond to React’s "
-         [:code "this.props"] " and " [:code "this.props.children"] ",
+          [:code "r/children"] " correspond to React’s "
+          [:code "this.props"] " and " [:code "this.props.children"] ",
          respectively. They may be convenient to use when wrapping
          native React components, since they follow the same
          conventions when interpreting the arguments given."]

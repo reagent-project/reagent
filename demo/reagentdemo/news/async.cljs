@@ -2,15 +2,15 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :refer-macros [get-source]]
+            [reagentdemo.syntax :as s :include-macros true]
             [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "news/reagent-is-async.html")
 (def title "Faster by waiting")
 
-(def funmap (-> "reagentdemo/news/async.cljs" get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
+(def ns-src (s/syntaxed "(ns example
+  (:require [reagent.core :as reagent :refer [atom]]))"))
 
 (defn timing-wrapper [f]
   (let [start-time (atom nil)
@@ -190,11 +190,12 @@
 
          [demo-component
           {:comp color-demo
-           :src (src-for
-                 [:ns :timing-wrapper :base-color :ncolors
-                  :random-colors :to-rgb :tweak-color
-                  :reset-random-colors :color-choose :ncolors-choose
-                  :palette :color-demo])}]])]]))
+           :src [:pre
+                 ns-src
+                 (s/src-of [:timing-wrapper :base-color :ncolors
+                            :random-colors :to-rgb :tweak-color
+                            :reset-random-colors :color-choose
+                            :ncolors-choose :palette :color-demo])]}]])]]))
 
 (tools/register-page url (fn [] [main])
                      (str "Reagent: " title))

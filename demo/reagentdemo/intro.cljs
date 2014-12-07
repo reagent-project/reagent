@@ -4,7 +4,7 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
-            [reagentdemo.syntax :refer-macros [get-source]]
+            [reagentdemo.syntax :as s :include-macros true]
             [sitetools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample :as simple]
@@ -107,8 +107,9 @@
       [:span {:style {:color color}} diagnose]
       [slider :bmi bmi 10 50]]]))
 
-(defonce funmap (-> "reagentdemo/intro.cljs" get-source common/fun-map))
-(defonce src-for (partial common/src-for funmap))
+(def ns-src (s/syntaxed "(ns example
+  (:require [reagent.core :as reagent :refer [atom]]))"))
+
 
 (defn intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
@@ -134,18 +135,18 @@
 
      [:p "A very basic Reagent component may look something like this: "]
      [demo-component {:comp simple-component
-                      :src (src-for [:simple-component])}]
+                      :src (s/src-of [:simple-component])}]
 
      [:p "You can build new components using other components as
      building blocks. Like this:"]
      [demo-component {:comp simple-parent
-                      :src (src-for [:simple-parent])}]
+                      :src (s/src-of [:simple-parent])}]
 
      [:p "Data is passed to child components using plain old Clojure
      data types. Like this:"]
 
      [demo-component {:comp say-hello
-                      :src (src-for [:hello-component :say-hello])}]
+                      :src (s/src-of [:hello-component :say-hello])}]
 
      [:p [:strong "Note: "]
       "In the example above, " [:code "hello-component"] " might just
@@ -160,7 +161,7 @@
      [:code "seq"] ":" ]
 
      [demo-component {:comp lister-user
-                      :src (src-for [:lister :lister-user])}]
+                      :src (s/src-of [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
      "The " [:code "^{:key item}"] " part above isn’t really necessary
@@ -184,7 +185,9 @@
 
    [:p "Let’s demonstrate that with a simple example:"]
    [demo-component {:comp counting-component
-                    :src (src-for [:ns :click-count :counting-component])}]
+                    :src [:pre
+                          ns-src
+                          (s/src-of [:click-count :counting-component])]}]
 
    [:p "Sometimes you may want to maintain state locally in a
    component. That is easy to do with an " [:code "atom"] " as well."]
@@ -194,7 +197,7 @@
    update a counter:"]
 
    [demo-component {:comp timer-component
-                    :src (src-for [:timer-component])}]
+                    :src (s/src-of [:timer-component])}]
 
    [:p "The previous example also uses another feature of Reagent: a
    component function can return another function, that is used to do
@@ -208,7 +211,9 @@
    state management between components, like this:"]
 
    [demo-component {:comp shared-state
-                    :src (src-for [:ns :atom-input :shared-state])}]
+                    :src [:pre
+                          ns-src
+                          (s/src-of [:atom-input :shared-state])]}]
 
    [:p [:strong "Note: "] "Component functions can be called with any
    arguments – as long as they are immutable. You "[:em "could"]" use
@@ -228,7 +233,9 @@
    example, splashing the very first example all over the page would
    look like this:"]
 
-   [demo-component {:src (src-for [:ns :simple-component :render-simple])}]])
+   [demo-component {:src [:pre
+                          ns-src
+                          (s/src-of [:simple-component :render-simple])]}]])
 
 (defn performance []
   [:div.demo-text
@@ -286,8 +293,10 @@
    with height, weight and BMI as keys."]
 
    [demo-component {:comp bmi-component
-                    :src (src-for [:ns :bmi-data :calc-bmi :slider
-                                   :bmi-component])}]])
+                    :src [:pre
+                          ns-src
+                          (s/src-of [:bmi-data :calc-bmi :slider
+                                     :bmi-component])]}]])
 
 (defn complete-simple-demo []
   [:div.demo-text
@@ -299,9 +308,7 @@
 
    [demo-component {:comp simple/simple-example
                     :complete true
-                    :src (-> "simpleexample.cljs"
-                             get-source
-                             common/syntaxify)}]])
+                    :src (s/src-of nil "simpleexample.cljs")}]])
 
 (defn todomvc-demo []
   [:div.demo-text
@@ -313,9 +320,7 @@
 
    [demo-component {:comp todo/todo-app
                     :complete true
-                    :src (-> "todomvc.cljs"
-                             get-source
-                             common/syntaxify)}]])
+                    :src (s/src-of nil "todomvc.cljs")}]])
 
 (defn main []
   (let [show-all (atom false)

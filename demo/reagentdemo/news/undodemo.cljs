@@ -2,16 +2,13 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :refer-macros [get-source]]
+            [reagentdemo.syntax :as s :include-macros true]
             [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc :as todomvc]))
 
 (def url "news/cloact-reagent-undo-demo.html")
 (def title "Cloact becomes Reagent: Undo is trivial")
-
-(def funmap (-> ::this get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
 
 (def state todomvc/todos)
 
@@ -39,8 +36,8 @@
 
 (defn undo-demo []
   [demo-component {:comp todomvc-with-undo
-                   :src (src-for [:state :undo-list :undo :save-state
-                                  :undo-button :todomvc-with-undo])}])
+                   :src (s/src-of [:state :undo-list :undo :save-state
+                                   :undo-button :todomvc-with-undo])}])
 
 (def undo-demo-cleanup
   (with-meta undo-demo {:component-will-unmount
