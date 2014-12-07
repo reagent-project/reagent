@@ -108,7 +108,7 @@
         (.setToken h p))
       h)))
 
-(def history nil)
+(defonce history nil)
 
 (defn token-base []
   (if (use-html5-history)
@@ -259,9 +259,10 @@
                  (js->clj js/pageConfig :keywordize-keys true))
           page-name (:page-name conf)]
       (swap! config merge conf)
-      (when page-name
-        (set-start-page page-name))
-      (setup-history page-name)
-      (set! (.-title js/document) (get-title))
+      (when (nil? history)
+        (when page-name
+          (set-start-page page-name))
+        (setup-history page-name)
+        (set! (.-title js/document) (get-title)))
       (reagent/render-component (body)
                                 (.' js/document :body)))))

@@ -1,6 +1,32 @@
 (ns reagentdemo.syntax
   (:require [clojure.string :as string]))
 
+(def comment-style {:style {:color "gray"
+                            :font-style "italic"}})
+(def string-style {:style {:color "green"}})
+(def keyword-style {:style {:color "blue"}})
+(def builtin-style {:style {:font-weight "bold"
+                            :color "#687868"}})
+(def def-style {:style {:color "#55c"
+                        :font-weight "bold"}})
+
+(def paren-style-1 {:style {:color "#272"}})
+(def paren-style-2 {:style {:color "#940"}})
+(def paren-style-3 {:style {:color "#44a"}})
+
+(defn comment-span [v] [:span comment-style v])
+(defn string-span [v] [:span string-style v])
+(defn keyword-span [v] [:span string-style v])
+(defn builtin-span [v] [:span builtin-style v])
+(defn def-span [v] [:span def-style v])
+
+(defn paren-span-1 [v] [:span paren-style-1 v])
+(defn paren-span-2 [v] [:span paren-style-2 v])
+(defn paren-span-3 [v] [:span paren-style-3 v])
+
+
+;;; Old stuff
+
 (def builtins #{"def" "defn" "ns" "atom" "let" "if" "when"
                "cond" "merge" "assoc" "swap!" "reset!" "for"
                "range" "nil?" "int" "or" "->" "->>" "%" "fn" "if-not"
@@ -60,7 +86,7 @@
         ncol (count paren-styles)
         paren-style (fn [level]
                       (nth paren-styles (mod level ncol)))]
-    (loop [tokens (tokenize src)
+    (loop [tokens (tokenize (str src " "))
            prev nil
            level 0
            res []]
