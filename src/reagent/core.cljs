@@ -12,7 +12,21 @@
 (def is-client util/is-client)
 
 (defn create-element
-  "Create a native React element, by calling React.createElement directly."
+  "Create a native React element, by calling React.createElement directly.
+
+That means the second argument must be a javascript object (or nil), and
+that any Reagent hiccup forms must be processed with as-element. For example
+like this:
+
+   (r/create-element \"div\" #js{:className \"foo\"}
+      \"Hi \" (r/as-element [:strong \"world!\"])
+
+which is equivalent to
+
+   [:div.foo \"Hi\" [:strong \"world!\"]]
+"
+  ([type]
+   (create-element type nil))
   ([type props]
    (assert (not (map? props)))
    (js/React.createElement type props))

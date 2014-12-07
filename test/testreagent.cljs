@@ -413,6 +413,8 @@
   (let [ae reagent/as-element
         ce reagent/create-element]
     (is (= (rstr (ae [:div]))
+           (rstr (ce "div"))))
+    (is (= (rstr (ae [:div]))
            (rstr (ce "div" nil))))
     (is (= (rstr (ae [:div "foo"]))
            (rstr (ce "div" nil "foo"))))

@@ -26,6 +26,7 @@
              :dev-base {:dependencies
                         [[figwheel "0.1.5-SNAPSHOT"]]
                         :plugins [[lein-figwheel "0.1.5-SNAPSHOT"]]
+                        :source-paths ["demo"] ;; for lighttable
                         :resource-paths ["site" "outsite"]
                         :figwheel {:css-dirs ["site/public/css"]}
                         :cljsbuild {:builds
