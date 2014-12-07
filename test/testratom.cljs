@@ -6,10 +6,12 @@
   (:require [cemerick.cljs.test :as t]
             [reagent.ratom :as rv]))
 
-(set! rv/debug true)
+(defn running []
+  (set! rv/debug true)
+  (rv/running))
 
-(defn running [] (rv/running))
-(defn dispose [v] (rv/dispose! v))
+(defn dispose [v]
+  (rv/dispose! v))
 
 (defn ratom-perf []
   (dbg "ratom-perf")

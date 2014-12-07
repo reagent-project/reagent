@@ -5,9 +5,9 @@
 
 (declare ^:dynamic *ratom-context*)
 
-(def debug false)
+(defonce debug false)
 
-(def -running (clojure.core/atom 0))
+(defonce -running (clojure.core/atom 0))
 
 (defn running [] @-running)
 
