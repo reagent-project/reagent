@@ -172,9 +172,10 @@
         _ (assert (util/clj-ifn? render-fun)
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
-        name (or (:displayName fun-map)
-                 (.' render-fun :displayName)
-                 (.' render-fun :name))
+        name (str (or (:displayName fun-map)
+                      (.' render-fun :displayName)
+                      (.' render-fun :name)
+                      ""))
         name' (if (empty? name) (str (gensym "reagent")) name)
         fmap (-> fun-map
                  (assoc :displayName name')

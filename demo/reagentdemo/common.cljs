@@ -1,8 +1,6 @@
 (ns reagentdemo.common
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.debug :refer-macros [dbg println]]
-            [clojure.string :as string]
-            [reagentdemo.syntax :as syntax]))
+            [reagent.debug :refer-macros [dbg println]]))
 
 (defn demo-component []
   (let [showing (atom true)]

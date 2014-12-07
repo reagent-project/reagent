@@ -71,9 +71,8 @@
   (let [color @base-color
         n @ncolors]
     [:div
-     [:div
-      [:p "base color: "]
-      [color-plate (to-rgb color)]]
+     [:p "base color: "]
+     [color-plate (to-rgb color)]
      [:div.color-samples
       [:p n " random matching colors:"]
       (map-indexed (fn [k v]

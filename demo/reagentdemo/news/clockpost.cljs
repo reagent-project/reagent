@@ -32,14 +32,13 @@
 
       [:p "Fredrik Dyrkell wrote a very nice " [:a lexclock "binary
       clock"] " using " [:a om "Om"] ". I thought I’d replicate that
-      using Reagent for fun (another re-write, using " [:a
-                                                        hoplon "Hoplon"] ", can be seen " [:a hopclock "here"] ")."]
+      using Reagent for fun (another re-write, using "
+       [:a hoplon "Hoplon"] ", can be seen " [:a hopclock "here"] ")."]
 
       [:p "So, without further ado, here is a binary clock using Reagent."]
 
       (if summary
-        [link {:href url
-               :class 'news-read-mode} "Read more"]
+        [link {:href url :class 'news-read-mode} "Read more"]
         [:div.demo-text
 
          [fn-src (s/syntaxed "(ns example
@@ -91,8 +90,8 @@
          [fn-src (s/src-of [:main]
                            "reagentdemo/news/binaryclock.cljs")]
 
-         [:p "The entire source is also available " [:a
-                                                     clocksrc "here"] "."]
+         [:p "The entire source is also available "
+          [:a clocksrc "here"] "."]
 
          [:h2 "How it all works"]
 
