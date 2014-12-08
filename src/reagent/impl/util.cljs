@@ -76,13 +76,6 @@
   IHash
   (-hash [_] (hash [f args])))
 
-; patch for CLJS-777; Can be replaced with clojure.core/ifn? after updating
-; ClojureScript to a version that includes the fix:
-; https://github.com/clojure/clojurescript/commit/525154f2a4874cf3b88ac3d5755794de425a94cb
-(defn clj-ifn? [x]
-  (or (ifn? x)
-      (satisfies? IMultiFn x)))
-
 (defn- merge-class [p1 p2]
   (let [class (when-let [c1 (:class p1)]
                 (when-let [c2 (:class p2)]
@@ -109,19 +102,6 @@
 
 (declare ^:dynamic *always-update*)
 
-(def doc-node-type 9)
-(def react-id-name "data-reactid")
-
-(defn get-react-node [cont]
-  (when (some? cont)
-    (if (== doc-node-type (.' cont :nodeType))
-      (.' cont :documentElement)
-      (.' cont :firstChild))))
-
-(defn get-root-id [cont]
-  (some-> (get-react-node cont)
-          (.' getAttribute react-id-name)))
-
 (defonce roots (atom {}))
 
 (defn clear-container [node]
@@ -130,10 +110,8 @@
   (try
     (.' js/React unmountComponentAtNode node)
     (catch js/Object e
-      (log e)))
-  (when-let [n (get-react-node node)]
-    (.' n removeAttribute react-id-name)
-    (.! n :innerHTML "")))
+      (do (log "Error unmounting:")
+          (log e)))))
 
 (defn render-component [comp container callback force-update]
   (try
@@ -207,4 +185,3 @@
   (Wrapper. value
             (partial-ifn. callback-fn args nil)
             false))
-

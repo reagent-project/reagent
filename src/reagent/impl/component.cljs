@@ -1,4 +1,3 @@
-
 (ns reagent.impl.component
   (:require [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -38,7 +37,7 @@
 (defn do-render [c]
   (binding [*current-component* c]
     (let [f (.' c :cljsRender)
-          _ (assert (util/clj-ifn? f))
+          _ (assert (ifn? f))
           p (.' c :props)
           res (if (nil? (.' c :componentFunction))
                 (f c)
@@ -169,7 +168,7 @@
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
                        (:render fun-map))
-        _ (assert (util/clj-ifn? render-fun)
+        _ (assert (ifn? render-fun)
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
         name (str (or (:displayName fun-map)

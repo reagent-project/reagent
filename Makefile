@@ -59,6 +59,7 @@ trigger-build:
 push-gh-pages: build-gh-pages
 	git push origin gh-pages:gh-pages
 
+# build site into a gh-pages branch
 build-gh-pages: gen-site gh-pages-add
 
 gen-site: clean

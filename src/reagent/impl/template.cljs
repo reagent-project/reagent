@@ -1,4 +1,3 @@
-
 (ns reagent.impl.template
   (:require [clojure.string :as string]
             [reagent.impl.util :as util :refer [is-client]]
@@ -28,14 +27,12 @@
 
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
-      (util/clj-ifn? x)))
+      (ifn? x)))
 
 (defn to-js-val [v]
   (cond
-   (string? v) v
-   (number? v) v
-   (keyword? v) (name v)
-   (symbol? v) (str v)
+   (or (string? v) (number? v)) v
+   (implements? INamed v) (name v)
    (coll? v) (clj->js v)
    (ifn? v) (fn [& args] (apply v args))
    :else v))
@@ -48,7 +45,6 @@
 ;;; Props conversion
 
 (def cached-prop-name (util/memoize-1 undash-prop-name))
-(def cached-style-name (util/memoize-1 util/dash-to-camel))
 
 (defn convert-prop-value [x]
   (cond (string? x) x
@@ -120,8 +116,8 @@
     (.! this :cljsInputValue nil)))
 
 (defn input-component? [x]
-  (or (= x "input")
-      (= x "textarea")))
+  (or (identical? x "input")
+      (identical? x "textarea")))
 
 (def reagent-input-class nil)
 
