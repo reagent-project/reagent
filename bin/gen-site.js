@@ -7,6 +7,12 @@ var moduleName = "devsetup";
 
 var beep = "\u0007";
 
+if (typeof location === "undefined") {
+    // figwheel wants js/location to exist, even if it doesn't run,
+    // for some reason
+    global.location = {};
+}
+
 var gensite = function () {
     console.log("Loading " + srcFile);
     var optNone = cljsLoad.load(srcFile, outputDirectory, moduleName);

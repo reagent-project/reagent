@@ -28,6 +28,7 @@
                        :css-file "css/built.css"
                        :js-file "js/main.js"
                        :js-dir "js/out"
+                       :main-div "main-content"
                        :allow-html5-history false}))
 
 (defonce page (atom "index.html"))
@@ -178,7 +179,8 @@
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
-       (danger :div body)
+       [:div {:id (:main-div @config)}
+        (danger :div body)]
        (danger :script (str "var pageConfig = " (-> page-conf
                                                     clj->js
                                                     js/JSON.stringify)))
@@ -265,4 +267,5 @@
         (setup-history page-name)
         (set! (.-title js/document) (get-title)))
       (reagent/render-component (body)
-                                (.' js/document :body)))))
+                                (.' js/document getElementById
+                                    (:main-div @config))))))
