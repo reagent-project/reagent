@@ -45,8 +45,12 @@
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
-          (is (found-in #"div in really-simple" div))))
-      (is (= 2 @ran)))))
+          (is (found-in #"div in really-simple" div))
+          (reagent/flush)
+          (is (= 2 @ran))
+          (reagent/force-update-all)
+          (is (= 3 @ran))))
+      (is (= 3 @ran)))))
 
 (deftest test-simple-callback
   (when isClient
@@ -93,8 +97,7 @@
 
           (reagent/set-state @self {:foo "you"})
           (rflush)
-          (is (found-in #"hi you" div))
-          ))
+          (is (found-in #"hi you" div))))
       (is (= 4 @ran)))))
 
 (deftest test-ratom-change
@@ -223,7 +226,10 @@
           (is (= @child-ran 6))
           (do (reset! child-props {:on-change (reagent/partial f1)})
               (rflush))
-          (is (= @child-ran 7)))))))
+          (is (= @child-ran 7))
+
+          (reagent/force-update-all)
+          (is (= @child-ran 8)))))))
 
 (deftest dirty-test
   (when isClient
