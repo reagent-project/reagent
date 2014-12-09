@@ -100,7 +100,7 @@
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
 
-(declare ^:dynamic *always-update*)
+(def ^:dynamic *always-update* false)
 
 (defonce roots (atom {}))
 
@@ -113,9 +113,9 @@
       (do (log "Error unmounting:")
           (log e)))))
 
-(defn render-component [comp container callback force-update]
+(defn render-component [comp container callback]
   (try
-    (binding [*always-update* force-update]
+    (binding [*always-update* true]
       (.' js/React render (comp) container
           (fn []
             (binding [*always-update* false]
@@ -127,7 +127,7 @@
           (throw e)))))
 
 (defn re-render-component [comp container]
-  (render-component comp container nil true))
+  (render-component comp container nil))
 
 (defn unmount-component-at-node [container]
   (swap! roots dissoc container)

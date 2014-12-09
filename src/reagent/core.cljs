@@ -6,7 +6,7 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg prn]]
+            [reagent.debug :as deb :refer-macros [dbg prn]]
             [reagent.interop :refer-macros [.' .!]]))
 
 (def is-client util/is-client)
@@ -48,19 +48,13 @@ either a vector (using Reagent's Hiccup syntax), or a React element. The second 
 
 Optionally takes a callback that is called when the component is in place.
 
-If the optional fourth argument is true (the default), an already mounted
-component will be forced to re-render (by bypassing the default
-shouldComponentUpdate).
-
 Returns the mounted component instance."
   ([comp container]
-   (render comp container nil true))
+   (render comp container nil))
   ([comp container callback]
-   (render comp container callback true))
-  ([comp container callback force-update]
    (let [f (fn []
              (as-element (if (fn? comp) (comp) comp)))]
-     (util/render-component f container callback force-update))))
+     (util/render-component f container callback))))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
