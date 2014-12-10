@@ -1,5 +1,5 @@
 
-VERSION = 0.4.3
+
 REACT_VERSION = 0.12.1
 
 PROF = 
@@ -93,6 +93,8 @@ download-react:
 		-o vendor/reagent/react.js
 	curl -L "http://fb.me/react-$(REACT_VERSION).min.js" \
 		-o vendor/reagent/react.min.js
+
+VERSION := `sed -n -e '/(defproject reagent/ s/.*"\(.*\)"/\1/p' project.clj`
 
 setversion:
 	version=$(VERSION); \
