@@ -1,5 +1,5 @@
 
-(defproject reagent "0.4.4-SNAPSHOT"
+(defproject reagent "0.5.0-alpha"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
