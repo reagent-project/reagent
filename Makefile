@@ -59,6 +59,12 @@ trigger-build:
 push-gh-pages: build-gh-pages
 	git push origin gh-pages:gh-pages
 
+# build site and push to reagent-project's doc site
+push-project-docs: build-gh-pages
+	git push --force \
+          https://github.com/reagent-project/reagent-project.github.io.git \
+          gh-pages:master
+
 # build site into a gh-pages branch
 build-gh-pages: gen-site gh-pages-add
 
