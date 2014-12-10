@@ -1,18 +1,26 @@
 
 (ns runtests
-  (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
-            [reagent.debug :refer-macros [dbg println]]
-            [demo :as demo]
-            [cemerick.cljs.test :as t]))
+  (:require [testreagent]
+            [testcursor]
+            [testinterop]
+            [testratom]
+            [testwrap]
+            [cemerick.cljs.test :as t]
+            [reagent.core :as reagent :refer [atom]]
+            [reagent.interop :refer-macros [.' .!]]
+            [reagent.debug :refer-macros [dbg println]]))
 
 (enable-console-print!)
 
 (def test-results (atom nil))
 
+(def test-box {:position 'absolute
+               :margin-left -35
+               :color :#aaa})
+
 (defn test-output []
   (let [res @test-results]
-    [:div {:style {:margin-top "40px"}}
+    [:div {:style test-box}
      (if-not res
        [:div "waiting for tests to run"]
        [:div
@@ -25,18 +33,10 @@
   (let [res @test-results]
     (if res
       (if (zero? (+ (:fail res) (:error res)))
-        [:div "Tests ok"]
+        [:div {:style test-box}
+         "All tests ok"]
         [test-output])
-      [:div "."])))
-
-(defn test-demo []
-  [:div
-   [test-output]
-   [demo/demo]])
-
-(defn ^:export mounttests []
-  (reagent/render-component (fn [] [test-demo])
-                            (.-body js/document)))
+      [:div {:style test-box} "testing"])))
 
 (defn ^:export run-all-tests []
   (println "-----------------------------------------")
@@ -48,8 +48,9 @@
         (reset! test-results {:error e}))))
   (println "-----------------------------------------"))
 
-(if reagent/is-client
-  (do
-    (reset! test-results nil)
-    (js/setTimeout run-all-tests 1000))
-  (run-all-tests))
+(defn ^:export run-tests []
+  (if reagent/is-client
+    (do
+      (reset! test-results nil)
+      (js/setTimeout run-all-tests 100))
+    (run-all-tests)))

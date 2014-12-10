@@ -1,31 +1,27 @@
 (ns reagentdemo.news.clockpost
   (:require [reagent.core :as r :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
-            [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.page :refer [title link page-map]]
+            [reagentdemo.syntax :as s :include-macros true]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
 
-(def funmap (-> "reagentdemo/news/binaryclock.cljs"
-                get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
+(def url "news/binary-clock.html")
+(def title "A binary clock")
 
-(defn fn-src [& parts]
-  [demo-component {:src (src-for (vec parts))
-                   :no-heading true}])
+(defn fn-src [src]
+  [demo-component {:src src :no-heading true}])
 
 (defn main [{:keys [summary]}]
-  (let [head "A binary clock"
-        lexclock {:href "http://www.lexicallyscoped.com/2014/01/23/clojurescript-react-om-binary-clock.html"}
+  (let [lexclock {:href "http://www.lexicallyscoped.com/2014/01/23/clojurescript-react-om-binary-clock.html"}
         hopclock {:href "http://pmbauer.github.io/2014/01/27/hoplon-binary-clock/"}
         om {:href "https://github.com/swannodette/om"}
         hoplon {:href "http://hoplon.io"}
         clocksrc {:href "https://github.com/reagent-project/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
 
     [:div.reagent-demo
-     [:h1 [link {:href (fvar main)} head]]
-     [title head]
+     [:h1 [link {:href url} title]]
      [:div.demo-text
 
       (when-not summary
@@ -36,59 +32,66 @@
 
       [:p "Fredrik Dyrkell wrote a very nice " [:a lexclock "binary
       clock"] " using " [:a om "Om"] ". I thought I’d replicate that
-      using Reagent for fun (another re-write, using " [:a
-      hoplon "Hoplon"] ", can be seen " [:a hopclock "here"] ")."]
+      using Reagent for fun (another re-write, using "
+       [:a hoplon "Hoplon"] ", can be seen " [:a hopclock "here"] ")."]
 
       [:p "So, without further ado, here is a binary clock using Reagent."]
 
       (if summary
-        [link {:href (fvar main)
-               :class 'news-read-more} "Read more"]
+        [link {:href url :class 'news-read-mode} "Read more"]
         [:div.demo-text
 
-         [fn-src :nsr]
+         [fn-src (s/syntaxed "(ns example
+  (:require [reagent.core :as r :refer [atom]]))")]
 
          [:p "We start with the basics: The clock is built out of
          cells, with a light colour if the bit the cell corresponds to
          is set."]
 
-         [fn-src :cell]
+         [fn-src (s/src-of [:cell]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "Cells are combined into columns of four bits, with a
          decimal digit at the bottom."]
 
-         [fn-src :column]
+         [fn-src (s/src-of [:column]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "Columns are in turn combined into pairs:"]
 
-         [fn-src :column-pair]
+         [fn-src (s/src-of [:column-pair]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "We'll also need the legend on the left side:"]
 
-         [fn-src :legend]
+         [fn-src (s/src-of [:legend]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "We combine these element into a component that shows the
          legend, hours, minutes and seconds; and optionally 1/100
          seconds. It also responds to clicks."]
 
-         [fn-src :clock]
+         [fn-src (s/src-of [:clock]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "We also need to keep track of the time, and of the
          detail shown, in a Reagent atom. And a function to update the
          time."]
 
-         [fn-src :clock-state :update-time]
+         [fn-src (s/src-of [:clock-state :update-time]
+                           "reagentdemo/news/binaryclock.cljs")]
 
          [:p "And finally we use the " [:code "clock"] " component.
          The current time is scheduled to be updated, after a suitable
          delay, every time the main component is rendered ("
-         [:code "reagent.core/next-tick"] " is just a front for "
-         [:code "requestAnimationFrame"] "):"]
+          [:code "reagent.core/next-tick"] " is just a front for "
+          [:code "requestAnimationFrame"] "):"]
 
-         [fn-src :main]
+         [fn-src (s/src-of [:main]
+                           "reagentdemo/news/binaryclock.cljs")]
 
-         [:p "The entire source is also available " [:a
-         clocksrc "here"] "."]
+         [:p "The entire source is also available "
+          [:a clocksrc "here"] "."]
 
          [:h2 "How it all works"]
 
@@ -119,5 +122,5 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(swap! page-map assoc
-       "news/binary-clock.html" (fvar main))
+(tools/register-page url (fn [] [main])
+                     (str "Reagent: " title))

@@ -1,4 +1,3 @@
-
 (ns reagent.impl.template
   (:require [clojure.string :as string]
             [reagent.impl.util :as util :refer [is-client]]
@@ -28,14 +27,12 @@
 
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
-      (util/clj-ifn? x)))
+      (ifn? x)))
 
 (defn to-js-val [v]
   (cond
-   (string? v) v
-   (number? v) v
-   (keyword? v) (name v)
-   (symbol? v) (str v)
+   (or (string? v) (number? v)) v
+   (implements? INamed v) (name v)
    (coll? v) (clj->js v)
    (ifn? v) (fn [& args] (apply v args))
    :else v))
@@ -48,7 +45,6 @@
 ;;; Props conversion
 
 (def cached-prop-name (util/memoize-1 undash-prop-name))
-(def cached-style-name (util/memoize-1 util/dash-to-camel))
 
 (defn convert-prop-value [x]
   (cond (string? x) x
@@ -62,28 +58,25 @@
 
 (defn set-id-class [props [id class]]
   (let [pid (.' props :id)]
-    (.! props :id (if-not (nil? pid) pid id))
-    (when-not (nil? class)
+    (.! props :id (if (some? pid) pid id))
+    (when (some? class)
       (let [old (.' props :className)]
-        (.! props :className (if-not (nil? old)
-                                 (str class " " old)
-                                 class))))))
+        (.! props :className (if (some? old)
+                               (str class " " old)
+                               class))))))
 
 (defn convert-props [props id-class]
-  (cond
-   (and (empty? props) (nil? id-class)) nil
-   (identical? (type props) js/Object) props
-   :else (let [objprops
-               (reduce-kv (fn [o k v]
-                            (let [pname (cached-prop-name k)]
-                              (if-not (identical? pname "key")
-                                ;; Skip key, it is set by parent
-                                (aset o pname (convert-prop-value v))))
-                            o)
-                          #js{} props)]
-           (when-not (nil? id-class)
-             (set-id-class objprops id-class))
-           objprops)))
+  (if (and (empty? props) (nil? id-class))
+    nil
+    (let [objprops
+          (reduce-kv (fn [o k v]
+                       (let [pname (cached-prop-name k)]
+                         (aset o pname (convert-prop-value v)))
+                       o)
+                     #js{} props)]
+      (when (some? id-class)
+        (set-id-class objprops id-class))
+      objprops)))
 
 
 ;;; Specialization for input components
@@ -123,51 +116,28 @@
     (.! this :cljsInputValue nil)))
 
 (defn input-component? [x]
-  (let [DOM (.' js/React :DOM)]
-    (or (= x "input")
-        (= x "textarea")
-        (identical? x (.' DOM :input))
-        (identical? x (.' DOM :textarea)))))
+  (or (identical? x "input")
+      (identical? x "textarea")))
 
-
-;;; Wrapping of native components
+(def reagent-input-class nil)
 
 (declare make-element)
 
-(defn wrapped-render [this comp id-class input-setup]
-  (let [inprops (.' this :props)
-        argv (.' inprops :argv)
-        props (nth argv 1 nil)
-        hasprops (or (nil? props) (map? props))
-        jsprops (convert-props (if hasprops props) id-class)]
-    (when-not (nil? input-setup)
-      (input-setup this jsprops))
-    (make-element argv comp jsprops
-                  (if hasprops 2 1)
-                  (inc (.' inprops :level)))))
+(def input-spec
+  {:display-name "ReagentInput"
+   :component-did-update input-set-value
+   :component-will-unmount input-unmount
+   :component-function
+   (fn [argv comp jsprops first-child]
+     (let [this comp/*current-component*]
+       (input-render-setup this jsprops)
+       (make-element argv comp jsprops first-child)))})
 
-(defn wrapped-should-update [c nextprops nextstate]
-  (or util/*always-update*
-      (let [a1 (.' c :props.argv)
-            a2 (.' nextprops :argv)]
-        (not (util/equal-args a1 a2)))))
-
-(defn add-input-methods [spec]
-  (doto spec
-    (.! :componentDidUpdate #(this-as c (input-set-value c)))
-    (.! :componentWillUnmount #(this-as c (input-unmount c)))))
-
-(defn wrap-component [comp extras name]
-  (let [input? (input-component? comp)
-        input-setup (if input? input-render-setup)
-        spec #js{:render
-                 #(this-as C (wrapped-render C comp extras input-setup))
-                 :shouldComponentUpdate
-                 #(this-as C (wrapped-should-update C %1 %2))
-                 :displayName (or name "ComponentWrapper")}]
-    (when input?
-      (add-input-methods spec))
-    (.' js/React createClass spec)))
+(defn reagent-input [argv comp jsprops first-child]
+  (when (nil? reagent-input-class)
+    (set! reagent-input-class
+          (comp/create-class input-spec)))
+  (reagent-input-class argv comp jsprops first-child))
 
 
 ;;; Conversion from Hiccup forms
@@ -180,49 +150,61 @@
     [tag (when (or id class')
            [id class'])]))
 
-(defn get-wrapper [tag]
-  (let [[comp id-class] (parse-tag tag)]
-    (wrap-component comp id-class (str tag))))
-
-(def cached-wrapper (util/memoize-1 get-wrapper))
-
-(declare create-class)
-
 (defn fn-to-class [f]
+  (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
-        res (create-class withrender)
+        res (comp/create-class withrender)
         wrapf (util/cached-react-class res)]
     (util/cache-react-class f wrapf)
     wrapf))
 
 (defn as-class [tag]
-  (if (hiccup-tag? tag)
-    (cached-wrapper tag)    
-    (let [cached-class (util/cached-react-class tag)]
-      (if-not (nil? cached-class)
-        cached-class
-        (if (.' js/React isValidElement tag)
-          (util/cache-react-class tag (wrap-component tag nil nil))
-          (fn-to-class tag))))))
+  (if-some [cached-class (util/cached-react-class tag)]
+    cached-class
+    (fn-to-class tag)))
 
 (defn get-key [x]
   (when (map? x) (get x :key)))
 
-(defn vec-to-comp [v level]
-  (assert (pos? (count v)) "Hiccup form should not be empty")
-  (assert (valid-tag? (nth v 0))
-          (str "Invalid Hiccup form: " (pr-str v)))
-  (let [c (as-class (nth v 0))
-        jsprops #js{:argv v
-                    :level level}]
-    (let [k (-> v meta get-key)
-          k' (if (nil? k)
-               (-> v (nth 1 nil) get-key)
-               k)]
-      (when-not (nil? k')
-        (.! jsprops :key k')))
+(defn reag-element [tag v]
+  (let [c (as-class tag)
+        jsprops #js{:argv v}]
+    (let [key (if-some [k (some-> (meta v) get-key)]
+                k
+                (-> v (nth 1 nil) get-key))]
+      (some->> key (.! jsprops :key)))
     (.' js/React createElement c jsprops)))
+
+(def cached-parse (util/memoize-1 parse-tag))
+
+(declare as-element)
+
+(defn native-element [tag argv]
+  (when (hiccup-tag? tag)
+    (let [[comp id-class] (cached-parse tag)]
+      (let [props (nth argv 1 nil)
+            hasprops (or (nil? props) (map? props))
+            jsprops (convert-props (if hasprops props) id-class)
+            first-child (if hasprops 2 1)]
+        (if (input-component? comp)
+          (-> [reagent-input argv comp jsprops first-child]
+              (with-meta (meta argv))
+              as-element)
+          (let [p (if-some [key (some-> (meta argv) get-key)]
+                    (doto (if (nil? jsprops) #js{} jsprops)
+                      (.! :key key))
+                    jsprops)]
+            (make-element argv comp p first-child)))))))
+
+(defn vec-to-elem [v]
+  (assert (pos? (count v)) "Hiccup form should not be empty")
+  (let [tag (nth v 0)]
+    (assert (valid-tag? tag)
+            (str "Invalid Hiccup form: " (pr-str v)))
+    (if-some [ne (native-element tag v)]
+      ne
+      (reag-element tag v))))
 
 (def seq-ctx #js{})
 
@@ -234,41 +216,35 @@
 
 (declare expand-seq)
 
-(defn as-component
-  ([x] (as-component x 0))
-  ([x level]
-     (cond (string? x) x
-           (vector? x) (vec-to-comp x level)
-           (seq? x) (if (dev?)
-                      (if (nil? ratom/*ratom-context*)
-                        (expand-seq x level)
-                        (let [s (ratom/capture-derefed
-                                 #(expand-seq x level)
-                                 seq-ctx)]
-                          (when (ratom/captured seq-ctx)
-                            (warn-on-deref x))
-                          s))
-                      (expand-seq x level))
-           true x)))
+(defn as-element [x]
+  (cond (string? x) x
+        (vector? x) (vec-to-elem x)
+        (seq? x) (if (dev?)
+                   (if (nil? ratom/*ratom-context*)
+                     (expand-seq x)
+                     (let [s (ratom/capture-derefed
+                              #(expand-seq x)
+                              seq-ctx)]
+                       (when (ratom/captured seq-ctx)
+                         (warn-on-deref x))
+                       s))
+                   (expand-seq x))
+        true x))
 
-(defn create-class [spec]
-  (comp/create-class spec as-component))
-
-(defn expand-seq [s level]
-  (let [a (into-array s)
-        level' (inc level)]
+(defn expand-seq [s]
+  (let [a (into-array s)]
     (dotimes [i (alength a)]
-      (aset a i (as-component (aget a i) level')))
+      (aset a i (as-element (aget a i))))
     a))
 
-(defn make-element [argv comp jsprops first-child level]
+(defn make-element [argv comp jsprops first-child]
   (if (== (count argv) (inc first-child))
     ;; Optimize common case of one child
     (.' js/React createElement comp jsprops
-        (as-component (nth argv first-child) level))
+        (as-element (nth argv first-child)))
     (.apply (.' js/React :createElement) nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                           (.push a (as-component v level)))
+                           (.push a (as-element v)))
                          a)
                        #js[comp jsprops] argv))))

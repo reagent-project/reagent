@@ -1,14 +1,14 @@
 (ns reagentdemo.news.undodemo
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :refer-macros [.' .! fvar]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :refer-macros [get-source]]
-            [reagentdemo.page :refer [title link page-map]]
+            [reagentdemo.syntax :as s :include-macros true]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc :as todomvc]))
 
-(def funmap (-> ::this get-source common/fun-map))
-(def src-for (partial common/src-for funmap))
+(def url "news/cloact-reagent-undo-demo.html")
+(def title "Cloact becomes Reagent: Undo is trivial")
 
 (def state todomvc/todos)
 
@@ -36,8 +36,8 @@
 
 (defn undo-demo []
   [demo-component {:comp todomvc-with-undo
-                   :src (src-for [:state :undo-list :undo :save-state
-                                  :undo-button :todomvc-with-undo])}])
+                   :src (s/src-of [:state :undo-list :undo :save-state
+                                   :undo-button :todomvc-with-undo])}])
 
 (def undo-demo-cleanup
   (with-meta undo-demo {:component-will-unmount
@@ -46,10 +46,9 @@
                           (remove-watch state ::undo-watcher))}))
 
 (defn main [{:keys [summary]}]
-  (let [head "Cloact becomes Reagent: Undo is trivial"]
+  (let [head title]
     [:div.reagent-demo
-     [:h1 [link {:href (fvar main)} head]]
-     [title head]
+     [:h1 [link {:href url} head]]
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
 
@@ -65,7 +64,7 @@
       search-and-replace should suffice."]
 
       (if summary
-        [link {:href (fvar main)
+        [link {:href url
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
@@ -86,5 +85,4 @@
 
          [undo-demo-cleanup]])]]))
 
-(swap! page-map assoc
-       "news/cloact-reagent-undo-demo.html" (fvar main))
+(tools/register-page url (fn [] [main]) title)

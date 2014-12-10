@@ -8,6 +8,11 @@
 
 ;;; Update batching
 
+(defonce mount-count 0)
+
+(defn next-mount-count []
+  (set! mount-count (inc mount-count)))
+
 (defn fake-raf [f]
   (js/setTimeout f 16))
 
@@ -21,14 +26,14 @@
           (.' w :msRequestAnimationFrame)
           fake-raf))))
 
-(defn compare-levels [c1 c2]
-  (- (.' c1 :props.level)
-     (.' c2 :props.level)))
+(defn compare-mount-order [c1 c2]
+  (- (.' c1 :cljsMountOrder)
+     (.' c2 :cljsMountOrder)))
 
 (defn run-queue [a]
-  ;; sort components by level, to make sure parents
+  ;; sort components by mount order, to make sure parents
   ;; are rendered before children
-  (.sort a compare-levels)
+  (.sort a compare-mount-order)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (.' c :cljsIsDirty)

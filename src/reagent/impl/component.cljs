@@ -1,4 +1,3 @@
-
 (ns reagent.impl.component
   (:require [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -29,13 +28,16 @@
 (defn set-state [this new-state]
   (swap! (state-atom this) merge new-state))
 
+;; ugly circular dependency
+(defn as-element [x]
+  (js/reagent.impl.template.as-element x))
 
 ;;; Rendering
 
 (defn do-render [c]
   (binding [*current-component* c]
     (let [f (.' c :cljsRender)
-          _ (assert (util/clj-ifn? f))
+          _ (assert (ifn? f))
           p (.' c :props)
           res (if (nil? (.' c :componentFunction))
                 (f c)
@@ -49,7 +51,7 @@
                     5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                     (apply f (subvec argv 1)))))]
       (if (vector? res)
-        (.' c asComponent res (.' p :level))
+        (as-element res)
         (if (ifn? res)
           (do
             (.! c :cljsRender res)
@@ -58,6 +60,13 @@
 
 
 ;;; Method wrapping
+
+(def static-fns {:render
+                 (fn []
+                   (this-as c
+                            (if-not *non-reactive*
+                              (batch/run-reactively c #(do-render c))
+                              (do-render c))))})
 
 (defn custom-wrapper [key f]
   (case key
@@ -83,7 +92,9 @@
                    (let [old-argv (.' c :props.argv)
                          new-argv (.' nextprops :argv)]
                      (if (nil? f)
-                       (not (util/equal-args old-argv new-argv))
+                       (or (nil? old-argv)
+                           (nil? new-argv)
+                           (not= old-argv new-argv))
                        (f c old-argv new-argv))))))
 
     :componentWillUpdate
@@ -95,6 +106,13 @@
     (fn [oldprops]
       (this-as c
                (f c (.' oldprops :argv))))
+
+    :componentWillMount
+    (fn []
+      (this-as c
+               (.! c :cljsMountOrder (batch/next-mount-count))
+               (when-not (nil? f)
+                 (f c))))
 
     :componentWillUnmount
     (fn []
@@ -129,6 +147,7 @@
       (or wrap (default-wrapper f)))))
 
 (def obligatory {:shouldComponentUpdate nil
+                 :componentWillMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-camel (util/memoize-1 util/dash-to-camel))
@@ -144,21 +163,18 @@
 (defn add-render [fun-map render-f]
   (assoc fun-map
     :cljsRender render-f
-    :render (if-not *non-reactive*
-              (fn []
-                (this-as c
-                         (batch/run-reactively c #(do-render c))))
-              (fn [] (this-as c (do-render c))))))
+    :render (:render static-fns)))
 
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
                        (:render fun-map))
-        _ (assert (util/clj-ifn? render-fun)
+        _ (assert (ifn? render-fun)
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
-        name (or (:displayName fun-map)
-                 (.' render-fun :displayName)
-                 (.' render-fun :name))
+        name (str (or (:displayName fun-map)
+                      (.' render-fun :displayName)
+                      (.' render-fun :name)
+                      ""))
         name' (if (empty? name) (str (gensym "reagent")) name)
         fmap (-> fun-map
                  (assoc :displayName name')
@@ -181,13 +197,12 @@
       map-to-js))
 
 (defn create-class
-  [body as-component]
+  [body]
   (assert (map? body))
   (let [spec (cljsify body)
-        _ (.! spec :asComponent (dont-bind as-component))
         res (.' js/React createClass spec)
         f (fn [& args]
-            (as-component (apply vector res args)))]
+            (as-element (apply vector res args)))]
     (util/cache-react-class f res)
     (util/cache-react-class res res)
     f))

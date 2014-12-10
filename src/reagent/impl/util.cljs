@@ -76,13 +76,6 @@
   IHash
   (-hash [_] (hash [f args])))
 
-; patch for CLJS-777; Can be replaced with clojure.core/ifn? after updating
-; ClojureScript to a version that includes the fix:
-; https://github.com/clojure/clojurescript/commit/525154f2a4874cf3b88ac3d5755794de425a94cb
-(defn clj-ifn? [x]
-  (or (ifn? x)
-      (satisfies? IMultiFn x)))
-
 (defn- merge-class [p1 p2]
   (let [class (when-let [c1 (:class p1)]
                 (when-let [c2 (:class p2)]
@@ -107,101 +100,88 @@
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
 
-(declare ^:dynamic *always-update*)
+(def ^:dynamic *always-update* false)
 
-(def doc-node-type 9)
-(def react-id-name "data-reactid")
+(defonce roots (atom {}))
 
-(defn get-react-node [cont]
-  (when-not (nil? cont)
-    (if (== doc-node-type (.' cont :nodeType))
-      (.' cont :documentElement)
-      (.' cont :firstChild))))
-
-(defn get-root-id [cont]
-  (some-> (get-react-node cont)
-          (.' getAttribute react-id-name)))
-
-(def roots (atom {}))
-
-(defn re-render-component [comp container]
+(defn clear-container [node]
+  ;; If render throws, React may get confused, and throw on
+  ;; unmount as well, so try to force React to start over.
   (try
-    (.' js/React render (comp) container)
+    (.' js/React unmountComponentAtNode node)
     (catch js/Object e
-      (do
-        (try
-          (.' js/React unmountComponentAtNode container)
-          (catch js/Object e
-            (log e)))
-        (when-let [n (get-react-node container)]
-          (.' n removeAttribute react-id-name)
-          (.! n :innerHTML ""))
-        (throw e)))))
+      (do (log "Error unmounting:")
+          (log e)))))
 
 (defn render-component [comp container callback]
-  (.' js/React render (comp) container
-       (fn []
-         (let [id (get-root-id container)]
-           (when-not (nil? id)
-             (swap! roots assoc id
-                    #(re-render-component comp container))))
-         (when-not (nil? callback)
-           (callback)))))
+  (try
+    (binding [*always-update* true]
+      (.' js/React render (comp) container
+          (fn []
+            (binding [*always-update* false]
+              (swap! roots assoc container [comp container])
+              (if (some? callback)
+                (callback))))))
+    (catch js/Object e
+      (do (clear-container container)
+          (throw e)))))
+
+(defn re-render-component [comp container]
+  (render-component comp container nil))
 
 (defn unmount-component-at-node [container]
-  (let [id (get-root-id container)]
-    (when-not (nil? id)
-      (swap! roots dissoc id)))
+  (swap! roots dissoc container)
   (.' js/React unmountComponentAtNode container))
 
 (defn force-update-all []
-  (binding [*always-update* true]
-    (doseq [f (vals @roots)]
-      (f)))
+  (doseq [v (vals @roots)]
+    (apply re-render-component v))
   "Updated")
 
-;;; Helpers for shouldComponentUpdate
 
-(defn equal-args [v1 v2]
-  (= v1 v2))
+;;; Wrapper
 
-;; (def -not-found (js-obj))
+(deftype Wrapper [^:mutable state callback ^:mutable changed]
 
-;; (defn identical-ish? [x y]
-;;   (or (keyword-identical? x y)
-;;       (and (or (symbol? x)
-;;                (identical? (type x) partial-ifn))
-;;            (= x y))))
+  IAtom
 
-;; (defn shallow-equal-maps [x y]
-;;   ;; Compare two maps, using identical-ish? on all values
-;;   (or (identical? x y)
-;;       (and (map? x)
-;;            (map? y)
-;;            (== (count x) (count y))
-;;            (reduce-kv (fn [res k v]
-;;                         (let [yv (get y k -not-found)]
-;;                           (if (or (identical? v yv)
-;;                                   (identical-ish? v yv)
-;;                                   ;; Handle :style maps specially
-;;                                   (and (keyword-identical? k :style)
-;;                                        (shallow-equal-maps v yv)))
-;;                             res
-;;                             (reduced false))))
-;;                       true x))))
+  IDeref
+  (-deref [this] state)
 
-;; (defn equal-args [v1 v2]
-;;   ;; Compare two vectors using identical-ish?
-;;   (assert (vector? v1))
-;;   (assert (vector? v2))
-;;   (or (identical? v1 v2)
-;;       (and (== (count v1) (count v2))
-;;            (reduce-kv (fn [res k v]
-;;                         (let [v' (nth v2 k)]
-;;                           (if (or (identical? v v')
-;;                                   (identical-ish? v v')
-;;                                   (and (map? v)
-;;                                        (shallow-equal-maps v v')))
-;;                             res
-;;                             (reduced false))))
-;;                       true v1))))
+  IReset
+  (-reset! [this newval]
+           (set! changed true)
+           (set! state newval)
+           (callback newval)
+           state)
+
+  ISwap
+  (-swap! [a f]
+    (-reset! a (f state)))
+  (-swap! [a f x]
+    (-reset! a (f state x)))
+  (-swap! [a f x y]
+    (-reset! a (f state x y)))
+  (-swap! [a f x y more]
+    (-reset! a (apply f state x y more)))
+
+  IEquiv
+  (-equiv [_ other]
+          (and (instance? Wrapper other)
+               ;; If either of the wrappers have changed, equality
+               ;; cannot be relied on.
+               (not changed)
+               (not (.-changed other))
+               (= state (.-state other))
+               (= callback (.-callback other))))
+
+  IPrintWithWriter
+  (-pr-writer [_ writer opts]
+    (-write writer "#<wrap: ")
+    (pr-writer state writer opts)
+    (-write writer ">")))
+
+(defn make-wrapper [value callback-fn args]
+  (Wrapper. value
+            (partial-ifn. callback-fn args nil)
+            false))

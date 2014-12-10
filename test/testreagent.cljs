@@ -26,7 +26,8 @@
     (let [div (add-test-div "_testreagent")]
       (let [comp (reagent/render-component comp div #(f comp div))]
         (reagent/unmount-component-at-node div)
-        (reagent/flush)))))
+        (reagent/flush)
+        (.removeChild (.-body js/document) div)))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
@@ -44,8 +45,12 @@
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
-          (is (found-in #"div in really-simple" div))))
-      (is (= 2 @ran)))))
+          (is (found-in #"div in really-simple" div))
+          (reagent/flush)
+          (is (= 2 @ran))
+          (reagent/force-update-all)
+          (is (= 3 @ran))))
+      (is (= 3 @ran)))))
 
 (deftest test-simple-callback
   (when isClient
@@ -92,8 +97,7 @@
 
           (reagent/set-state @self {:foo "you"})
           (rflush)
-          (is (found-in #"hi you" div))
-          ))
+          (is (found-in #"hi you" div))))
       (is (= 4 @ran)))))
 
 (deftest test-ratom-change
@@ -222,7 +226,10 @@
           (is (= @child-ran 6))
           (do (reset! child-props {:on-change (reagent/partial f1)})
               (rflush))
-          (is (= @child-ran 7)))))))
+          (is (= @child-ran 7))
+
+          (reagent/force-update-all)
+          (is (= @child-ran 8)))))))
 
 (deftest dirty-test
   (when isClient
@@ -344,3 +351,91 @@
          (reagent/render-to-static-markup
           [:div.bar {:dangerously-set-inner-HTML
                      {:__html "<p>foobar</p>"}} ]))))
+
+(deftest test-return-class
+  (when isClient
+    (let [ran (atom 0)
+          top-ran (atom 0)
+          comp (fn []
+                 (swap! top-ran inc)
+                 (reagent/create-class
+                  {:component-did-mount #(swap! ran inc)
+                   :render
+                   (fn [this]
+                     (let [props (reagent/props this)]
+                       (is (map? props))
+                       (is (= props ((reagent/argv this) 1)))
+                       (is (= 1 (first (reagent/children this))))
+                       (is (= 1 (count (reagent/children this))))
+                       (swap! ran inc)
+                       [:div (str "hi " (:foo props) ".")]))}))
+          prop (atom {:foo "you"})
+          parent (fn [] [comp @prop 1])]
+      (with-mounted-component [parent]
+        (fn [C div]
+          (swap! ran inc)
+          (is (found-in #"hi you" div))
+          (is (= 1 @top-ran))
+          (is (= 3 @ran))
+
+          (swap! prop assoc :foo "me")
+          (reagent/flush)
+          (is (found-in #"hi me" div))
+          (is (= 1 @top-ran))
+          (is (= 4 @ran)))))))
+
+(deftest test-return-class-fn
+  (when isClient
+    (let [ran (atom 0)
+          top-ran (atom 0)
+          comp (fn []
+                 (swap! top-ran inc)
+                 (reagent/create-class
+                  {:component-did-mount #(swap! ran inc)
+                   :component-function
+                   (fn [p a]
+                     (is (= 1 a))
+                     (swap! ran inc)
+                     [:div (str "hi " (:foo p) ".")])}))
+          prop (atom {:foo "you"})
+          parent (fn [] [comp @prop 1])]
+      (with-mounted-component [parent]
+        (fn [C div]
+          (swap! ran inc)
+          (is (found-in #"hi you" div))
+          (is (= 1 @top-ran))
+          (is (= 3 @ran))
+
+          (swap! prop assoc :foo "me")
+          (reagent/flush)
+          (is (found-in #"hi me" div))
+          (is (= 1 @top-ran))
+          (is (= 4 @ran)))))))
+
+(defn rstr [react-elem]
+  (reagent/render-to-static-markup react-elem))
+
+(deftest test-create-element
+  (let [ae reagent/as-element
+        ce reagent/create-element]
+    (is (= (rstr (ae [:div]))
+           (rstr (ce "div"))))
+    (is (= (rstr (ae [:div]))
+           (rstr (ce "div" nil))))
+    (is (= (rstr (ae [:div "foo"]))
+           (rstr (ce "div" nil "foo"))))
+    (is (= (rstr (ae [:div "foo" "bar"]))
+           (rstr (ce "div" nil "foo" "bar"))))
+    (is (= (rstr (ae [:div "foo" "bar" "foobar"]))
+           (rstr (ce "div" nil "foo" "bar" "foobar"))))
+
+    (is (= (rstr (ae [:div.foo "bar"]))
+           (rstr (ce "div" #js{:className "foo"} "bar"))))
+
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ce "div" nil (ce "div" nil "foo")))))
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ce "div" nil (ae [:div "foo"])))))
+    (is (= (rstr (ae [:div [:div "foo"]]))
+           (rstr (ae [:div (ce "div" nil "foo")]))))))
+

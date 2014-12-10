@@ -1,12 +1,13 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.debug :refer (dbg)]))
+  (:require-macros [reagent.debug :refer (dbg log dev?)])
+  (:require [reagent.impl.util :as util]))
 
 (declare ^:dynamic *ratom-context*)
 
-(def debug false)
+(defonce debug false)
 
-(def -running (clojure.core/atom 0))
+(defonce -running (clojure.core/atom 0))
 
 (defn running [] @-running)
 
@@ -87,33 +88,47 @@
   ([x] (RAtom. x nil nil nil))
   ([x & {:keys [meta validator]}] (RAtom. x meta validator nil)))
 
-(deftype RCursor [path ratom]
+(declare make-reaction)
+
+(defn peek-at [a path]
+  (binding [*ratom-context* nil]
+    (get-in @a path)))
+
+
+(deftype RCursor [path ratom setf ^:mutable reaction]
   IAtom
 
   IEquiv
-  (-equiv [o other] (identical? o other))
+  (-equiv [o other]
+    (and (instance? RCursor other)
+         (= path (.-path other))
+         (= ratom (.-ratom other))
+         (= setf (.-setf other))))
 
   IDeref
   (-deref [this]
-    (get-in @ratom path))
+    (if (nil? *ratom-context*)
+      (get-in @ratom path)
+      (do
+        (if (nil? reaction)
+          (set! reaction (make-reaction #(get-in @ratom path))))
+        @reaction)))
 
   IReset
   (-reset! [a new-value]
-    (swap! ratom assoc-in path new-value))
+    (if (nil? setf)
+      (swap! ratom assoc-in path new-value)
+      (setf new-value)))
 
   ISwap
   (-swap! [a f]
-    (swap! ratom update-in path f))
+    (-reset! a (f (peek-at ratom path))))
   (-swap! [a f x]
-    (swap! ratom update-in path f x))
+    (-reset! a (f (peek-at ratom path) x)))
   (-swap! [a f x y]
-    (swap! ratom update-in path f x y))
+    (-reset! a (f (peek-at ratom path) x y)))
   (-swap! [a f x y more]
-    (swap! ratom update-in path f x y more))
-
-  IMeta
-  (-meta [_]
-    (-meta ratom))
+    (-reset! a (apply f (peek-at ratom path) x y more)))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
@@ -136,11 +151,14 @@
     (-remove-watch ratom key))
 
   IHash
-  (-hash [this] (goog/getUid this)))
+  (-hash [this] (hash [ratom path setf])))
 
 (defn cursor
-  [path ra]
-  (RCursor. path ra))
+  ([path ra]
+     (RCursor. path ra nil nil))
+  ([path ra setf args]
+     (RCursor. path ra
+               (util/partial-ifn. setf args nil) nil)))
 
 (defprotocol IDisposable
   (dispose! [this]))

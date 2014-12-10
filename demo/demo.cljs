@@ -1,8 +1,8 @@
 (ns demo
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.interop :as i :refer-macros [.' .! fvar]]
+            [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
-            [reagentdemo.page :as page :refer [page-map page link prefix]]
+            [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
@@ -10,9 +10,7 @@
 
 (i/import-react)
 
-(swap! page-map assoc
-       "index.html" (fvar intro/main)
-       "news/index.html" (fvar news/main))
+(def test-results-comp (atom nil))
 
 (def github {:href "https://github.com/reagent-project/reagent"})
 
@@ -23,48 +21,31 @@
           :alt "Fork me on GitHub"
           :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"}]])
 
+(def index-page "index.html")
+(def news-page "news/index.html")
+
+(tools/register-page index-page
+                     (fn [] [intro/main])
+                     "Reagent: Minimalistic React for ClojureScript")
+(tools/register-page news-page
+                     (fn [] [news/main])
+                     "Reagent news")
+
 (defn demo []
   [:div
    [:div.nav
     [:ul.nav
-     [:li.brand [link {:href (fvar intro/main)} "Reagent:"]]
-     [:li [link {:href (fvar intro/main)} "Intro"]]
-     [:li [link {:href (fvar news/main)} "News"]]
+     [:li.brand [link {:href index-page} "Reagent:"]]
+     [:li [link {:href index-page} "Intro"]]
+     [:li [link {:href news-page} "News"]]
      [:li [:a github "GitHub"]]]]
-   (let [comp (get @page-map @page (fvar intro/main))]
-     [comp])
+   (when @test-results-comp [@test-results-comp])
+   [tools/page-content]
    [github-badge]])
 
-(defn ^:export mountdemo [p]
-  (when p (page/set-start-page p))
-  (reagent/render-component [demo] (.-body js/document)))
 
-(defn gen-page [p timestamp]
-  (reset! page p)
-  (let [body (reagent/render-component-to-string [demo])
-        title @page/title-atom
-        load-page (case p "index.html" "" p)]
-    (str "<!doctype html>
-<html>
-  <head>
-    <meta charset='utf-8'>
-    <title>" title "</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <link rel='stylesheet' href='" (prefix "assets/demo.css") timestamp "'>
-  </head>
-  <body>
-    " body "
-    <script type='text/javascript'
-      src='" (prefix "assets/demo.js") timestamp "'></script>
-    <script type='text/javascript'>
-      setTimeout(function() {demo.mountdemo('" load-page "')}, 200);
-    </script>
-  </body>
-</html>")))
-
-(defn ^:export genpages []
-  (let [timestamp (str "?" (.now js/Date))]
-    (->> (keys @page-map)
-         (map #(vector % (gen-page % timestamp)))
-         (into {})
-         clj->js)))
+(defn start! [{:keys [test-results]}]
+  (reset! test-results-comp test-results)
+  (tools/start! {:body (fn [] [demo])
+                 :css-infiles ["site/public/css/main.css"
+                               "site/public/css/examples.css"]}))

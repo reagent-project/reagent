@@ -4,7 +4,8 @@
                    [reagent.ratom :refer [run! reaction]]
                    [reagent.debug :refer [dbg]])
   (:require [cemerick.cljs.test :as t]
-            [reagent.ratom :as rv]))
+            [reagent.ratom :as rv]
+            [reagent.core :as r]))
 
 ;; this repeats all the atom tests but using cursors instead
 
@@ -90,8 +91,8 @@
     (let [!x-base (rv/atom {:a {:b 0 :c {:d 0}}})
           !x (rv/cursor [:a :c :d] !x-base)
           !co (rv/make-reaction #(inc @!x) :auto-run true)]
-      (is (= 1 @!co) "CO has correct value on first deref") 
-      (swap! !x inc) 
+      (is (= 1 @!co) "CO has correct value on first deref")
+      (swap! !x inc)
       (is (= 2 @!co) "CO auto-updates")
       (is (= {:a {:b 0 :c {:d 1}}} @!x-base))
       (dispose !co))
@@ -118,31 +119,31 @@
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 2))
       (is (= @c-changed 0))
       (is (= @a-base {:test {:unsubscribe -1 :value 42}}))
-             
+
       (reset! a 2)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
       (is (= @a-base {:test {:unsubscribe 2 :value 42}}))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @a-base {:test {:unsubscribe 3 :value 42}}))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @a-base {:test {:unsubscribe 3 :value 42}}))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (is (= @a-base {:test {:unsubscribe -1 :value 42}}))
@@ -205,19 +206,19 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 3 runs) (running)))
+      (is (= (+ 4 runs) (running)))
       (is (= @count-b 1))
       (is (= {:a 0 :b 0} @a-base))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 3 runs) (running)) "still running")
+      (is (= (+ 4 runs) (running)) "still running")
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 2 runs) (running)) "less running count")
+      (is (= (+ 3 runs) (running)) "less running count")
       (is (= {:a 2 :b 0} @a-base))
 
       (reset! disposed nil)
@@ -256,3 +257,50 @@
     (is (= {:set 11} @a-base))
     (is (= runs (running)))))
 
+
+(deftest test-equality
+  (let [a (atom {:foo "bar"})
+        a1 (atom {:foo "bar"})
+        c (r/cursor [:foo] a)
+        c2 (r/cursor [:foo] a swap! a assoc :foo)
+        c3 (r/cursor [:foo] a swap! a assoc :foobar)]
+    (is (= @c "bar"))
+    (is (= @c2 "bar"))
+    (is (= @c3 "bar"))
+    (is (= c (r/cursor [:foo] a)))
+    (is (not= c (r/cursor [:foo] a1)))
+    (is (not= c (r/cursor [:foobar] a)))
+    (is (= c2 (r/cursor [:foo] a swap! a assoc :foo)))
+    (is (not= c2 (r/cursor [:foo] a swap! a assoc :foobar)))
+    (is (not= c2 (r/cursor [:foo] a1 swap! a assoc :foo)))
+    (is (not= c2 (r/cursor [:foo] a swap! a1 assoc :foo)))
+
+    (reset! c2 "foobar")
+    (is (= @c2 "foobar"))
+    (is (= @c "foobar"))
+    (is (= @a {:foo "foobar"}))
+
+    (reset! c "bar")
+    (is (= @c2 "bar"))
+    (is (= @c "bar"))
+    (is (= @a {:foo "bar"}))
+    (is (= c (r/cursor [:foo] a)))
+    (is (= c2 (r/cursor [:foo] a swap! a assoc :foo)))
+
+    (reset! c3 "foo")
+    (is (= @a {:foo "bar" :foobar "foo"}))))
+
+(deftest test-wrap
+  (let [a (atom {:foo "bar"})
+        w (r/wrap (:foo @a) swap! a assoc :foo)]
+    (is (= @w "bar"))
+    (is (= w (r/wrap "bar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "foobar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "bar" swap! a assoc :foobar)))
+    (is (not= w (r/wrap "bar" reset! a assoc :foo)))
+
+    (reset! w "foobar")
+    (is (= @w "foobar"))
+    (is (= @a {:foo "foobar"}))
+    (is (not= w (r/wrap "bar" swap! a assoc :foo)))
+    (is (not= w (r/wrap "foobar" swap! a assoc :foo)))))

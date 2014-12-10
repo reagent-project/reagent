@@ -49,7 +49,38 @@
     (assert field (str "Field name must start with - in " field))
     `(aset ~object ~@names ~value)))
 
-(def react-import-ns (atom nil))
+(def js-imports (atom nil))
+
+(defmacro import-js
+  [dev-src min-src sym-name]
+  (assert (string? dev-src))
+  (assert (string? min-src))
+  (assert (string? sym-name))
+  (let [impns (get @js-imports sym-name)]
+    (if (and (not (nil? impns))
+             (not= *ns* impns))
+      ;; Our symbol was already imported in another namespace; so we avoid
+      ;; duplicate imports.
+      true
+      (let [srcfile (if *assert* dev-src min-src)
+            sym sym-name
+            src (slurp (io/resource srcfile))]
+        (swap! js-imports assoc sym-name *ns*)
+        `(js/eval ~(str "if (typeof " sym " != 'undefined' && "
+                      "typeof console != 'undefined') { "
+                      "console.log('" sym " is already defined'); "
+                      "} else { (function (exports, module) { "
+                      src "; \n
+                      if (typeof " sym " === 'undefined' && "
+                      "typeof console != 'undefined') { "
+                      "console.log('" sym " not defined in " srcfile "');
+                      }
+                      if (typeof global != 'undefined') {
+                      global." sym " = " sym ";
+                      } else if (typeof window != 'undefined') {
+                      window." sym " = " sym ";
+                      } })(); } \n
+                      //@ sourceURL=" srcfile "\n"))))))
 
 (defmacro import-react
   []
@@ -58,28 +89,7 @@
   (or adding react.js in a script tag). This may be more convenient when
   using :optimizations :none, since that doesn't take :preamble into account.
   Imports minimized version of React if :elide-asserts is true."
-  (if-not (or (nil? @react-import-ns)
-              (= *ns* @react-import-ns))
-    ;; React was already imported in another namespace; so we avoid
-    ;; duplicate imports.
-    true
-    (let [srcfile (if *assert* "reagent/react.js"
-                    "reagent/react.min.js")
-          src (slurp (io/resource srcfile))]
-      (if (nil? @react-import-ns)
-        (reset! react-import-ns *ns*))
-      `(js/eval ~(str "if (typeof React != 'undefined' &&
-                      typeof console != 'undefined') {
-                      console.log('WARNING: React is already defined');
-                      }"
-                      src "; \n"
-                      "if (typeof module != 'undefined' &&
-                      typeof global != 'undefined' &&
-                      module.exports && module.exports.DOM) {
-                      global.React = module.exports;
-                      } \n
-                      //@ sourceURL=" srcfile "\n")))))
-
+  `(import-js "reagent/react.js" "reagent/react.min.js" "React"))
 
 (defmacro fvar
   [f]

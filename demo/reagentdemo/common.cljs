@@ -1,38 +1,6 @@
 (ns reagentdemo.common
   (:require [reagent.core :as reagent :refer [atom]]
-            [reagent.debug :refer-macros [dbg println]]
-            [clojure.string :as string]
-            [reagentdemo.page :as rpage]
-            [reagentdemo.syntax :as syntax]))
-
-(def syntaxify (memoize syntax/syntaxify))
-
-(defn src-parts [src]
-  (string/split src #"\n(?=[(])"))
-
-(defn src-defs [parts]
-  (let [ws #"[^ \t]+"]
-    (into {} (for [x parts]
-               [(->> x (re-seq ws) second keyword) x]))))
-
-(def ns-src
-  "(ns example
-  (:require [reagent.core :as reagent :refer [atom]]))
-")
-
-(def nsr-src
-  "(ns example
-  (:require [reagent.core :as r :refer [atom]]))
-")
-
-(defn src-for-names [srcmap names]
-  (string/join "\n" (map srcmap names)))
-
-(defn fun-map [src]
-  (-> src src-parts src-defs (assoc :ns ns-src :nsr nsr-src)))
-
-(defn src-for [funmap defs]
-  [:pre (-> funmap (src-for-names defs) syntaxify)])
+            [reagent.debug :refer-macros [dbg println]]))
 
 (defn demo-component []
   (let [showing (atom true)]

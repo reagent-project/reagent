@@ -1,51 +1,89 @@
-PORT = 4562
 
-PROF = dev
-# PROF = prod,srcmap
-# PROF = prod
-
-CLJSBUILD = client
-CLJSDIRS = src test
-
-VERSION = 0.4.3
 
 REACT_VERSION = 0.12.1
 
-all: buildrun
+PROF = 
+PORT = 3449
 
-run: openbrowser buildrun
+SITEDIR = outsite/public
+OUTPUTDIR = $(SITEDIR)/js/out
 
-leinbuild: setup
-	lein -o with-profile $(PROF) cljsbuild once $(CLJSBUILD)
 
-openbrowser:
-	(sleep 1 && open site/test.html) &
+# convenience shortcuts for continous building
+##############################################
 
-buildrun: setup
-	lein -o with-profile $(PROF) cljsbuild auto $(CLJSBUILD)
+# development build with auto-reloading
+run: figwheel
 
-runtest:
-	$(MAKE) run PROF=test,$(PROF)
+# development build with auto-reloading and site generation
+runsite:
+	@$(MAKE) run PROF=dev,site,$(PROF)
 
-runsite: setup
-	(sleep 3 && open "http://127.0.0.1:$(PORT)/$$(basename $$PWD)") &
+# production build with auto-rebuild
+runprod: clean
+	@$(MAKE) serve-site PROF=prod,$(PROF)
+
+# production build with auto-rebuild and testing
+runprodtest: clean
+	@$(MAKE) serve-site PROF=prod-test,$(PROF)
+
+clean:
+	lein clean
+
+
+## Subtargets
+
+figwheel: trigger-build
+	@echo "Will start figwheel server at: http://127.0.0.1:$(PORT)\n"
+	lein with-profile $(PROF), figwheel
+
+serve-site: trigger-build
+	@echo "Starting site at: http://127.0.0.1:$(PORT)/public\n"
 	( trap "kill 0" SIGINT SIGTERM EXIT; \
-	  ( cd .. && python -m SimpleHTTPServer $(PORT) & ); \
-	  lein -o with-profile $(PROF),prod cljsbuild auto $(CLJSBUILD) )
+	  ( cd $(SITEDIR)/.. && python -m SimpleHTTPServer $(PORT) & ); \
+	  lein with-profile $(PROF), cljsbuild auto )
 
-install: leinbuild
-	lein install
+trigger-build:
+        # always trigger build to make sure page-generation works
+	@echo "(ns empty.generated.ns)" > demo/empty.cljs
+	@(echo "/* Generated, do not modify */\n\n" && \
+            cat examples/todomvc/todos.css examples/simple/example.css)  \
+            > site/public/css/examples.css
 
-preclean:
-	rm -rf repl .repl target out
-	mkdir -p vendor/reagent
 
-clean: preclean
-	rm -rf news assets
-	lein -o clean
 
-setup: preclean
-	mkdir -p news assets
+## gh-pages support
+###################
+
+# build site and push upstream to the gh-pages branch
+push-gh-pages: build-gh-pages
+	git push origin gh-pages:gh-pages
+
+# build site into a gh-pages branch
+build-gh-pages: gen-site gh-pages-add
+
+gen-site: clean
+	lein with-profile prod cljsbuild once
+
+# copy contents of $(SITEDIR) to branch gh-pages
+gh-pages-add:
+        # sanity check
+	test -f $(SITEDIR)/index.html
+	test ! -e $(OUTPUTDIR)
+        # make sure gh-pages branch exists
+	git show-branch gh-pages || true | git mktree | \
+          xargs git commit-tree | xargs git branch gh-pages
+        # clone gh-pages branch, and commit site to that
+	cd $(SITEDIR) && \
+	rm -rf .git tmp && \
+	git clone ../.. -lnb gh-pages tmp && \
+	mv tmp/.git . && \
+	git add . && git commit -m "Updated" && \
+	git push && rm -rf .git tmp
+
+
+## Misc utilities
+#################
 
 show-outdated:
 	lein ancient :all
@@ -56,13 +94,7 @@ download-react:
 	curl -L "http://fb.me/react-$(REACT_VERSION).min.js" \
 		-o vendor/reagent/react.min.js
 
-gensite:
-	node bin/gen-site.js
-
-demobuild:
-	$(MAKE) PROF=prod,demo leinbuild
-
-buildsite: demobuild gensite
+VERSION := `sed -n -e '/(defproject reagent/ s/.*"\(.*\)"/\1/p' project.clj`
 
 setversion:
 	version=$(VERSION); \
