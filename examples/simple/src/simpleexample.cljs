@@ -33,5 +33,5 @@
    [color-input]])
 
 (defn ^:export run []
-  (reagent/render-component (fn [] [simple-example])
+  (reagent/render-component [simple-example]
                             (.-body js/document)))
