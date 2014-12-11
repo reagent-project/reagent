@@ -47,5 +47,5 @@
 (defn start! [{:keys [test-results]}]
   (reset! test-results-comp test-results)
   (tools/start! {:body (fn [] [demo])
-                 :css-infiles ["site/public/css/main.css"
-                               "site/public/css/examples.css"]}))
+                 :css-infiles ["site/public/css/examples.css"
+                               "site/public/css/main.css"]}))

@@ -226,7 +226,7 @@
     (apply (.' path :join) paths)))
 
 (defn read-css []
-  (clojure.string/join "\\n"
+  (clojure.string/join "\n"
                        (map read-file (:css-infiles @config))))
 
 (defn write-resources [dir]
