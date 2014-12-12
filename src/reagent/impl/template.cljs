@@ -57,13 +57,14 @@
         :else (to-js-val x)))
 
 (defn set-id-class [props [id class]]
-  (let [pid (.' props :id)]
-    (.! props :id (if (some? pid) pid id))
-    (when (some? class)
-      (let [old (.' props :className)]
-        (.! props :className (if (some? old)
-                               (str class " " old)
-                               class))))))
+  (when (some? id)
+    (let [pid (.' props :id)]
+      (.! props :id (if (some? pid) pid id))))
+  (when (some? class)
+    (let [old (.' props :className)]
+      (.! props :className (if (some? old)
+                             (str class " " old)
+                             class)))))
 
 (defn convert-props [props id-class]
   (if (and (empty? props) (nil? id-class))
@@ -238,10 +239,13 @@
     a))
 
 (defn make-element [argv comp jsprops first-child]
-  (if (== (count argv) (inc first-child))
-    ;; Optimize common case of one child
-    (.' js/React createElement comp jsprops
-        (as-element (nth argv first-child)))
+  (case (- (count argv) first-child)
+    ;; Optimize cases of zero or one child
+    0 (.' js/React createElement comp jsprops)
+
+    1 (.' js/React createElement comp jsprops
+          (as-element (nth argv first-child)))
+
     (.apply (.' js/React :createElement) nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
