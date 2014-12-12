@@ -194,7 +194,8 @@
                  (s/src-of [:timing-wrapper :base-color :ncolors
                             :random-colors :to-rgb :tweak-color
                             :reset-random-colors :color-choose
-                            :ncolors-choose :palette :color-demo])]}]])]]))
+                            :ncolors-choose :color-plate
+                            :palette :color-demo])]}]])]]))
 
 (tools/register-page url (fn [] [main])
                      (str "Reagent: " title))
