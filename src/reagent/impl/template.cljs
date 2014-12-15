@@ -13,10 +13,6 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(def attr-aliases {:class "className"
-                   :for "htmlFor"
-                   :charset "charSet"})
-
 
 ;;; Common utilities
 
@@ -37,14 +33,12 @@
    (ifn? v) (fn [& args] (apply v args))
    :else v))
 
-(defn undash-prop-name [n]
-  (or (attr-aliases n)
-      (util/dash-to-camel n)))
-
 
 ;;; Props conversion
 
-(def prop-name-cache #js{})
+(def prop-name-cache #js{:class "className"
+                         :for "htmlFor"
+                         :charset "charSet"})
 
 (defn obj-get [o k]
   (when (.hasOwnProperty o k)
@@ -56,7 +50,8 @@
     x
     (if-let [s (obj-get prop-name-cache (name x))]
       s
-      (aset prop-name-cache (name x) (undash-prop-name x)))))
+      (aset prop-name-cache (name x)
+            (util/dash-to-camel x)))))
 
 (defn convert-prop-value [x]
   (cond (string? x) x
@@ -69,7 +64,7 @@
         :else (to-js-val x)))
 
 (defn set-id-class [props id-class]
-  (when-some [id (.' id-class :idName)]
+  (when-some [id (.' id-class :id)]
     (let [pid (.' props :id)]
       (.! props :id (if (some? pid) pid id))))
   (when-some [class (.' id-class :className)]
@@ -162,7 +157,7 @@
     (assert tag (str "Unknown tag: '" hiccup-tag "'"))
     #js{:name tag
         :hasIdClass (or (some? id) (some? class'))
-        :idName id
+        :id id
         :className class'}))
 
 (defn fn-to-class [f]
