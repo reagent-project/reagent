@@ -44,7 +44,19 @@
 
 ;;; Props conversion
 
-(def cached-prop-name (util/memoize-1 undash-prop-name))
+(def prop-name-cache #js{})
+
+(defn obj-get [o k]
+  (when (.hasOwnProperty o k)
+    (aget o k)))
+
+(defn cached-prop-name [x]
+  (if (or (string? x)
+          (not (implements? INamed x)))
+    x
+    (if-let [s (obj-get prop-name-cache (name x))]
+      s
+      (aset prop-name-cache (name x) (undash-prop-name x)))))
 
 (defn convert-prop-value [x]
   (cond (string? x) x
@@ -56,26 +68,26 @@
                             #js{} x)
         :else (to-js-val x)))
 
-(defn set-id-class [props [id class]]
-  (when (some? id)
+(defn set-id-class [props id-class]
+  (when-some [id (.' id-class :idName)]
     (let [pid (.' props :id)]
       (.! props :id (if (some? pid) pid id))))
-  (when (some? class)
+  (when-some [class (.' id-class :className)]
     (let [old (.' props :className)]
       (.! props :className (if (some? old)
                              (str class " " old)
                              class)))))
 
 (defn convert-props [props id-class]
-  (if (and (empty? props) (nil? id-class))
+  (if (and (empty? props) (not (.' id-class :hasIdClass)))
     nil
     (let [objprops
           (reduce-kv (fn [o k v]
-                       (let [pname (cached-prop-name k)]
-                         (aset o pname (convert-prop-value v)))
-                       o)
+                       (doto o
+                         (aset (cached-prop-name k)
+                               (convert-prop-value v))))
                      #js{} props)]
-      (when (some? id-class)
+      (when (.' id-class :hasIdClass)
         (set-id-class objprops id-class))
       objprops)))
 
@@ -148,8 +160,10 @@
         class' (when class
                  (string/replace class #"\." " "))]
     (assert tag (str "Unknown tag: '" hiccup-tag "'"))
-    [tag (when (or id class')
-           [id class'])]))
+    #js{:name tag
+        :hasIdClass (or (some? id) (some? class'))
+        :idName id
+        :className class'}))
 
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
@@ -177,16 +191,24 @@
       (some->> key (.! jsprops :key)))
     (.' js/React createElement c jsprops)))
 
-(def cached-parse (util/memoize-1 parse-tag))
+
+(def tag-name-cache #js{})
+
+(defn cached-parse [x]
+  (if-let [s (obj-get tag-name-cache (name x))]
+    s
+    (aset tag-name-cache (name x) (parse-tag x))))
+
 
 (declare as-element)
 
 (defn native-element [tag argv]
   (when (hiccup-tag? tag)
-    (let [[comp id-class] (cached-parse tag)]
+    (let [parsed (cached-parse tag)
+          comp (.' parsed :name)]
       (let [props (nth argv 1 nil)
             hasprops (or (nil? props) (map? props))
-            jsprops (convert-props (if hasprops props) id-class)
+            jsprops (convert-props (if hasprops props) parsed)
             first-child (if hasprops 2 1)]
         (if (input-component? comp)
           (-> [reagent-input argv comp jsprops first-child]
