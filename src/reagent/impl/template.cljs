@@ -17,8 +17,7 @@
 ;;; Common utilities
 
 (defn hiccup-tag? [x]
-  (or (keyword? x)
-      (symbol? x)
+  (or (implements? INamed x)
       (string? x)))
 
 (defn valid-tag? [x]
@@ -44,14 +43,14 @@
   (when (.hasOwnProperty o k)
     (aget o k)))
 
-(defn cached-prop-name [x]
-  (if (or (string? x)
-          (not (implements? INamed x)))
-    x
-    (if-let [s (obj-get prop-name-cache (name x))]
-      s
-      (aset prop-name-cache (name x)
-            (util/dash-to-camel x)))))
+(defn cached-prop-name [k]
+  (if (or (string? k)
+          (not (implements? INamed k)))
+    k
+    (if-let [k' (obj-get prop-name-cache (name k))]
+      k'
+      (aset prop-name-cache (name k)
+            (util/dash-to-camel k)))))
 
 (defn convert-prop-value [x]
   (cond (string? x) x
