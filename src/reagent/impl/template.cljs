@@ -24,14 +24,6 @@
   (or (hiccup-tag? x)
       (ifn? x)))
 
-(defn to-js-val [v]
-  (cond
-   (or (string? v) (number? v)) v
-   (implements? INamed v) (name v)
-   (coll? v) (clj->js v)
-   (ifn? v) (fn [& args] (apply v args))
-   :else v))
-
 
 ;;; Props conversion
 
@@ -44,8 +36,7 @@
     (aget o k)))
 
 (defn cached-prop-name [k]
-  (if (or (string? k)
-          (not (implements? INamed k)))
+  (if-not (implements? INamed k)
     k
     (if-let [k' (obj-get prop-name-cache (name k))]
       k'
@@ -53,37 +44,38 @@
             (util/dash-to-camel k)))))
 
 (defn convert-prop-value [x]
-  (cond (string? x) x
-        (number? x) x
+  (cond (or (string? x) (number? x) (fn? x)) x
+        (implements? INamed x) (name x)
         (map? x) (reduce-kv (fn [o k v]
                               (doto o
                                 (aset (cached-prop-name k)
-                                      (to-js-val v))))
+                                      (convert-prop-value v))))
                             #js{} x)
-        :else (to-js-val x)))
+        (coll? x) (clj->js x)
+        (ifn? x) (fn [& args] (apply x args))
+        true (clj->js x)))
 
-(defn set-id-class [props id-class]
-  (when-some [id (.' id-class :id)]
-    (let [pid (.' props :id)]
-      (.! props :id (if (some? pid) pid id))))
-  (when-some [class (.' id-class :className)]
-    (let [old (.' props :className)]
-      (.! props :className (if (some? old)
-                             (str class " " old)
-                             class)))))
+(defn set-id-class [props id class]
+  (let [p (if (nil? props) #js{} props)]
+    (when (and (some? id) (nil? (.' p :id)))
+      (.! p :id id))
+    (when (some? class)
+      (let [old (.' p :className)]
+        (.! p :className (if (some? old)
+                           (str class " " old)
+                           class))))
+    p))
 
 (defn convert-props [props id-class]
-  (if (and (empty? props) (not (.' id-class :hasIdClass)))
-    nil
-    (let [objprops
-          (reduce-kv (fn [o k v]
-                       (doto o
-                         (aset (cached-prop-name k)
-                               (convert-prop-value v))))
-                     #js{} props)]
-      (when (.' id-class :hasIdClass)
-        (set-id-class objprops id-class))
-      objprops)))
+  (let [id (.' id-class :id)
+        class (.' id-class :className)
+        no-id-class (and (nil? id) (nil? class))]
+    (if (and no-id-class (empty? props))
+      nil
+      (let [objprops (convert-prop-value props)]
+        (if no-id-class
+          objprops
+          (set-id-class objprops id class))))))
 
 
 ;;; Specialization for input components
@@ -155,7 +147,6 @@
                  (string/replace class #"\." " "))]
     (assert tag (str "Unknown tag: '" hiccup-tag "'"))
     #js{:name tag
-        :hasIdClass (or (some? id) (some? class'))
         :id id
         :className class'}))
 
