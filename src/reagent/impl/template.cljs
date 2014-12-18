@@ -16,8 +16,13 @@
 
 ;;; Common utilities
 
+(defn named? [x]
+  (or (keyword? x)
+      (symbol? x)))
+
 (defn hiccup-tag? [x]
-  (or (implements? INamed x)
+  (or (keyword? x)
+      (symbol? x)
       (string? x)))
 
 (defn valid-tag? [x]
@@ -36,7 +41,7 @@
     (aget o k)))
 
 (defn cached-prop-name [k]
-  (if-not (implements? INamed k)
+  (if-not (named? k)
     k
     (if-let [k' (obj-get prop-name-cache (name k))]
       k'
@@ -45,7 +50,7 @@
 
 (defn convert-prop-value [x]
   (cond (or (string? x) (number? x) (fn? x)) x
-        (implements? INamed x) (name x)
+        (named? x) (name x)
         (map? x) (reduce-kv (fn [o k v]
                               (doto o
                                 (aset (cached-prop-name k)
