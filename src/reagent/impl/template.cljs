@@ -21,8 +21,7 @@
       (symbol? x)))
 
 (defn hiccup-tag? [x]
-  (or (keyword? x)
-      (symbol? x)
+  (or (named? x)
       (string? x)))
 
 (defn valid-tag? [x]
@@ -41,12 +40,12 @@
     (aget o k)))
 
 (defn cached-prop-name [k]
-  (if-not (named? k)
-    k
-    (if-let [k' (obj-get prop-name-cache (name k))]
+  (if (named? k)
+    (if-some [k' (obj-get prop-name-cache (name k))]
       k'
       (aset prop-name-cache (name k)
-            (util/dash-to-camel k)))))
+            (util/dash-to-camel k)))
+    k))
 
 (defn convert-prop-value [x]
   (cond (or (string? x) (number? x) (fn? x)) x
@@ -185,7 +184,7 @@
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
-  (if-let [s (obj-get tag-name-cache (name x))]
+  (if-some [s (obj-get tag-name-cache (name x))]
     s
     (aset tag-name-cache (name x) (parse-tag x))))
 
