@@ -13,8 +13,6 @@
   (enable-console-print!))
 
 (declare page-content)
-(declare prefix)
-
 
 
 ;;; Configuration
@@ -56,7 +54,7 @@
     (assert (ifn? f) (str "couldn't resolve ppage " p))
     (assert (string? p))
     [:a (assoc props
-          :href (prefix p)
+          :href p
           :on-click (if (:has-history @page-state)
                       (fn [e]
                         (.preventDefault e)
@@ -166,9 +164,8 @@
 (defn html-template [{:keys [title body timestamp page-conf
                              opt-none req]}]
   (let [c @config
-        base (prefix (str (:js-dir c) "/goog/base.js"))
-        main (str (prefix (:js-file c)) timestamp)
-        css-file (prefix (:css-file c))
+        main (str (:js-file c) timestamp)
+        css-file (:css-file c)
         opt-none (:opt-none c)]
     (reagent/render-to-static-markup
      [:html
@@ -176,6 +173,7 @@
        [:meta {:charset "utf-8"}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
+       [:base {:href (prefix "")}]
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
@@ -184,11 +182,7 @@
        (danger :script (str "var pageConfig = " (-> page-conf
                                                     clj->js
                                                     js/JSON.stringify)))
-       (if opt-none
-         [:script {:src base :type "text/javascript"}])
-       [:script {:src main :type "text/javascript"}]
-       (if opt-none
-         (danger :script "goog.require('devsetup');"))]])))
+       [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-name timestamp]
   (reset! page page-name)

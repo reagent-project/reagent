@@ -8,8 +8,6 @@
             [reagentdemo.news :as news]
             [reagent.debug :refer-macros [dbg println]]))
 
-(i/import-react)
-
 (def test-results-comp (atom nil))
 
 (def github {:href "https://github.com/reagent-project/reagent"})
@@ -42,7 +40,6 @@
    (when @test-results-comp [@test-results-comp])
    [tools/page-content]
    [github-badge]])
-
 
 (defn start! [{:keys [test-results]}]
   (reset! test-results-comp test-results)

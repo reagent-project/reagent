@@ -1,7 +1,8 @@
 
 (ns reagent.core
   (:refer-clojure :exclude [partial atom flush])
-  (:require [reagent.impl.template :as tmpl]
+  (:require [cljsjs.react]
+            [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]

@@ -3,34 +3,33 @@ var fs = require("fs");
 var vm = require("vm");
 var path = require("path");
 
+var run = function (src) {
+    global.require = require;
+    vm.runInThisContext(fs.readFileSync(src), src);
+}
+
 var loadSrc = function (mainFile, outputDir, devModule) {
-    var src = fs.readFileSync(mainFile);
     var googDir = path.join(outputDir, "goog");
     var optNone = false;
     if (outputDir) {
         optNone = fs.existsSync(path.join(googDir, "deps.js"));
     }
-
     if (optNone) {
         var cwd = process.cwd();
-        if (!global.goog) global.goog = {};
-
+        if (!global.goog) {
+            global.goog = {};
+        }
         global.CLOSURE_IMPORT_SCRIPT = function (src) {
-            require(path.resolve(path.resolve(
-                cwd, path.join(googDir, src))));
+            var s = path.resolve(path.resolve(cwd, path.join(googDir, src)));
+            run(s);
             return true;
         };
 
-        var f = path.join(googDir, "base.js");
-        vm.runInThisContext(fs.readFileSync(f), f);
-        require(path.resolve(cwd, mainFile));
+        run(path.join(googDir, "base.js"));
+        run(path.join(outputDir, "cljs_deps.js"));
         goog.require(devModule);
     } else {
-        global.globalNodeRequire = require;
-
-        vm.runInThisContext("(function (require) {"
-                            + src
-                            + "\n})(globalNodeRequire);", mainFile);
+        run(mainFile);
     }
     return optNone;
 };

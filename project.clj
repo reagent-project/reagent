@@ -5,8 +5,9 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2342"]]
-  :plugins [[lein-cljsbuild "1.0.3"]]
+                 [org.clojure/clojurescript "0.0-2740"]
+                 [cljsjs/react "0.12.2-5"]]
+  :plugins [[lein-cljsbuild "1.0.4"]]
   :resource-paths ["vendor"]
   :source-paths ["src"]
   
@@ -24,15 +25,16 @@
                                 {:client {:source-paths ["test"]}}}}
 
              :dev-base {:dependencies
-                        [[figwheel "0.1.7-SNAPSHOT"]]
-                        :plugins [[lein-figwheel "0.1.7-SNAPSHOT"]]
+                        [[figwheel "0.2.2-SNAPSHOT"]]
+                        :plugins [[lein-figwheel "0.2.2-SNAPSHOT"]]
                         :source-paths ["demo"] ;; for lighttable
                         :resource-paths ["site" "outsite"]
                         :figwheel {:css-dirs ["site/public/css"]}
                         :cljsbuild {:builds
                                     {:client
                                      {:source-paths ["env/dev"]
-                                      :compiler {:source-map true
+                                      :compiler {:main "devsetup"
+                                                 :source-map true
                                                  :optimizations :none
                                                  :output-dir
                                                  "outsite/public/js/out"}}}}}
@@ -48,7 +50,8 @@
                     {:cljsbuild {:builds
                                  {:client
                                   {:source-paths ["env/prod"]
-                                   :compiler {:optimizations :advanced
+                                   :compiler {:main "prodsetup"
+                                              :optimizations :advanced
                                               :elide-asserts true
                                               :pretty-print false
                                               :output-dir "target/client"}}}}}]
@@ -65,7 +68,9 @@
 
   :cljsbuild {:builds
               {:client {:compiler
-                        {:output-to "outsite/public/js/main.js"}}}}
+                        {:output-to "outsite/public/js/main.js"
+                         :asset-path "js/out"}}}}
   
   :figwheel {:http-server-root "public" ;; assumes "resources"
+             :repl false
              :server-port 3449})
