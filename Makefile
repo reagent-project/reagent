@@ -99,6 +99,10 @@ download-react:
 		-o vendor/reagent/react.js
 	curl -L "http://fb.me/react-$(REACT_VERSION).min.js" \
 		-o vendor/reagent/react.min.js
+	curl -L "http://fb.me/react-with-addons-$(REACT_VERSION).js" \
+		-o vendor/reagent/react-with-addons.js
+	curl -L "http://fb.me/react-with-addons-$(REACT_VERSION).min.js" \
+		-o vendor/reagent/react-with-addons.min.js
 
 VERSION := `sed -n -e '/(defproject reagent/ s/.*"\(.*\)"/\1/p' project.clj`
 
