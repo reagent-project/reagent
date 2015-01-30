@@ -229,3 +229,13 @@
     (dispose b)
     (is (= runs (running)))))
 
+(deftest non-reactive-deref
+  (let [runs (running)
+        a (rv/atom 0)
+        b (rv/make-reaction #(+ 5 @a))]
+    (is (= @b 5))
+    (is (= runs (running)))
+
+    (reset! a 1)
+    (is (= @b 6))
+    (is (= runs (running)))))

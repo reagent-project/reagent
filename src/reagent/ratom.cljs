@@ -105,14 +105,15 @@
          (= ratom (.-ratom other))
          (= setf (.-setf other))))
 
+  Object
+  (_reaction [this]
+    (if (nil? reaction)
+      (set! reaction (make-reaction #(get-in @ratom path)))
+      reaction))
+
   IDeref
   (-deref [this]
-    (if (nil? *ratom-context*)
-      (get-in @ratom path)
-      (do
-        (if (nil? reaction)
-          (set! reaction (make-reaction #(get-in @ratom path))))
-        @reaction)))
+    (deref (._reaction this)))
 
   IReset
   (-reset! [a new-value]
@@ -244,15 +245,15 @@
 
   IDeref
   (-deref [this]
-    ;; TODO: relax this?
-    (when (not (or auto-run *ratom-context*))
-      (dbg [auto-run *ratom-context*]))
-    (assert (or auto-run *ratom-context*)
-            "Reaction derefed outside auto-running context")
-    (notify-deref-watcher! this)
-    (if dirty?
-      (run this)
-      state))
+    (if-not (or auto-run *ratom-context*)
+      (if dirty?
+        (set! state (f))
+        state)
+      (do
+        (notify-deref-watcher! this)
+        (if dirty?
+          (run this)
+          state))))
 
   IDisposable
   (dispose! [this]
