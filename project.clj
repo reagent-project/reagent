@@ -35,6 +35,7 @@
                                      {:source-paths ["env/dev"]
                                       :compiler {:main "devsetup"
                                                  :source-map true
+                                                 :source-map-timestamp true
                                                  :optimizations :none
                                                  :output-dir
                                                  "outsite/public/js/out"}}}}}
