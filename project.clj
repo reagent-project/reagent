@@ -20,8 +20,7 @@
                                        "examples/simple/src"
                                        "examples/geometry/src"]}}}}
 
-             :test {:dependencies [[com.cemerick/clojurescript.test "0.3.1"]]
-                    :cljsbuild {:builds
+             :test {:cljsbuild {:builds
                                 {:client {:source-paths ["test"]}}}}
 
              :dev-base {:dependencies

@@ -1,5 +1,5 @@
 (ns testwrap
-  (:require [cemerick.cljs.test :as t :refer-macros [is deftest]]
+  (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.core :as r :refer [atom wrap]]))
 

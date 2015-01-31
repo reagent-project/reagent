@@ -1,10 +1,7 @@
 (ns testcursor
-  (:require-macros [cemerick.cljs.test
-                    :refer (is deftest with-test run-tests testing)]
-                   [reagent.ratom :refer [run! reaction]]
-                   [reagent.debug :refer [dbg]])
-  (:require [cemerick.cljs.test :as t]
-            [reagent.ratom :as rv]
+  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+            [reagent.ratom :as rv :refer-macros [run! reaction]]
+            [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
 ;; this repeats all the atom tests but using cursors instead

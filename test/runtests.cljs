@@ -5,10 +5,17 @@
             [testinterop]
             [testratom]
             [testwrap]
-            [cemerick.cljs.test :as t]
+            [cljs.test :as test :include-macros true]
             [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]))
+
+(defn all-tests []
+  (test/run-tests 'testreagent
+                  'testcursor
+                  'testinterop
+                  'testratom
+                  'testwrap))
 
 (enable-console-print!)
 
@@ -41,7 +48,7 @@
 (defn ^:export run-all-tests []
   (println "-----------------------------------------")
   (try
-    (reset! test-results (t/run-all-tests))
+    (reset! test-results (all-tests))
     (catch js/Object e
       (do
         (println "Testrun failed\n" e "\n" (.-stack e))

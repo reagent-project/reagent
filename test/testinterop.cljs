@@ -1,5 +1,5 @@
 (ns testinterop
-  (:require [cemerick.cljs.test :as t :refer-macros [is deftest]]
+  (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [.' .! fvar fvar?]]))
 

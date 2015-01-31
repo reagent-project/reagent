@@ -1,11 +1,8 @@
 (ns testreagent
-  (:require-macros [cemerick.cljs.test
-                    :refer (is deftest with-test run-tests testing)]
-                   [reagent.ratom :refer [reaction]]
-                   [reagent.debug :refer [dbg println log]])
-  (:require [cemerick.cljs.test :as t]
-            [reagent.core :as reagent :refer [atom]]
-            [reagent.ratom :as rv]))
+  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+            [reagent.ratom :as rv :refer-macros [reaction]]
+            [reagent.debug :refer-macros [dbg println log]]
+            [reagent.core :as reagent :refer [atom]]))
 
 (defn running [] (rv/running))
 
