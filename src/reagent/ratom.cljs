@@ -109,10 +109,8 @@
                              :on-set (if (= path [])
                                        #(reset! ratom %2)
                                        #(swap! ratom assoc-in path %2)))
-              (do
-                (assert (ifn? ratom))
-                (make-reaction #(ratom path)
-                               :on-set #(ratom path %2)))))
+              (make-reaction #(ratom path)
+                             :on-set #(ratom path %2))))
       reaction))
 
   (_peek [this]
@@ -157,8 +155,17 @@
 (defn cursor
   [src path]
   (if (satisfies? IDeref path)
-    (RCursor. path src nil)
-    (RCursor. src path nil)))
+    (do
+      (when (dev?)
+        (log (str "Calling cursor with an atom as the second arg is "
+                  "deprecated, in (cursor "
+                  src " " (pr-str path) ")")))
+      (RCursor. path src nil))
+    (do
+      (assert (or (satisfies? IDeref src)
+                  (ifn? src))
+              "src must be an atom or a function")
+      (RCursor. src path nil))))
 
 (defprotocol IDisposable
   (dispose! [this]))

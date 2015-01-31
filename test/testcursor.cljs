@@ -29,7 +29,7 @@
 (deftest basic-cursor
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})
-        start (rv/cursor [:a :b :c] start-base)
+        start (r/cursor start-base [:a :b :c])
         sv (reaction @start)
         comp (reaction @sv (+ 2 @sv))
         c2 (reaction (inc @comp))
@@ -52,7 +52,7 @@
 (deftest double-dependency
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})
-        start (rv/cursor [:a :b :c] start-base)
+        start (r/cursor start-base [:a :b :c])
         c3-count (rv/atom 0)
         c1 (reaction @start 1)
         c2 (reaction @start)
@@ -75,7 +75,7 @@
 (deftest test-from-reflex
   (let [runs (running)]
     (let [!ctr-base (rv/atom {:x {:y 0 :z 0}})
-          !counter (rv/cursor [:x :y] !ctr-base)
+          !counter (r/cursor !ctr-base [:x :y])
           !signal (rv/atom "All I do is change")
           co (run!
               ;;when I change...
@@ -89,7 +89,7 @@
       (is (= @!ctr-base {:x {:y 2 :z 0}}))
       (dispose co))
     (let [!x-base (rv/atom {:a {:b 0 :c {:d 0}}})
-          !x (rv/cursor [:a :c :d] !x-base)
+          !x (r/cursor !x-base [:a :c :d])
           !co (rv/make-reaction #(inc @!x) :auto-run true)]
       (is (= 1 @!co) "CO has correct value on first deref")
       (swap! !x inc)
@@ -103,7 +103,7 @@
   (dotimes [x 10]
     (let [runs (running)
           a-base (rv/atom {:test {:unsubscribe 0 :value 42}})
-          a (rv/cursor [:test :unsubscribe] a-base)
+          a (r/cursor a-base [:test :unsubscribe])
           a1 (reaction (inc @a))
           a2 (reaction @a)
           b-changed (rv/atom 0)
@@ -154,7 +154,7 @@
   (let [runs (running)]
     (let [runs (running)
           a-base (rv/atom {:a {:b 0 :c {:d 42}}})
-          a (rv/cursor [:a :b] a-base)
+          a (r/cursor a-base [:a :b])
           b (reaction (inc @a))
           c (reaction (dec @a))
           d (reaction (str @b))
@@ -166,14 +166,14 @@
     ;; should be broken according to https://github.com/lynaghk/reflex/issues/1
     ;; but isnt
     (let [a-base (rv/atom {:a 0})
-          a (rv/cursor [:a] a-base)
+          a (r/cursor a-base [:a])
           b (reaction (inc @a))
           c (reaction (dec @a))
           d (run! [@b @c])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a-base (rv/atom 0)
-          a (rv/cursor [] a-base)
+          a (r/cursor a-base [])
           b (reaction (inc @a))
           c (reaction (dec @a))
           d (run! [@b @c])
@@ -189,7 +189,7 @@
   (dotimes [x 10]
     (let [runs (running)
           a-base (rv/atom {:a 0 :b 0})
-          a (rv/cursor [:a] a-base)
+          a (r/cursor a-base [:a])
           disposed (rv/atom nil)
           disposed-c (rv/atom nil)
           disposed-cns (rv/atom nil)
@@ -239,7 +239,7 @@
 (deftest test-on-set
   (let [runs (running)
         a-base (rv/atom {:set 0})
-        a (rv/cursor [:set] a-base)
+        a (r/cursor a-base [:set])
         b (rv/make-reaction #(+ 5 @a)
                             :auto-run true
                             :on-set (fn [oldv newv]
@@ -261,7 +261,7 @@
 (deftest test-equality
   (let [a (atom {:foo "bar"})
         a1 (atom {:foo "bar"})
-        c (r/cursor [:foo] a)
+        c (r/cursor a [:foo])
         foo (fn
               ([path] (get-in @a path))
               ([path v] (swap! a assoc-in path v)))
@@ -274,9 +274,9 @@
     (is (= @c "bar"))
     (is (= @c2 "bar"))
     (is (= @c3 "bar"))
-    (is (= c (r/cursor [:foo] a)))
-    (is (not= c (r/cursor [:foo] a1)))
-    (is (not= c (r/cursor [:foobar] a)))
+    (is (= c (r/cursor a [:foo])))
+    (is (not= c (r/cursor a1 [:foo])))
+    (is (not= c (r/cursor a [:foobar])))
     (is (= c2 (r/cursor foo [:foo])))
     (is (= c3 (r/cursor foobar [:foo])))
     (is (= c2 c2))
@@ -293,7 +293,7 @@
     (is (= @c2 "bar"))
     (is (= @c "bar"))
     (is (= @a {:foo "bar"}))
-    (is (= c (r/cursor [:foo] a)))
+    (is (= c (r/cursor a [:foo])))
     (is (= c2 (r/cursor foo [:foo])))
 
     (reset! c3 "foo")
@@ -317,8 +317,8 @@
 
 (deftest cursor-values
   (let [test-atom (atom {:a {:b {:c {:d 1}}}})
-        test-cursor (r/cursor [:a :b :c :d] test-atom)
-        test-cursor2 (r/cursor [] test-atom)
+        test-cursor (r/cursor test-atom [:a :b :c :d])
+        test-cursor2 (r/cursor test-atom [])
         runs (running)] ;; nasty edge case
 
     ;; get the initial values
@@ -356,7 +356,7 @@
 
 (deftest atom-behaviors
   (let [test-atom (atom {:a {:b {:c {:d 1}}}})
-        test-cursor (r/cursor [:a :b :c :d] test-atom)
+        test-cursor (r/cursor test-atom [:a :b :c :d])
         witness (atom nil)
         runs (running)]
     ;; per the description, reset! should return the new values
