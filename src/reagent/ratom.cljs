@@ -108,48 +108,48 @@
   Object
   (_reaction [this]
     (if (nil? reaction)
-      (set! reaction (make-reaction #(get-in @ratom path)))
+      (set! reaction (make-reaction
+                      #(get-in @ratom path)
+                      :on-set (if setf
+                                #(setf %2)
+                                #(swap! ratom assoc-in path %2))))
       reaction))
+
+  (_peek [this]
+    (binding [*ratom-context* nil]
+      (deref (._reaction this))))
 
   IDeref
   (-deref [this]
     (deref (._reaction this)))
 
   IReset
-  (-reset! [a new-value]
-    (if (nil? setf)
-      (swap! ratom assoc-in path new-value)
-      (setf new-value)))
+  (-reset! [this new-value]
+    (reset! (._reaction this) new-value))
 
   ISwap
   (-swap! [a f]
-    (-reset! a (f (peek-at ratom path))))
+    (-reset! a (f (._peek a))))
   (-swap! [a f x]
-    (-reset! a (f (peek-at ratom path) x)))
+    (-reset! a (f (._peek a) x)))
   (-swap! [a f x y]
-    (-reset! a (f (peek-at ratom path) x y)))
+    (-reset! a (f (._peek a) x y)))
   (-swap! [a f x y more]
-    (-reset! a (apply f (peek-at ratom path) x y more)))
+    (-reset! a (apply f (._peek a) x y more)))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
-    ;; not sure about how this should be implemented?
-    ;; should it print as an atom focused on the appropriate part of
-    ;; the ratom - (pr-writer (get-in @ratom path)) - or should it be
-    ;; a completely separate type? and do we need a reader for it?
     (-write writer "#<Cursor: ")
-    (pr-writer path writer opts)
-    (-write writer " ")
-    (pr-writer ratom writer opts)
+    (pr-writer (._peek a) writer opts)
     (-write writer ">"))
 
   IWatchable
   (-notify-watches [this oldval newval]
-    (-notify-watches ratom oldval newval))
+    (-notify-watches (._reaction this) oldval newval))
   (-add-watch [this key f]
-    (-add-watch ratom key f))
+    (-add-watch (._reaction this) key f))
   (-remove-watch [this key]
-    (-remove-watch ratom key))
+    (-remove-watch (._reaction this) key))
 
   IHash
   (-hash [this] (hash [ratom path setf])))
