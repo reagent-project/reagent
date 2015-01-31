@@ -91,15 +91,14 @@
 
 (declare make-reaction)
 
-(deftype RCursor [path ratom setf ^:mutable reaction]
+(deftype RCursor [ratom path ^:mutable reaction]
   IAtom
 
   IEquiv
   (-equiv [o other]
     (and (instance? RCursor other)
          (= path (.-path other))
-         (= ratom (.-ratom other))
-         (= setf (.-setf other))))
+         (= ratom (.-ratom other))))
 
   Object
   (_reaction [this]
@@ -110,8 +109,10 @@
                              :on-set (if (= path [])
                                        #(reset! ratom %2)
                                        #(swap! ratom assoc-in path %2)))
-              (make-reaction #(ratom path)
-                             :on-set #(ratom path %2))))
+              (do
+                (assert (ifn? ratom))
+                (make-reaction #(ratom path)
+                               :on-set #(ratom path %2)))))
       reaction))
 
   (_peek [this]
@@ -151,14 +152,13 @@
     (-remove-watch (._reaction this) key))
 
   IHash
-  (-hash [this] (hash [ratom path setf])))
+  (-hash [this] (hash [ratom path])))
 
 (defn cursor
-  ([path ra]
-     (RCursor. path ra nil nil))
-  ([path ra setf args]
-     (RCursor. path ra
-               (util/partial-ifn. setf args nil) nil)))
+  [src path]
+  (if (satisfies? IDeref path)
+    (RCursor. path src nil)
+    (RCursor. src path nil)))
 
 (defprotocol IDisposable
   (dispose! [this]))

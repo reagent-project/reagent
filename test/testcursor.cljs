@@ -268,8 +268,8 @@
         foobar (fn
                  ([path] (get-in @a path))
                  ([path v] (swap! a assoc :foobar v)))
-        c2 (r/cursor [:foo] foo)
-        c3 (r/cursor [:foo] foobar)]
+        c2 (r/cursor foo [:foo])
+        c3 (r/cursor foobar [:foo])]
 
     (is (= @c "bar"))
     (is (= @c2 "bar"))
@@ -277,12 +277,12 @@
     (is (= c (r/cursor [:foo] a)))
     (is (not= c (r/cursor [:foo] a1)))
     (is (not= c (r/cursor [:foobar] a)))
-    (is (= c2 (r/cursor [:foo] foo)))
-    (is (= c3 (r/cursor [:foo] foobar)))
+    (is (= c2 (r/cursor foo [:foo])))
+    (is (= c3 (r/cursor foobar [:foo])))
     (is (= c2 c2))
-    (is (not= c2 (r/cursor [:foo] foobar)))
-    (is (not= c3 (r/cursor [:foo] foo)))
-    (is (not= c2 (r/cursor [:foobar] foo)))
+    (is (not= c2 (r/cursor foobar [:foo])))
+    (is (not= c3 (r/cursor foo [:foo])))
+    (is (not= c2 (r/cursor foo [:foobar])))
 
     (reset! c2 "foobar")
     (is (= @c2 "foobar"))
@@ -294,7 +294,7 @@
     (is (= @c "bar"))
     (is (= @a {:foo "bar"}))
     (is (= c (r/cursor [:foo] a)))
-    (is (= c2 (r/cursor [:foo] foo)))
+    (is (= c2 (r/cursor foo [:foo])))
 
     (reset! c3 "foo")
     (is (= @a {:foo "bar" :foobar "foo"}))))

@@ -207,16 +207,14 @@ re-rendered."
 
 Behaves like a Reagent atom but focuses updates and derefs to
 the specified path within the wrapped Reagent atom. e.g.,
-  (let [c (cursor [:nested :content] ra)]
+  (let [c (cursor ra [:nested :content])]
     ... @c ;; equivalent to (get-in @ra [:nested :content])
     ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
     ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
     )
 "
-  ([path ra]
-   (assert (or (satisfies? IDeref ra)
-               (ifn? ra)))
-   (ratom/cursor path ra)))
+  ([src path]
+   (ratom/cursor src path)))
 
 ;; Utilities
 
