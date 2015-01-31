@@ -88,12 +88,8 @@
   ([x] (RAtom. x nil nil nil))
   ([x & {:keys [meta validator]}] (RAtom. x meta validator nil)))
 
+
 (declare make-reaction)
-
-(defn peek-at [a path]
-  (binding [*ratom-context* nil]
-    (get-in @a path)))
-
 
 (deftype RCursor [path ratom setf ^:mutable reaction]
   IAtom
@@ -108,34 +104,37 @@
   Object
   (_reaction [this]
     (if (nil? reaction)
-      (set! reaction (make-reaction
-                      #(get-in @ratom path)
-                      :on-set (if setf
-                                #(setf %2)
-                                #(swap! ratom assoc-in path %2))))
+      (set! reaction
+            (make-reaction
+             #(get-in @ratom path)
+             :on-set (if setf
+                       #(setf %2)
+                       (if (= path [])
+                         #(reset! ratom %2)
+                         #(swap! ratom assoc-in path %2)))))
       reaction))
 
   (_peek [this]
     (binding [*ratom-context* nil]
-      (deref (._reaction this))))
+      (-deref (._reaction this))))
 
   IDeref
   (-deref [this]
-    (deref (._reaction this)))
+    (-deref (._reaction this)))
 
   IReset
   (-reset! [this new-value]
-    (reset! (._reaction this) new-value))
+    (-reset! (._reaction this) new-value))
 
   ISwap
   (-swap! [a f]
-    (-reset! a (f (._peek a))))
+    (-swap! (._reaction a) f))
   (-swap! [a f x]
-    (-reset! a (f (._peek a) x)))
+    (-swap! (._reaction a) f x))
   (-swap! [a f x y]
-    (-reset! a (f (._peek a) x y)))
+    (-swap! (._reaction a) f x y))
   (-swap! [a f x y more]
-    (-reset! a (apply f (._peek a) x y more)))
+    (-swap! (._reaction a) f x y more))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
