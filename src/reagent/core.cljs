@@ -212,19 +212,11 @@ the specified path within the wrapped Reagent atom. e.g.,
     ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
     ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
     )
-The third argument may be a function, that is called with
-optional extra arguments provided to cursor, and the new value of the
-resulting 'atom'. If such a function is given, it should update the
-given Reagent atom.
 "
-  ([path] (fn [ra] (cursor path ra)))
   ([path ra]
-   (assert (satisfies? IDeref ra))
-   (ratom/cursor path ra))
-  ([path ra reset-fn & args]
-   (assert (satisfies? IDeref ra))
-   (assert (ifn? reset-fn))
-   (ratom/cursor path ra reset-fn args)))
+   (assert (or (satisfies? IDeref ra)
+               (ifn? ra)))
+   (ratom/cursor path ra)))
 
 ;; Utilities
 

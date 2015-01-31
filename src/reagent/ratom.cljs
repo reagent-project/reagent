@@ -105,13 +105,13 @@
   (_reaction [this]
     (if (nil? reaction)
       (set! reaction
-            (make-reaction
-             #(get-in @ratom path)
-             :on-set (if setf
-                       #(setf %2)
-                       (if (= path [])
-                         #(reset! ratom %2)
-                         #(swap! ratom assoc-in path %2)))))
+            (if (satisfies? IDeref ratom)
+              (make-reaction #(get-in @ratom path)
+                             :on-set (if (= path [])
+                                       #(reset! ratom %2)
+                                       #(swap! ratom assoc-in path %2)))
+              (make-reaction #(ratom path)
+                             :on-set #(ratom path %2))))
       reaction))
 
   (_peek [this]

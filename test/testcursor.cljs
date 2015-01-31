@@ -262,18 +262,27 @@
   (let [a (atom {:foo "bar"})
         a1 (atom {:foo "bar"})
         c (r/cursor [:foo] a)
-        c2 (r/cursor [:foo] a swap! a assoc :foo)
-        c3 (r/cursor [:foo] a swap! a assoc :foobar)]
+        foo (fn
+              ([path] (get-in @a path))
+              ([path v] (swap! a assoc-in path v)))
+        foobar (fn
+                 ([path] (get-in @a path))
+                 ([path v] (swap! a assoc :foobar v)))
+        c2 (r/cursor [:foo] foo)
+        c3 (r/cursor [:foo] foobar)]
+
     (is (= @c "bar"))
     (is (= @c2 "bar"))
     (is (= @c3 "bar"))
     (is (= c (r/cursor [:foo] a)))
     (is (not= c (r/cursor [:foo] a1)))
     (is (not= c (r/cursor [:foobar] a)))
-    (is (= c2 (r/cursor [:foo] a swap! a assoc :foo)))
-    (is (not= c2 (r/cursor [:foo] a swap! a assoc :foobar)))
-    (is (not= c2 (r/cursor [:foo] a1 swap! a assoc :foo)))
-    (is (not= c2 (r/cursor [:foo] a swap! a1 assoc :foo)))
+    (is (= c2 (r/cursor [:foo] foo)))
+    (is (= c3 (r/cursor [:foo] foobar)))
+    (is (= c2 c2))
+    (is (not= c2 (r/cursor [:foo] foobar)))
+    (is (not= c3 (r/cursor [:foo] foo)))
+    (is (not= c2 (r/cursor [:foobar] foo)))
 
     (reset! c2 "foobar")
     (is (= @c2 "foobar"))
@@ -285,7 +294,7 @@
     (is (= @c "bar"))
     (is (= @a {:foo "bar"}))
     (is (= c (r/cursor [:foo] a)))
-    (is (= c2 (r/cursor [:foo] a swap! a assoc :foo)))
+    (is (= c2 (r/cursor [:foo] foo)))
 
     (reset! c3 "foo")
     (is (= @a {:foo "bar" :foobar "foo"}))))
