@@ -22,11 +22,9 @@
 (def index-page "index.html")
 (def news-page "news/index.html")
 
-(tools/register-page index-page
-                     (fn [] [intro/main])
+(tools/register-page index-page [#'intro/main]
                      "Reagent: Minimalistic React for ClojureScript")
-(tools/register-page news-page
-                     (fn [] [news/main])
+(tools/register-page news-page [#'news/main]
                      "Reagent news")
 
 (defn demo []
@@ -43,6 +41,6 @@
 
 (defn start! [{:keys [test-results]}]
   (reset! test-results-comp test-results)
-  (tools/start! {:body (fn [] [demo])
+  (tools/start! {:body [#'demo]
                  :css-infiles ["site/public/css/examples.css"
                                "site/public/css/main.css"]}))

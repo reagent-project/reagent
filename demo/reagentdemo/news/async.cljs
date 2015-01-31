@@ -197,5 +197,5 @@
                             :ncolors-choose :color-plate
                             :palette :color-demo])]}]])]]))
 
-(tools/register-page url (fn [] [main])
+(tools/register-page url [main]
                      (str "Reagent: " title))

@@ -122,5 +122,5 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(tools/register-page url (fn [] [main])
+(tools/register-page url [main]
                      (str "Reagent: " title))

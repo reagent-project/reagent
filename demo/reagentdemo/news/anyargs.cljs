@@ -133,5 +133,5 @@
 
          [demo-component {:comp geometry-example}]])]]))
 
-(tools/register-page url (fn [] [main])
+(tools/register-page url [main]
                      (str "Reagent 0.4.0: " title))

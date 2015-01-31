@@ -191,4 +191,4 @@
        will cause the entire component tree to update (by-passing the
        equality checks)."] ])]])
 
-(tools/register-page url (fn [] [main]) title)
+(tools/register-page url [#'main] title)

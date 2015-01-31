@@ -17,10 +17,9 @@
 
 ;;; Configuration
 
-(defonce config (atom {:page-map {"index.html"
-                                  (fn [] [:div "Empty"])}
+(defonce config (atom {:page-map {"index.html" [:div "Empty"]}
                        :page-titles {}
-                       :body (fn [] [:div (page-content)])
+                       :body [page-content]
                        :site-dir "outsite/public"
                        :css-infiles ["site/public/css/main.css"]
                        :css-file "css/built.css"
@@ -38,7 +37,8 @@
   ([pageurl comp title]
    (assert (string? pageurl)
            (str "expected string, not " pageurl))
-   (assert (fn? comp))
+   (assert (vector? comp)
+           (str "expected vector, not " (pr-str comp)))
    (assert (or (nil? title)
                (string? title)))
    (swap! config update-in [:page-map] assoc pageurl comp)
@@ -51,7 +51,7 @@
   [props child]
   (let [p (:href props)
         f ((:page-map @config) p)]
-    (assert (ifn? f) (str "couldn't resolve ppage " p))
+    (assert (vector? f) (str "couldn't resolve page " p))
     (assert (string? p))
     [:a (assoc props
           :href p
@@ -66,9 +66,8 @@
      child]))
 
 (defn page-content []
-  [(get-in @config [:page-map @page]
-           (get-in @config [:page-map "index.html"]))])
-
+  (get-in @config [:page-map @page]
+          (get-in @config [:page-map "index.html"])))
 
 
 
@@ -155,8 +154,8 @@
 
 (defn body []
   (let [b (:body @config)]
-    (assert (fn? b))
-    [b]))
+    (assert (vector? b) (str "body is not a vector: " b))
+    b))
 
 (defn danger [t s]
   [t {:dangerouslySetInnerHTML {:__html s}}])

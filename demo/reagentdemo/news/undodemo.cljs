@@ -85,4 +85,4 @@
 
          [undo-demo-cleanup]])]]))
 
-(tools/register-page url (fn [] [main]) title)
+(tools/register-page url [main] title)
