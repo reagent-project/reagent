@@ -309,7 +309,8 @@
 (deftest cursor-values
   (let [test-atom (atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor [:a :b :c :d] test-atom)
-        test-cursor2 (r/cursor [] test-atom)] ;; nasty edge case
+        test-cursor2 (r/cursor [] test-atom)
+        runs (running)] ;; nasty edge case
 
     ;; get the initial values
     (is (= (get-in @test-atom [:a :b :c :d])
@@ -339,13 +340,16 @@
     (swap! test-cursor2 assoc :z 3)
     (is (= @test-cursor2 {:z 3}))
     (is (= (get-in @test-atom [])
-           {:z 3}))))
+           {:z 3}))
+
+    (is (= runs (running)))))
 
 
 (deftest atom-behaviors
   (let [test-atom (atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor [:a :b :c :d] test-atom)
-        witness (atom nil)]
+        witness (atom nil)
+        runs (running)]
     ;; per the description, reset! should return the new values
     (is (= {}
            (reset! test-cursor {})))
@@ -365,8 +369,10 @@
     (is (= @(:ref @witness) @test-cursor))
     (is (= (:old @witness) "old"))
     (is (= (:new @witness) "new"))
+
     ;; can we remove the watch?
     (remove-watch test-cursor :w)
     (reset! test-cursor "removed")
     (is (= (:new @witness) "new")) ;; shouldn't have changed
+    (is (= (running) runs))
     ))
