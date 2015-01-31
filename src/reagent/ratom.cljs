@@ -252,8 +252,12 @@
   IDeref
   (-deref [this]
     (if-not (or auto-run *ratom-context*)
-      (if dirty?
-        (set! state (f))
+      (do
+        (when dirty?
+          (let [oldstate state]
+            (set! state (f))
+            (when-not (identical? oldstate state)
+              (call-watches this watches oldstate state))))
         state)
       (do
         (notify-deref-watcher! this)
@@ -265,7 +269,7 @@
   (dispose! [this]
     (doseq [w watching]
       (remove-watch w this))
-    (set! watching #{})
+    (set! watching nil)
     (set! state nil)
     (set! dirty? true)
     (when active?
@@ -291,7 +295,7 @@
         active (not (nil? derefed))
         dirty (not active)
         reaction (Reaction. f nil dirty active
-                            nil {}
+                            nil nil
                             runner on-set on-dispose)]
     (when-not (nil? derefed)
       (when debug (swap! -running inc))

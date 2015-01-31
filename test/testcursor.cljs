@@ -372,13 +372,25 @@
     (is (= (:key @witness) :w))
     ;; cursor reports that the reaction is the current atom,
     ;; but I guess that's ok
-    (is (= @(:ref @witness) @test-cursor))
     (is (= (:old @witness) "old"))
     (is (= (:new @witness) "new"))
+    (is (= @(:ref @witness) @test-cursor))
+    (is (= (:new @witness) "new"))
+
+    (reset! test-atom {:a {:b {:c {:d "newer"}}}})
+    ;; watch doesn't run until the value is realized
+    (is (= (:new @witness) "new"))
+    (is (= @test-cursor "newer"))
+    @test-cursor
+    (is (= (:old @witness) "new"))
+    (is (= (:new @witness) "newer"))
+    @test-cursor
+    (is (= (:old @witness) "new"))
+    (is (= (:new @witness) "newer"))
 
     ;; can we remove the watch?
     (remove-watch test-cursor :w)
     (reset! test-cursor "removed")
-    (is (= (:new @witness) "new")) ;; shouldn't have changed
+    (is (= (:new @witness) "newer")) ;; shouldn't have changed
     (is (= (running) runs))
     ))
