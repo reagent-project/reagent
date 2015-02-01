@@ -205,7 +205,8 @@
 
   (-remove-watch [this k]
     (set! watches (dissoc watches k))
-    (when (empty? watches)
+    (when (and (empty? watches)
+               (not auto-run))
       (dispose! this)))
 
   IReset
