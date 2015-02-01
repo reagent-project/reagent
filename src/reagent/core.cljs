@@ -107,27 +107,34 @@ Everything is optional, except :render.
   []
   comp/*current-component*)
 
-
-(defn state
-  "Returns the state of a component, as set with replace-state or set-state."
+(defn state-atom
+  "Returns an atom containing a components state."
   [this]
   (assert (util/reagent-component? this))
-  ;; TODO: Warn if top-level component
-  (comp/state this))
+  (comp/state-atom this))
+
+(defn state
+  "Returns the state of a component, as set with replace-state or set-state.
+Equivalent to (deref (r/state-atom this))"
+  [this]
+  (assert (util/reagent-component? this))
+  (deref (state-atom this)))
 
 (defn replace-state
-  "Set state of a component."
+  "Set state of a component.
+Equivalent to (reset! (state-atom this) new-state)"
   [this new-state]
   (assert (util/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
-  (comp/replace-state this new-state))
+  (reset! (state-atom this) new-state))
 
 (defn set-state
-  "Merge component state with new-state."
+  "Merge component state with new-state.
+Equivalent to (swap! (state-atom this) merge new-state)"
   [this new-state]
   (assert (util/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
-  (comp/set-state this new-state))
+  (swap! (state-atom this) merge new-state))
 
 
 (defn props
