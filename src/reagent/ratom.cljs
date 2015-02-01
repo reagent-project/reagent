@@ -260,7 +260,7 @@
 
   IDeref
   (-deref [this]
-    (if-not (or auto-run *ratom-context*)
+    (if-not (or auto-run (some? *ratom-context*))
       (do
         (when dirty?
           (let [oldstate state]
@@ -321,7 +321,12 @@
   IAtom
 
   IDeref
-  (-deref [this] state)
+  (-deref [this]
+    (when (dev?)
+      (when (and changed (some? *ratom-context*))
+        (log "warning: derefing stale wrap: "
+             (pr-str this))))
+    state)
 
   IReset
   (-reset! [this newval]
