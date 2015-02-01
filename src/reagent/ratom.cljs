@@ -137,7 +137,7 @@
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
-    (-write writer "#<Cursor: ")
+    (-write writer (str "#<Cursor: " path " "))
     (pr-writer (._peek a) writer opts)
     (-write writer ">"))
 
@@ -163,8 +163,9 @@
       (RCursor. path src nil))
     (do
       (assert (or (satisfies? IDeref src)
-                  (ifn? src))
-              "src must be an atom or a function")
+                  (and (ifn? src)
+                       (not (vector? src))))
+              (str "src must be an atom or a function, not " src))
       (RCursor. src path nil))))
 
 (defprotocol IDisposable
@@ -177,12 +178,6 @@
   (-update-watching [this derefed])
   (-handle-change [k sender oldval newval]))
 
-(defn- call-watches [obs watches oldval newval]
-  (reduce-kv (fn [_ key f]
-               (f key obs oldval newval)
-               nil)
-             nil watches))
-
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
                    auto-run on-set on-dispose]
@@ -190,9 +185,10 @@
 
   IWatchable
   (-notify-watches [this oldval newval]
-    (when on-set
-      (on-set oldval newval))
-    (call-watches this watches oldval newval))
+    (reduce-kv (fn [_ key f]
+                 (f key this oldval newval)
+                 nil)
+               nil watches))
 
   (-add-watch [this k wf]
     (set! watches (assoc watches k wf)))
@@ -203,11 +199,14 @@
       (dispose! this)))
 
   IReset
-  (-reset! [a new-value]
-    (let [old-value state]
-      (set! state new-value)
-      (-notify-watches a old-value new-value)
-      new-value))
+  (-reset! [a newval]
+    (let [oldval state]
+      (set! state newval)
+      (when on-set
+        (set! dirty? true)
+        (on-set oldval newval))
+      (-notify-watches a oldval newval)
+      newval))
 
   ISwap
   (-swap! [a f]
@@ -246,7 +245,7 @@
         (set! active? true))
       (set! dirty? false)
       (set! state res)
-      (call-watches this watches oldstate state)
+      (-notify-watches this oldstate state)
       res))
 
   IDeref
@@ -257,7 +256,7 @@
           (let [oldstate state]
             (set! state (f))
             (when-not (identical? oldstate state)
-              (call-watches this watches oldstate state))))
+              (-notify-watches this oldstate state))))
         state)
       (do
         (notify-deref-watcher! this)
