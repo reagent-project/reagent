@@ -11,18 +11,6 @@
 (defn running [] (rv/running))
 (defn dispose [v] (rv/dispose! v))
 
-(defn ratom-perf []
-  (dbg "ratom-perf")
-  (let [a (rv/atom {})
-        mid (reaction (inc @a))
-        res (run!
-             (inc @mid))]
-    (time (dotimes [x 100000]
-            (swap! a inc)))
-    (dispose res)))
-
-;; (ratom-perf)
-
 (deftest basic-cursor
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})
@@ -351,7 +339,7 @@
     (is (= runs (running)))))
 
 
-(deftest atom-behaviors
+(deftest cursor-atom-behaviors
   (let [test-atom (atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor test-atom [:a :b :c :d])
         witness (atom nil)
@@ -393,4 +381,38 @@
     (reset! test-cursor "removed")
     (is (= (:new @witness) "newer")) ;; shouldn't have changed
     (is (= (running) runs))
+    ))
+
+(deftest wrap-atom-behaviors
+  (let [test-atom (atom "foo")
+        test-wrap (r/wrap @test-atom reset! test-atom)
+        witness (atom nil)]
+    ;; per the description, reset! should return the new values
+    (is (= {}
+           (reset! test-wrap {})))
+    (is (= @test-wrap @test-atom))
+
+    ;; per the description, swap! should return the new values
+    (is (= {:z [1 2 3]}
+           (swap! test-wrap assoc :z [1 2 3])))
+    (is (= @test-wrap @test-atom))
+
+    ;; watches should behave like with a normal atom
+    (reset! test-wrap "old")
+    (add-watch test-wrap :w #(reset! witness
+                                     {:key %1 :ref %2 :old %3 :new %4}))
+    (reset! test-wrap "new") ;; this should trigger the watch function
+    (is (= (:key @witness) :w))
+    ;; cursor reports that the reaction is the current atom,
+    ;; but I guess that's ok
+    (is (= (:old @witness) "old"))
+    (is (= (:new @witness) "new"))
+    (is (= (:ref @witness) test-wrap))
+    (is (= (:new @witness) "new"))
+
+    ;; can we remove the watch?
+    (remove-watch test-wrap :w)
+    (reset! test-wrap "removed")
+    (is (= (:new @witness) "new")) ;; shouldn't have changed
+    (is (= @test-wrap @test-atom))
     ))

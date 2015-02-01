@@ -315,7 +315,8 @@
 
 ;;; wrap
 
-(deftype Wrapper [^:mutable state callback ^:mutable changed]
+(deftype Wrapper [^:mutable state callback ^:mutable changed
+                  ^:mutable watches]
 
   IAtom
 
@@ -324,10 +325,13 @@
 
   IReset
   (-reset! [this newval]
-           (set! changed true)
-           (set! state newval)
-           (callback newval)
-           state)
+    (let [oldval state]
+      (set! changed true)
+      (set! state newval)
+      (when-not (nil? watches)
+        (-notify-watches this oldval newval))
+      (callback newval)
+      newval))
 
   ISwap
   (-swap! [a f]
@@ -349,6 +353,17 @@
                (= state (.-state other))
                (= callback (.-callback other))))
 
+  IWatchable
+  (-notify-watches [this oldval newval]
+    (reduce-kv (fn [_ key f]
+                 (f key this oldval newval)
+                 nil)
+               nil watches))
+  (-add-watch [this key f]
+    (set! watches (assoc watches key f)))
+  (-remove-watch [this key]
+    (set! watches (dissoc watches key)))
+
   IPrintWithWriter
   (-pr-writer [_ writer opts]
     (-write writer "#<wrap: ")
@@ -358,4 +373,5 @@
 (defn make-wrapper [value callback-fn args]
   (Wrapper. value
             (util/partial-ifn. callback-fn args nil)
-            false))
+            false nil))
+
