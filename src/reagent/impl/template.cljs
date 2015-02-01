@@ -156,6 +156,11 @@
 
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
+  (when (dev?)
+    (when (and (fn? f)
+               (some? (.' f :type)))
+      (log "warning: using native React classes directly is not supported: "
+           (.' f :type))))
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
         res (comp/create-class withrender)
