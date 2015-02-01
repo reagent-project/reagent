@@ -212,9 +212,21 @@ the specified path within the wrapped Reagent atom. e.g.,
     ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
     ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
     )
+
+The first parameter can also be a function, that should look something
+like this:
+
+(defn digit-filter
+  ([k] (get-in @state k))
+  ([k v] (swap! state assoc-in k v)))
+
+The function will be called with one argument – the path passed to
+cursor – when the cursor is deref'ed, and two arguments (path and new
+value) when the cursor is modified.
 "
   ([src path]
    (ratom/cursor src path)))
+
 
 ;; Utilities
 

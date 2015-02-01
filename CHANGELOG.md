@@ -3,6 +3,10 @@
 
 ## Upcoming
 
+- Reagent no longer bundles React. Instead it uses cljsjs/react as a dependency. This means that you should no longer specify React in `:preamble` in your project.clj.
+
+- `cursor` is re-written, to be more efficient and flexible.
+
 - `render` now forces a deep update of all components, to make it more convenient to use with e.g. figwheel.
 
 - Renamed `as-component` to `as-element`, to match React's new terminology better (old name still works, though, for backward compatiblity).
