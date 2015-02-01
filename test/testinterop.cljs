@@ -1,7 +1,7 @@
 (ns testinterop
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .! fvar fvar?]]))
+            [reagent.interop :refer-macros [.' .!]]))
 
 
 (deftest iterop-quote
@@ -48,22 +48,3 @@
 
     (is (= "1bar2" (.' (.' o :foo)
                        call o 1)))))
-
-(def f nil)
-
-(deftest interop-fvar
-  (set! f (fn [& args] (into ["foo"] args)))
-  (let [f' (fvar f)]
-    (is (= ["foo"] (f')))
-    (is (= ["foo" 1] (f' 1)))
-    (is (= ["foo" 1 2] (f' 1 2)))
-    (is (= ["foo" 1 2 3] (f' 1 2 3)))
-
-    (set! f (fn [] "foobar"))
-    (is (= "foobar" (f')))
-
-    (is (identical? f' (fvar f)))
-
-    (is (fvar? f'))
-    (is (not (fvar? f)))
-    (is (fn? f'))))

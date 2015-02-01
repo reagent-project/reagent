@@ -1,7 +1,5 @@
 
 
-REACT_VERSION = 0.12.2
-
 PROF = 
 PORT = 3449
 
@@ -93,12 +91,6 @@ gh-pages-add:
 
 show-outdated:
 	lein ancient :all
-
-download-react:
-	curl -L "http://fb.me/react-$(REACT_VERSION).js" \
-		-o vendor/reagent/react.js
-	curl -L "http://fb.me/react-$(REACT_VERSION).min.js" \
-		-o vendor/reagent/react.min.js
 
 VERSION := `sed -n -e '/(defproject reagent/ s/.*"\(.*\)"/\1/p' project.clj`
 

@@ -42,7 +42,8 @@
    (assert (or (nil? title)
                (string? title)))
    (swap! config update-in [:page-map] assoc pageurl comp)
-   (swap! config update-in [:page-titles] assoc pageurl title)))
+   (swap! config update-in [:page-titles] assoc pageurl title)
+   pageurl))
 
 
 ;;; Components
