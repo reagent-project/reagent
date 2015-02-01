@@ -29,6 +29,9 @@
               (conj (if (nil? captured) #{} captured)
                     derefable))))))
 
+
+;;; Atom
+
 (deftype RAtom [^:mutable state meta validator ^:mutable watches]
   IAtom
 
@@ -88,6 +91,9 @@
   ([x] (RAtom. x nil nil nil))
   ([x & {:keys [meta validator]}] (RAtom. x meta validator nil)))
 
+
+
+;;; cursor
 
 (declare make-reaction)
 
@@ -167,6 +173,10 @@
                        (not (vector? src))))
               (str "src must be an atom or a function, not " src))
       (RCursor. src path nil))))
+
+
+
+;;;; reaction
 
 (defprotocol IDisposable
   (dispose! [this]))
@@ -300,3 +310,52 @@
       (when debug (swap! -running inc))
       (-update-watching reaction derefed))
     reaction))
+
+
+
+;;; wrap
+
+(deftype Wrapper [^:mutable state callback ^:mutable changed]
+
+  IAtom
+
+  IDeref
+  (-deref [this] state)
+
+  IReset
+  (-reset! [this newval]
+           (set! changed true)
+           (set! state newval)
+           (callback newval)
+           state)
+
+  ISwap
+  (-swap! [a f]
+    (-reset! a (f state)))
+  (-swap! [a f x]
+    (-reset! a (f state x)))
+  (-swap! [a f x y]
+    (-reset! a (f state x y)))
+  (-swap! [a f x y more]
+    (-reset! a (apply f state x y more)))
+
+  IEquiv
+  (-equiv [_ other]
+          (and (instance? Wrapper other)
+               ;; If either of the wrappers have changed, equality
+               ;; cannot be relied on.
+               (not changed)
+               (not (.-changed other))
+               (= state (.-state other))
+               (= callback (.-callback other))))
+
+  IPrintWithWriter
+  (-pr-writer [_ writer opts]
+    (-write writer "#<wrap: ")
+    (pr-writer state writer opts)
+    (-write writer ">")))
+
+(defn make-wrapper [value callback-fn args]
+  (Wrapper. value
+            (util/partial-ifn. callback-fn args nil)
+            false))

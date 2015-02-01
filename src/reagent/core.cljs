@@ -197,7 +197,7 @@ re-rendered."
   Probably useful only for passing to child components."
   [value reset-fn & args]
   (assert (ifn? reset-fn))
-  (util/make-wrapper value reset-fn args))
+  (ratom/make-wrapper value reset-fn args))
 
 
 ;; RCursor
