@@ -2,6 +2,7 @@
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :refer-macros [dbg println log]]
+            [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as reagent :refer [atom]]))
 
 (defn running [] (rv/running))
@@ -436,3 +437,37 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ae [:div (ce "div" nil "foo")]))))))
 
+(def ndiv (.' js/React
+              createClass
+              #js{:render
+                  (fn []
+                    (this-as
+                     this
+                     (reagent/create-element
+                      "div" #js{:className (.' this :props.className)}
+                      (.' this :props.children))))}))
+
+(deftest test-adapt-class
+  (let [d1 (reagent/adapt-react-class ndiv)
+        d2 (reagent/adapt-react-class "div")]
+    (is (= (rstr [:div])
+           (rstr [d1])))
+    (is (= (rstr [:div "a"])
+           (rstr [d1 "a"])))
+    (is (= (rstr [:div "a" "b"])
+           (rstr [d1 "a" "b"])))
+    (is (= (rstr [:div.foo "a"])
+           (rstr [d1 {:class "foo"} "a"])))
+    (is (= (rstr [:div "a" "b" [:div "c"]])
+           (rstr [d1 "a" "b" [:div "c"]])))
+
+    (is (= (rstr [:div])
+           (rstr [d2])))
+    (is (= (rstr [:div "a"])
+           (rstr [d2 "a"])))
+    (is (= (rstr [:div "a" "b"])
+           (rstr [d2 "a" "b"])))
+    (is (= (rstr [:div.foo "a"])
+           (rstr [d2 {:class "foo"} "a"])))
+    (is (= (rstr [:div "a" "b" [:div "c"]])
+           (rstr [d2 "a" "b" [:div "c"]])))))

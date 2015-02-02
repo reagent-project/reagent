@@ -13,6 +13,8 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
+(deftype NativeWrapper [comp])
+
 
 ;;; Common utilities
 
@@ -26,7 +28,8 @@
 
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
-      (ifn? x)))
+      (ifn? x)
+      (instance? NativeWrapper x)))
 
 
 ;;; Props conversion
@@ -186,20 +189,26 @@
     (.' js/React createElement c jsprops)))
 
 
+(defn adapt-react-class [c]
+  (NativeWrapper. #js{:name c
+                      :id nil
+                      :class nil}))
+
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
-  (if-some [s (obj-get tag-name-cache (name x))]
-    s
-    (aset tag-name-cache (name x) (parse-tag x))))
-
+  (if (hiccup-tag? x)
+    (if-some [s (obj-get tag-name-cache (name x))]
+      s
+      (aset tag-name-cache (name x) (parse-tag x)))
+    (when (instance? NativeWrapper x)
+      (.-comp x))))
 
 (declare as-element)
 
 (defn native-element [tag argv]
-  (when (hiccup-tag? tag)
-    (let [parsed (cached-parse tag)
-          comp (.' parsed :name)]
+  (when-let [parsed (cached-parse tag)]
+    (let [comp (.' parsed :name)]
       (let [props (nth argv 1 nil)
             hasprops (or (nil? props) (map? props))
             jsprops (convert-props (if hasprops props) parsed)

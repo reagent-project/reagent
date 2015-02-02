@@ -43,6 +43,9 @@ which is equivalent to
   [form]
   (tmpl/as-element form))
 
+(defn adapt-react-class [c]
+  (tmpl/adapt-react-class c))
+
 (defn render
   "Render a Reagent component into the DOM. The first argument may be 
 either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
