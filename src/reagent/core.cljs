@@ -229,13 +229,17 @@ the specified path within the wrapped Reagent atom. e.g.,
 The first parameter can also be a function, that should look something
 like this:
 
-(defn digit-filter
+(defn set-get
   ([k] (get-in @state k))
   ([k v] (swap! state assoc-in k v)))
 
 The function will be called with one argument – the path passed to
 cursor – when the cursor is deref'ed, and two arguments (path and new
 value) when the cursor is modified.
+
+Given that set-get function, (and that state is a Reagent atom, or
+another cursor) these cursors are equivalent:
+(cursor state [:foo]) and (cursor set-get [:foo]).
 "
   ([src path]
    (ratom/cursor src path)))
