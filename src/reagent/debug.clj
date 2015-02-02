@@ -8,6 +8,19 @@
   `(when (clojure.core/exists? js/console)
      (.log js/console ~@forms)))
 
+(defmacro warn
+  "Print with console.warn."
+  [& forms]
+  (when *assert*
+    `(when (clojure.core/exists? js/console)
+       (.warn js/console (str "Warning: " ~@forms)))))
+
+(defmacro warn-unless
+  [cond & forms]
+  (when *assert*
+    `(when (and (not ~cond) (clojure.core/exists? js/console))
+       (.warn js/console (str "Warning: " ~@forms)))))
+
 (defmacro println
   "Print string with console.log"
   [& forms]

@@ -5,8 +5,8 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg prn println log dev?]]))
-
+            [reagent.debug :refer-macros [dbg prn println log dev?
+                                          warn warn-unless]]))
 
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
@@ -149,18 +149,18 @@
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
         class' (when class
                  (string/replace class #"\." " "))]
-    (assert tag (str "Unknown tag: '" hiccup-tag "'"))
+    (assert tag (str "Invalid tag: '" hiccup-tag "'"
+                     (comp/comp-name)))
     #js{:name tag
         :id id
         :className class'}))
 
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
-  (when (dev?)
-    (when (and (fn? f)
-               (some? (.' f :type)))
-      (log "warning: using native React classes directly is not supported: "
-           (.' f :type))))
+  (warn-unless (not (and (fn? f)
+                         (some? (.' f :type))))
+               "Using native React classes directly "
+               "is not supported: " (.' f :type) (comp/comp-name))
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
         res (comp/create-class withrender)
@@ -215,10 +215,13 @@
             (make-element argv comp p first-child)))))))
 
 (defn vec-to-elem [v]
-  (assert (pos? (count v)) "Hiccup form should not be empty")
+  (assert (pos? (count v))
+          (str "Hiccup form should not be empty: "
+               (pr-str v) (comp/comp-name)))
   (let [tag (nth v 0)]
     (assert (valid-tag? tag)
-            (str "Invalid Hiccup form: " (pr-str v)))
+            (str "Invalid Hiccup form: "
+                 (pr-str v) (comp/comp-name)))
     (if-some [ne (native-element tag v)]
       ne
       (reag-element tag v))))
@@ -226,10 +229,9 @@
 (def seq-ctx #js{})
 
 (defn warn-on-deref [x]
-  (when-not (.' seq-ctx :warned)
-    (log "Warning: Reactive deref not supported in seq in "
-         (pr-str x))
-    (.! seq-ctx :warned true)))
+  (warn "Reactive deref not supported in lazy seq, it should be "
+        "wrapped in doall" (comp/comp-name) ". Value:\n"
+        (pr-str x)))
 
 (declare expand-seq)
 

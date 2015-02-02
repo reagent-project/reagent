@@ -1,6 +1,6 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.debug :refer (dbg log dev?)])
+  (:require-macros [reagent.debug :refer (dbg log warn dev?)])
   (:require [reagent.impl.util :as util]))
 
 (declare ^:dynamic *ratom-context*)
@@ -162,10 +162,9 @@
   [src path]
   (if (satisfies? IDeref path)
     (do
-      (when (dev?)
-        (log (str "Calling cursor with an atom as the second arg is "
-                  "deprecated, in (cursor "
-                  src " " (pr-str path) ")")))
+      (warn "Calling cursor with an atom as the second arg is "
+            "deprecated, in (cursor "
+            src " " (pr-str path) ")")
       (RCursor. path src nil))
     (do
       (assert (or (satisfies? IDeref src)
@@ -325,8 +324,8 @@
   (-deref [this]
     (when (dev?)
       (when (and changed (some? *ratom-context*))
-        (log "warning: derefing stale wrap: "
-             (pr-str this))))
+        (warn "derefing stale wrap: "
+              (pr-str this))))
     state)
 
   IReset

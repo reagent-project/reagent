@@ -3,7 +3,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg prn]]))
+            [reagent.debug :refer-macros [dbg prn dev?]]))
 
 (declare ^:dynamic *current-component*)
 
@@ -118,10 +118,10 @@
       (this-as c (apply f c args)))
     f))
 
-(def dont-wrap #{:cljsRender :render :componentFunction})
+(def dont-wrap #{:cljsRender :render :componentFunction :cljsName})
 
 (defn dont-bind [f]
-  (if (ifn? f)
+  (if (fn? f)
     (doto f
       (.! :__reactDontBind true))
     f))
@@ -149,10 +149,13 @@
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
 
-(defn add-render [fun-map render-f]
-  (assoc fun-map
-    :cljsRender render-f
-    :render (:render static-fns)))
+(defn add-render [fun-map render-f name]
+  (let [fm (assoc fun-map
+                  :cljsRender render-f
+                  :render (:render static-fns))]
+    (if (dev?)
+      (assoc fm :cljsName (fn [] name))
+      fm)))
 
 (defn wrap-funs [fun-map]
   (let [render-fun (or (:componentFunction fun-map)
@@ -167,7 +170,7 @@
         name' (if (empty? name) (str (gensym "reagent")) name)
         fmap (-> fun-map
                  (assoc :displayName name')
-                 (add-render render-fun))]
+                 (add-render render-fun name'))]
     (reduce-kv (fn [m k v]
                  (assoc m k (get-wrapper k v name')))
                {} fmap)))
@@ -195,3 +198,12 @@
     (util/cache-react-class f res)
     (util/cache-react-class res res)
     f))
+
+(defn comp-name []
+  (if (dev?)
+    (let [n (some-> *current-component*
+                    (.' cljsName))]
+      (if-not (empty? n)
+        (str " (in " n ")")
+        ""))
+    ""))

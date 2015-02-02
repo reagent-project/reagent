@@ -1,5 +1,5 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg log]]
+  (:require [reagent.debug :refer-macros [dbg log warn]]
             [reagent.interop :refer-macros [.' .!]]
             [clojure.string :as string]))
 
@@ -110,7 +110,7 @@
   (try
     (.' js/React unmountComponentAtNode node)
     (catch js/Object e
-      (do (log "Error unmounting:")
+      (do (warn "Error unmounting:")
           (log e)))))
 
 (defn render-component [comp container callback]
