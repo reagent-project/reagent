@@ -5,7 +5,7 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2740"]
+                 [org.clojure/clojurescript "0.0-2755"]
                  [cljsjs/react "0.12.2-5"]]
   :plugins [[lein-cljsbuild "1.0.4"]]
   :resource-paths ["vendor"]
