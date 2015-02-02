@@ -43,7 +43,10 @@ which is equivalent to
   [form]
   (tmpl/as-element form))
 
-(defn adapt-react-class [c]
+(defn adapt-react-class
+  "Returns an adapter for a native React class, that may be used
+just like a Reagent component function or class in Hiccup forms."
+  [c]
   (tmpl/adapt-react-class c))
 
 (defn render

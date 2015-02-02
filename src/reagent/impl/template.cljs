@@ -162,8 +162,10 @@
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
   (warn-unless (not (and (fn? f)
                          (some? (.' f :type))))
-               "Using native React classes directly "
-               "is not supported: " (.' f :type) (comp/comp-name))
+               "Using native React classes directly in Hiccup forms "
+               "is not supported. Use create-element or "
+               "adapt-react-class instead: " (.' f :type)
+               (comp/comp-name))
   (let [spec (meta f)
         withrender (assoc spec :component-function f)
         res (comp/create-class withrender)
