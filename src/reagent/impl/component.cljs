@@ -17,6 +17,17 @@
       sa
       (.! this :cljsState (ratom/atom nil)))))
 
+(defn state [this]
+  (deref (state-atom this)))
+
+(defn replace-state [this new-state]
+  ;; Don't use React's replaceState, since it doesn't play well
+  ;; with clojure maps
+  (reset! (state-atom this) new-state))
+
+(defn set-state [this new-state]
+  (swap! (state-atom this) merge new-state))
+
 ;; ugly circular dependency
 (defn as-element [x]
   (js/reagent.impl.template.as-element x))
