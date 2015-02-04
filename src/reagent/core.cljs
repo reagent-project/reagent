@@ -99,9 +99,10 @@ looking like this:
 :component-will-update (fn [this new-argv])
 :component-did-update (fn [this old-argv])
 :component-will-unmount (fn [this])
-:render (fn [this])}
+:reagent-render (fn [args....])   ;; or :render (fn [this])
+}
 
-Everything is optional, except :render.
+Everything is optional, except either :reagent-render or :render.
 "
   [spec]
   (comp/create-class spec))

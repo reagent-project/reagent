@@ -133,7 +133,7 @@
   {:display-name "ReagentInput"
    :component-did-update input-set-value
    :component-will-unmount input-unmount
-   :component-function
+   :reagent-render
    (fn [argv comp jsprops first-child]
      (let [this comp/*current-component*]
        (input-render-setup this jsprops)
@@ -167,7 +167,7 @@
                "adapt-react-class instead: " (.' f :type)
                (comp/comp-name))
   (let [spec (meta f)
-        withrender (assoc spec :component-function f)
+        withrender (assoc spec :reagent-render f)
         res (comp/create-class withrender)
         wrapf (util/cached-react-class res)]
     (util/cache-react-class f wrapf)
