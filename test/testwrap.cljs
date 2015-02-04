@@ -173,3 +173,25 @@
           (r/flush)
           (is (found-in #"value:4:" div))
           (is (= @ran 7)))))))
+
+(deftest test-cursor
+ (let [state (atom {:a 0
+                    :b 0})
+       a-count (atom 0)
+       b-count (atom 0)
+       derefer (fn derefer [cur count]
+                 (swap! count inc)
+                 [:div @cur])
+       comp (fn test-cursor []
+              [:div
+               [derefer (r/cursor state [:a]) a-count]
+               [derefer (r/cursor state [:b]) b-count]])]
+   (with-mounted-component [comp]
+     (fn [c div]
+       (is (= @a-count 1))
+       (is (= @b-count 1))
+
+       (swap! state update-in [:a] inc)
+       (r/flush)
+       (is (= @a-count 2))
+       (is (= @b-count 1))))))

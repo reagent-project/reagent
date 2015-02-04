@@ -215,8 +215,7 @@
       (when on-set
         (set! dirty? true)
         (on-set oldval newval))
-      (when (not (identical? oldval newval))
-        (-notify-watches a oldval newval))
+      (-notify-watches a oldval newval)
       newval))
 
   ISwap
@@ -231,13 +230,9 @@
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
-    (when (and active? (not dirty?)
-               (or (instance? Reaction sender)
-                   (not (identical? oldval newval))))
+    (when (and active? (not dirty?) (not (identical? oldval newval)))
       (set! dirty? true)
-      (if auto-run
-        ((or auto-run run) this)
-        (-notify-watches this state state))))
+      ((or auto-run run) this)))
 
   (-update-watching [this derefed]
     (doseq [w derefed]
@@ -260,8 +255,7 @@
         (set! active? true))
       (set! dirty? false)
       (set! state res)
-      (when (not (identical? oldstate state))
-        (-notify-watches this oldstate state))
+      (-notify-watches this oldstate state)
       res))
 
   IDeref
