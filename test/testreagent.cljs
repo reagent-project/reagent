@@ -76,7 +76,7 @@
           self (atom nil)
           comp (reagent/create-class
                 {:get-initial-state (fn [] {:foo "initial"})
-                 :render
+                 :reagent-render
                  (fn []
                    (let [this (reagent/current-component)]
                      (reset! self this)

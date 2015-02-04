@@ -28,7 +28,7 @@
     (let [f (.' c :cljsRender)
           _ (assert (ifn? f))
           p (.' c :props)
-          res (if (nil? (.' c :componentFunction))
+          res (if (nil? (.' c :reagentRender))
                 (f c)
                 (let [argv (.' p :argv)
                       n (count argv)]
@@ -118,7 +118,7 @@
       (this-as c (apply f c args)))
     f))
 
-(def dont-wrap #{:cljsRender :render :componentFunction :cljsName})
+(def dont-wrap #{:cljsRender :render :reagentRender :cljsName})
 
 (defn dont-bind [f]
   (if (fn? f)
@@ -157,8 +157,13 @@
       (assoc fm :cljsName (fn [] name))
       fm)))
 
-(defn wrap-funs [fun-map]
-  (let [render-fun (or (:componentFunction fun-map)
+(defn wrap-funs [fmap]
+  (let [fun-map (if-some [cf (:componentFunction fmap)]
+                  (-> fmap
+                      (assoc :reagentRender cf)
+                      (dissoc :componentFunction))
+                  fmap)
+        render-fun (or (:reagentRender fun-map)
                        (:render fun-map))
         _ (assert (ifn? render-fun)
                   (str "Render must be a function, not "
