@@ -5,6 +5,8 @@
 
 - Reagent no longer bundles React. Instead it uses cljsjs/react as a dependency. This means that you should no longer specify React in `:preamble` in your project.clj.
 
+- `adapt-react-class` makes it easier to use "native" React components with Reagent.
+
 - `cursor` is re-written, to be more efficient and flexible.
 
 - `render` now forces a deep update of all components, to make it more convenient to use with e.g. figwheel.
@@ -18,11 +20,14 @@ components in Reagent ones.
 
 - Arguments to components are now compared using simple `=`, instead of the old, rather complicated heuristics. **NOTE**: This means all arguments to a component function must be comparable with `=` (which means that they cannot be for example infinite `seq`s).
 
-- React updated to 0.12.1. Reagent now creates all React components using `React.createElement`.
+- React updated to 0.12. Reagent now creates all React components using `React.createElement`.
 
-- `render-component` is now render, and `render-component-to-string` is `render-to-string`, in order to match React 0.12.1 (but the old names still work).
+- `render-component` is now render, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
 
 - Add `render-to-static-markup`. This works exactly like `render-to-string`, except that it doesn't produce `data-react-id` etc.
+
+- `create-class` now takes a Reagent-style render function (i.e with the same arguments you pass to the component), called `:reagent-render`.
+
 
 
 ## 0.4.3
