@@ -49,6 +49,13 @@ just like a Reagent component function or class in Hiccup forms."
   [c]
   (tmpl/adapt-react-class c))
 
+(defn reactify-component
+  "Returns an adapter for a Reagent component, that may be used from
+  React, for example in JSX. A single argument, props, is passed to
+  the component, converted to a map."
+  [c]
+  (comp/reactify-component c))
+
 (defn render
   "Render a Reagent component into the DOM. The first argument may be 
 either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.

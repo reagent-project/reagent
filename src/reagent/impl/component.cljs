@@ -212,3 +212,16 @@
         (str " (in " n ")")
         ""))
     ""))
+
+(defn shallow-obj-to-map [o]
+  (into {} (for [k (js-keys o)]
+             [(keyword k) (aget o k)])))
+
+(defn reactify-component [comp]
+  (.' js/React createClass
+      #js{:displayName "react-wrapper"
+          :render
+          (fn []
+            (this-as
+             this (as-element
+                   [comp (shallow-obj-to-map (.' this :props))])))}))

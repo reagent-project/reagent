@@ -471,3 +471,24 @@
            (rstr [d2 {:class "foo"} "a"])))
     (is (= (rstr [:div "a" "b" [:div "c"]])
            (rstr [d2 "a" "b" [:div "c"]])))))
+
+(deftest test-reactize-component
+  (let [ae reagent/as-element
+        ce reagent/create-element
+        c1r (fn [p]
+              [:p "p:" (:a p) (:children p)])
+        c1 (reagent/reactify-component c1r)]
+    (is (= (rstr [:p "p:a"])
+           (rstr (ce c1 #js{:a "a"}))))
+    (is (= (rstr [:p "p:"])
+           (rstr (ce c1 #js{:a nil}))))
+    (is (= (rstr [:p "p:"])
+           (rstr (ce c1 nil))))
+
+    (is (= (rstr [:p "p:a" [:b "b"]])
+           (rstr (ce c1 #js{:a "a"}
+                     (ae [:b "b"])))))
+    (is (= (rstr [:p "p:a" [:b "b"] [:i "i"]])
+           (rstr (ce c1 #js{:a "a"}
+                     (ae [:b "b"])
+                     (ae [:i "i"])))))))
