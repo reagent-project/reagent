@@ -157,6 +157,16 @@
       (assoc fm :cljsName (fn [] name))
       fm)))
 
+(defn fun-name [f]
+  (or (and (fn? f)
+           (or (.' f :displayName)
+               (.' f :name)))
+      (and (implements? INamed f)
+           (name f))
+      (let [m (meta f)]
+        (if (map? m)
+          (:name m)))))
+
 (defn wrap-funs [fmap]
   (let [fun-map (if-some [cf (:componentFunction fmap)]
                   (-> fmap
@@ -169,10 +179,9 @@
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
         name (str (or (:displayName fun-map)
-                      (.' render-fun :displayName)
-                      (.' render-fun :name)
-                      ""))
-        name' (if (empty? name) (str (gensym "reagent")) name)
+                      (fun-name render-fun)))
+        name' (if (empty? name)
+                (str (gensym "reagent")) name)
         fmap (-> fun-map
                  (assoc :displayName name')
                  (add-render render-fun name'))]
