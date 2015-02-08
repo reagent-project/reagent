@@ -492,3 +492,16 @@
            (rstr (ce c1 #js{:a "a"}
                      (ae [:b "b"])
                      (ae [:i "i"])))))))
+
+(deftest test-keys
+  (let [a nil ;; (atom "a")
+        c (fn key-tester []
+            [:div
+             (for [i (range 3)]
+               ^{:key i} [:p i (some-> a deref)])
+             (for [i (range 3)]
+               [:p {:key i} i (some-> a deref)])])]
+    (with-mounted-component [c]
+      (fn [c div]
+        ;; Just make sure this doesn't print a debug message
+        ))))

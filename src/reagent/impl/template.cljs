@@ -181,15 +181,16 @@
 (defn get-key [x]
   (when (map? x) (get x :key)))
 
+(defn key-from-vec [v]
+  (if-some [k (some-> (meta v) get-key)]
+    k
+    (-> v (nth 1 nil) get-key)))
+
 (defn reag-element [tag v]
   (let [c (as-class tag)
         jsprops #js{:argv v}]
-    (let [key (if-some [k (some-> (meta v) get-key)]
-                k
-                (-> v (nth 1 nil) get-key))]
-      (some->> key (.! jsprops :key)))
+    (some->> v key-from-vec (.! jsprops :key))
     (.' js/React createElement c jsprops)))
-
 
 (defn adapt-react-class [c]
   (NativeWrapper. #js{:name c
@@ -237,27 +238,14 @@
       ne
       (reag-element tag v))))
 
-(def seq-ctx #js{})
-
-(defn warn-on-deref [x]
-  (warn "Reactive deref not supported in lazy seq, it should be "
-        "wrapped in doall" (comp/comp-name) ". Value:\n"
-        (pr-str x)))
-
 (declare expand-seq)
+(declare expand-seq-check)
 
 (defn as-element [x]
   (cond (string? x) x
         (vector? x) (vec-to-elem x)
         (seq? x) (if (dev?)
-                   (if (nil? ratom/*ratom-context*)
-                     (expand-seq x)
-                     (let [s (ratom/capture-derefed
-                              #(expand-seq x)
-                              seq-ctx)]
-                       (when (ratom/captured seq-ctx)
-                         (warn-on-deref x))
-                       s))
+                   (expand-seq-check x)
                    (expand-seq x))
         true x))
 
@@ -266,6 +254,31 @@
     (dotimes [i (alength a)]
       (aset a i (as-element (aget a i))))
     a))
+
+(defn expand-seq-dev [s o]
+  (let [a (into-array s)]
+    (dotimes [i (alength a)]
+      (let [val (aget a i)]
+        (when (and (vector? val)
+                   (nil? (key-from-vec val)))
+          (.! o :no-key true))
+        (aset a i (as-element val))))
+    a))
+
+(defn expand-seq-check [x]
+  (let [ctx #js{}
+        res (if (nil? ratom/*ratom-context*)
+              (expand-seq-dev x ctx)
+              (ratom/capture-derefed #(expand-seq-dev x ctx)
+                                     ctx))]
+    (when (ratom/captured ctx)
+      (warn "Reactive deref not supported in lazy seq, "
+            "it should be wrapped in doall"
+            (comp/comp-name) ". Value:\n" (pr-str x)))
+    (when (.' ctx :no-key)
+      (warn "Every element in a seq should have a unique "
+            ":key" (comp/comp-name) ". Value: " (pr-str x)))
+    res))
 
 (defn make-element [argv comp jsprops first-child]
   (case (- (count argv) first-child)
