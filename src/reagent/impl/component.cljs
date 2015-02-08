@@ -226,11 +226,19 @@
   (into {} (for [k (js-keys o)]
              [(keyword k) (aget o k)])))
 
+(def elem-counter 0)
+
 (defn reactify-component [comp]
   (.' js/React createClass
       #js{:displayName "react-wrapper"
           :render
           (fn []
-            (this-as
-             this (as-element
-                   [comp (shallow-obj-to-map (.' this :props))])))}))
+            (this-as this
+                     (as-element
+                      [comp
+                       (-> (.' this :props)
+                           shallow-obj-to-map
+                           ;; ensure re-render, might get mutable js data
+                           (assoc :-elem-count
+                                  (set! elem-counter
+                                        (inc elem-counter))))])))}))
