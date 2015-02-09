@@ -19,7 +19,7 @@ This will setup a new Reagent project with some reasonable defaults, see here fo
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
-    [reagent "0.5.0-alpha"]
+    [reagent "0.5.0-alpha3"]
 
 You also need to include react.js itself. One way to do this is to add
 

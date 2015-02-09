@@ -1,8 +1,8 @@
 
-(defproject simple-reagent "0.5.0-alpha"
+(defproject simple-reagent "0.5.0-alpha3"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2760"]
-                 [reagent "0.5.0-alpha2"]
+                 [reagent "0.5.0-alpha3"]
                  [figwheel "0.2.3-SNAPSHOT"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
