@@ -1,4 +1,3 @@
-
 (ns simpleexample
   (:require [reagent.core :as reagent :refer [atom]]))
 
@@ -32,5 +31,5 @@
    [color-input]])
 
 (defn ^:export run []
-  (reagent/render-component [simple-example]
-                            (js/document.getElementById "app")))
+  (reagent/render [simple-example]
+                  (js/document.getElementById "app")))
