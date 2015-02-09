@@ -33,5 +33,7 @@ if (!compileFail()) {
   } catch (e) {
     console.log(e + beep);
     console.error(e.stack);
+    process.exit(1);
   }
 }
+process.exit(0);
