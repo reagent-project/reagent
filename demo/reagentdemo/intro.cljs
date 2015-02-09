@@ -3,7 +3,7 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
-            [reagentdemo.syntax :as s :include-macros true]
+            [reagentdemo.syntax :as s]
             [sitetools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample :as simple]

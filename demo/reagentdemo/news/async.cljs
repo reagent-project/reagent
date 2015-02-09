@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :as s :include-macros true]
+            [reagentdemo.syntax :as s]
             [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 

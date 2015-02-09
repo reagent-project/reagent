@@ -2,7 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
-            [reagentdemo.syntax :as s :include-macros true]
+            [reagentdemo.syntax :as s]
             [sitetools :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
