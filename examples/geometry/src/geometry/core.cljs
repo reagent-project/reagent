@@ -6,7 +6,7 @@
 
 (enable-console-print!)
 
-(def points 
+(defonce points 
   (r/atom
    {:p1 (g/point 100 100)
     :p2 (g/point 200 200)
@@ -48,6 +48,5 @@
   (.getElementById js/document id))
 
 (defn ^:export run []
-  (r/render-component 
-   [main]
-   (by-id "app")))
+  (r/render [main]
+            (by-id "app")))
