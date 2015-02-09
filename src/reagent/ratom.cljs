@@ -32,8 +32,11 @@
 
 ;;; Atom
 
+(defprotocol IReactiveAtom)
+
 (deftype RAtom [^:mutable state meta validator ^:mutable watches]
   IAtom
+  IReactiveAtom
 
   IEquiv
   (-equiv [o other] (identical? o other))
@@ -99,6 +102,7 @@
 
 (deftype RCursor [ratom path ^:mutable reaction]
   IAtom
+  IReactiveAtom
 
   IEquiv
   (-equiv [o other]
@@ -165,12 +169,16 @@
       (warn "Calling cursor with an atom as the second arg is "
             "deprecated, in (cursor "
             src " " (pr-str path) ")")
+      (assert (satisfies? IReactiveAtom path)
+              (str "src must be a reactive atom, not "
+                   (pr-str path)))
       (RCursor. path src nil))
     (do
-      (assert (or (satisfies? IDeref src)
+      (assert (or (satisfies? IReactiveAtom src)
                   (and (ifn? src)
                        (not (vector? src))))
-              (str "src must be an atom or a function, not " src))
+              (str "src must be a reactive atom or a function, not "
+                   (pr-str src)))
       (RCursor. src path nil))))
 
 
@@ -191,6 +199,7 @@
                    ^:mutable watching ^:mutable watches
                    auto-run on-set on-dispose]
   IAtom
+  IReactiveAtom
 
   IWatchable
   (-notify-watches [this oldval newval]
