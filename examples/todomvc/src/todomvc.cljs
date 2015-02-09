@@ -1,10 +1,9 @@
-
 (ns todomvc
   (:require [reagent.core :as reagent :refer [atom]]))
 
-(def todos (atom (sorted-map)))
+(defonce todos (atom (sorted-map)))
 
-(def counter (atom 0))
+(defonce counter (atom 0))
 
 (defn add-todo [text]
   (let [id (swap! counter inc)]
@@ -18,11 +17,12 @@
 (defn complete-all [v] (swap! todos mmap map #(assoc-in % [1 :done] v)))
 (defn clear-done [] (swap! todos mmap remove #(get-in % [1 :done])))
 
-(add-todo "Rename Cloact to Reagent")
-(add-todo "Add undo demo")
-(add-todo "Make all rendering async")
-(add-todo "Allow any arguments to component functions")
-(complete-all true)
+(defonce init (do
+                (add-todo "Rename Cloact to Reagent")
+                (add-todo "Add undo demo")
+                (add-todo "Make all rendering async")
+                (add-todo "Allow any arguments to component functions")
+                (complete-all true)))
 
 (defn todo-input [{:keys [title on-save on-stop]}]
   (let [val (atom title)
@@ -104,4 +104,5 @@
           [:p "Double-click to edit a todo"]]]))))
 
 (defn ^:export run []
-  (reagent/render-component [todo-app] (.-body js/document)))
+  (reagent/render [todo-app]
+                  (js/document.getElementById "app")))
