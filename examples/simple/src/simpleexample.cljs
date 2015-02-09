@@ -2,18 +2,17 @@
 (ns simpleexample
   (:require [reagent.core :as reagent :refer [atom]]))
 
-(def timer (atom (js/Date.)))
-(def time-color (atom "#f34"))
+(defonce timer (atom (js/Date.)))
 
-(defn update-time [time]
-  ;; Update the time every 1/10 second to be accurate...
-  (js/setTimeout #(reset! time (js/Date.)) 100))
+(defonce time-color (atom "#f34"))
+
+(defonce time-updater (js/setInterval
+                       #(reset! timer (js/Date.)) 1000))
 
 (defn greeting [message]
   [:h1 message])
 
 (defn clock []
-  (update-time timer)
   (let [time-str (-> @timer .toTimeString (clojure.string/split " ") first)]
     [:div.example-clock
      {:style {:color @time-color}}
@@ -33,5 +32,5 @@
    [color-input]])
 
 (defn ^:export run []
-  (reagent/render-component (fn [] [simple-example])
-                            (.-body js/document)))
+  (reagent/render-component [simple-example]
+                            (js/document.getElementById "app")))

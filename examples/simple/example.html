@@ -6,9 +6,17 @@
     <link rel="stylesheet" href="example.css">
   </head>
   <body>
-    <h1>This will become an example when the ClojureScript is compiled</h1>
-    <script type="text/javascript" src="target/client.js"></script>
-    <script type="text/javascript">
+    <div id="app">
+      <h1>Reagent example app</h1>
+
+      <p> Run "lein figwheel" in a terminal to compile, wait a while, and then refresh the browser. </p>
+
+      <p> Any changes to .cljs files will be reflected in the running page immediately. </p>
+
+      <p> Run "lein clean; lein with-profile prod compile" to compile an optimized version. </p>
+    </div>
+    <script src="target/client.js"></script>
+    <script>
       simpleexample.run();
     </script>
   </body>
