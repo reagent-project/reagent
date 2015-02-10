@@ -39,9 +39,7 @@
              :prod [:site
                     {:cljsbuild
                      {:builds {:client
-                               {:source-paths ["env/prod"]
-                                :compiler {:main "reagentdemo.prod"
-                                           :optimizations :advanced
+                               {:compiler {:optimizations :advanced
                                            :elide-asserts true
                                            :pretty-print false
                                            :output-dir "target/client"}}}}}]

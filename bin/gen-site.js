@@ -16,9 +16,6 @@ if (typeof location === "undefined") {
 var gensite = function () {
     console.log("Loading " + srcFile);
     var optNone = cljsLoad.load(srcFile, outputDirectory, moduleName);
-    if (typeof reagenttest != "undefined") {
-        reagenttest.runtests.run_tests();
-    }
     sitetools.core.genpages({"opt-none": optNone});
 }
 
