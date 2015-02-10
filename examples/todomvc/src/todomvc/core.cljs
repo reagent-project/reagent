@@ -1,4 +1,4 @@
-(ns todomvc
+(ns todomvc.core
   (:require [reagent.core :as reagent :refer [atom]]))
 
 (defonce todos (atom (sorted-map)))

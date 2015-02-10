@@ -1,4 +1,4 @@
-(ns sitetools
+(ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
             [goog.history.EventType :as hevt]

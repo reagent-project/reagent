@@ -1,11 +1,10 @@
-
 (defproject reagent "0.5.0-SNAPSHOT"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2760"]
+                 [org.clojure/clojurescript "0.0-2816"]
                  [cljsjs/react "0.12.2-5"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]]
@@ -24,7 +23,7 @@
                         {:builds
                          {:client
                           {:source-paths ["env/dev"]
-                           :compiler {:main "devsetup"
+                           :compiler {:main "reagentdemo.dev"
                                       :source-map true
                                       :source-map-timestamp true
                                       :optimizations :none
@@ -41,7 +40,7 @@
                     {:cljsbuild
                      {:builds {:client
                                {:source-paths ["env/prod"]
-                                :compiler {:main "prodsetup"
+                                :compiler {:main "reagentdemo.prod"
                                            :optimizations :advanced
                                            :elide-asserts true
                                            :pretty-print false
@@ -54,6 +53,7 @@
                                     "outsite/public/js"
                                     "outsite/public/site"
                                     "outsite/public/news"
+                                    "outsite/public/css"
                                     "outsite/public/index.html"
                                     "out"]
 

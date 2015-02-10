@@ -1,6 +1,6 @@
-(ns ^:figwheel-always devsetup
-    (:require [demo :as site]
-              [runtests]
+(ns ^:figwheel-always reagentdemo.dev
+    (:require [reagentdemo.core :as demo]
+              [reagenttest.runtests :as runtests]
               [reagent.core :as r]
               [figwheel.client :as fw]))
 
@@ -13,6 +13,7 @@
 
 (defn start! []
   (demo/start! {:test-results test-results})
-  (runtests/run-tests))
+  (when r/is-client
+    (runtests/run-tests)))
 
 (start!)

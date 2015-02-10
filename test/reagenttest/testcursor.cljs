@@ -1,4 +1,4 @@
-(ns testcursor
+(ns reagenttest.testcursor
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
             [reagent.debug :refer-macros [dbg]]

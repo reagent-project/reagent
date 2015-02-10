@@ -1,5 +1,5 @@
-(ns devsetup
-  (:require [simpleexample :as example]
+(ns geometry.dev
+  (:require [geometry.core :as example]
             [figwheel.client :as fw]))
 
 (fw/start {:on-jsload example/run

@@ -3,9 +3,8 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools :as tools :refer [link]]
-            [reagentdemo.common :as common :refer [demo-component]]
-            [todomvc :as todomvc]))
+            [sitetools.core :as tools :refer [link]]
+            [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "news/news050.html")
 (def title "News in 0.5.0-alpha")

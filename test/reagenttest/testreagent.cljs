@@ -1,4 +1,4 @@
-(ns testreagent
+(ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :refer-macros [dbg println log]]

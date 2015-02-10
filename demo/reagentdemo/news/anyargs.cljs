@@ -3,7 +3,7 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools :as tools :refer [link]]
+            [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
 

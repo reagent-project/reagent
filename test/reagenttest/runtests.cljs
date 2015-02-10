@@ -1,25 +1,31 @@
-
-(ns runtests
-  (:require [testreagent]
-            [testcursor]
-            [testinterop]
-            [testratom]
-            [testwrap]
+(ns reagenttest.runtests
+  (:require [reagenttest.testreagent]
+            [reagenttest.testcursor]
+            [reagenttest.testinterop]
+            [reagenttest.testratom]
+            [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
             [reagent.core :as reagent :refer [atom]]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg println]]))
-
-(defn all-tests []
-  (test/run-tests 'testreagent
-                  'testcursor
-                  'testinterop
-                  'testratom
-                  'testwrap))
+            [reagent.debug :refer-macros [dbg log]]))
 
 (enable-console-print!)
 
+(defn all-tests []
+  (test/run-tests 'reagenttest.testreagent
+                  'reagenttest.testcursor
+                  'reagenttest.testinterop
+                  'reagenttest.testratom
+                  'reagenttest.testwrap))
+
 (def test-results (atom nil))
+
+(defmethod test/report [::test/default :summary] [m]
+  ;; ClojureScript 2814 doesn't return anything from run-tests
+  (reset! test-results m)
+  (println "\nRan" (:test m) "tests containing"
+    (+ (:pass m) (:fail m) (:error m)) "assertions.")
+  (println (:fail m) "failures," (:error m) "errors."))
 
 (def test-box {:position 'absolute
                :margin-left -35
@@ -46,14 +52,15 @@
       [:div {:style test-box} "testing"])))
 
 (defn ^:export run-all-tests []
-  (println "-----------------------------------------")
+  (log "-----------------------------------------")
   (try
-    (reset! test-results (all-tests))
+    (reset! test-results nil)
+    (all-tests)
     (catch js/Object e
       (do
-        (println "Testrun failed\n" e "\n" (.-stack e))
+        (log "Testrun failed\n" e "\n" (.-stack e))
         (reset! test-results {:error e}))))
-  (println "-----------------------------------------"))
+  (log "-----------------------------------------"))
 
 (defn ^:export run-tests []
   (if reagent/is-client

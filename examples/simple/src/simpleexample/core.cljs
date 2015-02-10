@@ -1,4 +1,4 @@
-(ns simpleexample
+(ns simpleexample.core
   (:require [reagent.core :as reagent :refer [atom]]))
 
 (defonce timer (atom (js/Date.)))

@@ -4,10 +4,10 @@
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
             [reagentdemo.syntax :as s]
-            [sitetools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
-            [simpleexample :as simple]
-            [todomvc :as todo]))
+            [simpleexample.core :as simple]
+            [todomvc.core :as todo]))
 
 (defn simple-component []
   [:div
@@ -307,7 +307,7 @@
 
    [demo-component {:comp simple/simple-example
                     :complete true
-                    :src (s/src-of nil "simpleexample.cljs")}]])
+                    :src (s/src-of nil "simpleexample/core.cljs")}]])
 
 (defn todomvc-demo []
   [:div.demo-text
@@ -319,7 +319,7 @@
 
    [demo-component {:comp todo/todo-app
                     :complete true
-                    :src (s/src-of nil "todomvc.cljs")}]])
+                    :src (s/src-of nil "todomvc/core.cljs")}]])
 
 (defn main []
   (let [show-all (atom false)

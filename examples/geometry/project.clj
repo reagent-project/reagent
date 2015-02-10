@@ -1,6 +1,6 @@
 (defproject geometry-reagent "0.5.0-alpha3"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2760"]
+                 [org.clojure/clojurescript "0.0-2816"]
                  [reagent "0.5.0-alpha3"]
                  [figwheel "0.2.3-SNAPSHOT"]]
 
@@ -12,7 +12,7 @@
   :profiles {:dev {:cljsbuild
                    {:builds {:client {:source-paths ["devsrc"]
                                       :compiler
-                                      {:main devsetup
+                                      {:main geometry.dev
                                        :optimizations :none
                                        :source-map true
                                        :source-map-timestamp true}}}}}

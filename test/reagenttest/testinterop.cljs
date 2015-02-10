@@ -1,4 +1,4 @@
-(ns testinterop
+(ns reagenttest.testinterop
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [.' .!]]))

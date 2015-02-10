@@ -1,5 +1,5 @@
-(ns devsetup
-  (:require [geometry.core :as example]
+(ns todomvc.dev
+  (:require [todomvc.core :as example]
             [figwheel.client :as fw]))
 
 (fw/start {:on-jsload example/run

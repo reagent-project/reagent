@@ -1,8 +1,8 @@
-(ns demo
+(ns reagentdemo.core
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
-            [sitetools :as tools :refer [link]]
+            [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]

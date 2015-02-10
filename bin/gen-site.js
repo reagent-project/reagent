@@ -3,7 +3,7 @@ var cljsLoad = require("./cljs-load");
 
 var srcFile = "outsite/public/js/main.js";
 var outputDirectory = "outsite/public/js/out/";
-var moduleName = "devsetup";
+var moduleName = "reagentdemo.dev";
 
 var beep = "\u0007";
 
@@ -16,7 +16,10 @@ if (typeof location === "undefined") {
 var gensite = function () {
     console.log("Loading " + srcFile);
     var optNone = cljsLoad.load(srcFile, outputDirectory, moduleName);
-    sitetools.genpages({"opt-none": optNone});
+    if (typeof reagenttest != "undefined") {
+        reagenttest.runtests.run_tests();
+    }
+    sitetools.core.genpages({"opt-none": optNone});
 }
 
 var compileFail = function () {
