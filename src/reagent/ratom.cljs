@@ -276,20 +276,19 @@
 
   IDeref
   (-deref [this]
-    (if-not (or auto-run (some? *ratom-context*))
+    (if (or auto-run (some? *ratom-context*))
+      (do
+        (notify-deref-watcher! this)
+        (if dirty?
+          (run this)
+          state))
       (do
         (when dirty?
           (let [oldstate state]
             (set! state (f))
             (when-not (identical? oldstate state)
               (-notify-watches this oldstate state))))
-        state)
-      (do
-        (when (some? *ratom-context*)
-          (notify-deref-watcher! this))
-        (if dirty?
-          (run this)
-          state))))
+        state)))
 
   IDisposable
   (dispose! [this]
