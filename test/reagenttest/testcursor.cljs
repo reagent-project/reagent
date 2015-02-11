@@ -416,3 +416,13 @@
     (is (= (:new @witness) "new")) ;; shouldn't have changed
     (is (= @test-wrap @test-atom))
     ))
+
+(deftest test-cursor-swap
+  (let [a (atom {:b 1})
+        b (r/cursor a [:b])]
+    (is (= 1 @b))
+    (is (= 2 (swap! b inc)))
+
+    (swap! a update-in [:b] inc)
+    (is (= 4 (swap! b inc)))
+    (is (= 4 @b))))

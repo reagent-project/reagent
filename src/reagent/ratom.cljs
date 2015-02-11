@@ -193,7 +193,8 @@
 
 (defprotocol IComputedImpl
   (-update-watching [this derefed])
-  (-handle-change [k sender oldval newval]))
+  (-handle-change [k sender oldval newval])
+  (-peek-at [this]))
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
@@ -229,13 +230,13 @@
 
   ISwap
   (-swap! [a f]
-    (-reset! a (f state)))
+    (-reset! a (f (-peek-at a))))
   (-swap! [a f x]
-    (-reset! a (f state x)))
+    (-reset! a (f (-peek-at a) x)))
   (-swap! [a f x y]
-    (-reset! a (f state x y)))
+    (-reset! a (f (-peek-at a) x y)))
   (-swap! [a f x y more]
-    (-reset! a (apply f state x y more)))
+    (-reset! a (apply f (-peek-at a) x y more)))
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
@@ -251,6 +252,12 @@
       (when-not (contains? derefed w)
         (remove-watch w this)))
     (set! watching derefed))
+
+  (-peek-at [this]
+    (if-not dirty?
+      state
+      (binding [*ratom-context* nil]
+        (-deref this))))
 
   IRunnable
   (run [this]
@@ -278,7 +285,8 @@
               (-notify-watches this oldstate state))))
         state)
       (do
-        (notify-deref-watcher! this)
+        (when (some? *ratom-context*)
+          (notify-deref-watcher! this))
         (if dirty?
           (run this)
           state))))
