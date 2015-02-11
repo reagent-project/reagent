@@ -6,9 +6,9 @@
 
 ;; this repeats all the atom tests but using cursors instead
 
-(set! rv/debug true)
-
-(defn running [] (rv/running))
+(defn running []
+  (set! rv/debug true)
+  (rv/running))
 (defn dispose [v] (rv/dispose! v))
 
 (deftest basic-cursor

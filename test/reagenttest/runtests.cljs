@@ -44,5 +44,7 @@
     (js/setTimeout all-tests 100)
     (all-tests)))
 
-(reset! demo/test-results [#'test-output-mini])
-(run-tests)
+(when (some? (test/deftest empty-test))
+  ;; Only run with :load-tests true
+  (reset! demo/test-results [#'test-output-mini])
+  (run-tests))

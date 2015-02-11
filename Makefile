@@ -17,6 +17,10 @@ run: figwheel
 runsite:
 	@$(MAKE) run PROF=dev,site,$(PROF)
 
+# development build with figwheel, but no tests
+runnotest:
+	@$(MAKE) run PROF=dev-notest,$(PROF)
+
 # production build with auto-rebuild
 runprod: clean
 	@$(MAKE) serve-site PROF=prod,$(PROF)

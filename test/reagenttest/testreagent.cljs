@@ -7,8 +7,7 @@
 
 (defn running [] (rv/running))
 
-(def isClient (not (nil? (try (.-document js/window)
-                              (catch js/Object e nil)))))
+(def isClient reagent/is-client)
 
 (def rflush reagent/flush)
 
