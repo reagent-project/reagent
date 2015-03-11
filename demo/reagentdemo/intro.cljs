@@ -79,12 +79,12 @@
       (assoc data :weight (* bmi h h)))))
 
 (defn slider [param value min max]
-  (let [reset (case param :bmi :weight :bmi)]
-    [:input {:type "range" :value value :min min :max max
-             :style {:width "100%"}
-             :on-change #(swap! bmi-data assoc
-                                param (-> % .-target .-value)
-                                reset nil)}]))
+  [:input {:type "range" :value value :min min :max max
+           :style {:width "100%"}
+           :on-change (fn [e]
+                        (swap! bmi-data assoc param (.-target.value e))
+                        (when (not= param :bmi)
+                          (swap! bmi-data assoc :bmi nil)))}])
 
 (defn bmi-component []
   (let [{:keys [weight height bmi]} (calc-bmi)
