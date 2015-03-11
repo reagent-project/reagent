@@ -9,7 +9,7 @@
   (string/split src #"\n(?=[(])"))
 
 (defn src-defs [parts]
-  (let [ws #"[^ \t]+"]
+  (let [ws #"[^ \t\n]+"]
     (into {} (for [x parts]
                [(->> x (re-seq ws) second keyword) x]))))
 
