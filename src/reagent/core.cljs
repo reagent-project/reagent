@@ -92,7 +92,17 @@ Returns the mounted component instance."
      (binding [comp/*non-reactive* true]
        (.' js/React renderToStaticMarkup (as-element component)))))
 
-(defn ^:export force-update-all []
+(defn ^:export force-update-all
+  "Force re-rendering of all mounted Reagent components. This is
+  probably only useful in a development environment, when you want to
+  update components in response to some dynamic changes to code.
+
+  Note that force-update-all may not update root components. This
+  happens if a component 'foo' is mounted with `(render [foo])` (since
+  functions are passed by value, and not by reference, in
+  ClojureScript). To get around this you'll have to introduce a layer
+  of indirection, for example by using `(render [#'foo])` instead."
+  []
   (util/force-update-all))
 
 (defn create-class
