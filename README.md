@@ -21,17 +21,13 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
     [reagent "0.5.0-alpha3"]
 
-You also need to include react.js itself. One way to do this is to add
+This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
-    :preamble ["reagent/react.js"]
+    [reagent "0.5.0-alpha3" :exclusions [cljsjs/react]]
+    [cljsjs/react-with-addons "0.12.2-4"]
 
-to the *:compiler* section of project.clj, as shown in the examples
-directory (or "reagent/react.min.js" in production). You could also
-add
+If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
 
-    <script src="http://fb.me/react-0.12.1.js"></script>
-
-directly to your html.
 
 ## Examples
 
