@@ -1,7 +1,9 @@
 
 # Changelog
 
-## Upcoming
+## 0.5.0
+
+- React updated to 0.12.2
 
 - Reagent no longer bundles React. Instead it uses cljsjs/react as a dependency. This means that you should no longer specify React in `:preamble` in your project.clj.
 
@@ -24,7 +26,7 @@ components in Reagent ones.
 
 - Arguments to components are now compared using simple `=`, instead of the old, rather complicated heuristics. **NOTE**: This means all arguments to a component function must be comparable with `=` (which means that they cannot be for example infinite `seq`s).
 
-- React updated to 0.12. Reagent now creates all React components using `React.createElement`.
+- Reagent now creates all React components using `React.createElement` (required for React 0.12).
 
 - `render-component` is now render, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
 

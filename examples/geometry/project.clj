@@ -1,7 +1,7 @@
-(defproject geometry-reagent "0.5.0-alpha3"
+(defproject geometry-reagent "0.5.0"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2816"]
-                 [reagent "0.5.0-alpha3"]
+                 [reagent "0.5.0"]
                  [figwheel "0.2.3-SNAPSHOT"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
