@@ -5,7 +5,11 @@
 
 - Reagent no longer bundles React. Instead it uses cljsjs/react as a dependency. This means that you should no longer specify React in `:preamble` in your project.clj.
 
+- ClojureScript 0.0-2816 or later is required.
+
 - `adapt-react-class` makes it easier to use "native" React components with Reagent.
+
+- `reactify-component` makes it easier to use Reagent components in JSX.
 
 - `cursor` is re-written, to be more efficient and flexible.
 
@@ -13,7 +17,7 @@
 
 - Renamed `as-component` to `as-element`, to match React's new terminology better (old name still works, though, for backward compatiblity).
 
-- Stop wrapping native components. This reduces the number of components created a lot, and can speed some things up substantially (especially render-to-string, that is not bound by browser performance). This is made possible by a new way of keeping track of which order to re-render dirty components.
+- Stop wrapping native components. This reduces the number of components created a lot, and can speed up some things substantially (especially render-to-string, that is not bound by browser performance). This is made possible by a new way of keeping track of which order to re-render dirty components.
 
 - Added `create-element` to make it easier to embed native React 
 components in Reagent ones.
