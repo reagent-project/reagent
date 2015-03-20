@@ -1,6 +1,7 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.debug :refer (dbg log warn dev?)])
+  (:require-macros [reagent.debug :refer (dbg log warn dev?)]
+                   reagent.ratom)
   (:require [reagent.impl.util :as util]))
 
 (declare ^:dynamic *ratom-context*)
