@@ -4,10 +4,10 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2816"]
+                 [org.clojure/clojurescript "0.0-3126"]
                  [cljsjs/react "0.12.2-5"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]]
+  :plugins [[lein-cljsbuild "1.0.5"]]
 
   :source-paths ["src"]
   
@@ -15,8 +15,8 @@
                     {:builds {:client {:source-paths ["test"]}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.2.3-SNAPSHOT"]]
-                    :plugins [[lein-figwheel "0.2.3-SNAPSHOT"]]
+                   {:dependencies [[figwheel "0.2.5"]]
+                    :plugins [[lein-figwheel "0.2.5"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
@@ -69,4 +69,5 @@
                         :compiler {:output-to "outsite/public/js/main.js"}}}}
   
   :figwheel {:http-server-root "public" ;; assumes "resources"
-             :repl false})
+             ;; broken in figwheel 0.2.5: :repl false
+             })
