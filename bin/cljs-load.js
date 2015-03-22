@@ -8,7 +8,9 @@ var run = function (src) {
     vm.runInThisContext(fs.readFileSync(src), src);
 }
 
-var loadSrc = function (mainFile, outputDir, devModule) {
+var imported = {};
+
+var loadSrc = function (mainFile, outputDir, devFile) {
     var googDir = path.join(outputDir, "goog");
     var optNone = false;
     if (outputDir) {
@@ -21,13 +23,16 @@ var loadSrc = function (mainFile, outputDir, devModule) {
         }
         global.CLOSURE_IMPORT_SCRIPT = function (src) {
             var s = path.resolve(path.resolve(cwd, path.join(googDir, src)));
-            run(s);
-            return true;
+            if (!(s in imported)) {
+                imported[s] = true;
+                run(s);
+                return true;
+            }
         };
 
         run(path.join(googDir, "base.js"));
         run(path.join(outputDir, "cljs_deps.js"));
-        goog.require(devModule);
+        run(path.join(outputDir, devFile));
     } else {
         run(mainFile);
     }

@@ -15,11 +15,11 @@ run: figwheel
 
 # development build with auto-reloading and site generation
 runsite:
-	@$(MAKE) run PROF=dev,site,$(PROF)
+	@$(MAKE) run PROF=+site,$(PROF)
 
 # development build with figwheel, but no tests
 runnotest:
-	@$(MAKE) run PROF=dev-notest,$(PROF)
+	@$(MAKE) run PROF=+dev-notest,$(PROF)
 
 # production build with auto-rebuild
 runprod: clean
