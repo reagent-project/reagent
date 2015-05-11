@@ -7,10 +7,14 @@
                  [org.clojure/clojurescript "0.0-2816"]
                  [cljsjs/react "0.12.2-5"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]]
+  :plugins [[lein-cljsbuild "1.0.4"]
+            [codox "0.8.12"]]
 
   :source-paths ["src"]
-  
+
+  :codox {:language :clojurescript
+          :exclude clojure.string}  
+
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]}}}}
 
