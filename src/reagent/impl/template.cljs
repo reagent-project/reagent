@@ -91,11 +91,13 @@
   (.! this :cljsInputValue nil))
 
 ;; <input type="??" >
-(def these-inputs-have-a-cursor #{"text" "textarea" "password" "email" "number" "search" "tel" "url"})
+;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
+;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
+(def these-inputs-have-selection-api #{"text" "textarea" "password" "search" "tel" "url"})
 
-(defn has-cursor?
+(defn has-selection-api?
   [input-type]
-  (contains? these-inputs-have-a-cursor  input-type))
+  (contains? these-inputs-have-selection-api input-type))
 
 (defn input-set-value [this]
   (when-some [value (.' this :cljsInputValue)]
@@ -103,7 +105,7 @@
              (let [node       (.' this getDOMNode)
                    node-value (.' node :value)]
                (when (not= value node-value)
-                 (if-not (has-cursor? (.' node :type))
+                 (if-not (has-selection-api? (.' node :type))
                    ; just set the value, no need to worry about a cursor
                    (.! node :value value)
 
