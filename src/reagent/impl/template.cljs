@@ -91,7 +91,7 @@
   (.! this :cljsInputValue nil))
 
 ;; <input type="??" >
-(def these-inputs-have-a-cursor #{"text" "password" "email" "number" "search" "tel" "url"})
+(def these-inputs-have-a-cursor #{"text" "textarea" "password" "email" "number" "search" "tel" "url"})
 
 (defn has-cursor?
   [input-type]
