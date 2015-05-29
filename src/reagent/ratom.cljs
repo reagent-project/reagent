@@ -1,5 +1,5 @@
 (ns reagent.ratom
-  (:refer-clojure :exclude [atom])
+  (:refer-clojure :exclude [atom run!])
   (:require-macros [reagent.debug :refer (dbg log warn dev?)])
   (:require [reagent.impl.util :as util]))
 
