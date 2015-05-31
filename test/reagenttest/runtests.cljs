@@ -50,4 +50,8 @@
     (reset! demo/test-results [#'test-output-mini])
     (run-tests)))
 
+(defn reload []
+  (demo/init!)
+  (init!))
+
 (init!)

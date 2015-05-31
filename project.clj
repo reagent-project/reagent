@@ -23,8 +23,9 @@
                     :cljsbuild
                     {:builds
                      {:client
-                      {:source-paths ["env/dev"]
-                       :compiler {:main "reagentdemo.dev"
+                      {;;:source-paths ["env/dev"]
+                       :figwheel {:on-jsload "reagenttest.runtests/reload"}
+                       :compiler {:main "reagenttest.runtests"
                                   :source-map true
                                   :source-map-timestamp true
                                   :optimizations :none
@@ -69,5 +70,4 @@
                         :compiler {:output-to "outsite/public/js/main.js"}}}}
   
   :figwheel {:http-server-root "public" ;; assumes "resources"
-             :repl false
-             })
+             :repl false})
