@@ -1,3 +1,3 @@
-(ns reagent.debug)
+(ns reagent.debug
+  (:require-macros [reagent.debug]))
 
-;; Empty file, to allow require with :refer-macros
