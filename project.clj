@@ -4,7 +4,7 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.7.0-RC1"]
-                 [org.clojure/clojurescript "0.0-3297"]
+                 [org.clojure/clojurescript "0.0-3308"]
                  [cljsjs/react "0.13.3-0"]]
 
   :plugins [[lein-cljsbuild "1.0.6"]]
@@ -23,8 +23,7 @@
                     :cljsbuild
                     {:builds
                      {:client
-                      {;;:source-paths ["env/dev"]
-                       :figwheel {:on-jsload "reagenttest.runtests/reload"}
+                      {:figwheel {:on-jsload "reagenttest.runtests/reload"}
                        :compiler {:main "reagenttest.runtests"
                                   :source-map true
                                   :source-map-timestamp true
