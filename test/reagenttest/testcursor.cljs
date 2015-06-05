@@ -426,3 +426,14 @@
     (swap! a update-in [:b] inc)
     (is (= 4 (swap! b inc)))
     (is (= 4 @b))))
+
+(deftest test-cursor-atom-race-condition
+         (let [a            (r/atom {:foo {:active? false}})
+               c            (r/cursor a [:foo])
+               button-click (fn []
+                              (swap! c assoc :not-pristine true)
+                              (swap! a update-in [:foo :active?] not))]
+           (button-click)
+           (is (:active? @c))
+           (button-click)
+           (is (not (:active? @c)))))
