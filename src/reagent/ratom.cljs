@@ -241,7 +241,7 @@
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
-    (when (and active? (not (identical? oldval newval)))
+    (when (and active? (not= oldval newval))
       (set! dirty? true)
       ((or auto-run run) this)))
 
@@ -287,7 +287,7 @@
         (when dirty?
           (let [oldstate state]
             (set! state (f))
-            (when-not (identical? oldstate state)
+            (when-not (= oldstate state)
               (-notify-watches this oldstate state))))
         state)))
 
@@ -396,4 +396,3 @@
   (Wrapper. value
             (util/partial-ifn. callback-fn args nil)
             false nil))
-

@@ -45,7 +45,7 @@
       (is (= @w1 @w2))
       (is (not= w1 w2))
       (reset! w1 1))
-    
+
     (let [w1 (ws) w2 (ws)]
       (is (= @w1 1))
       (is (= w1 w2))
@@ -161,18 +161,18 @@
           (reset! @grand-state {:foobar 2})
           (r/flush)
           (is (found-in #"value:2:" div))
-          (is (= @ran 5))
+          (is (= @ran 4))
 
           (reset! state {:foo {:bar {:foobar 4}}})
           (reset! @grand-state {:foobar 4})
           (r/flush)
           (is (found-in #"value:4:" div))
-          (is (= @ran 6))
+          (is (= @ran 5))
 
           (reset! @grand-state {:foobar 4})
           (r/flush)
           (is (found-in #"value:4:" div))
-          (is (= @ran 7)))))))
+          (is (= @ran 5)))))))
 
 (deftest test-cursor
  (let [state (atom {:a 0

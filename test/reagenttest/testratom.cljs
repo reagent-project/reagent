@@ -81,8 +81,8 @@
       (dispose co))
     (let [!x (rv/atom 0)
           !co (rv/make-reaction #(inc @!x) :auto-run true)]
-      (is (= 1 @!co) "CO has correct value on first deref") 
-      (swap! !x inc) 
+      (is (= 1 @!co) "CO has correct value on first deref")
+      (swap! !x inc)
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
@@ -107,27 +107,27 @@
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 2))
       (is (= @c-changed 0))
-             
+
       (reset! a 2)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (dispose res)
@@ -237,6 +237,17 @@
     (reset! a 1)
     (is (= @b 6))
     (is (= runs (running)))))
+
+(deftest reaction-equality
+  (let [count (atom 0)
+        a (rv/atom {:foo {:bar "baz"}})
+        r (rv/reaction (:foo @a))]
+    (run!
+     (is (= @r {:bar "baz"}))
+     (swap! count inc))
+    (swap! a assoc-in [:foo :bar] "baz")
+    (swap! a assoc :foo {:bar "baz"})
+    (is (= @count 1))))
 
 ;; (deftest catching
 ;;   (let [runs (running)
