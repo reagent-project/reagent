@@ -63,7 +63,7 @@
       (run-queue q)
       (run-funs aq))))
 
-(def render-queue (RenderQueue. (array) false (array)))
+(def render-queue (->RenderQueue (array) false (array)))
 
 (defn flush []
   (.run-queue render-queue))
