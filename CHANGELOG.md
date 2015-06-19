@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 0.5.1
+
+- Hiccup syntax has been extended to allow nested elements to be defined using '>' as part of the keyword name.
+
 ## 0.5.0
 
 - React updated to 0.12.2
