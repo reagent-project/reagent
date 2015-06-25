@@ -1,6 +1,6 @@
 (ns reagenttest.testcursor
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer-macros [run! reaction]]
+            [reagent.ratom :as rv :refer-macros [react! reaction]]
             [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
@@ -23,7 +23,7 @@
         res (reaction
              (swap! count inc)
              @sv @c2 @comp)
-        const (run!
+        const (react!
                (reset! out @res))]
     (is (= @count 1) "constrain ran")
     (is (= @out 2))
@@ -62,7 +62,7 @@
     (let [!ctr-base (rv/atom {:x {:y 0 :z 0}})
           !counter (r/cursor !ctr-base [:x :y])
           !signal (rv/atom "All I do is change")
-          co (run!
+          co (react!
               ;;when I change...
               @!signal
               ;;update the counter
@@ -99,7 +99,7 @@
           c (reaction
              (swap! c-changed inc)
              (+ 10 @a2))
-          res (run!
+          res (react!
                (if (< @a2 1) @b @c))]
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
@@ -144,7 +144,7 @@
           c (reaction (dec @a))
           d (reaction (str @b))
           res (rv/atom 0)
-          cs (run!
+          cs (react!
               (reset! res @d))]
       (is (= @res "1"))
       (dispose cs))
@@ -154,17 +154,17 @@
           a (r/cursor a-base [:a])
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])]
+          d (react! [@b @c])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a-base (rv/atom 0)
           a (r/cursor a-base [])
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])
+          d (react! [@b @c])
           res (rv/atom 0)]
       (is (= @d [1 -1]))
-      (let [e (run! (reset! res @d))]
+      (let [e (react! (reset! res @d))]
         (is (= @res [1 -1]))
         (dispose e))
       (dispose d))
