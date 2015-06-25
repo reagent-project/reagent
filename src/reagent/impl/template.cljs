@@ -227,7 +227,7 @@
             (make-element argv comp p first-child)))))))
 
 (defn- expand-tags
-  "Used to supported the extended Hiccup syntax for nested elements. In addition to the keyword
+  "Used to support the extended Hiccup syntax for nested elements. In addition to the keyword
   specifying tag, optional id, and optional class(es), the '>' character indicates a nested element.
 
   e.g.
