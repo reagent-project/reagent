@@ -236,7 +236,7 @@
 
   is the same as:
 
-      [:nav.navbar [:div.container [:div.navbar-header [:a.navbar-bran {:href \"...\"} \"Home\"]]]]
+      [:nav.navbar [:div.container [:div.navbar-header [:a.navbar-brand {:href \"...\"} \"Home\"]]]]
 
   tags - the original keyword split at '>'
   hiccup-form - the original hiccup form (a keyword in the first position)"
