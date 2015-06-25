@@ -261,7 +261,7 @@
                (assert (valid-tag? tag)
                        (str "Invalid Hiccup form: "
                             (pr-str v) (comp/comp-name)))
-               (if (keyword? tag)
+               (when (keyword? tag)
                  (-> tag
                      name
                      (string/split #">")
