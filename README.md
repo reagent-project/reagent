@@ -41,6 +41,20 @@ Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead
     " text."]])
 ```
 
+Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements together by using a `>` character.
+
+```clj
+[:div
+  [:p
+    [:b "Nested Element"]]]
+```
+      
+can be written as:
+      
+```clj
+[:div>p>b "Nested Element"]
+```        
+
 You can use one component inside another:
 
 ```clj

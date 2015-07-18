@@ -226,17 +226,51 @@
                     jsprops)]
             (make-element argv comp p first-child)))))))
 
+(defn- expand-tags
+  "Used to support the extended Hiccup syntax for nested elements. In addition to the keyword
+  specifying tag, optional id, and optional class(es), the '>' character indicates a nested element.
+
+  e.g.
+
+      [:nav.navbar>div.container>div.navbar-header>a.navbar-brand {:href \"...\"} \"Home\"]
+
+  is the same as:
+
+      [:nav.navbar [:div.container [:div.navbar-header [:a.navbar-brand {:href \"...\"} \"Home\"]]]]
+
+  tags - the original keyword split at '>'
+  hiccup-form - the original hiccup form (a keyword in the first position)"
+  [tags hiccup-form]
+  (loop [deepest? true
+         [tag & tag-queue] (reverse tags)
+         tail     (rest hiccup-form)]
+    (if (nil? tag)
+      tail
+      (recur false
+             tag-queue
+             (if deepest?
+               (into [(keyword tag)] tail)
+               [(keyword tag) tail])))))
+
 (defn vec-to-elem [v]
   (assert (pos? (count v))
           (str "Hiccup form should not be empty: "
                (pr-str v) (comp/comp-name)))
-  (let [tag (nth v 0)]
-    (assert (valid-tag? tag)
-            (str "Invalid Hiccup form: "
-                 (pr-str v) (comp/comp-name)))
-    (if-some [ne (native-element tag v)]
-      ne
-      (reag-element tag v))))
+  (let [tag  (nth v 0)
+        tags (do
+               (assert (valid-tag? tag)
+                       (str "Invalid Hiccup form: "
+                            (pr-str v) (comp/comp-name)))
+               (when (keyword? tag)
+                 (-> tag
+                     name
+                     (string/split #">")
+                     vec)))]
+    (if (< 1 (count tags))
+      (recur (expand-tags tags v))
+      (if-some [ne (native-element tag v)]
+               ne
+               (reag-element tag v)))))
 
 (declare expand-seq)
 (declare expand-seq-check)
