@@ -1,3 +1,9 @@
+# ignore intellij files
+.idea
+*.iml
+*.ipr
+*.iws
+
 target
 pom.xml
 .lein-repl-history

@@ -241,7 +241,7 @@
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
-    (when (and active? (not dirty?) (not (identical? oldval newval)))
+    (when (and active? (not (identical? oldval newval)))
       (set! dirty? true)
       ((or auto-run run) this)))
 
