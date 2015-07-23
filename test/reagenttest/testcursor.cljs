@@ -336,6 +336,12 @@
     (is (= (get-in @test-atom [])
            {:z 3}))
 
+    (reset! test-cursor {}) ;; empty map
+    (swap! test-cursor assoc :x 1 :y 2 :z 3 :w)
+    (is (= @test-cursor {:x 1 :y 2 :z 3 :w nil}))
+    (is (= (get-in @test-atom [:a :b :c :d])
+           {:x 1 :y 2 :z 3 :w nil}))
+
     (is (= runs (running)))))
 
 
