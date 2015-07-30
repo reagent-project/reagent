@@ -1,3 +1,2 @@
-(ns reagent.interop)
-
-;; Empty
+(ns reagent.interop
+  (:require-macros [reagent.interop]))

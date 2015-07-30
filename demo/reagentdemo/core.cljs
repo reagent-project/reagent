@@ -1,4 +1,4 @@
-(ns ^:figwheel-always reagentdemo.core
+(ns reagentdemo.core
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
@@ -39,6 +39,9 @@
    [tools/page-content]
    [github-badge]])
 
-(tools/start! {:body [#'demo]
-               :css-infiles ["site/public/css/examples.css"
-                             "site/public/css/main.css"]})
+(defn init! []
+  (tools/start! {:body [#'demo]
+                 :css-infiles ["site/public/css/examples.css"
+                               "site/public/css/main.css"]}))
+
+(init!)

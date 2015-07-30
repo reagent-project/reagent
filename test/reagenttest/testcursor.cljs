@@ -426,3 +426,19 @@
     (swap! a update-in [:b] inc)
     (is (= 4 (swap! b inc)))
     (is (= 4 @b))))
+
+(deftest test-double-reset
+  (let [a (r/atom {:foo {:active? false}})
+        c (r/cursor a [:foo])
+        f (fn []
+            (swap! c assoc :not-pristine true)
+            (swap! a update-in [:foo :active?] not))
+        spy (atom nil)
+        r (run!
+           (reset! spy (:active? @c)))]
+    (is (= @spy false))
+    (f)
+    (is (= @spy true))
+    (f)
+    (is (= @spy false))
+    (dispose r)))

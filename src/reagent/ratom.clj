@@ -1,4 +1,5 @@
-(ns reagent.ratom)
+(ns reagent.ratom
+  (:refer-clojure :exclude [run!]))
 
 (defmacro reaction [& body]
   `(reagent.ratom/make-reaction
