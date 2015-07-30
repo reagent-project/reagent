@@ -504,3 +504,15 @@
       (fn [c div]
         ;; Just make sure this doesn't print a debug message
         ))))
+
+(deftest test-extended-syntax
+  (is (= (rstr [:p>b "foo"])
+         "<p><b>foo</b></p>"))
+  (is (= (rstr [:p.foo>b "x"])
+         (rstr [:p.foo [:b "x"]])))
+  (is (= (rstr [:div.foo>p.bar.foo>b.foobar "xy"])
+         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
+  (is (= (rstr [:div.foo>p.bar.foo>b.foobar {} "xy"])
+         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
+  (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
+         (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
