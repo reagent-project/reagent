@@ -64,7 +64,7 @@
     (-reset! a (f state x)))
   (-swap! [a f x y]
     (-reset! a (f state x y)))
-  (-swap! [a f x y & more]
+  (-swap! [a f x y more]
     (-reset! a (apply f state x y more)))
 
   IMeta
@@ -143,7 +143,7 @@
     (-swap! (._reaction a) f x))
   (-swap! [a f x y]
     (-swap! (._reaction a) f x y))
-  (-swap! [a f x y & more]
+  (-swap! [a f x y more]
     (-swap! (._reaction a) f x y more))
 
   IPrintWithWriter
@@ -236,7 +236,7 @@
     (-reset! a (f (-peek-at a) x)))
   (-swap! [a f x y]
     (-reset! a (f (-peek-at a) x y)))
-  (-swap! [a f x y & more]
+  (-swap! [a f x y more]
     (-reset! a (apply f (-peek-at a) x y more)))
 
   IComputedImpl
@@ -362,7 +362,7 @@
     (-reset! a (f state x)))
   (-swap! [a f x y]
     (-reset! a (f state x y)))
-  (-swap! [a f x y & more]
+  (-swap! [a f x y more]
     (-reset! a (apply f state x y more)))
 
   IEquiv
