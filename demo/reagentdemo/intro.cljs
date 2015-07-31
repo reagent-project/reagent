@@ -1,5 +1,5 @@
 (ns reagentdemo.intro
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [clojure.string :as string]
@@ -37,7 +37,7 @@
    "Here is a list:"
    [lister (range 3)]])
 
-(def click-count (atom 0))
+(def click-count (r/atom 0))
 
 (defn counting-component []
   [:div
@@ -52,24 +52,24 @@
            :on-change #(reset! value (-> % .-target .-value))}])
 
 (defn shared-state []
-  (let [val (atom "foo")]
+  (let [val (r/atom "foo")]
     (fn []
       [:div
        [:p "The value is now: " @val]
        [:p "Change it here: " [atom-input val]]])))
 
 (defn timer-component []
-  (let [seconds-elapsed (atom 0)]
+  (let [seconds-elapsed (r/atom 0)]
     (fn []
       (js/setTimeout #(swap! seconds-elapsed inc) 1000)
       [:div
        "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
-  (reagent/render-component [simple-component]
-                            (.-body js/document)))
+  (r/render-component [simple-component]
+                      (.-body js/document)))
 
-(def bmi-data (atom {:height 180 :weight 80}))
+(def bmi-data (r/atom {:height 180 :weight 80}))
 
 (defn calc-bmi []
   (let [{:keys [height weight bmi] :as data} @bmi-data
@@ -107,7 +107,7 @@
       [slider :bmi bmi 10 50]]]))
 
 (def ns-src (s/syntaxed "(ns example
-  (:require [reagent.core :as reagent :refer [atom]]))"))
+  (:require [reagent.core :as r]))"))
 
 
 (defn intro []
@@ -277,7 +277,7 @@
 
    [:p "Incidentally, this page also uses another React trick: the
    entire page is pre-rendered using Node, and "
-   [:code "reagent/render-component-to-string"] ". When it is loaded
+   [:code "reagent.core/render-component-to-string"] ". When it is loaded
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 
@@ -322,7 +322,7 @@
                     :src (s/src-of nil "todomvc/core.cljs")}]])
 
 (defn main []
-  (let [show-all (atom false)
+  (let [show-all (r/atom false)
         head "Reagent: Minimalistic React for ClojureScript"]
     (js/setTimeout #(reset! show-all true) 500)
     (fn []
