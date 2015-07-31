@@ -85,13 +85,13 @@ assuming we have imported Reagent like this:
 
 ```clj
 (ns example
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as r]))
 ```
 
 State is handled using Reagent's version of `atom`, like this:
 
 ```clj
-(def click-count (atom 0))
+(def click-count (r/atom 0))
 
 (defn state-ful-with-atom []
   [:div {:on-click #(swap! click-count inc)}
@@ -104,7 +104,7 @@ If you want do some setting up when the component is first created, the componen
 
 ```clj
 (defn timer-component []
-  (let [seconds-elapsed (atom 0)]
+  (let [seconds-elapsed (r/atom 0)]
     (fn []
       (js/setTimeout #(swap! seconds-elapsed inc) 1000)
       [:div
@@ -116,7 +116,7 @@ This way you can avoid using React's lifecycle callbacks like `getInitialState` 
 But you can still use them if you want to, either using `reagent.core/create-class` or by attaching meta-data to a component function:
 
 ```clj
-(def my-html (atom ""))
+(def my-html (r/atom ""))
 
 (defn plain-component []
   [:p "My html is " @my-html])
