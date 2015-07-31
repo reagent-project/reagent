@@ -516,3 +516,12 @@
          (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
   (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
          (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
+
+
+(deftest test-key-warning
+  ;; Just make sure that seq without key dont print unnecessary
+  ;; debug messages
+  (r/render-to-static-markup [:div (for [x (range 5)]
+                                     [:p x])])
+  (r/render-to-string [:div (for [x (range 5)]
+                              [:p x])]))

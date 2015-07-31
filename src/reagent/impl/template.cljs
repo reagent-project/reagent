@@ -282,7 +282,8 @@
       (warn "Reactive deref not supported in lazy seq, "
             "it should be wrapped in doall"
             (comp/comp-name) ". Value:\n" (pr-str x)))
-    (when (.' ctx :no-key)
+    (when (and (not comp/*non-reactive*)
+               (.' ctx :no-key))
       (warn "Every element in a seq should have a unique "
             ":key" (comp/comp-name) ". Value: " (pr-str x)))
     res))
