@@ -1,7 +1,7 @@
 (ns reagenttest.testwrap
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg println log]]
-            [reagent.core :as r :refer [atom wrap]]))
+            [reagent.core :as r]))
 
 (defn add-test-div [name]
   (let [doc js/document
@@ -26,7 +26,7 @@
           false))))
 
 (deftest test-wrap-basic
-  (let [state (atom {:foo 1})
+  (let [state (r/atom {:foo 1})
         ws (fn [] (r/wrap (:foo @state)
                           swap! state assoc :foo))]
     (let [w1 (ws) w2 (ws)]
@@ -72,8 +72,8 @@
       (reset! w1 1))))
 
 (deftest test-wrap-equality
-  (let [a (atom 1)
-        b (atom 2)]
+  (let [a (r/atom 1)
+        b (r/atom 2)]
     (is (= (r/wrap @a swap! a assoc :foo)
            (r/wrap @a swap! a assoc :foo)))
     (is (not= (r/wrap @a swap! a assoc :foo)
@@ -98,8 +98,8 @@
 
 (deftest test-wrap-returns
   (let [n (fn [] :foobar)
-        a (atom {:k 1})
-        b (wrap {:k 1} n)]
+        a (r/atom {:k 1})
+        b (r/wrap {:k 1} n)]
     (is (not= a b))
     (is (not= b a))
     (is (= (swap! a update-in [:k] inc)
@@ -114,18 +114,18 @@
 
 (deftest test-wrap
   (when r/is-client
-    (let [state (atom {:foo {:bar {:foobar 1}}})
-          ran (atom 0)
+    (let [state (r/atom {:foo {:bar {:foobar 1}}})
+          ran (r/atom 0)
           grand-state (clojure.core/atom nil)
           grand-child (fn [v]
                         (swap! ran inc)
                         (reset! grand-state v)
                         [:div (str "value:" (:foobar @v) ":")])
           child (fn [v]
-                  [grand-child (wrap (:bar @v)
+                  [grand-child (r/wrap (:bar @v)
                                      swap! v assoc :bar)])
           parent (fn []
-                   [child (wrap (:foo @state)
+                   [child (r/wrap (:foo @state)
                                 swap! state assoc :foo)])]
       (with-mounted-component [parent]
         (fn [c div]
@@ -175,10 +175,10 @@
           (is (= @ran 7)))))))
 
 (deftest test-cursor
- (let [state (atom {:a 0
-                    :b 0})
-       a-count (atom 0)
-       b-count (atom 0)
+ (let [state (r/atom {:a 0
+                      :b 0})
+       a-count (r/atom 0)
+       b-count (r/atom 0)
        derefer (fn derefer [cur count]
                  (swap! count inc)
                  [:div @cur])
