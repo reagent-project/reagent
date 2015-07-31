@@ -55,7 +55,8 @@
                               (string/join ")|(" [comment-p str-p open-p
                                                   close-p meta-p iden-p any-p])
                               ")"))
-        keyw-re #"^:"]
+        keyw-re #"^:"
+        qualif-re #"^r/"]
     (for [[s comment str-litt open close met iden any] (re-seq patt src)]
       (cond
        comment [:comment s]
@@ -66,6 +67,7 @@
        iden (cond
              (re-find keyw-re s) [:keyw s]
              (builtins s) [:builtin s]
+             (re-find qualif-re s) [:builtin s]
              :else [:iden s])
        any [:other s]))))
 
