@@ -200,77 +200,50 @@
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
-  (if (hiccup-tag? x)
-    (if-some [s (obj-get tag-name-cache (name x))]
-      s
-      (aset tag-name-cache (name x) (parse-tag x)))
-    (when (instance? NativeWrapper x)
-      (.-comp x))))
+  (if-some [s (obj-get tag-name-cache x)]
+    s
+    (aset tag-name-cache x (parse-tag x))))
 
 (declare as-element)
 
-(defn native-element [tag argv]
-  (when-let [parsed (cached-parse tag)]
-    (let [comp (.' parsed :name)]
-      (let [props (nth argv 1 nil)
-            hasprops (or (nil? props) (map? props))
-            jsprops (convert-props (if hasprops props) parsed)
-            first-child (if hasprops 2 1)]
-        (if (input-component? comp)
-          (-> [reagent-input argv comp jsprops first-child]
-              (with-meta (meta argv))
-              as-element)
-          (let [p (if-some [key (some-> (meta argv) get-key)]
-                    (doto (if (nil? jsprops) #js{} jsprops)
-                      (.! :key key))
-                    jsprops)]
-            (make-element argv comp p first-child)))))))
-
-(defn- expand-tags
-  "Used to support the extended Hiccup syntax for nested elements. In addition to the keyword
-  specifying tag, optional id, and optional class(es), the '>' character indicates a nested element.
-
-  e.g.
-
-      [:nav.navbar>div.container>div.navbar-header>a.navbar-brand {:href \"...\"} \"Home\"]
-
-  is the same as:
-
-      [:nav.navbar [:div.container [:div.navbar-header [:a.navbar-brand {:href \"...\"} \"Home\"]]]]
-
-  tags - the original keyword split at '>'
-  hiccup-form - the original hiccup form (a keyword in the first position)"
-  [tags hiccup-form]
-  (loop [deepest? true
-         [tag & tag-queue] (reverse tags)
-         tail     (rest hiccup-form)]
-    (if (nil? tag)
-      tail
-      (recur false
-             tag-queue
-             (if deepest?
-               (into [(keyword tag)] tail)
-               [(keyword tag) tail])))))
+(defn native-element [parsed argv]
+  (let [comp (.' parsed :name)]
+    (let [props (nth argv 1 nil)
+          hasprops (or (nil? props) (map? props))
+          jsprops (convert-props (if hasprops props) parsed)
+          first-child (if hasprops 2 1)]
+      (if (input-component? comp)
+        (-> [reagent-input argv comp jsprops first-child]
+            (with-meta (meta argv))
+            as-element)
+        (let [p (if-some [key (some-> (meta argv) get-key)]
+                  (doto (if (nil? jsprops) #js{} jsprops)
+                    (.! :key key))
+                  jsprops)]
+          (make-element argv comp p first-child))))))
 
 (defn vec-to-elem [v]
   (assert (pos? (count v))
           (str "Hiccup form should not be empty: "
                (pr-str v) (comp/comp-name)))
-  (let [tag  (nth v 0)
-        tags (do
-               (assert (valid-tag? tag)
-                       (str "Invalid Hiccup form: "
-                            (pr-str v) (comp/comp-name)))
-               (when (keyword? tag)
-                 (-> tag
-                     name
-                     (string/split #">")
-                     vec)))]
-    (if (< 1 (count tags))
-      (recur (expand-tags tags v))
-      (if-some [ne (native-element tag v)]
-               ne
-               (reag-element tag v)))))
+  (let [tag (nth v 0)]
+    (assert (valid-tag? tag)
+            (str "Invalid Hiccup form: "
+                 (pr-str v) (comp/comp-name)))
+    (cond
+      (hiccup-tag? tag)
+      (let [n (name tag)
+            pos (.indexOf n ">")]
+        (if (== pos -1)
+          (native-element (cached-parse n) v)
+          ;; Support extended hiccup syntax, i.e :div.bar>a.foo
+          (recur [(subs n 0 pos)
+                  (assoc v 0 (subs n (inc pos)))])))
+
+      (instance? NativeWrapper tag)
+      (native-element (.-comp tag) v)
+
+      :else (reag-element tag v))))
 
 (declare expand-seq)
 (declare expand-seq-check)
