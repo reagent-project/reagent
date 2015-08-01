@@ -109,14 +109,16 @@ Returns the mounted component instance."
   "Create a component, React style. Should be called with a map,
 looking like this:
 {:get-initial-state (fn [this])
-:component-will-receive-props (fn [this new-argv])
-:should-component-update (fn [this old-argv new-argv])
-:component-will-mount (fn [this])
-:component-did-mount (fn [this])
-:component-will-update (fn [this new-argv])
-:component-did-update (fn [this old-argv])
-:component-will-unmount (fn [this])
-:reagent-render (fn [args....])   ;; or :render (fn [this])
+ :get-child-context (fn [this])
+ :child-context-types {:key type}
+ :component-will-receive-props (fn [this new-argv])
+ :should-component-update (fn [this old-argv new-argv])
+ :component-will-mount (fn [this])
+ :component-did-mount (fn [this])
+ :component-will-update (fn [this new-argv])
+ :component-did-update (fn [this old-argv])
+ :component-will-unmount (fn [this])
+ :reagent-render (fn [args....])   ;; or :render (fn [this])
 }
 
 Everything is optional, except either :reagent-render or :render.

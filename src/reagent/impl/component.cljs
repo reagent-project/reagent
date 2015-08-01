@@ -9,6 +9,12 @@
 
 (declare ^:dynamic *non-reactive*)
 
+(defn map-to-js [m]
+  (reduce-kv (fn [o k v]
+               (doto o
+                 (aset (name k) v)))
+             #js{} m))
+
 ;;; State
 
 (defn state-atom [this]
@@ -66,6 +72,10 @@
 
 (defn custom-wrapper [key f]
   (case key
+    :childContextTypes
+    (when-not (nil? f)
+      (map-to-js f))
+
     :getDefaultProps
     (assert false "getDefaultProps not supported yet")
 
@@ -73,6 +83,12 @@
     (fn []
       (this-as c
                (reset! (state-atom c) (f c))))
+
+    :getChildContext
+    (fn []
+      (this-as c
+               (when-not (nil? f)
+                 (f c))))
 
     :componentWillReceiveProps
     (fn [props]
@@ -195,12 +211,6 @@
     (reduce-kv (fn [m k v]
                  (assoc m k (get-wrapper k v name')))
                {} fmap)))
-
-(defn map-to-js [m]
-  (reduce-kv (fn [o k v]
-               (doto o
-                 (aset (name k) v)))
-             #js{} m))
 
 (defn cljsify [body]
   (-> body
