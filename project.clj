@@ -13,7 +13,7 @@
   :source-paths ["src"]
 
   :codox {:language :clojurescript
-          :exclude clojure.string}  
+          :exclude clojure.string}
 
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]}}}}
@@ -34,13 +34,13 @@
                                   :optimizations :none
                                   :output-dir "outsite/public/js/out"
                                   :asset-path "js/out"}}}}}]
-             
+
              :site {:resource-paths ^:replace ["outsite"]
                     :figwheel {:css-dirs ^:replace ["outsite/public/css"]}
                     :cljsbuild
                     {:builds {:client
                               {:notify-command ["node" "bin/gen-site.js"]}}}}
-             
+
              :prod [:site
                     {:cljsbuild
                      {:builds {:client
@@ -50,7 +50,7 @@
                                            :output-dir "target/client"}}}}}]
 
              :prod-test [:test :prod]
-             
+
              :dev-notest [:dev
                           {:cljsbuild
                            {:builds {:client
@@ -70,7 +70,16 @@
                                        "examples/todomvc/src"
                                        "examples/simple/src"
                                        "examples/geometry/src"]
-                        :compiler {:output-to "outsite/public/js/main.js"}}}}
-  
+                        :compiler {:output-to "outsite/public/js/main.js"}}
+
+                       :test
+                       {:source-paths ["src" "test"]
+                        :compiler {:output-to "target/test/test.js"
+                                   :output-dir "target/test"
+                                   :pretty-print true
+                                   :source-map true
+                                   :optimizations :none}}}
+              :test-commands {"test" ["phantomjs" "test/phantom-test.js"]}}
+
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
