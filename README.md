@@ -91,7 +91,7 @@ assuming we have imported Reagent like this:
 State is handled using Reagent's version of `atom`, like this:
 
 ```clj
-(def click-count (r/atom 0))
+(defonce click-count (r/atom 0))
 
 (defn state-ful-with-atom []
   [:div {:on-click #(swap! click-count inc)}
@@ -116,7 +116,7 @@ This way you can avoid using React's lifecycle callbacks like `getInitialState` 
 But you can still use them if you want to, either using `reagent.core/create-class` or by attaching meta-data to a component function:
 
 ```clj
-(def my-html (r/atom ""))
+(defonce my-html (r/atom ""))
 
 (defn plain-component []
   [:p "My html is " @my-html])
