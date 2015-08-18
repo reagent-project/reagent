@@ -90,12 +90,48 @@
 (defn input-unmount [this]
   (.! this :cljsInputValue nil))
 
+;; <input type="??" >
+;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
+;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
+(def these-inputs-have-selection-api #{"text" "textarea" "password" "search" "tel" "url"})
+
+(defn has-selection-api?
+  [input-type]
+  (contains? these-inputs-have-selection-api input-type))
+
 (defn input-set-value [this]
   (when-some [value (.' this :cljsInputValue)]
-    (.! this :cljsInputDirty false)
-    (let [node (.' this getDOMNode)]
-      (when (not= value (.' node :value))
-        (.! node :value value)))))
+             (.! this :cljsInputDirty false)
+             (let [node       (.' this getDOMNode)
+                   node-value (.' node :value)]
+               (when (not= value node-value)
+                 (if-not (has-selection-api? (.' node :type))
+                   ; just set the value, no need to worry about a cursor
+                   (.! node :value value)
+
+                   ;; Setting "value" (below) moves the cursor position to the end which 
+                   ;; gives the user a jarring experience. 
+                   ;; 
+                   ;; But repositioning the cursor within the text, turns out 
+                   ;; to be quite a challenge because changes in the text can be 
+                   ;; triggered by various events like:
+                   ;;    - a validation function rejecting a certain user inputted char
+                   ;;    - the user enters a lower case char, but is transformed to upper.
+                   ;;    - the user selects multiple chars and deletes text
+                   ;;    - the user pastes in multiple chars, and some of them are rejected 
+                   ;;      by a validator.
+                   ;;    - the user selects multiple chars and then types in a single 
+                   ;;      new char to repalce them all. 
+                   ;; Coming up with a sane cursor repositioning strategy hasn't been easy 
+                   ;; ALTHOUGH in the end, it kinda fell out nicely, and it appears to sanely
+                   ;; handle all the cases we could think of.  
+                   ;; So this is just a warning.  The code below is simple enough, but if
+                   ;; you are tempted to change it, be aware of all the scenarios you have handle. 
+                   (let [existing-offset-from-end (- (count node-value) (.' node :selectionStart))
+                         new-cursor-offset        (- (count value) existing-offset-from-end)]
+                     (.! node :value value)
+                     (.! node :selectionStart new-cursor-offset)
+                     (.! node :selectionEnd   new-cursor-offset)))))))
 
 (defn input-handle-change [this on-change e]
   (let [res (on-change e)]
