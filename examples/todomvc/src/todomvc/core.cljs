@@ -1,9 +1,9 @@
 (ns todomvc.core
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as r]))
 
-(defonce todos (atom (sorted-map)))
+(defonce todos (r/atom (sorted-map)))
 
-(defonce counter (atom 0))
+(defonce counter (r/atom 0))
 
 (defn add-todo [text]
   (let [id (swap! counter inc)]
@@ -25,7 +25,7 @@
                 (complete-all true)))
 
 (defn todo-input [{:keys [title on-save on-stop]}]
-  (let [val (atom title)
+  (let [val (r/atom title)
         stop #(do (reset! val "")
                   (if on-stop (on-stop)))
         save #(let [v (-> @val str clojure.string/trim)]
@@ -41,7 +41,7 @@
                                       nil)})])))
 
 (def todo-edit (with-meta todo-input
-                 {:component-did-mount #(.focus (reagent/dom-node %))}))
+                 {:component-did-mount #(.focus (r/dom-node %))}))
 
 (defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
@@ -59,7 +59,7 @@
         "Clear completed " done])]))
 
 (defn todo-item []
-  (let [editing (atom false)]
+  (let [editing (r/atom false)]
     (fn [{:keys [id done title]}]
       [:li {:class (str (if done "completed ")
                         (if @editing "editing"))}
@@ -74,7 +74,7 @@
                      :on-stop #(reset! editing false)}])])))
 
 (defn todo-app [props]
-  (let [filt (atom :all)]
+  (let [filt (r/atom :all)]
     (fn []
       (let [items (vals @todos)
             done (->> items (filter :done) count)
@@ -104,5 +104,5 @@
           [:p "Double-click to edit a todo"]]]))))
 
 (defn ^:export run []
-  (reagent/render [todo-app]
-                  (js/document.getElementById "app")))
+  (r/render [todo-app]
+            (js/document.getElementById "app")))

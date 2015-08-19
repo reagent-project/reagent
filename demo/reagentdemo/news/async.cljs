@@ -1,5 +1,5 @@
 (ns reagentdemo.news.async
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
@@ -10,11 +10,11 @@
 (def title "Faster by waiting")
 
 (def ns-src (s/syntaxed "(ns example
-  (:require [reagent.core :as reagent :refer [atom]]))"))
+  (:require [reagent.core :as r]))"))
 
 (defn timing-wrapper [f]
-  (let [start-time (atom nil)
-        render-time (atom nil)
+  (let [start-time (r/atom nil)
+        render-time (r/atom nil)
         now #(.now js/Date)
         start #(reset! start-time (now))
         stop #(reset! render-time (- (now) @start-time))
@@ -28,9 +28,9 @@
        [:p [:em "render time: " @render-time "ms"]]
        [timed-f]])))
 
-(def base-color (atom {:red 130 :green 160 :blue 120}))
-(def ncolors (atom 20))
-(def random-colors (atom nil))
+(def base-color (r/atom {:red 130 :green 160 :blue 120}))
+(def ncolors (r/atom 20))
+(def random-colors (r/atom nil))
 
 (defn to-rgb [{:keys [red green blue]}]
   (let [hex #(str (if (< % 16) "0")
@@ -61,7 +61,7 @@
    "number of color divs " @ncolors
    [:input {:type "range" :min 0 :max 500
             :value @ncolors
-            :on-change #(reset! ncolors (-> % .-target .-value))}]])
+            :on-change #(reset! ncolors (-> % .-target .-value int))}]])
 
 (defn color-plate [color]
   [:div.color-plate

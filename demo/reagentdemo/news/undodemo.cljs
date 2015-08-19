@@ -1,5 +1,5 @@
 (ns reagentdemo.news.undodemo
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
@@ -10,9 +10,12 @@
 (def url "news/cloact-reagent-undo-demo.html")
 (def title "Cloact becomes Reagent: Undo is trivial")
 
+(def ns-src (s/syntaxed "(ns example
+  (:require [reagent.core :as r]))"))
+
 (def state todomvc/todos)
 
-(def undo-list (atom nil))
+(def undo-list (r/atom nil))
 
 (defn undo []
   (let [undos @undo-list]
@@ -36,8 +39,9 @@
 
 (defn undo-demo []
   [demo-component {:comp todomvc-with-undo
-                   :src (s/src-of [:state :undo-list :undo :save-state
-                                   :undo-button :todomvc-with-undo])}])
+                   :src [:pre ns-src
+                         (s/src-of [:state :undo-list :undo :save-state
+                                    :undo-button :todomvc-with-undo])]}])
 
 (def undo-demo-cleanup
   (with-meta undo-demo {:component-will-unmount

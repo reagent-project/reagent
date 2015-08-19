@@ -3,9 +3,9 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.7.0-RC1"]
-                 [org.clojure/clojurescript "0.0-3308"]
-                 [cljsjs/react "0.13.3-0"]]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/clojurescript "1.7.48"]
+                 [cljsjs/react "0.13.3-1"]]
 
   :plugins [[lein-cljsbuild "1.0.6"]
             [codox "0.8.12"]]
@@ -19,8 +19,8 @@
                     {:builds {:client {:source-paths ["test"]}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.3.3"]]
-                    :plugins [[lein-figwheel "0.3.3"]]
+                   {:dependencies [[figwheel "0.3.7"]]
+                    :plugins [[lein-figwheel "0.3.7"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}

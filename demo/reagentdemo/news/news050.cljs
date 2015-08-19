@@ -1,5 +1,5 @@
 (ns reagentdemo.news.news050
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
@@ -12,7 +12,7 @@
 (def new-in-alpha [:strong "New since 0.5.0-alpha: "])
 
 (def ns-src (s/syntaxed "(ns example
-  (:require [reagent.core :as r :refer [atom]]))"))
+  (:require [reagent.core :as r]))"))
 
 (def cel-link "http://facebook.github.io/react/docs/top-level-api.html#react.createelement")
 
@@ -20,8 +20,8 @@
 
 
 
-(defonce person (atom {:name
-                       {:first-name "John" :last-name "Smith"}}))
+(defonce person (r/atom {:name
+                         {:first-name "John" :last-name "Smith"}}))
 
 (defn input [prompt val]
   [:div

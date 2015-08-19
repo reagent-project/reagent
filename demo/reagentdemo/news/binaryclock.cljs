@@ -1,5 +1,5 @@
 (ns reagentdemo.news.binaryclock
-  (:require [reagent.core :as r :refer [atom]]))
+  (:require [reagent.core :as r]))
 
 (defn cell [n bit]
   [:div.clock-cell {:class (if (bit-test n bit)
@@ -35,8 +35,8 @@
      [column-pair (-> (.getMilliseconds date)
                       (quot 10))])])
 
-(def clock-state (atom {:time (js/Date.)
-                        :show-100s false}))
+(def clock-state (r/atom {:time (js/Date.)
+                          :show-100s false}))
 
 (defn update-time []
   (swap! clock-state assoc :time (js/Date.)))

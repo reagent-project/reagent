@@ -1,5 +1,5 @@
 (ns reagentdemo.news.clockpost
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :as s]
@@ -42,7 +42,7 @@
         [:div.demo-text
 
          [fn-src (s/syntaxed "(ns example
-  (:require [reagent.core :as r :refer [atom]]))")]
+  (:require [reagent.core :as r]))")]
 
          [:p "We start with the basics: The clock is built out of
          cells, with a light colour if the bit the cell corresponds to

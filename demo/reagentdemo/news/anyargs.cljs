@@ -1,5 +1,5 @@
 (ns reagentdemo.news.anyargs
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
@@ -11,7 +11,7 @@
 (def title "All arguments allowed")
 
 (def ns-src (s/syntaxed "(ns example
-  (:require [reagent.core :as r :refer [atom]]))"))
+  (:require [reagent.core :as r]))"))
 
 (defn hello-component [name]
   [:p "Hello, " name "!"])
