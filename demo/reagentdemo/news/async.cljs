@@ -61,7 +61,7 @@
    "number of color divs " @ncolors
    [:input {:type "range" :min 0 :max 500
             :value @ncolors
-            :on-change #(reset! ncolors (-> % .-target .-value))}]])
+            :on-change #(reset! ncolors (-> % .-target .-value int))}]])
 
 (defn color-plate [color]
   [:div.color-plate
