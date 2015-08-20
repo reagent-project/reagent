@@ -516,3 +516,27 @@
          (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
   (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
          (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
+
+(deftest test-force-update
+  (let [v (atom {:v1 0
+                 :v2 0})
+        comps (atom {})
+        c1 (fn []
+             (swap! comps assoc :c1 (r/current-component))
+             [:p (swap! v update-in [:v1] inc)])
+        c2 (fn []
+             (swap! comps assoc :c2 (r/current-component))
+             [:p (swap! v update-in [:v2] inc)
+              [c1]])]
+    (with-mounted-component [c2]
+      (fn [c div]
+        (is (= @v {:v1 1 :v2 1}))
+
+        (r/force-update (:c2 @comps))
+        (is (= @v {:v1 1 :v2 2}))
+
+        (r/force-update (:c1 @comps))
+        (is (= @v {:v1 2 :v2 2}))
+
+        (r/force-update (:c2 @comps) true)
+        (is (= @v {:v1 3 :v2 3}))))))
