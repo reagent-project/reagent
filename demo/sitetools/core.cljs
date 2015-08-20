@@ -234,17 +234,10 @@
   (log "Generating site")
   (swap! config merge (js->clj opts :keywordize-keys true))
   (let [dir (:site-dir @config)
-        written (r/atom #{})
-        timestamp (str "?" (.' js/Date now))
-        one-page (fn [] (first (filter
-                                (fn [x] (nil? (@written x)))
-                                (keys (:page-map @config)))))]
-    (loop [f (one-page)]
-      (when f
-        (swap! written conj f)
-        (write-file (path-join dir f)
-                    (gen-page f timestamp))
-        (recur (one-page))))
+        timestamp (str "?" (.' js/Date now))]
+    (doseq [f (keys (:page-map @config))]
+      (write-file (path-join dir f)
+                  (gen-page f timestamp)))
     (write-resources dir))
   (log "Wrote site"))
 

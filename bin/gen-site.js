@@ -3,7 +3,7 @@ var cljsLoad = require("./cljs-load");
 
 var srcFile = "outsite/public/js/main.js";
 var outputDirectory = "outsite/public/js/out/";
-var devFile = "reagentdemo/core.js";
+var devFile = "reagenttest/runtests.js";
 
 var beep = "\u0007";
 
