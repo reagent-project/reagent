@@ -176,11 +176,10 @@
        (input-render-setup this jsprops)
        (make-element argv comp jsprops first-child)))})
 
-(defn reagent-input [argv comp jsprops first-child]
+(defn reagent-input []
   (when (nil? reagent-input-class)
-    (set! reagent-input-class
-          (comp/create-class input-spec)))
-  (reagent-input-class argv comp jsprops first-child))
+    (set! reagent-input-class (comp/create-class input-spec)))
+  reagent-input-class)
 
 
 ;;; Conversion from Hiccup forms
@@ -250,7 +249,7 @@
           jsprops (convert-props (if hasprops props) parsed)
           first-child (if hasprops 2 1)]
       (if (input-component? comp)
-        (-> [reagent-input argv comp jsprops first-child]
+        (-> [(reagent-input) argv comp jsprops first-child]
             (with-meta (meta argv))
             as-element)
         (let [p (if-some [key (some-> (meta argv) get-key)]
