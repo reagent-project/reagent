@@ -63,7 +63,7 @@
                      (is (= 1 (count (r/children this))))
                      (swap! ran inc)
                      [:div (str "hi " (:foo props) ".")]))})]
-      (with-mounted-component (comp {:foo "you"} 1)
+      (with-mounted-component [comp {:foo "you"} 1]
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi you" div))))
@@ -81,7 +81,7 @@
                      (reset! self this)
                      (swap! ran inc)
                      [:div (str "hi " (:foo (r/state this)))]))})]
-      (with-mounted-component (comp)
+      (with-mounted-component [comp]
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi initial" div))

@@ -3,7 +3,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg prn dev?]]))
+            [reagent.debug :refer-macros [dbg prn dev? warn]]))
 
 (declare ^:dynamic *current-component*)
 
@@ -22,6 +22,10 @@
   (js/reagent.impl.template.as-element x))
 
 ;;; Rendering
+
+(defn reagent-class? [c]
+  (and (fn? c)
+       (some? (.' c :cljsReactClass))))
 
 (defn do-render [c]
   (binding [*current-component* c]
@@ -42,8 +46,11 @@
       (if (vector? res)
         (as-element res)
         (if (ifn? res)
-          (do
-            (.! c :cljsRender res)
+          (let [f (if (reagent-class? res)
+                    (fn [& args]
+                      (as-element (apply vector res args)))
+                    res)]
+            (.! c :cljsRender f)
             (do-render c))
           res)))))
 
@@ -208,6 +215,9 @@
   (let [spec (cljsify body)
         res (.' js/React createClass spec)
         f (fn [& args]
+            (warn "Calling the result of create-class as a function is "
+                  "deprecated in " (.' res :displayName) ". Use a vector "
+                  "instead.")
             (as-element (apply vector res args)))]
     (util/cache-react-class f res)
     (util/cache-react-class res res)
