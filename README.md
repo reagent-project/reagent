@@ -17,7 +17,7 @@ This will setup a new Reagent project with some reasonable defaults, see here fo
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
-    [reagent "0.5.1-rc"]
+[![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent)
 
 This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
