@@ -47,6 +47,7 @@ which is equivalent to
   "Returns an adapter for a native React class, that may be used
 just like a Reagent component function or class in Hiccup forms."
   [c]
+  (assert c)
   (tmpl/adapt-react-class c))
 
 (defn reactify-component
@@ -54,6 +55,7 @@ just like a Reagent component function or class in Hiccup forms."
   React, for example in JSX. A single argument, props, is passed to
   the component, converted to a map."
   [c]
+  (assert c)
   (comp/reactify-component c))
 
 (defn render
