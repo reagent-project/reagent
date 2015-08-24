@@ -323,7 +323,7 @@
         reaction (Reaction. f nil dirty active
                             nil nil
                             runner on-set on-dispose)]
-    (when-not (nil? derefed)
+    (when active
       (when debug (swap! -running inc))
       (-update-watching reaction derefed))
     reaction))
