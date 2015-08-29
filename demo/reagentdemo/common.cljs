@@ -1,9 +1,9 @@
 (ns reagentdemo.common
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :as r]
             [reagent.debug :refer-macros [dbg println]]))
 
 (defn demo-component []
-  (let [showing (atom true)]
+  (let [showing (r/atom true)]
     (fn [{:keys [comp src complete no-heading]}]
       [:div
        (when comp

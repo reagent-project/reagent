@@ -137,3 +137,9 @@
   (doseq [v (vals @roots)]
     (apply re-render-component v))
   "Updated")
+
+(defn force-update [comp deep]
+  (if deep
+    (binding [*always-update* true]
+      (.' comp forceUpdate))
+    (.' comp forceUpdate)))

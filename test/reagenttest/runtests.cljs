@@ -1,18 +1,18 @@
-(ns ^:figwheel-always reagenttest.runtests
+(ns reagenttest.runtests
   (:require [reagenttest.testreagent]
             [reagenttest.testcursor]
             [reagenttest.testinterop]
             [reagenttest.testratom]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
-            [reagent.core :as reagent :refer [atom]]
+            [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg log]]
             [reagentdemo.core :as demo]))
 
 (enable-console-print!)
 
-(def test-results (atom nil))
+(def test-results (r/atom nil))
 
 (def test-box-style {:position 'absolute
                      :margin-left -35
@@ -40,11 +40,18 @@
 
 (defn run-tests []
   (reset! test-results nil)
-  (if reagent/is-client
+  (if r/is-client
     (js/setTimeout all-tests 100)
     (all-tests)))
 
-(when (some? (test/deftest empty-test))
-  ;; Only run with :load-tests true
-  (reset! demo/test-results [#'test-output-mini])
-  (run-tests))
+(defn init! []
+  (when (some? (test/deftest empty-test))
+    ;; Only run with :load-tests true
+    (reset! demo/test-results [#'test-output-mini])
+    (run-tests)))
+
+(defn reload []
+  (demo/init!)
+  (init!))
+
+(init!)

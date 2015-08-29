@@ -10,3 +10,7 @@ outsite/public/news
 outsite/public/css
 out
 figwheel_server.log
+
+reagent.iml
+.idea
+.lein-failures

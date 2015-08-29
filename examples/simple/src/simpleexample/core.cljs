@@ -1,9 +1,9 @@
 (ns simpleexample.core
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as r]))
 
-(defonce timer (atom (js/Date.)))
+(defonce timer (r/atom (js/Date.)))
 
-(defonce time-color (atom "#f34"))
+(defonce time-color (r/atom "#f34"))
 
 (defonce time-updater (js/setInterval
                        #(reset! timer (js/Date.)) 1000))
@@ -31,5 +31,5 @@
    [color-input]])
 
 (defn ^:export run []
-  (reagent/render [simple-example]
-                  (js/document.getElementById "app")))
+  (r/render [simple-example]
+            (js/document.getElementById "app")))

@@ -1,8 +1,8 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.debug :refer (dbg log warn dev?)]
-                   reagent.ratom)
-  (:require [reagent.impl.util :as util :refer [->partial-ifn]]))
+  (:require-macros [reagent.ratom])
+  (:require [reagent.impl.util :as util :refer [->partial-ifn]]
+            [reagent.debug :refer-macros [dbg log warn dev?]]))
 
 (declare ^:dynamic *ratom-context*)
 
@@ -241,7 +241,7 @@
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
-    (when (and active? (not dirty?) (not (identical? oldval newval)))
+    (when (and active? (not (identical? oldval newval)))
       (set! dirty? true)
       ((or auto-run run) this)))
 

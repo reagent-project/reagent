@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.core :as r :refer [atom]]))
+            [reagent.core :as r]))
 
 ;; this repeats all the atom tests but using cursors instead
 
@@ -244,8 +244,8 @@
 
 
 (deftest test-equality
-  (let [a (atom {:foo "bar"})
-        a1 (atom {:foo "bar"})
+  (let [a (r/atom {:foo "bar"})
+        a1 (r/atom {:foo "bar"})
         c (r/cursor a [:foo])
         foo (fn
               ([path] (get-in @a path))
@@ -285,7 +285,7 @@
     (is (= @a {:foo "bar" :foobar "foo"}))))
 
 (deftest test-wrap
-  (let [a (atom {:foo "bar"})
+  (let [a (r/atom {:foo "bar"})
         w (r/wrap (:foo @a) swap! a assoc :foo)]
     (is (= @w "bar"))
     (is (= w (r/wrap "bar" swap! a assoc :foo)))
@@ -301,7 +301,7 @@
 
 
 (deftest cursor-values
-  (let [test-atom (atom {:a {:b {:c {:d 1}}}})
+  (let [test-atom (r/atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor test-atom [:a :b :c :d])
         test-cursor2 (r/cursor test-atom [])
         runs (running)] ;; nasty edge case
@@ -340,9 +340,9 @@
 
 
 (deftest cursor-atom-behaviors
-  (let [test-atom (atom {:a {:b {:c {:d 1}}}})
+  (let [test-atom (r/atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor test-atom [:a :b :c :d])
-        witness (atom nil)
+        witness (r/atom nil)
         runs (running)]
     ;; per the description, reset! should return the new values
     (is (= {}
@@ -384,9 +384,9 @@
     ))
 
 (deftest wrap-atom-behaviors
-  (let [test-atom (atom "foo")
+  (let [test-atom (r/atom "foo")
         test-wrap (r/wrap @test-atom reset! test-atom)
-        witness (atom nil)]
+        witness (r/atom nil)]
     ;; per the description, reset! should return the new values
     (is (= {}
            (reset! test-wrap {})))
@@ -418,7 +418,7 @@
     ))
 
 (deftest test-cursor-swap
-  (let [a (atom {:b 1})
+  (let [a (r/atom {:b 1})
         b (r/cursor a [:b])]
     (is (= 1 @b))
     (is (= 2 (swap! b inc)))
@@ -426,3 +426,19 @@
     (swap! a update-in [:b] inc)
     (is (= 4 (swap! b inc)))
     (is (= 4 @b))))
+
+(deftest test-double-reset
+  (let [a (r/atom {:foo {:active? false}})
+        c (r/cursor a [:foo])
+        f (fn []
+            (swap! c assoc :not-pristine true)
+            (swap! a update-in [:foo :active?] not))
+        spy (r/atom nil)
+        r (run!
+           (reset! spy (:active? @c)))]
+    (is (= @spy false))
+    (f)
+    (is (= @spy true))
+    (f)
+    (is (= @spy false))
+    (dispose r)))

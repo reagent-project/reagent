@@ -1,13 +1,13 @@
-(defproject reagent "0.5.1-SNAPSHOT"
+(defproject reagent "0.5.1-rc"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2816"]
-                 [cljsjs/react "0.12.2-5"]]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/clojurescript "1.7.48"]
+                 [cljsjs/react "0.13.3-1"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]
+  :plugins [[lein-cljsbuild "1.0.6"]
             [codox "0.8.12"]]
 
   :source-paths ["src"]
@@ -19,16 +19,16 @@
                     {:builds {:client {:source-paths ["test"]}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.2.3-SNAPSHOT"]]
-                    :plugins [[lein-figwheel "0.2.3-SNAPSHOT"]]
+                   {:dependencies [[figwheel "0.3.7"]]
+                    :plugins [[lein-figwheel "0.3.7"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
                     :cljsbuild
                     {:builds
                      {:client
-                      {:source-paths ["env/dev"]
-                       :compiler {:main "reagentdemo.dev"
+                      {:figwheel {:on-jsload "reagenttest.runtests/reload"}
+                       :compiler {:main "reagenttest.runtests"
                                   :source-map true
                                   :source-map-timestamp true
                                   :optimizations :none

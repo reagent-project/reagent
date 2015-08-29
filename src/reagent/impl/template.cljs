@@ -90,12 +90,49 @@
 (defn input-unmount [this]
   (.! this :cljsInputValue nil))
 
+;; <input type="??" >
+;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
+;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
+(def these-inputs-have-selection-api #{"text" "textarea" "password" "search" "tel" "url"})
+
+(defn has-selection-api?
+  [input-type]
+  (contains? these-inputs-have-selection-api input-type))
+
 (defn input-set-value [this]
   (when-some [value (.' this :cljsInputValue)]
-    (.! this :cljsInputDirty false)
-    (let [node (.' this getDOMNode)]
-      (when (not= value (.' node :value))
-        (.! node :value value)))))
+             (.! this :cljsInputDirty false)
+             (let [node       (.' this getDOMNode)
+                   node-value (.' node :value)]
+               (when (not= value node-value)
+                 (if-not (and (identical? node (.-activeElement js/document))
+                              (has-selection-api? (.' node :type)))
+                   ; just set the value, no need to worry about a cursor
+                   (.! node :value value)
+
+                   ;; Setting "value" (below) moves the cursor position to the end which 
+                   ;; gives the user a jarring experience. 
+                   ;; 
+                   ;; But repositioning the cursor within the text, turns out 
+                   ;; to be quite a challenge because changes in the text can be 
+                   ;; triggered by various events like:
+                   ;;    - a validation function rejecting a certain user inputted char
+                   ;;    - the user enters a lower case char, but is transformed to upper.
+                   ;;    - the user selects multiple chars and deletes text
+                   ;;    - the user pastes in multiple chars, and some of them are rejected 
+                   ;;      by a validator.
+                   ;;    - the user selects multiple chars and then types in a single 
+                   ;;      new char to repalce them all. 
+                   ;; Coming up with a sane cursor repositioning strategy hasn't been easy 
+                   ;; ALTHOUGH in the end, it kinda fell out nicely, and it appears to sanely
+                   ;; handle all the cases we could think of.  
+                   ;; So this is just a warning.  The code below is simple enough, but if
+                   ;; you are tempted to change it, be aware of all the scenarios you have handle. 
+                   (let [existing-offset-from-end (- (count node-value) (.' node :selectionStart))
+                         new-cursor-offset        (- (count value) existing-offset-from-end)]
+                     (.! node :value value)
+                     (.! node :selectionStart new-cursor-offset)
+                     (.! node :selectionEnd   new-cursor-offset)))))))
 
 (defn input-handle-change [this on-change e]
   (let [res (on-change e)]
@@ -139,11 +176,10 @@
        (input-render-setup this jsprops)
        (make-element argv comp jsprops first-child)))})
 
-(defn reagent-input [argv comp jsprops first-child]
+(defn reagent-input []
   (when (nil? reagent-input-class)
-    (set! reagent-input-class
-          (comp/create-class input-spec)))
-  (reagent-input-class argv comp jsprops first-child))
+    (set! reagent-input-class (comp/create-class input-spec)))
+  reagent-input-class)
 
 
 ;;; Conversion from Hiccup forms
@@ -200,31 +236,27 @@
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
-  (if (hiccup-tag? x)
-    (if-some [s (obj-get tag-name-cache (name x))]
-      s
-      (aset tag-name-cache (name x) (parse-tag x)))
-    (when (instance? NativeWrapper x)
-      (.-comp x))))
+  (if-some [s (obj-get tag-name-cache x)]
+    s
+    (aset tag-name-cache x (parse-tag x))))
 
 (declare as-element)
 
-(defn native-element [tag argv]
-  (when-let [parsed (cached-parse tag)]
-    (let [comp (.' parsed :name)]
-      (let [props (nth argv 1 nil)
-            hasprops (or (nil? props) (map? props))
-            jsprops (convert-props (if hasprops props) parsed)
-            first-child (if hasprops 2 1)]
-        (if (input-component? comp)
-          (-> [reagent-input argv comp jsprops first-child]
-              (with-meta (meta argv))
-              as-element)
-          (let [p (if-some [key (some-> (meta argv) get-key)]
-                    (doto (if (nil? jsprops) #js{} jsprops)
-                      (.! :key key))
-                    jsprops)]
-            (make-element argv comp p first-child)))))))
+(defn native-element [parsed argv]
+  (let [comp (.' parsed :name)]
+    (let [props (nth argv 1 nil)
+          hasprops (or (nil? props) (map? props))
+          jsprops (convert-props (if hasprops props) parsed)
+          first-child (if hasprops 2 1)]
+      (if (input-component? comp)
+        (-> [(reagent-input) argv comp jsprops first-child]
+            (with-meta (meta argv))
+            as-element)
+        (let [p (if-some [key (some-> (meta argv) get-key)]
+                  (doto (if (nil? jsprops) #js{} jsprops)
+                    (.! :key key))
+                  jsprops)]
+          (make-element argv comp p first-child))))))
 
 (defn vec-to-elem [v]
   (assert (pos? (count v))
@@ -234,9 +266,20 @@
     (assert (valid-tag? tag)
             (str "Invalid Hiccup form: "
                  (pr-str v) (comp/comp-name)))
-    (if-some [ne (native-element tag v)]
-      ne
-      (reag-element tag v))))
+    (cond
+      (hiccup-tag? tag)
+      (let [n (name tag)
+            pos (.indexOf n ">")]
+        (if (== pos -1)
+          (native-element (cached-parse n) v)
+          ;; Support extended hiccup syntax, i.e :div.bar>a.foo
+          (recur [(subs n 0 pos)
+                  (assoc v 0 (subs n (inc pos)))])))
+
+      (instance? NativeWrapper tag)
+      (native-element (.-comp tag) v)
+
+      :else (reag-element tag v))))
 
 (declare expand-seq)
 (declare expand-seq-check)
@@ -275,7 +318,8 @@
       (warn "Reactive deref not supported in lazy seq, "
             "it should be wrapped in doall"
             (comp/comp-name) ". Value:\n" (pr-str x)))
-    (when (.' ctx :no-key)
+    (when (and (not comp/*non-reactive*)
+               (.' ctx :no-key))
       (warn "Every element in a seq should have a unique "
             ":key" (comp/comp-name) ". Value: " (pr-str x)))
     res))

@@ -160,6 +160,16 @@ Equivalent to (swap! (state-atom this) merge new-state)"
   (assert (or (nil? new-state) (map? new-state)))
   (swap! (state-atom this) merge new-state))
 
+(defn force-update
+  "Force a component to re-render immediately.
+
+  If the second argument is true, child components will also be
+  re-rendered, even is their arguments have not changed."
+  ([this]
+   (force-update this false))
+  ([this deep]
+   (util/force-update this deep)))
+
 
 (defn props
   "Returns the props passed to a component."

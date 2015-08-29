@@ -17,12 +17,12 @@ This will setup a new Reagent project with some reasonable defaults, see here fo
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
-    [reagent "0.5.0"]
+[![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent)
 
 This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
-    [reagent "0.5.0" :exclusions [cljsjs/react]]
-    [cljsjs/react-with-addons "0.12.2-4"]
+    [reagent "0.5.1-rc" :exclusions [cljsjs/react]]
+    [cljsjs/react-with-addons "0.13.3-0"]
 
 If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
 
@@ -40,6 +40,20 @@ Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead
     [:span {:style {:color "red"}} " and red"]
     " text."]])
 ```
+
+Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements together by using a `>` character.
+
+```clj
+[:div
+  [:p
+    [:b "Nested Element"]]]
+```
+      
+can be written as:
+      
+```clj
+[:div>p>b "Nested Element"]
+```        
 
 You can use one component inside another:
 
@@ -71,13 +85,13 @@ assuming we have imported Reagent like this:
 
 ```clj
 (ns example
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as r]))
 ```
 
 State is handled using Reagent's version of `atom`, like this:
 
 ```clj
-(def click-count (atom 0))
+(defonce click-count (r/atom 0))
 
 (defn state-ful-with-atom []
   [:div {:on-click #(swap! click-count inc)}
@@ -90,7 +104,7 @@ If you want do some setting up when the component is first created, the componen
 
 ```clj
 (defn timer-component []
-  (let [seconds-elapsed (atom 0)]
+  (let [seconds-elapsed (r/atom 0)]
     (fn []
       (js/setTimeout #(swap! seconds-elapsed inc) 1000)
       [:div
@@ -102,7 +116,7 @@ This way you can avoid using React's lifecycle callbacks like `getInitialState` 
 But you can still use them if you want to, either using `reagent.core/create-class` or by attaching meta-data to a component function:
 
 ```clj
-(def my-html (atom ""))
+(defonce my-html (r/atom ""))
 
 (defn plain-component []
   [:p "My html is " @my-html])

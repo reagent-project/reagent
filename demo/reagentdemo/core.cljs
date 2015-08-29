@@ -1,5 +1,5 @@
-(ns ^:figwheel-always reagentdemo.core
-  (:require [reagent.core :as reagent :refer [atom]]
+(ns reagentdemo.core
+  (:require [reagent.core :as r]
             [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
             [sitetools.core :as tools :refer [link]]
@@ -8,7 +8,7 @@
             [reagentdemo.news :as news]
             [reagent.debug :refer-macros [dbg println]]))
 
-(def test-results (atom nil))
+(def test-results (r/atom nil))
 
 (def github {:href "https://github.com/reagent-project/reagent"})
 
@@ -39,6 +39,9 @@
    [tools/page-content]
    [github-badge]])
 
-(tools/start! {:body [#'demo]
-               :css-infiles ["site/public/css/examples.css"
-                             "site/public/css/main.css"]})
+(defn init! []
+  (tools/start! {:body [#'demo]
+                 :css-infiles ["site/public/css/examples.css"
+                               "site/public/css/main.css"]}))
+
+(init!)

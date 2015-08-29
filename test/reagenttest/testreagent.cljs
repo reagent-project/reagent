@@ -3,13 +3,13 @@
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.core :as reagent :refer [atom]]))
+            [reagent.core :as r]))
 
 (defn running [] (rv/running))
 
-(def isClient reagent/is-client)
+(def isClient r/is-client)
 
-(def rflush reagent/flush)
+(def rflush r/flush)
 
 (defn add-test-div [name]
   (let [doc js/document
@@ -21,9 +21,9 @@
 (defn with-mounted-component [comp f]
   (when isClient
     (let [div (add-test-div "_testreagent")]
-      (let [comp (reagent/render-component comp div #(f comp div))]
-        (reagent/unmount-component-at-node div)
-        (reagent/flush)
+      (let [comp (r/render-component comp div #(f comp div))]
+        (r/unmount-component-at-node div)
+        (r/flush)
         (.removeChild (.-body js/document) div)))))
 
 (defn found-in [re div]
@@ -35,7 +35,7 @@
 
 (deftest really-simple-test
   (when isClient
-    (let [ran (atom 0)
+    (let [ran (r/atom 0)
           really-simple (fn []
                           (swap! ran inc)
                           [:div "div in really-simple"])]
@@ -43,27 +43,27 @@
         (fn [c div]
           (swap! ran inc)
           (is (found-in #"div in really-simple" div))
-          (reagent/flush)
+          (r/flush)
           (is (= 2 @ran))
-          (reagent/force-update-all)
+          (r/force-update-all)
           (is (= 3 @ran))))
       (is (= 3 @ran)))))
 
 (deftest test-simple-callback
   (when isClient
-    (let [ran (atom 0)
-          comp (reagent/create-class
+    (let [ran (r/atom 0)
+          comp (r/create-class
                 {:component-did-mount #(swap! ran inc)
                  :render
                  (fn [this]
-                   (let [props (reagent/props this)]
+                   (let [props (r/props this)]
                      (is (map? props))
-                     (is (= props ((reagent/argv this) 1)))
-                     (is (= 1 (first (reagent/children this))))
-                     (is (= 1 (count (reagent/children this))))
+                     (is (= props ((r/argv this) 1)))
+                     (is (= 1 (first (r/children this))))
+                     (is (= 1 (count (r/children this))))
                      (swap! ran inc)
                      [:div (str "hi " (:foo props) ".")]))})]
-      (with-mounted-component (comp {:foo "you"} 1)
+      (with-mounted-component [comp {:foo "you"} 1]
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi you" div))))
@@ -71,45 +71,45 @@
 
 (deftest test-state-change
   (when isClient
-    (let [ran (atom 0)
-          self (atom nil)
-          comp (reagent/create-class
+    (let [ran (r/atom 0)
+          self (r/atom nil)
+          comp (r/create-class
                 {:get-initial-state (fn [] {:foo "initial"})
                  :reagent-render
                  (fn []
-                   (let [this (reagent/current-component)]
+                   (let [this (r/current-component)]
                      (reset! self this)
                      (swap! ran inc)
-                     [:div (str "hi " (:foo (reagent/state this)))]))})]
-      (with-mounted-component (comp)
+                     [:div (str "hi " (:foo (r/state this)))]))})]
+      (with-mounted-component [comp]
         (fn [C div]
           (swap! ran inc)
           (is (found-in #"hi initial" div))
 
-          (reagent/replace-state @self {:foo "there"})
-          (reagent/state @self)
+          (r/replace-state @self {:foo "there"})
+          (r/state @self)
 
           (rflush)
           (is (found-in #"hi there" div))
 
-          (reagent/set-state @self {:foo "you"})
+          (r/set-state @self {:foo "you"})
           (rflush)
           (is (found-in #"hi you" div))))
       (is (= 4 @ran)))))
 
 (deftest test-ratom-change
   (when isClient
-    (let [ran (atom 0)
+    (let [ran (r/atom 0)
           runs (running)
-          val (atom 0)
-          secval (atom 0)
+          val (r/atom 0)
+          secval (r/atom 0)
           v1 (reaction @val)
           comp (fn []
                  (swap! ran inc)
                  [:div (str "val " @v1 @val @secval)])]
       (with-mounted-component [comp]
         (fn [C div]
-          (reagent/flush)
+          (r/flush)
           (is (not= runs (running)))
           (is (found-in #"val 0" div))
           (is (= 1 @ran))
@@ -119,13 +119,13 @@
           (reset! val 1)
           (reset! val 2)
           (reset! val 1)
-          (reagent/flush)
+          (r/flush)
           (is (found-in #"val 1" div))
           (is (= 2 @ran))
 
           ;; should not be rendered
           (reset! val 1)
-          (reagent/flush)
+          (r/flush)
           (is (found-in #"val 1" div))
           (is (= 2 @ran))))
       (is (= runs (running)))
@@ -133,9 +133,9 @@
 
 (deftest batched-update-test []
   (when isClient
-    (let [ran (atom 0)
-          v1 (atom 0)
-          v2 (atom 0)
+    (let [ran (r/atom 0)
+          v1 (r/atom 0)
+          v2 (r/atom 0)
           c2 (fn [{val :val}]
                (swap! ran inc)
                (is (= @v1 val))
@@ -167,14 +167,14 @@
 
 (deftest init-state-test
   (when isClient
-    (let [ran (atom 0)
+    (let [ran (r/atom 0)
           really-simple (fn []
-                          (let [this (reagent/current-component)]
+                          (let [this (r/current-component)]
                             (swap! ran inc)
-                            (reagent/set-state this {:foo "foobar"})
+                            (r/set-state this {:foo "foobar"})
                             (fn []
                               [:div (str "this is "
-                                         (:foo (reagent/state this)))])))]
+                                         (:foo (r/state this)))])))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
@@ -183,9 +183,9 @@
 
 (deftest shoud-update-test
   (when isClient
-    (let [parent-ran (atom 0)
-          child-ran (atom 0)
-          child-props (atom nil)
+    (let [parent-ran (r/atom 0)
+          child-ran (r/atom 0)
+          child-props (r/atom nil)
           f (fn [])
           f1 (fn [])
           child (fn [p]
@@ -215,23 +215,23 @@
           (is (= @child-ran 4) "symbols are equal")
           (do (reset! child-props {:style {:color 'red}}) (rflush))
           (is (= @child-ran 5))
-          (do (reset! child-props {:on-change (reagent/partial f)})
+          (do (reset! child-props {:on-change (r/partial f)})
               (rflush))
           (is (= @child-ran 6))
-          (do (reset! child-props {:on-change (reagent/partial f)})
+          (do (reset! child-props {:on-change (r/partial f)})
               (rflush))
           (is (= @child-ran 6))
-          (do (reset! child-props {:on-change (reagent/partial f1)})
+          (do (reset! child-props {:on-change (r/partial f1)})
               (rflush))
           (is (= @child-ran 7))
 
-          (reagent/force-update-all)
+          (r/force-update-all)
           (is (= @child-ran 8)))))))
 
 (deftest dirty-test
   (when isClient
-    (let [ran (atom 0)
-          state (atom 0)
+    (let [ran (r/atom 0)
+          state (r/atom 0)
           really-simple (fn []
                           (swap! ran inc)
                           (if (= @state 1)
@@ -248,7 +248,7 @@
       (is (= 2 @ran)))))
 
 (defn as-string [comp]
-  (reagent/render-component-to-string comp))
+  (r/render-component-to-string comp))
 
 (deftest to-string-test []
   (let [comp (fn [props]
@@ -321,12 +321,12 @@
                (as-string ['div#foo.foo.bar]))))
 
 (deftest partial-test []
-  (let [p1 (reagent/partial vector 1 2)]
+  (let [p1 (r/partial vector 1 2)]
     (is (= (p1 3) [1 2 3]))
-    (is (= p1 (reagent/partial vector 1 2)))
+    (is (= p1 (r/partial vector 1 2)))
     (is (ifn? p1))
-    (is (= (reagent/partial vector 1 2) p1))
-    (is (not= p1 (reagent/partial vector 1 3)))))
+    (is (= (r/partial vector 1 2) p1))
+    (is (not= p1 (r/partial vector 1 3)))))
 
 (deftest test-null-component
   (let [null-comp (fn [do-show]
@@ -339,34 +339,34 @@
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
-         (reagent/render-to-static-markup
+         (r/render-to-static-markup
           [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
-         (reagent/render-to-static-markup
+         (r/render-to-static-markup
           [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
-         (reagent/render-to-static-markup
+         (r/render-to-static-markup
           [:div.bar {:dangerously-set-inner-HTML
                      {:__html "<p>foobar</p>"}} ]))))
 
 (deftest test-return-class
   (when isClient
-    (let [ran (atom 0)
-          top-ran (atom 0)
+    (let [ran (r/atom 0)
+          top-ran (r/atom 0)
           comp (fn []
                  (swap! top-ran inc)
-                 (reagent/create-class
+                 (r/create-class
                   {:component-did-mount #(swap! ran inc)
                    :render
                    (fn [this]
-                     (let [props (reagent/props this)]
+                     (let [props (r/props this)]
                        (is (map? props))
-                       (is (= props ((reagent/argv this) 1)))
-                       (is (= 1 (first (reagent/children this))))
-                       (is (= 1 (count (reagent/children this))))
+                       (is (= props ((r/argv this) 1)))
+                       (is (= 1 (first (r/children this))))
+                       (is (= 1 (count (r/children this))))
                        (swap! ran inc)
                        [:div (str "hi " (:foo props) ".")]))}))
-          prop (atom {:foo "you"})
+          prop (r/atom {:foo "you"})
           parent (fn [] [comp @prop 1])]
       (with-mounted-component [parent]
         (fn [C div]
@@ -376,25 +376,25 @@
           (is (= 3 @ran))
 
           (swap! prop assoc :foo "me")
-          (reagent/flush)
+          (r/flush)
           (is (found-in #"hi me" div))
           (is (= 1 @top-ran))
           (is (= 4 @ran)))))))
 
 (deftest test-return-class-fn
   (when isClient
-    (let [ran (atom 0)
-          top-ran (atom 0)
+    (let [ran (r/atom 0)
+          top-ran (r/atom 0)
           comp (fn []
                  (swap! top-ran inc)
-                 (reagent/create-class
+                 (r/create-class
                   {:component-did-mount #(swap! ran inc)
                    :component-function
                    (fn [p a]
                      (is (= 1 a))
                      (swap! ran inc)
                      [:div (str "hi " (:foo p) ".")])}))
-          prop (atom {:foo "you"})
+          prop (r/atom {:foo "you"})
           parent (fn [] [comp @prop 1])]
       (with-mounted-component [parent]
         (fn [C div]
@@ -404,17 +404,17 @@
           (is (= 3 @ran))
 
           (swap! prop assoc :foo "me")
-          (reagent/flush)
+          (r/flush)
           (is (found-in #"hi me" div))
           (is (= 1 @top-ran))
           (is (= 4 @ran)))))))
 
 (defn rstr [react-elem]
-  (reagent/render-to-static-markup react-elem))
+  (r/render-to-static-markup react-elem))
 
 (deftest test-create-element
-  (let [ae reagent/as-element
-        ce reagent/create-element]
+  (let [ae r/as-element
+        ce r/create-element]
     (is (= (rstr (ae [:div]))
            (rstr (ce "div"))))
     (is (= (rstr (ae [:div]))
@@ -442,13 +442,13 @@
                   (fn []
                     (this-as
                      this
-                     (reagent/create-element
+                     (r/create-element
                       "div" #js{:className (.' this :props.className)}
                       (.' this :props.children))))}))
 
 (deftest test-adapt-class
-  (let [d1 (reagent/adapt-react-class ndiv)
-        d2 (reagent/adapt-react-class "div")]
+  (let [d1 (r/adapt-react-class ndiv)
+        d2 (r/adapt-react-class "div")]
     (is (= (rstr [:div])
            (rstr [d1])))
     (is (= (rstr [:div "a"])
@@ -472,11 +472,11 @@
            (rstr [d2 "a" "b" [:div "c"]])))))
 
 (deftest test-reactize-component
-  (let [ae reagent/as-element
-        ce reagent/create-element
+  (let [ae r/as-element
+        ce r/create-element
         c1r (fn [p]
               [:p "p:" (:a p) (:children p)])
-        c1 (reagent/reactify-component c1r)]
+        c1 (r/reactify-component c1r)]
     (is (= (rstr [:p "p:a"])
            (rstr (ce c1 #js{:a "a"}))))
     (is (= (rstr [:p "p:"])
@@ -493,7 +493,7 @@
                      (ae [:i "i"])))))))
 
 (deftest test-keys
-  (let [a nil ;; (atom "a")
+  (let [a nil ;; (r/atom "a")
         c (fn key-tester []
             [:div
              (for [i (range 3)]
@@ -504,3 +504,39 @@
       (fn [c div]
         ;; Just make sure this doesn't print a debug message
         ))))
+
+(deftest test-extended-syntax
+  (is (= (rstr [:p>b "foo"])
+         "<p><b>foo</b></p>"))
+  (is (= (rstr [:p.foo>b "x"])
+         (rstr [:p.foo [:b "x"]])))
+  (is (= (rstr [:div.foo>p.bar.foo>b.foobar "xy"])
+         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
+  (is (= (rstr [:div.foo>p.bar.foo>b.foobar {} "xy"])
+         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
+  (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
+         (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
+
+(deftest test-force-update
+  (let [v (atom {:v1 0
+                 :v2 0})
+        comps (atom {})
+        c1 (fn []
+             (swap! comps assoc :c1 (r/current-component))
+             [:p (swap! v update-in [:v1] inc)])
+        c2 (fn []
+             (swap! comps assoc :c2 (r/current-component))
+             [:p (swap! v update-in [:v2] inc)
+              [c1]])]
+    (with-mounted-component [c2]
+      (fn [c div]
+        (is (= @v {:v1 1 :v2 1}))
+
+        (r/force-update (:c2 @comps))
+        (is (= @v {:v1 1 :v2 2}))
+
+        (r/force-update (:c1 @comps))
+        (is (= @v {:v1 2 :v2 2}))
+
+        (r/force-update (:c2 @comps) true)
+        (is (= @v {:v1 3 :v2 3}))))))

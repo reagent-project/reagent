@@ -1,6 +1,21 @@
 
 # Changelog
 
+## 0.5.1
+
+- React updated to 0.13.3
+
+- Deprecate calling the result of `create-class` as a function (i.e always use hiccup forms to call Reagent components).
+
+- Hiccup syntax has been extended to allow nested elements to be defined using '>' as part of the keyword name.
+
+- Add `force-update` for completeness.
+
+- Try harder to maintain cursor position in inputs.
+
+- Simplify examples, taking advantage of new figwheel.
+
+
 ## 0.5.0
 
 - React updated to 0.12.2
