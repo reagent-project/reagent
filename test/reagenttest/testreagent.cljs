@@ -540,3 +540,15 @@
 
         (r/force-update (:c2 @comps) true)
         (is (= @v {:v1 3 :v2 3}))))))
+
+(deftest test-component-path
+  (let [a (atom nil)
+        tc (r/create-class {:display-name "atestcomponent"
+                           :render (fn []
+                                     (let [c (r/current-component)]
+                                       (reset! a (r/component-path c))
+                                       [:div]))})]
+    (with-mounted-component [tc]
+      (fn [c]
+        (is (seq @a))
+        (is (re-find #"atestcomponent" @a) "component-path should work")))))

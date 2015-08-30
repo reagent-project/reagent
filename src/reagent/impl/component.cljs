@@ -188,7 +188,8 @@
         name (str (or (:displayName fun-map)
                       (fun-name render-fun)))
         name' (if (empty? name)
-                (str (gensym "reagent")) name)
+                (str (gensym "reagent"))
+                (clojure.string/replace name #"\$" "."))
         fmap (-> fun-map
                  (assoc :displayName name')
                  (add-render render-fun name'))]
@@ -223,10 +224,26 @@
     (util/cache-react-class res res)
     f))
 
+(defn component-path [c]
+  (let [elem (some-> (or (some-> c
+                                 (.' :_reactInternalInstance))
+                          c)
+                     (.' :_currentElement))
+        name (some-> elem
+                     (.' :type)
+                     (.' :displayName))
+        path (some-> elem
+                     (.' :_owner)
+                     component-path
+                     (str " > "))
+        res (str path name)]
+    (when-not (empty? res) res)))
+
 (defn comp-name []
   (if (dev?)
-    (let [n (some-> *current-component*
-                    (.' cljsName))]
+    (let [c *current-component*
+          n (or (component-path c)
+                (some-> c (.' cljsName)))]
       (if-not (empty? n)
         (str " (in " n ")")
         ""))
