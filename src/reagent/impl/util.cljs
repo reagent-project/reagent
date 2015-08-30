@@ -108,8 +108,8 @@
   ;; If render throws, React may get confused, and throw on
   ;; unmount as well, so try to force React to start over.
   (try
-    (.' js/React unmountComponentAtNode node)
-    (catch js/Object e
+    (.! node :innerHTML "")
+    (catch :default e
       (do (warn "Error unmounting:")
           (log e)))))
 
@@ -122,7 +122,7 @@
               (swap! roots assoc container [comp container])
               (if (some? callback)
                 (callback))))))
-    (catch js/Object e
+    (catch :default e
       (do (clear-container container)
           (throw e)))))
 
