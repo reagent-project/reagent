@@ -288,3 +288,9 @@ the result can be compared with ="
   [f & args]
   (util/partial-ifn. f args nil))
 
+(defn component-path
+  ;;; Try to return the path of component c. Maybe useful for debugging
+  ;;; and error reporting, but may break with future versions of React.
+  ;;; Thus component-path may return nil.
+  [c]
+  (comp/component-path c))
