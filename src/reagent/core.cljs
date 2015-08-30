@@ -289,8 +289,8 @@ the result can be compared with ="
   (util/partial-ifn. f args nil))
 
 (defn component-path
-  ;;; Try to return the path of component c. Maybe useful for debugging
-  ;;; and error reporting, but may break with future versions of React.
-  ;;; Thus component-path may return nil.
+  ;; Try to return the path of component c as a string.
+  ;; Maybe useful for debugging and error reporting, but may break
+  ;; with future versions of React (and return nil). 
   [c]
   (comp/component-path c))
