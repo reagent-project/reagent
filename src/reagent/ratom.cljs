@@ -203,7 +203,7 @@
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
-                   auto-run on-set on-dispose]
+                   ^:mutable auto-run on-set on-dispose]
   IAtom
   IReactiveAtom
 
@@ -290,6 +290,14 @@
 
   IDeref
   (-deref [this]
+    (when (== dirty? maybe-dirty)
+      (let [oldauto auto-run]
+        (set! auto-run nil)
+        (doseq [w watching]
+          (-deref w))
+        (set! auto-run oldauto))
+      (when (== dirty? maybe-dirty)
+        (set! dirty? clean)))
     (if (or auto-run (some? *ratom-context*))
       (do
         (notify-deref-watcher! this)
