@@ -197,6 +197,10 @@
   (-handle-change [k sender oldval newval])
   (-peek-at [this]))
 
+(def clean 0)
+(def maybe-dirty 1)
+(def is-dirty 2)
+
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
                    auto-run on-set on-dispose]
@@ -224,7 +228,7 @@
     (let [oldval state]
       (set! state newval)
       (when on-set
-        (set! dirty? true)
+        (set! dirty? is-dirty)
         (on-set oldval newval))
       (-notify-watches a oldval newval)
       newval))
@@ -242,7 +246,7 @@
   IComputedImpl
   (-handle-change [this sender oldval newval]
     (when (and active? (not (identical? oldval newval)))
-      (set! dirty? true)
+      (set! dirty? is-dirty)
       ((or auto-run run) this)))
 
   (-update-watching [this derefed]
@@ -255,7 +259,7 @@
     (set! watching derefed))
 
   (-peek-at [this]
-    (if-not dirty?
+    (if (== dirty? clean)
       state
       (binding [*ratom-context* nil]
         (-deref this))))
@@ -270,7 +274,7 @@
       (when-not active?
         (when debug (swap! -running inc))
         (set! active? true))
-      (set! dirty? false)
+      (set! dirty? clean)
       (set! state res)
       (-notify-watches this oldstate state)
       res))
@@ -280,11 +284,11 @@
     (if (or auto-run (some? *ratom-context*))
       (do
         (notify-deref-watcher! this)
-        (if dirty?
+        (if-not (== dirty? clean)
           (run this)
           state))
       (do
-        (when dirty?
+        (when-not (== dirty? clean)
           (let [oldstate state]
             (set! state (f))
             (when-not (identical? oldstate state)
@@ -297,7 +301,7 @@
       (remove-watch w this))
     (set! watching nil)
     (set! state nil)
-    (set! dirty? true)
+    (set! dirty? is-dirty)
     (when active?
       (when debug (swap! -running dec))
       (set! active? false))
@@ -319,7 +323,7 @@
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed]}]
   (let [runner (if (= auto-run true) run auto-run)
         active (not (nil? derefed))
-        dirty (not active)
+        dirty (if (not active) is-dirty clean)
         reaction (Reaction. f nil dirty active
                             nil nil
                             runner on-set on-dispose)]
