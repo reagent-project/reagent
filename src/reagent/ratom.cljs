@@ -195,7 +195,8 @@
 (defprotocol IComputedImpl
   (-update-watching [this derefed])
   (-handle-change [k sender oldval newval])
-  (-peek-at [this]))
+  (-peek-at [this])
+  (-check-clean [this]))
 
 (def clean 0)
 (def maybe-dirty 1)
@@ -250,8 +251,12 @@
                         (if (identical? oldval newval)
                           maybe-dirty is-dirty)))
       (if auto-run
-        (when (> dirty? clean)
-          ((or auto-run run) this))
+        (do
+          ;; FIXME: is this correct?
+          (binding [*ratom-context* this]
+            (-check-clean this))
+          (when (> dirty? clean)
+            ((or auto-run run) this)))
         (-notify-watches this state state)))
     ;; (when (and active? (not (identical? oldval newval)))
     ;;   (set! dirty? is-dirty)
@@ -273,6 +278,16 @@
       (binding [*ratom-context* nil]
         (-deref this))))
 
+  (-check-clean [this]
+    (when (== dirty? maybe-dirty)
+      (let [oldauto auto-run]
+        (set! auto-run nil)
+        (doseq [w watching]
+          (-deref w))
+        (set! auto-run oldauto))
+      (when (== dirty? maybe-dirty)
+        (set! dirty? clean))))
+
   IRunnable
   (run [this]
     (let [oldstate state
@@ -290,14 +305,7 @@
 
   IDeref
   (-deref [this]
-    (when (== dirty? maybe-dirty)
-      (let [oldauto auto-run]
-        (set! auto-run nil)
-        (doseq [w watching]
-          (-deref w))
-        (set! auto-run oldauto))
-      (when (== dirty? maybe-dirty)
-        (set! dirty? clean)))
+    (-check-clean this)
     (if (or auto-run (some? *ratom-context*))
       (do
         (notify-deref-watcher! this)

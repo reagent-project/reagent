@@ -11,7 +11,7 @@
   (rv/running))
 (defn dispose [v] (rv/dispose! v))
 
-(def testite 1)
+(def testite 10)
 
 (deftest basic-cursor
   (let [runs (running)

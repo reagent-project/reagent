@@ -8,7 +8,7 @@
   (set! rv/debug true)
   (rv/running))
 
-(def testite 1)
+(def testite 10)
 
 (defn dispose [v]
   (rv/dispose! v))
