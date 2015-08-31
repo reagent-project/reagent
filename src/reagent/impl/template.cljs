@@ -215,7 +215,11 @@
     (fn-to-class tag)))
 
 (defn get-key [x]
-  (when (map? x) (get x :key)))
+  (when (map? x)
+    ;; try catch to avoid clojurescript peculiarity with
+    ;; sorted-maps with keys that are numbers
+    (try (get x :key)
+         (catch :default e))))
 
 (defn key-from-vec [v]
   (if-some [k (some-> (meta v) get-key)]

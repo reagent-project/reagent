@@ -552,3 +552,10 @@
       (fn [c]
         (is (seq @a))
         (is (re-find #"atestcomponent" @a) "component-path should work")))))
+
+(deftest test-sorted-map-key
+  (let [c1 (fn [map]
+             [:div (map 1)])
+        c2 (fn []
+             [c1 (sorted-map 1 "foo" 2 "bar")])]
+    (is (= (rstr [c2]) "<div>foo</div>"))))
