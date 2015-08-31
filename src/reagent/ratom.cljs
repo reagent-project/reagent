@@ -245,9 +245,18 @@
 
   IComputedImpl
   (-handle-change [this sender oldval newval]
-    (when (and active? (not (identical? oldval newval)))
-      (set! dirty? is-dirty)
-      ((or auto-run run) this)))
+    (when active?
+      (set! dirty? (max dirty?
+                        (if (identical? oldval newval)
+                          maybe-dirty is-dirty)))
+      (if auto-run
+        (when (> dirty? clean)
+          ((or auto-run run) this))
+        (-notify-watches this state state)))
+    ;; (when (and active? (not (identical? oldval newval)))
+    ;;   (set! dirty? is-dirty)
+    ;;   ((or auto-run run) this))
+    )
 
   (-update-watching [this derefed]
     (doseq [w derefed]

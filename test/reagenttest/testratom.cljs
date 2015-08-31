@@ -8,6 +8,8 @@
   (set! rv/debug true)
   (rv/running))
 
+(def testite 1)
+
 (defn dispose [v]
   (rv/dispose! v))
 
@@ -89,7 +91,7 @@
 
 
 (deftest test-unsubscribe
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a (rv/atom 0)
           a1 (reaction (inc @a))
@@ -166,7 +168,7 @@
     (is (= runs (running)))))
 
 (deftest test-dispose
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a (rv/atom 0)
           disposed (rv/atom nil)

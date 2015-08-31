@@ -11,6 +11,8 @@
   (rv/running))
 (defn dispose [v] (rv/dispose! v))
 
+(def testite 1)
+
 (deftest basic-cursor
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})
@@ -85,7 +87,7 @@
 
 
 (deftest test-unsubscribe
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:test {:unsubscribe 0 :value 42}})
           a (r/cursor a-base [:test :unsubscribe])
@@ -171,7 +173,7 @@
     (is (= runs (running)))))
 
 (deftest test-dispose
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:a 0 :b 0})
           a (r/cursor a-base [:a])
