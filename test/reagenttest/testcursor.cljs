@@ -31,7 +31,7 @@
     (is (= @out 2))
     (reset! start 1)
     (is (= @out 3))
-    (is (= @count 4))
+    (is (= @count 2))
     (dispose const)
     (is (= @start-base {:a {:b {:c 1}}}))
     (is (= (running) runs))))

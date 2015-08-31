@@ -204,7 +204,7 @@
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
-                   ^:mutable auto-run on-set on-dispose]
+                   auto-run on-set on-dispose ^:mutable norun?]
   IAtom
   IReactiveAtom
 
@@ -251,7 +251,7 @@
         (set! dirty? (max dirty?
                           (if (identical? oldval newval)
                             maybe-dirty is-dirty)))
-        (if auto-run
+        (if (and auto-run (not norun?))
           (do
             ;; FIXME: is this correct?
             (when (== dirty? maybe-dirty)
@@ -259,7 +259,8 @@
                 (-check-clean this)))
             (when-not (== dirty? clean)
               ((or auto-run run) this)))
-          (-notify-watches this state state))))
+          (when (== old-dirty clean)
+            (-notify-watches this state state)))))
     ;; (when (and active? (not (identical? oldval newval)))
     ;;   (set! dirty? is-dirty)
     ;;   ((or auto-run run) this))
@@ -282,16 +283,16 @@
 
   (-check-clean [this]
     (when (== dirty? maybe-dirty)
-      (let [oldauto auto-run]
-        (set! auto-run nil)
-        (doseq [w watching]
-          (-deref w))
-        (set! auto-run oldauto))
+      (set! norun? true)
+      (doseq [w watching]
+        (-deref w))
+      (set! norun? false)
       (when (== dirty? maybe-dirty)
         (set! dirty? clean))))
 
   IRunnable
   (run [this]
+    (set! norun? true)
     (let [oldstate state
           res (capture-derefed f this)
           derefed (captured this)]
@@ -300,6 +301,7 @@
       (when-not active?
         (when debug (swap! -running inc))
         (set! active? true))
+      (set! norun? false)
       (set! dirty? clean)
       (set! state res)
       (-notify-watches this oldstate state)
@@ -353,7 +355,7 @@
         dirty (if (not active) is-dirty clean)
         reaction (Reaction. f nil dirty active
                             nil nil
-                            runner on-set on-dispose)]
+                            runner on-set on-dispose false)]
     (when-not (nil? derefed)
       (when debug (swap! -running inc))
       (-update-watching reaction derefed))

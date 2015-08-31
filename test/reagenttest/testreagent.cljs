@@ -122,13 +122,13 @@
           (is (= 1 @ran))
           (r/flush)
           (is (found-in #"val 1" div))
-          (is (= 2 @ran))
+          (is (= 2 @ran) "ran once more")
 
           ;; should not be rendered
           (reset! val 1)
           (r/flush)
           (is (found-in #"val 1" div))
-          (is (= 2 @ran))))
+          (is (= 2 @ran) "did not run")))
       (is (= runs (running)))
       (is (= 2 @ran)))))
 
