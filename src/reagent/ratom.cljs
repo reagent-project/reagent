@@ -247,17 +247,19 @@
   IComputedImpl
   (-handle-change [this sender oldval newval]
     (when active?
-      (set! dirty? (max dirty?
-                        (if (identical? oldval newval)
-                          maybe-dirty is-dirty)))
-      (if auto-run
-        (do
-          ;; FIXME: is this correct?
-          (binding [*ratom-context* this]
-            (-check-clean this))
-          (when (> dirty? clean)
-            ((or auto-run run) this)))
-        (-notify-watches this state state)))
+      (let [old-dirty dirty?]
+        (set! dirty? (max dirty?
+                          (if (identical? oldval newval)
+                            maybe-dirty is-dirty)))
+        (if auto-run
+          (do
+            ;; FIXME: is this correct?
+            (when (== dirty? maybe-dirty)
+              (binding [*ratom-context* (js-obj)]
+                (-check-clean this)))
+            (when-not (== dirty? clean)
+              ((or auto-run run) this)))
+          (-notify-watches this state state))))
     ;; (when (and active? (not (identical? oldval newval)))
     ;;   (set! dirty? is-dirty)
     ;;   ((or auto-run run) this))

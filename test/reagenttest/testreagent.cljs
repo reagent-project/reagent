@@ -119,6 +119,7 @@
           (reset! val 1)
           (reset! val 2)
           (reset! val 1)
+          (is (= 1 @ran))
           (r/flush)
           (is (found-in #"val 1" div))
           (is (= 2 @ran))
