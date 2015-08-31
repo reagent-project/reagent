@@ -27,32 +27,48 @@
   (and (fn? c)
        (some? (.' c :cljsReactClass))))
 
+(defn do-render-sub [c]
+  (let [f (.' c :cljsRender)
+        _ (assert (ifn? f))
+        p (.' c :props)
+        res (if (nil? (.' c :reagentRender))
+              (f c)
+              (let [argv (.' p :argv)
+                    n (count argv)]
+                (case n
+                  1 (f)
+                  2 (f (nth argv 1))
+                  3 (f (nth argv 1) (nth argv 2))
+                  4 (f (nth argv 1) (nth argv 2) (nth argv 3))
+                  5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
+                  (apply f (subvec argv 1)))))]
+    (if (vector? res)
+      (as-element res)
+      (if (ifn? res)
+        (let [f (if (reagent-class? res)
+                  (fn [& args]
+                    (as-element (apply vector res args)))
+                  res)]
+          (.! c :cljsRender f)
+          (recur c))
+        res))))
+
+(declare comp-name)
+
 (defn do-render [c]
   (binding [*current-component* c]
-    (let [f (.' c :cljsRender)
-          _ (assert (ifn? f))
-          p (.' c :props)
-          res (if (nil? (.' c :reagentRender))
-                (f c)
-                (let [argv (.' p :argv)
-                      n (count argv)]
-                  (case n
-                    1 (f)
-                    2 (f (nth argv 1))
-                    3 (f (nth argv 1) (nth argv 2))
-                    4 (f (nth argv 1) (nth argv 2) (nth argv 3))
-                    5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
-                    (apply f (subvec argv 1)))))]
-      (if (vector? res)
-        (as-element res)
-        (if (ifn? res)
-          (let [f (if (reagent-class? res)
-                    (fn [& args]
-                      (as-element (apply vector res args)))
-                    res)]
-            (.! c :cljsRender f)
-            (do-render c))
-          res)))))
+    (if (dev?)
+      ;; Log errors, without using try/catch (and mess up call stack)
+      (let [ok (array false)]
+        (try
+          (let [res (do-render-sub c)]
+            (aset ok 0 true)
+            res)
+          (finally
+            (when-not (aget ok 0)
+              (js/console.error (str "Error rendering component "
+                                     (comp-name)))))))
+      (do-render-sub c))))
 
 
 ;;; Method wrapping
