@@ -15,6 +15,8 @@
 
 - Simplify examples, taking advantage of new figwheel.
 
+- Better warnings and error messages.
+
 
 ## 0.5.0
 
