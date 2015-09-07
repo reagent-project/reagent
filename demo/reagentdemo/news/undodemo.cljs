@@ -13,9 +13,8 @@
 
 (declare main)
 (defroute path "/news/cloact-reagent-undo-demo.html" []
-  (dispatch [:content [#'main]]))
+  (dispatch [:content [#'main] title]))
 (tools/reg-page (path))
-
 
 
 (def ns-src (s/syntaxed "(ns example

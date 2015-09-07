@@ -12,7 +12,8 @@
 (def title "All arguments allowed")
 
 (declare main)
-(defroute path "/news/any-arguments.html" [] (dispatch [:content [#'main]]))
+(defroute path "/news/any-arguments.html" []
+  (dispatch [:content [#'main] title]))
 (tools/reg-page (path))
 
 

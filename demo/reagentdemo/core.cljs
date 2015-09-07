@@ -29,8 +29,10 @@
 ;;                      "Reagent news")
 
 (defroute "/" [] (dispatch [:content [#'intro/main]]))
-(defroute main-page "/index.html" [] (dispatch [:content [#'intro/main]]))
-(defroute news-page "/news/index.html" [] (dispatch [:content [#'news/main]]))
+(defroute main-page "/index.html" []
+  (dispatch [:content [#'intro/main] "Minimalistic React for ClojureScript"]))
+(defroute news-page "/news/index.html" []
+  (dispatch [:content [#'news/main] "News"]))
 (tools/reg-page (main-page))
 (tools/reg-page (news-page))
 
@@ -48,6 +50,7 @@
 
 (defn init! []
   (tools/start! {:body [#'demo]
+                 :title-prefix "Reagent: "
                  :css-infiles ["site/public/css/examples.css"
                                "site/public/css/main.css"]}))
 

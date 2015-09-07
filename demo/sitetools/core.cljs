@@ -13,8 +13,6 @@
 (when (exists? js/console)
   (enable-console-print!))
 
-(declare page-content)
-
 (defn rswap! [a f & args]
   ;; Roughly like swap!, except that recursive swaps are ok
   (let [fs (if-some [arr (.-rswapfs a)]
@@ -34,6 +32,8 @@
 
 ;;; Configuration
 
+(declare page-content)
+
 (defonce config (r/atom {:page-map {"index.html" [:div "Empty"]}
                          :page-titles {}
                          :body [page-content]
@@ -45,7 +45,7 @@
                          :js-file "js/main.js"
                          :js-dir "js/out"
                          :main-div "main-content"
-                         :default-title "Reagent"
+                         :default-title ""
                          :allow-html5-history false}))
 
 (defonce page (r/atom "index.html"))
@@ -56,7 +56,9 @@
 (defn demo-handler [state [id v1 v2 :as event]]
   (case id
     :content (do
-               (let [title (or v2 (:default-title @config) "")]
+               (let [title (if v2
+                             (str (:title-prefix @config) v2)
+                             (str (:default-title @config)))]
                  (when r/is-client
                    (r/next-tick #(set! js/document.title title)))
                  (assoc state
@@ -86,19 +88,19 @@
       (.setEnabled true))))
 
 
-(defn register-page
-  ([pageurl comp]
-   (register-page pageurl comp nil))
-  ([pageurl comp title]
-   (assert (string? pageurl)
-           (str "expected string, not " pageurl))
-   (assert (vector? comp)
-           (str "expected vector, not " (pr-str comp)))
-   (assert (or (nil? title)
-               (string? title)))
-   (swap! config update-in [:page-map] assoc pageurl comp)
-   (swap! config update-in [:page-titles] assoc pageurl title)
-   pageurl))
+;; (defn register-page
+;;   ([pageurl comp]
+;;    (register-page pageurl comp nil))
+;;   ([pageurl comp title]
+;;    (assert (string? pageurl)
+;;            (str "expected string, not " pageurl))
+;;    (assert (vector? comp)
+;;            (str "expected vector, not " (pr-str comp)))
+;;    (assert (or (nil? title)
+;;                (string? title)))
+;;    (swap! config update-in [:page-map] assoc pageurl comp)
+;;    (swap! config update-in [:page-titles] assoc pageurl title)
+;;    pageurl))
 
 
 ;;; Components
@@ -109,23 +111,23 @@
                             (dispatch [:goto-page (:href props)])))
    child])
 
-#_(defn link
-    [props child]
-    (let [p (:href props)
-          f ((:page-map @config) p)]
-      (assert (vector? f) (str "couldn't resolve page " p))
-      (assert (string? p))
-      [:a (assoc props
-                 :href p
-                 :on-click (if (:has-history @page-state)
-                             (fn [e]
-                               (.preventDefault e)
-                               (reset! page p)
-                               (r/next-tick
-                                #(set! (.-scrollTop (.-body js/document))
-                                       0)))
-                             identity))
-       child]))
+;; (defn link
+;;     [props child]
+;;     (let [p (:href props)
+;;           f ((:page-map @config) p)]
+;;       (assert (vector? f) (str "couldn't resolve page " p))
+;;       (assert (string? p))
+;;       [:a (assoc props
+;;                  :href p
+;;                  :on-click (if (:has-history @page-state)
+;;                              (fn [e]
+;;                                (.preventDefault e)
+;;                                (reset! page p)
+;;                                (r/next-tick
+;;                                 #(set! (.-scrollTop (.-body js/document))
+;;                                        0)))
+;;                              identity))
+;;        child]))
 
 (defn page-content []
   (:main-content @config))
@@ -134,75 +136,75 @@
 
 ;;; Implementation:
 
-(defn get-title []
-  (get-in @config [:page-titles @page]
-          (or (get-in @config [:page-titles "index.html"])
-              "")))
+;; (defn get-title []
+;;   (get-in @config [:page-titles @page]
+;;           (or (get-in @config [:page-titles "index.html"])
+;;               "")))
 
-(defn default-content []
-  [:div "Empty"])
+;; (defn default-content []
+;;   [:div "Empty"])
 
-(add-watch page ::title-watch
-           (fn [_ _ _ p]
-             (when r/is-client
-               (set! (.-title js/document) (get-title)))
-             ;; First title on a page wins
-             #_(reset! page-title "")))
+;; (add-watch page ::title-watch
+;;            (fn [_ _ _ p]
+;;              (when r/is-client
+;;                (set! (.-title js/document) (get-title)))
+;;              ;; First title on a page wins
+;;              #_(reset! page-title "")))
 
 ;;; History
 
-(defn use-html5-history []
-  (when r/is-client
-    (let [proto (.' js/window :location.protocol)]
-      (and (:allow-html5-history @config)
-           (.isSupported Html5History)
-           (#{"http:" "https:"} proto)))))
+;; (defn use-html5-history []
+;;   (when r/is-client
+;;     (let [proto (.' js/window :location.protocol)]
+;;       (and (:allow-html5-history @config)
+;;            (.isSupported Html5History)
+;;            (#{"http:" "https:"} proto)))))
 
-(defn create-history [p]
-  (if (use-html5-history)
-    (doto (Html5History.)
-      (.setUseFragment false))
-    (let [h (History.)]
-      (when p
-        (.setToken h p))
-      h)))
+;; (defn create-history [p]
+;;   (if (use-html5-history)
+;;     (doto (Html5History.)
+;;       (.setUseFragment false))
+;;     (let [h (History.)]
+;;       (when p
+;;         (.setToken h p))
+;;       h)))
 
-(defn token-base []
-  (if (use-html5-history)
-    (:base-path @config)))
+;; (defn token-base []
+;;   (if (use-html5-history)
+;;     (:base-path @config)))
 
-(defn setup-history [p]
-  (when (nil? history)
-    (set! history (create-history p))
-    (swap! page-state assoc :has-history (some? history))
-    (when-let [h history]
-      (evt/listen h hevt/NAVIGATE
-                  (fn [e]
-                    (let [t (.-token e)
-                          tb (token-base)]
-                      (reset! page (if (and tb (== 0 (.indexOf t tb)))
-                                     (subs t (count tb))
-                                     t)))
-                    (r/flush)))
-      (add-watch page ::history
-                 (fn [_ _ oldp newp]
-                   (when-not (= oldp newp)
-                     (.setToken h (str (token-base) newp)))))
-      (.setEnabled h true))))
+;; (defn setup-history [p]
+;;   (when (nil? history)
+;;     (set! history (create-history p))
+;;     (swap! page-state assoc :has-history (some? history))
+;;     (when-let [h history]
+;;       (evt/listen h hevt/NAVIGATE
+;;                   (fn [e]
+;;                     (let [t (.-token e)
+;;                           tb (token-base)]
+;;                       (reset! page (if (and tb (== 0 (.indexOf t tb)))
+;;                                      (subs t (count tb))
+;;                                      t)))
+;;                     (r/flush)))
+;;       (add-watch page ::history
+;;                  (fn [_ _ oldp newp]
+;;                    (when-not (= oldp newp)
+;;                      (.setToken h (str (token-base) newp)))))
+;;       (.setEnabled h true))))
 
-(defn base-path [loc p]
-  ;; Find base-path for html5 history
-  (let [split #".[^/]*"
-        depth (->> (case p "" "." p) (re-seq split) count)
-        base (->> loc (re-seq split) (drop-last depth) (apply str))]
-    (string/replace (str base "/") #"^/" "")))
+;; (defn base-path [loc p]
+;;   ;; Find base-path for html5 history
+;;   (let [split #".[^/]*"
+;;         depth (->> (case p "" "." p) (re-seq split) count)
+;;         base (->> loc (re-seq split) (drop-last depth) (apply str))]
+;;     (string/replace (str base "/") #"^/" "")))
 
-(defn set-start-page [p]
-  (when (and (not (:base-path @config))
-             (use-html5-history))
-    (swap! config assoc :base-path
-           (base-path (.' js/window -location.pathname) p)))
-  (reset! page p))
+;; (defn set-start-page [p]
+;;   (when (and (not (:base-path @config))
+;;              (use-html5-history))
+;;     (swap! config assoc :base-path
+;;            (base-path (.' js/window -location.pathname) p)))
+;;   (reset! page p))
 
 (defn prefix [href]
   (let [depth (-> #"/" (re-seq @page) count)]
@@ -246,7 +248,7 @@
   (reset! page page-name)
   (let [b (r/render-component-to-string (body))]
     (str "<!doctype html>"
-         (html-template {:title (get-title)
+         (html-template {:title (:title @config) ;;(get-title)
                          :body b
                          :page-conf {:allow-html5-history true
                                      :page-name page-name}
@@ -307,11 +309,12 @@
           page-name (:page-name conf)]
       (swap! config merge conf)
       (when (nil? history)
-        (when page-name
-          (set-start-page page-name))
+        ;; (when page-name
+        ;;   (set-start-page page-name))
         (init-history)
         ;; (setup-history page-name)
-        (set! (.-title js/document) (get-title)))
+        ;; (set! (.-title js/document) (get-title))
+        )
       (r/render-component (body)
                           (.' js/document getElementById
                               (:main-div @config))))))

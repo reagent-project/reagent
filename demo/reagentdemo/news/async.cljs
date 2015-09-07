@@ -11,7 +11,8 @@
 (def title "Faster by waiting")
 
 (declare main)
-(defroute path "/news/reagent-is-async.html" [] (dispatch [:content [#'main]]))
+(defroute path "/news/reagent-is-async.html" []
+  (dispatch [:content [#'main] title]))
 (tools/reg-page (path))
 
 

@@ -12,7 +12,8 @@
 (def title "A binary clock")
 
 (declare main)
-(defroute path "/news/binary-clock.html" [] (dispatch [:content [#'main]]))
+(defroute path "/news/binary-clock.html" []
+  (dispatch [:content [#'main] title]))
 (tools/reg-page (path))
 
 
