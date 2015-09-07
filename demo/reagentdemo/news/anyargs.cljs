@@ -3,12 +3,18 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :as tools :refer [dispatch link]]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
 
-(def url "news/any-arguments.html")
+;; (def url "news/any-arguments.html")
 (def title "All arguments allowed")
+
+(declare main)
+(defroute path "/news/any-arguments.html" [] (dispatch [:content [#'main]]))
+(tools/reg-page (path))
+
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -37,7 +43,7 @@
   (let [geometry {:href "https://github.com/reagent-project/reagent/tree/master/examples/geometry"}
         jonase {:href "https://github.com/jonase"}]
     [:div.reagent-demo
-     [:h1 [link {:href url} title]]
+     [:h1 [link {:href (path)} title]]
      [:div.demo-text
 
       [:h2 "If it looks like a function…"]
@@ -54,7 +60,7 @@
       them."]
 
       (if summary
-        [link {:href url :class 'news-read-more} "Read more"]
+        [link {:href (path) :class 'news-read-more} "Read more"]
         [:div.demo-text
          [:p "In other words, you can now do this:"]
 
@@ -133,5 +139,5 @@
 
          [demo-component {:comp geometry-example}]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent 0.4.0: " title))
+;; (tools/register-page url [main]
+;;                      (str "Reagent 0.4.0: " title))

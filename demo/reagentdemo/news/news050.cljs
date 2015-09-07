@@ -3,11 +3,17 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :as tools :refer [dispatch link]]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/news050.html")
+;; (def url "news/news050.html")
 (def title "News in 0.5.0")
+
+(declare main)
+(defroute path "/news/news050.html" [] (dispatch [:content [#'main]]))
+(tools/reg-page (path))
+
 
 (def new-in-alpha [:strong "New since 0.5.0-alpha: "])
 
@@ -103,17 +109,16 @@
 (defn could-be-jsx []
   (r/create-element react-comp #js{:name "world"}))
 
-
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
-   [:h1 [link {:href url} title]]
+   [:h1 [link {:href (path)} title]]
    [:div.demo-text
     [:p "Reagent 0.5.0 has automatic importing of React.js, two kinds
     of cursors, better integration of native React components, better
     performance, easier integration with e.g Figwheel, and more."]
     
     (if summary
-      [link {:href url
+      [link {:href (path)
              :class 'news-read-more} "Read more"]
       [:div.demo-text
        [:h2 "A new way of importing React"]
@@ -337,5 +342,3 @@
 
        [:p new-in-alpha "All the examples in the Reagent repo now uses
        figwheel."]])]])
-
-(tools/register-page url [#'main] title)

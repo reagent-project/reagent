@@ -3,12 +3,18 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :as tools :refer [dispatch link]]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
 
-(def url "news/binary-clock.html")
+;; (def url "news/binary-clock.html")
 (def title "A binary clock")
+
+(declare main)
+(defroute path "/news/binary-clock.html" [] (dispatch [:content [#'main]]))
+(tools/reg-page (path))
+
 
 (defn fn-src [src]
   [demo-component {:src src :no-heading true}])
@@ -21,7 +27,7 @@
         clocksrc {:href "https://github.com/reagent-project/reagent/blob/master/demo/reagentdemo/news/binaryclock.cljs"}]
 
     [:div.reagent-demo
-     [:h1 [link {:href url} title]]
+     [:h1 [link {:href (path)} title]]
      [:div.demo-text
 
       (when-not summary
@@ -38,7 +44,7 @@
       [:p "So, without further ado, here is a binary clock using Reagent."]
 
       (if summary
-        [link {:href url :class 'news-read-mode} "Read more"]
+        [link {:href (path) :class 'news-read-mode} "Read more"]
         [:div.demo-text
 
          [fn-src (s/syntaxed "(ns example
@@ -122,5 +128,5 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent: " title))
+;; (tools/register-page url [main]
+;;                      (str "Reagent: " title))

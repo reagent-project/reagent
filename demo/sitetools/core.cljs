@@ -52,7 +52,6 @@
 (defonce history nil)
 
 (defn demo-handler [state [id v1 v2 :as event]]
-  (dbg event)
   (case id
     :content (do
                (assoc state :main-content v1))
@@ -63,6 +62,7 @@
 
 (defn dispatch [event]
   ;; (r/next-tick #(rswap! config demo-handler event))
+  (dbg event)
   (rswap! config demo-handler event)
   (:main-content @config)
   nil)
@@ -73,7 +73,7 @@
 (defn init-history []
   (when-not history
     (doto (set! history (History.))
-      (evt/listen hevt/NAVIGATE #(secretary/dispatch! (dbg (.-token %))))
+      (evt/listen hevt/NAVIGATE #(secretary/dispatch! (.-token %)))
       (.setEnabled true))))
 
 
@@ -119,9 +119,7 @@
        child]))
 
 (defn page-content []
-  (dbg (:main-content @config))
-  #_(get-in @config [:page-map @page]
-            (get-in @config [:page-map "index.html"])))
+  (:main-content @config))
 
 
 
