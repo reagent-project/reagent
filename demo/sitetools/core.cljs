@@ -16,19 +16,20 @@
 (declare page-content)
 
 (defn rswap! [a f & args]
-  ;; Like swap!, except that recursive swaps are ok
+  ;; Roughly like swap!, except that recursive swaps are ok
   (let [fs (if-some [arr (.-rswapfs a)]
              arr
              (set! (.-rswapfs a) (array)))]
     (.push fs #(apply f % args))
     (if (< 1 (.-length fs))
-      (swap! a identity)
-      (loop []
-        (let [s (swap! a (aget fs 0))]
-          (.shift fs)
-          (if (-> fs .-length pos?)
-            (recur)
-            s))))))
+      nil
+      (let [f' (fn [state]
+                 (let [s ((aget fs 0) state)]
+                   (.shift fs)
+                   (if (-> fs .-length pos?)
+                     (recur s)
+                     s)))]
+        (swap! a f')))))
 
 
 ;;; Configuration
@@ -44,6 +45,7 @@
                          :js-file "js/main.js"
                          :js-dir "js/out"
                          :main-div "main-content"
+                         :default-title "Reagent"
                          :allow-html5-history false}))
 
 (defonce page (r/atom "index.html"))
@@ -54,17 +56,24 @@
 (defn demo-handler [state [id v1 v2 :as event]]
   (case id
     :content (do
-               (assoc state :main-content v1))
+               (let [title (or v2 (:default-title @config) "")]
+                 (when r/is-client
+                   (r/next-tick #(set! js/document.title title)))
+                 (assoc state
+                        :main-content v1
+                        :title title)))
+    :set-page (do (secretary/dispatch! v1)
+                  (assoc state :page v1))
     :goto-page (do
-                 (.setToken history v1)
-                 (assoc state :page v1))
+                 (when r/is-client
+                   (.setToken history v1 false)
+                   (r/next-tick #(set! js/document.body.scrollTop 0)))
+                 (recur state [:set-page v1 v2]))
     state))
 
 (defn dispatch [event]
-  ;; (r/next-tick #(rswap! config demo-handler event))
   (dbg event)
   (rswap! config demo-handler event)
-  (:main-content @config)
   nil)
 
 (defn reg-page [url]
@@ -73,7 +82,7 @@
 (defn init-history []
   (when-not history
     (doto (set! history (History.))
-      (evt/listen hevt/NAVIGATE #(secretary/dispatch! (.-token %)))
+      (evt/listen hevt/NAVIGATE #(dispatch [:set-page (.-token %)]))
       (.setEnabled true))))
 
 

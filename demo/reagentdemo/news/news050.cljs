@@ -11,7 +11,7 @@
 (def title "News in 0.5.0")
 
 (declare main)
-(defroute path "/news/news050.html" [] (dispatch [:content [#'main]]))
+(defroute path "/news/news050.html" [] (dispatch [:content [#'main] title]))
 (tools/reg-page (path))
 
 

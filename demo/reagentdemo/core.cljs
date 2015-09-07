@@ -20,18 +20,19 @@
           :alt "Fork me on GitHub"
           :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"}]])
 
-(def index-page "index.html")
-(def news-page "news/index.html")
+;; (def index-page "index.html")
+;; (def news-page "news/index.html")
 
-(tools/register-page index-page [#'intro/main]
-                     "Reagent: Minimalistic React for ClojureScript")
-(tools/register-page news-page [#'news/main]
-                     "Reagent news")
+;; (tools/register-page index-page [#'intro/main]
+;;                      "Reagent: Minimalistic React for ClojureScript")
+;; (tools/register-page news-page [#'news/main]
+;;                      "Reagent news")
 
+(defroute "/" [] (dispatch [:content [#'intro/main]]))
 (defroute main-page "/index.html" [] (dispatch [:content [#'intro/main]]))
-(defroute news-p "/news/index.html" [] (dispatch [:content [#'news/main]]))
+(defroute news-page "/news/index.html" [] (dispatch [:content [#'news/main]]))
 (tools/reg-page (main-page))
-(tools/reg-page (news-p))
+(tools/reg-page (news-page))
 
 (defn demo []
   [:div
@@ -39,7 +40,7 @@
     [:ul.nav
      [:li.brand [link {:href (main-page)} "Reagent:"]]
      [:li [link {:href (main-page)} "Intro"]]
-     [:li [link {:href (news-p)} "News"]]
+     [:li [link {:href (news-page)} "News"]]
      [:li [:a github "GitHub"]]]]
    @test-results
    [tools/page-content]
