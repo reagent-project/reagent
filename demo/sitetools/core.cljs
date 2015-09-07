@@ -3,6 +3,7 @@
             [goog.events :as evt]
             [goog.history.EventType :as hevt]
             [reagent.core :as r]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [.' .!]])
   (:import [goog History]
@@ -14,12 +15,29 @@
 
 (declare page-content)
 
+(defn rswap! [a f & args]
+  ;; Like swap!, except that recursive swaps are ok
+  (let [fs (if-some [arr (.-rswapfs a)]
+             arr
+             (set! (.-rswapfs a) (array)))]
+    (.push fs #(apply f % args))
+    (if (< 1 (.-length fs))
+      (swap! a identity)
+      (loop []
+        (let [s (swap! a (aget fs 0))]
+          (.shift fs)
+          (if (-> fs .-length pos?)
+            (recur)
+            s))))))
+
 
 ;;; Configuration
 
 (defonce config (r/atom {:page-map {"index.html" [:div "Empty"]}
                          :page-titles {}
                          :body [page-content]
+                         :main-content [:div]
+                         :pages #{}
                          :site-dir "outsite/public"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
@@ -30,6 +48,34 @@
 
 (defonce page (r/atom "index.html"))
 (defonce page-state (r/atom {:has-history false}))
+
+(defonce history nil)
+
+(defn demo-handler [state [id v1 v2 :as event]]
+  (dbg event)
+  (case id
+    :content (do
+               (assoc state :main-content v1))
+    :goto-page (do
+                 (.setToken history v1)
+                 (assoc state :page v1))
+    state))
+
+(defn dispatch [event]
+  ;; (r/next-tick #(rswap! config demo-handler event))
+  (rswap! config demo-handler event)
+  (:main-content @config)
+  nil)
+
+(defn reg-page [url]
+  (swap! config update-in [:pages] conj url))
+
+(defn init-history []
+  (when-not history
+    (doto (set! history (History.))
+      (evt/listen hevt/NAVIGATE #(secretary/dispatch! (dbg (.-token %))))
+      (.setEnabled true))))
+
 
 (defn register-page
   ([pageurl comp]
@@ -48,27 +94,34 @@
 
 ;;; Components
 
-(defn link
-  [props child]
-  (let [p (:href props)
-        f ((:page-map @config) p)]
-    (assert (vector? f) (str "couldn't resolve page " p))
-    (assert (string? p))
-    [:a (assoc props
-          :href p
-          :on-click (if (:has-history @page-state)
-                      (fn [e]
-                        (.preventDefault e)
-                        (reset! page p)
-                        (r/next-tick
-                         #(set! (.-scrollTop (.-body js/document))
-                                0)))
-                      identity))
-     child]))
+(defn link [props child]
+  [:a (assoc props
+             :on-click #(do (.preventDefault %)
+                            (dispatch [:goto-page (:href props)])))
+   child])
+
+#_(defn link
+    [props child]
+    (let [p (:href props)
+          f ((:page-map @config) p)]
+      (assert (vector? f) (str "couldn't resolve page " p))
+      (assert (string? p))
+      [:a (assoc props
+                 :href p
+                 :on-click (if (:has-history @page-state)
+                             (fn [e]
+                               (.preventDefault e)
+                               (reset! page p)
+                               (r/next-tick
+                                #(set! (.-scrollTop (.-body js/document))
+                                       0)))
+                             identity))
+       child]))
 
 (defn page-content []
-  (get-in @config [:page-map @page]
-          (get-in @config [:page-map "index.html"])))
+  (dbg (:main-content @config))
+  #_(get-in @config [:page-map @page]
+            (get-in @config [:page-map "index.html"])))
 
 
 
@@ -106,8 +159,6 @@
       (when p
         (.setToken h p))
       h)))
-
-(defonce history nil)
 
 (defn token-base []
   (if (use-html5-history)
@@ -198,9 +249,9 @@
   (let [fs (js/require "fs")
         path (js/require "path")
         items (as-> f _
-                    (.' path dirname _)
-                    (.' path normalize _)
-                    (string/split _ #"/"))
+                (.' path dirname _)
+                (.' path normalize _)
+                (string/split _ #"/"))
         parts (reductions #(str %1 "/" %2) items)]
     (doseq [d parts]
       (when-not (.' fs existsSync d)
@@ -251,7 +302,8 @@
       (when (nil? history)
         (when page-name
           (set-start-page page-name))
-        (setup-history page-name)
+        (init-history)
+        ;; (setup-history page-name)
         (set! (.-title js/document) (get-title)))
       (r/render-component (body)
                           (.' js/document getElementById

@@ -19,7 +19,8 @@
                     {:builds {:client {:source-paths ["test"]}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.3.7"]]
+                   {:dependencies [[figwheel "0.3.7"]
+                                   [secretary "1.2.3"]]
                     :plugins [[lein-figwheel "0.3.7"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]

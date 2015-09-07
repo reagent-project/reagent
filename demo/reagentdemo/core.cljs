@@ -2,7 +2,8 @@
   (:require [reagent.core :as r]
             [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :as tools :refer [dispatch link]]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
@@ -27,13 +28,18 @@
 (tools/register-page news-page [#'news/main]
                      "Reagent news")
 
+(defroute main-page "/index.html" [] (dispatch [:content [#'intro/main]]))
+(defroute news-p "/news/index.html" [] (dispatch [:content [#'news/main]]))
+(tools/reg-page (main-page))
+(tools/reg-page (news-p))
+
 (defn demo []
   [:div
    [:div.nav
     [:ul.nav
-     [:li.brand [link {:href index-page} "Reagent:"]]
-     [:li [link {:href index-page} "Intro"]]
-     [:li [link {:href news-page} "News"]]
+     [:li.brand [link {:href (main-page)} "Reagent:"]]
+     [:li [link {:href (main-page)} "Intro"]]
+     [:li [link {:href (news-p)} "News"]]
      [:li [:a github "GitHub"]]]]
    @test-results
    [tools/page-content]
