@@ -106,7 +106,9 @@
                    node-value (.' node :value)]
                (when (not= value node-value)
                  (if-not (and (identical? node (.-activeElement js/document))
-                              (has-selection-api? (.' node :type)))
+                              (has-selection-api? (.' node :type))
+                              (string? value)
+                              (string? node-value))
                    ; just set the value, no need to worry about a cursor
                    (.! node :value value)
 
