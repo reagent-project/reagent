@@ -6,9 +6,8 @@
             [secretary.core :as secretary :refer-macros [defroute]]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [.' .!]])
-  (:import [goog History]
-           [goog.history Html5History]
-           [goog.net Jsonp]))
+  (:import goog.History
+           goog.history.Html5History))
 
 (when (exists? js/console)
   (enable-console-print!))
