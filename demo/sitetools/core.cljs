@@ -90,8 +90,8 @@
                     (History.)))
         (evt/listen hevt/NAVIGATE #(dispatch [:set-page (.-token %)]))
         (.setEnabled true))
-      (when (and page (not html5) (empty? (.getToken history)))
-        (dispatch [:set-page page])))))
+      (when (and page (not html5) (-> history .getToken empty?))
+        (.setToken history page)))))
 
 (defn to-relative [f]
   (string/replace f #"^/" ""))
