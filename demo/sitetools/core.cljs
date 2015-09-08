@@ -120,18 +120,12 @@
   (let [depth (-> #"/" (re-seq (as-relative page)) count)]
     (str (->> "../" (repeat depth) (apply str)) href)))
 
-(defn body []
-  (let [b (:body @config)]
-    (assert (vector? b) (str "body is not a vector: " b))
-    b))
-
 (defn danger [t s]
   [t {:dangerouslySetInnerHTML {:__html s}}])
 
-(defn html-template [{:keys [title body timestamp page-conf
-                             req]}]
-  (let [{:keys [js-file css-file main-div]} @config
-        main (str js-file timestamp)]
+(defn html-template [{:keys [title body-html timestamp page-conf
+                             js-file css-file main-div]}]
+  (let [main (str js-file timestamp)]
     (r/render-to-static-markup
      [:html
       [:head
@@ -142,19 +136,20 @@
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
-       [:div {:id main-div} (danger :div body)]
+       [:div {:id main-div} (danger :div body-html)]
        (danger :script (str "var pageConfig = "
                             (-> page-conf clj->js js/JSON.stringify)))
        [:script {:src main :type "text/javascript"}]]])))
 
-(defn gen-page [page-name timestamp]
+(defn gen-page [page-name conf]
   (dispatch [:set-page page-name])
-  (let [b (r/render-component-to-string (body))]
+  (let [b (:body conf)
+        _ (assert (vector? b))
+        bhtml (r/render-component-to-string b)]
     (str "<!doctype html>"
-         (html-template {:title (:title @config)
-                         :body b
-                         :page-conf {:page-name page-name}
-                         :timestamp timestamp}))))
+         (html-template (assoc conf
+                               :page-conf {:page-name page-name}
+                               :body-html bhtml)))))
 
 (defn mkdirs [f]
   (let [fs (js/require "fs")
@@ -177,12 +172,12 @@
 (defn path-join [& paths]
   (apply (.' (js/require "path") :join) paths))
 
-(defn read-css []
-  (string/join "\n" (map read-file (:css-infiles @config))))
+(defn read-css [{cssfiles :css-infiles}]
+  (string/join "\n" (map read-file cssfiles)))
 
-(defn write-resources [dir]
-  (write-file (path-join dir (:css-file @config))
-              (read-css)))
+(defn write-resources [dir {file :css-file :as conf}]
+  (write-file (path-join dir file)
+              (read-css conf)))
 
 
 ;;; Main entry points
@@ -190,12 +185,12 @@
 (defn ^:export genpages [opts]
   (log "Generating site")
   (swap! config merge (js->clj opts :keywordize-keys true))
-  (let [dir (:site-dir @config)
-        timestamp (str "?" (js/Date.now))]
-    (doseq [f (:pages @config)]
-      (write-file (path-join dir (dbg (as-relative f)))
-                  (gen-page f timestamp)))
-    (write-resources dir))
+  (let [{:keys [site-dir pages] :as conf} @config
+        conf (assoc conf :timestamp (str "?" (js/Date.now)))]
+    (doseq [f pages]
+      (write-file (path-join site-dir (as-relative f))
+                  (gen-page f conf)))
+    (write-resources site-dir conf))
   (log "Wrote site"))
 
 (defn start! [site-config]
@@ -205,5 +200,5 @@
                  (js->clj js/pageConfig :keywordize-keys true))]
       (swap! config merge conf)
       (init-history)
-      (r/render-component (body)
+      (r/render-component (:body @config)
                           (js/document.getElementById (:main-div @config))))))
