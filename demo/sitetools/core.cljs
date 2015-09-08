@@ -96,7 +96,7 @@
       (when (and page (not html5) (empty? (.getToken history)))
         (dispatch [:set-page page])))))
 
-(defn as-relative [f]
+(defn to-relative [f]
   (string/replace f #"^/" ""))
 
 
@@ -104,7 +104,7 @@
 
 (defn link [props child]
   [:a (assoc props
-             :href (-> props :href as-relative)
+             :href (-> props :href to-relative)
              :on-click #(do (.preventDefault %)
                             (dispatch [:goto-page (:href props)])))
    child])
@@ -117,7 +117,7 @@
 ;;; Static site generation
 
 (defn prefix [href page]
-  (let [depth (-> #"/" (re-seq (as-relative page)) count)]
+  (let [depth (-> #"/" (re-seq (to-relative page)) count)]
     (str (->> "../" (repeat depth) (apply str)) href)))
 
 (defn danger [t s]
@@ -138,7 +138,7 @@
       [:body
        [:div {:id main-div} (danger :div body-html)]
        (danger :script (str "var pageConfig = "
-                            (-> page-conf clj->js js/JSON.stringify)))
+                            (-> page-conf clj->js js/JSON.stringify) ";"))
        [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-name conf]
@@ -172,12 +172,12 @@
 (defn path-join [& paths]
   (apply (.' (js/require "path") :join) paths))
 
-(defn read-css [{cssfiles :css-infiles}]
-  (string/join "\n" (map read-file cssfiles)))
+(defn read-files [files]
+  (string/join "\n" (map read-file files)))
 
-(defn write-resources [dir {file :css-file :as conf}]
-  (write-file (path-join dir file)
-              (read-css conf)))
+(defn write-resources [dir {:keys [css-file css-infiles]}]
+  (write-file (path-join dir css-file)
+              (read-files css-infiles)))
 
 
 ;;; Main entry points
@@ -185,10 +185,10 @@
 (defn ^:export genpages [opts]
   (log "Generating site")
   (swap! config merge (js->clj opts :keywordize-keys true))
-  (let [{:keys [site-dir pages] :as conf} @config
-        conf (assoc conf :timestamp (str "?" (js/Date.now)))]
+  (let [{:keys [site-dir pages] :as state} @config
+        conf (assoc state :timestamp (str "?" (js/Date.now)))]
     (doseq [f pages]
-      (write-file (path-join site-dir (as-relative f))
+      (write-file (->> f to-relative (path-join site-dir))
                   (gen-page f conf)))
     (write-resources site-dir conf))
   (log "Wrote site"))
