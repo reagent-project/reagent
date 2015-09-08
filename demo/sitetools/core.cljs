@@ -33,16 +33,13 @@
 
 (declare page-content)
 
-(defonce config (r/atom {;;:page-map {"index.html" [:div "Empty"]}
-                         ;;:page-titles {}
-                         :body [page-content]
+(defonce config (r/atom {:body [page-content]
                          :main-content [:div]
                          :pages #{}
                          :site-dir "outsite/public"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"
-                         :js-dir "js/out"
                          :main-div "main-content"
                          :default-title ""}))
 
@@ -132,11 +129,9 @@
   [t {:dangerouslySetInnerHTML {:__html s}}])
 
 (defn html-template [{:keys [title body timestamp page-conf
-                             opt-none req]}]
-  (let [c @config
-        main (str (:js-file c) timestamp)
-        css-file (:css-file c)
-        opt-none (:opt-none c)]
+                             req]}]
+  (let [{:keys [js-file css-file main-div]} @config
+        main (str js-file timestamp)]
     (r/render-to-static-markup
      [:html
       [:head
@@ -147,15 +142,12 @@
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
-       [:div {:id (:main-div @config)}
-        (danger :div body)]
-       (danger :script (str "var pageConfig = " (-> page-conf
-                                                    clj->js
-                                                    js/JSON.stringify)))
+       [:div {:id main-div} (danger :div body)]
+       (danger :script (str "var pageConfig = "
+                            (-> page-conf clj->js js/JSON.stringify)))
        [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-name timestamp]
-  ;; (reset! page page-name)
   (dispatch [:set-page page-name])
   (let [b (r/render-component-to-string (body))]
     (str "<!doctype html>"
