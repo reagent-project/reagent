@@ -3,18 +3,11 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [dispatch link]]
-            [secretary.core :as secretary :refer-macros [defroute]]
+            [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-;; (def url "news/reagent-is-async.html")
+(def url "/news/reagent-is-async.html")
 (def title "Faster by waiting")
-
-(declare main)
-(defroute path "/news/reagent-is-async.html" []
-  (dispatch [:set-content [#'main] title]))
-(tools/reg-page (path))
-
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -100,7 +93,7 @@
 (defn main [{:keys [summary]}]
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
     [:div.reagent-demo
-     [:h1 [link {:href (path)} title]]
+     [:h1 [link {:href url} title]]
      [:div.demo-text
       [:h2 "Reagent gets async rendering"]
 
@@ -114,7 +107,7 @@
       changes are rendered in one single go."]
 
       (if summary
-        [link {:href (path)
+        [link {:href url
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
@@ -204,5 +197,4 @@
                             :ncolors-choose :color-plate
                             :palette :color-demo])]}]])]]))
 
-;; (tools/register-page url [main]
-;;                      (str "Reagent: " title))
+(tools/register-page url [#'main] title)

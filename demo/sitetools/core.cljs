@@ -50,12 +50,15 @@
     :set-content (let [title (if v2
                                (str (:title-prefix state) v2)
                                (str (:default-title state)))]
+                   (assert (vector? v1))
                    (when r/is-client
                      (r/next-tick #(set! js/document.title title)))
                    (assoc state :main-content v1 :title title))
-    :set-page (do (secretary/dispatch! v1)
+    :set-page (do (assert (string? v1))
+                  (secretary/dispatch! v1)
                   (assoc state :page-name v1))
     :goto-page (do
+                 (assert (string? v1))
                  (when r/is-client
                    (.setToken history v1 false)
                    (r/next-tick #(set! js/document.body.scrollTop 0)))
@@ -68,7 +71,15 @@
   nil)
 
 (defn reg-page [url]
+  {:pre [(string? url)]
+   :post [(map? %)]}
   (swap! config update-in [:pages] conj url))
+
+(defn register-page [url comp title]
+  {:pre [(re-matches #"/.*[.]html" url)
+         (vector? comp)]}
+  (secretary/add-route! url #(dispatch [:set-content comp title]))
+  (reg-page url))
 
 
 ;;; History

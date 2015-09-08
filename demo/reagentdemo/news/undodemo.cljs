@@ -3,19 +3,12 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [dispatch link]]
-            [secretary.core :as secretary :refer-macros [defroute]]
+            [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc.core :as todomvc]))
 
-;; (def url "news/cloact-reagent-undo-demo.html")
+(def url "/news/cloact-reagent-undo-demo.html")
 (def title "Cloact becomes Reagent: Undo is trivial")
-
-(declare main)
-(defroute path "/news/cloact-reagent-undo-demo.html" []
-  (dispatch [:set-content [#'main] title]))
-(tools/reg-page (path))
-
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -59,7 +52,7 @@
 (defn main [{:keys [summary]}]
   (let [head title]
     [:div.reagent-demo
-     [:h1 [link {:href (path)} head]]
+     [:h1 [link {:href url} head]]
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
 
@@ -75,7 +68,7 @@
       search-and-replace should suffice."]
 
       (if summary
-        [link {:href (path)
+        [link {:href url
                :class 'news-read-more} "Read more"]
         [:div.demo-text
 
@@ -96,4 +89,4 @@
 
          [undo-demo-cleanup]])]]))
 
-;; (tools/register-page url [main] title)
+(tools/register-page url [#'main] title)

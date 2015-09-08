@@ -4,8 +4,7 @@
             [reagentdemo.news.undodemo :as undodemo]
             [reagentdemo.news.clockpost :as clock]
             [reagentdemo.news.news050 :as news050]
-            [sitetools.core :as tools :refer [dispatch link]]
-            [secretary.core :as secretary :refer-macros [defroute]]))
+            [sitetools.core :as tools]))
 
 (defn main []
   [:div
@@ -15,6 +14,5 @@
    [async/main {:summary true}]
    [undodemo/main {:summary true}]])
 
-(defroute path "/news/index.html" []
-  (dispatch [:set-content [#'main] "News"]))
-(tools/reg-page (path))
+(def url "/news/index.html")
+(tools/register-page url [#'main] "News")

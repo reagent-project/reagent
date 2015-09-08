@@ -43,7 +43,7 @@
     [:ul.nav
      [:li.brand [link {:href (main-page)} "Reagent:"]]
      [:li [link {:href (main-page)} "Intro"]]
-     [:li [link {:href (news/path)} "News"]]
+     [:li [link {:href news/url} "News"]]
      [:li [:a github "GitHub"]]]]
    @test-results
    [tools/page-content]
