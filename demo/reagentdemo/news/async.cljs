@@ -12,7 +12,7 @@
 
 (declare main)
 (defroute path "/news/reagent-is-async.html" []
-  (dispatch [:content [#'main] title]))
+  (dispatch [:set-content [#'main] title]))
 (tools/reg-page (path))
 
 

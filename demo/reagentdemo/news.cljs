@@ -16,5 +16,5 @@
    [undodemo/main {:summary true}]])
 
 (defroute path "/news/index.html" []
-  (dispatch [:content [#'main] "News"]))
+  (dispatch [:set-content [#'main] "News"]))
 (tools/reg-page (path))

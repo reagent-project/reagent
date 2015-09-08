@@ -47,15 +47,12 @@
 
 (defn demo-handler [state [id v1 v2 :as event]]
   (case id
-    :content (do
-               (let [title (if v2
-                             (str (:title-prefix state) v2)
-                             (str (:default-title state)))]
-                 (when r/is-client
-                   (r/next-tick #(set! js/document.title title)))
-                 (assoc state
-                        :main-content v1
-                        :title title)))
+    :set-content (let [title (if v2
+                               (str (:title-prefix state) v2)
+                               (str (:default-title state)))]
+                   (when r/is-client
+                     (r/next-tick #(set! js/document.title title)))
+                   (assoc state :main-content v1 :title title))
     :set-page (do (secretary/dispatch! v1)
                   (assoc state :page-name v1))
     :goto-page (do

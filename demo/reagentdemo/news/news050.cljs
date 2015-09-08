@@ -12,7 +12,7 @@
 
 (declare main)
 (defroute path "/news/news050.html" []
-  (dispatch [:content [#'main] title]))
+  (dispatch [:set-content [#'main] title]))
 (tools/reg-page (path))
 
 

@@ -31,9 +31,9 @@
 (def title "Minimalistic React for ClojureScript")
 
 (defroute "/" []
-  (dispatch [:content [#'intro/main] title]))
+  (dispatch [:set-content [#'intro/main] title]))
 (defroute main-page "/index.html" []
-  (dispatch [:content [#'intro/main] title]))
+  (dispatch [:set-content [#'intro/main] title]))
 (tools/reg-page (main-page))
 
 

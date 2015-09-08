@@ -13,7 +13,7 @@
 
 (declare main)
 (defroute path "/news/any-arguments.html" []
-  (dispatch [:content [#'main] title]))
+  (dispatch [:set-content [#'main] title]))
 (tools/reg-page (path))
 
 
