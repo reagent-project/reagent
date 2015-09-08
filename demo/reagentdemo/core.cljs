@@ -28,13 +28,14 @@
 ;; (tools/register-page news-page [#'news/main]
 ;;                      "Reagent news")
 
-(defroute "/" [] (dispatch [:content [#'intro/main]]))
+(def title "Minimalistic React for ClojureScript")
+
+(defroute "/" []
+  (dispatch [:content [#'intro/main] title]))
 (defroute main-page "/index.html" []
-  (dispatch [:content [#'intro/main] "Minimalistic React for ClojureScript"]))
-(defroute news-page "/news/index.html" []
-  (dispatch [:content [#'news/main] "News"]))
+  (dispatch [:content [#'intro/main] title]))
 (tools/reg-page (main-page))
-(tools/reg-page (news-page))
+
 
 (defn demo []
   [:div
@@ -42,7 +43,7 @@
     [:ul.nav
      [:li.brand [link {:href (main-page)} "Reagent:"]]
      [:li [link {:href (main-page)} "Intro"]]
-     [:li [link {:href (news-page)} "News"]]
+     [:li [link {:href (news/path)} "News"]]
      [:li [:a github "GitHub"]]]]
    @test-results
    [tools/page-content]

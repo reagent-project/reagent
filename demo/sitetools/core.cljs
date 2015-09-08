@@ -14,9 +14,8 @@
 
 (defn rswap! [a f & args]
   ;; Roughly like swap!, except that recursive swaps are ok
-  (let [fs (if-some [arr (.-rswapfs a)]
-             arr
-             (set! (.-rswapfs a) (array)))]
+  (let [fs (or (.-rswapfs a)
+               (set! (.-rswapfs a) (array)))]
     (.push fs #(apply f % args))
     (if (< 1 (.-length fs))
       nil
@@ -73,7 +72,7 @@
     state))
 
 (defn dispatch [event]
-  (dbg event)
+  ;; (dbg event)
   (rswap! config demo-handler event)
   nil)
 
