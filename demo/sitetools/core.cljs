@@ -33,7 +33,7 @@
 
 (declare page-content)
 
-(defonce config (r/atom {:body [page-content]
+(defonce config (r/atom {:body [#'page-content]
                          :main-content [:div]
                          :pages #{}
                          :site-dir "outsite/public"
@@ -107,8 +107,9 @@
    child])
 
 (defn page-content []
-  (:main-content @config))
-
+  (let [{:keys [main-content]} @config]
+    (assert (vector? main-content))
+    main-content))
 
 
 ;;; Static site generation
