@@ -32,8 +32,8 @@
 
 (declare page-content)
 
-(defonce config (r/atom {:page-map {"index.html" [:div "Empty"]}
-                         :page-titles {}
+(defonce config (r/atom {;;:page-map {"index.html" [:div "Empty"]}
+                         ;;:page-titles {}
                          :body [page-content]
                          :main-content [:div]
                          :pages #{}
@@ -46,8 +46,8 @@
                          :default-title ""
                          :allow-html5-history false}))
 
-(defonce page (r/atom "index.html"))
-(defonce page-state (r/atom {:has-history false}))
+;; (defonce page (r/atom "index.html"))
+;; (defonce page-state (r/atom {:has-history false}))
 
 (defonce history nil)
 
@@ -204,8 +204,8 @@
 ;;            (base-path (.' js/window -location.pathname) p)))
 ;;   (reset! page p))
 
-(defn prefix [href]
-  (let [depth (-> #"/" (re-seq @page) count)]
+(defn prefix [href page]
+  (let [depth (-> #"/" (re-seq page) count)]
     (str (->> "../" (repeat depth) (apply str)) href)))
 
 
@@ -231,7 +231,7 @@
        [:meta {:charset "utf-8"}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
-       [:base {:href (prefix "")}]
+       [:base {:href (prefix "" (:page-name page-conf))}]
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
@@ -243,7 +243,8 @@
        [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-name timestamp]
-  (reset! page page-name)
+  ;; (reset! page page-name)
+  (dispatch [:set-page page-name])
   (let [b (r/render-component-to-string (body))]
     (str "<!doctype html>"
          (html-template {:title (:title @config) ;;(get-title)
@@ -285,6 +286,8 @@
   (write-file (path-join dir (:css-file @config))
               (read-css)))
 
+(defn as-relative [f]
+  (clojure.string/replace f #"^/" ""))
 
 ;;; Main entry points
 
@@ -293,8 +296,8 @@
   (swap! config merge (js->clj opts :keywordize-keys true))
   (let [dir (:site-dir @config)
         timestamp (str "?" (.' js/Date now))]
-    (doseq [f (keys (:page-map @config))]
-      (write-file (path-join dir f)
+    (doseq [f (:pages @config)]
+      (write-file (path-join dir (dbg (as-relative f)))
                   (gen-page f timestamp)))
     (write-resources dir))
   (log "Wrote site"))
