@@ -168,17 +168,14 @@
         (.' fs mkdirSync d)))))
 
 (defn write-file [f content]
-  (let [fs (js/require "fs")]
-    (mkdirs f)
-    (.' fs writeFileSync f content)))
+  (mkdirs f)
+  (.' (js/require "fs") writeFileSync f content))
 
 (defn read-file [f]
-  (let [fs (js/require "fs")]
-    (.' fs readFileSync f)))
+  (.' (js/require "fs") readFileSync f))
 
 (defn path-join [& paths]
-  (let [path (js/require "path")]
-    (apply (.' path :join) paths)))
+  (apply (.' (js/require "path") :join) paths))
 
 (defn read-css []
   (string/join "\n" (map read-file (:css-infiles @config))))
