@@ -1,4 +1,4 @@
-(defproject reagent "0.5.1-rc3"
+(defproject reagent "0.5.1-SNAPSHOT"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
@@ -13,7 +13,7 @@
   :source-paths ["src"]
 
   :codox {:language :clojurescript
-          :exclude clojure.string}  
+          :exclude clojure.string}
 
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]}}}}
