@@ -51,6 +51,9 @@
 
 (defonce history nil)
 
+(defn as-relative [f]
+  (clojure.string/replace f #"^/" ""))
+
 (defn demo-handler [state [id v1 v2 :as event]]
   (case id
     :content (do
@@ -63,7 +66,7 @@
                         :main-content v1
                         :title title)))
     :set-page (do (secretary/dispatch! v1)
-                  (assoc state :page v1))
+                  (assoc state :page-name v1))
     :goto-page (do
                  (when r/is-client
                    (.setToken history v1 false)
@@ -72,7 +75,7 @@
     state))
 
 (defn dispatch [event]
-  ;; (dbg event)
+  (dbg event)
   (rswap! config demo-handler event)
   nil)
 
@@ -81,9 +84,22 @@
 
 (defn init-history []
   (when-not history
-    (doto (set! history (History.))
-      (evt/listen hevt/NAVIGATE #(dispatch [:set-page (.-token %)]))
-      (.setEnabled true))))
+    (let [page (:page-name @config)
+          html5 (let [proto js/location.protocol]
+                  (and page
+                       (.isSupported Html5History)
+                       (#{"http:" "https:"} proto)))]
+      (doto (set! history
+                  (if html5
+                    (doto (Html5History.)
+                      (.setUseFragment false)
+                      (.setPathPrefix js/location.origin)
+                      (.setEnabled true))
+                    (History.)))
+        (evt/listen hevt/NAVIGATE #(dispatch [:set-page (str (.-token %))]))
+        (.setEnabled true))
+      (when html5
+        (.setToken history page)))))
 
 
 ;; (defn register-page
@@ -286,8 +302,6 @@
   (write-file (path-join dir (:css-file @config))
               (read-css)))
 
-(defn as-relative [f]
-  (clojure.string/replace f #"^/" ""))
 
 ;;; Main entry points
 
@@ -295,7 +309,7 @@
   (log "Generating site")
   (swap! config merge (js->clj opts :keywordize-keys true))
   (let [dir (:site-dir @config)
-        timestamp (str "?" (.' js/Date now))]
+        timestamp (str "?" js/Date.now)]
     (doseq [f (:pages @config)]
       (write-file (path-join dir (dbg (as-relative f)))
                   (gen-page f timestamp)))
@@ -309,13 +323,7 @@
                  (js->clj js/pageConfig :keywordize-keys true))
           page-name (:page-name conf)]
       (swap! config merge conf)
-      (when (nil? history)
-        ;; (when page-name
-        ;;   (set-start-page page-name))
-        (init-history)
-        ;; (setup-history page-name)
-        ;; (set! (.-title js/document) (get-title))
-        )
+      (init-history)
       (r/render-component (body)
                           (.' js/document getElementById
                               (:main-div @config))))))
