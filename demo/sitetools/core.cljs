@@ -13,7 +13,7 @@
   (enable-console-print!))
 
 (defn rswap! [a f & args]
-  ;; Roughly like swap!, except that recursive swaps on the same atom are ok.
+  ;; Like swap!, except that recursive swaps on the same atom are ok.
   {:pre [(satisfies? ISwap a)
          (ifn? f)]}
   (if a.rswapping
@@ -72,7 +72,7 @@
   (rswap! config demo-handler event)
   nil)
 
-(defn reg-page [url]
+(defn add-page-to-generate [url]
   {:pre [(string? url)]
    :post [(map? %)]}
   (swap! config update-in [:pages] conj url))
@@ -81,7 +81,7 @@
   {:pre [(re-matches #"/.*[.]html" url)
          (vector? comp)]}
   (secretary/add-route! url #(dispatch [:set-content comp title]))
-  (reg-page url))
+  (add-page-to-generate url))
 
 
 ;;; History
