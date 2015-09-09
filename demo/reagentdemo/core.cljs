@@ -26,19 +26,18 @@
 (tools/register-page index-page [#'intro/main] title)
 
 (defroute "/" []
-  (dispatch [:set-content [#'intro/main] title]))
+  (dispatch [:set-page index-page]))
 
 
 (defn demo []
   [:div
-   [:div.nav
-    [:ul.nav
-     [:li.brand [link {:href index-page} "Reagent:"]]
-     [:li [link {:href index-page} "Intro"]]
-     [:li [link {:href news/url} "News"]]
-     [:li [:a github "GitHub"]]]]
-   @test-results
-   [tools/page-content]
+   [:div.nav>ul.nav
+    [:li.brand [link {:href index-page} "Reagent:"]]
+    [:li [link {:href index-page} "Intro"]]
+    [:li [link {:href news/url} "News"]]
+    [:li>a github "GitHub"]]
+   [:div @test-results]
+   [tools/main-content]
    [github-badge]])
 
 (defn init! []

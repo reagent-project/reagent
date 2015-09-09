@@ -34,9 +34,9 @@
 
 ;;; Configuration
 
-(declare page-content)
+(declare main-content)
 
-(defonce config (r/atom {:body [#'page-content]
+(defonce config (r/atom {:body [#'main-content]
                          :main-content [:div]
                          :pages #{}
                          :site-dir "outsite/public"
@@ -118,10 +118,10 @@
                             (dispatch [:goto-page (:href props)])))
    child])
 
-(defn page-content []
-  (let [{:keys [main-content]} @config]
-    (assert (vector? main-content))
-    main-content))
+(defn main-content []
+  (let [{comp :main-content} @config]
+    (assert (vector? comp))
+    comp))
 
 
 ;;; Static site generation
