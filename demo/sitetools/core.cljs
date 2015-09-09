@@ -165,29 +165,24 @@
 (defn path [] (js/require "path"))
 
 (defn mkdirs [f]
-  (let [items (as-> f _
-                (.' (path) normalize _)
-                (string/split _ #"/"))]
-    (doseq [d (reductions #(str %1 "/" %2) items)]
-      (when-not (.' (fs) existsSync d)
-        (.' (fs) mkdirSync d)))))
+  (doseq [d (reductions #(str %1 "/" %2)
+                        (-> (.' (path) normalize f)
+                            (string/split #"/")))]
+    (when-not (.' (fs) existsSync d)
+      (.' (fs) mkdirSync d))))
 
 (defn write-file [f content]
   (mkdirs (.' (path) dirname f))
   (.' (fs) writeFileSync f content))
 
-(defn read-file [f]
-  (.' (fs) readFileSync f))
-
 (defn path-join [& paths]
   (apply (.' (path) :join) paths))
 
-(defn read-files [files]
-  (string/join "\n" (map read-file files)))
-
 (defn write-resources [dir {:keys [css-file css-infiles]}]
   (write-file (path-join dir css-file)
-              (read-files css-infiles)))
+              (->> css-infiles
+                   (map #(.' (fs) readFileSync %))
+                   (string/join "\n"))))
 
 
 ;;; Main entry points
