@@ -13,20 +13,22 @@
   (enable-console-print!))
 
 (defn rswap! [a f & args]
-  ;; Roughly like swap!, except that recursive swaps are ok
-  (let [fs (or (.-rswapfs a)
-               (set! (.-rswapfs a) (array)))]
-    (.push fs #(apply f % args))
-    (if (< 1 (alength fs))
-      nil
-      (let [f' (fn [state]
-                 ;;;; TODO: This could throw
-                 (let [s ((aget fs 0) state)]
-                   (.shift fs)
-                   (if (-> fs alength pos?)
-                     (recur s)
-                     s)))]
-        (swap! a f')))))
+  ;; Roughly like swap!, except that recursive swaps on the same atom are ok.
+  {:pre [(satisfies? ISwap a)
+         (ifn? f)]}
+  (if a.rswapping
+    (do (-> (or a.rswapfs
+                (set! a.rswapfs (array)))
+            (.push #(apply f % args)))
+        nil)
+    (do (set! a.rswapping true)
+        (try (swap! a (fn [state]
+                        (loop [s (apply f state args)]
+                          (if-some [sf (some-> a .-rswapfs .shift)]
+                            (recur (sf s))
+                            s))))
+             (finally
+               (set! a.rswapping false))))))
 
 
 ;;; Configuration
