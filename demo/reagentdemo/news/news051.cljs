@@ -14,20 +14,23 @@
 
 (defn old-and-tired []
   [:ul
-   [:li.foo [:a.bar "Link 1"]]
-   [:li.foo [:a.bar "Link 2"]]])
+   [:li.foo [:a.bar "Text 1"]]
+   [:li.foo [:a.bar "Text 2"]]])
 
 (defn new-hotness []
   [:ul
-   [:li.foo>a.bar "Link 1"]
-   [:li.foo>a.bar "Link 2"]])
+   [:li.foo>a.bar "Text 1"]
+   [:li.foo>a.bar "Text 2"]])
+
+(def upper-value (r/atom "FOOBAR"))
 
 (defn upper-input []
-  (let [v (r/atom "FOOBAR")]
-    (fn []
-      [:input {:type 'text :value @v
-               :on-change #(reset! v (-> % .-target .-value
-                                         clojure.string/upper-case))}])))
+  [:div
+   [:p "Value is: " @upper-value]
+   [:input {:type 'text :value @upper-value
+            :on-change #(reset! upper-value
+                                (-> % .-target .-value
+                                    clojure.string/upper-case))}]])
 
 
 (defn main [{:keys [summary]}]
@@ -71,7 +74,8 @@
        whenever you made a change to something like this:"]
 
        [demo-component {:comp upper-input
-                        :src (s/src-of [:upper-input])}]
+                        :src [:pre ns-src
+                              (s/src-of [:upper-value :upper-input])]}]
 
 
        [:h2 "Other news"]
