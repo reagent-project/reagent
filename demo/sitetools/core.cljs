@@ -62,7 +62,7 @@
                   (assoc state :page-name v1))
     :goto-page (do
                  (assert (string? v1))
-                 (if r/is-client
+                 (if history
                    (do (.setToken history v1)
                        (r/next-tick #(set! js/document.body.scrollTop 0))
                        state)
@@ -89,7 +89,7 @@
 (defn init-history [page]
   (when-not history
     (let [html5 (and page
-                     (.isSupported Html5History)
+                     (Html5History.isSupported)
                      (#{"http:" "https:"} js/location.protocol))]
       (doto (set! history
                   (if html5
