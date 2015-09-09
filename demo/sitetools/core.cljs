@@ -48,26 +48,25 @@
 
 (defonce history nil)
 
-(defn demo-handler [state [id v1 v2 :as event]]
+(defn demo-handler [state [id x y :as event]]
   (case id
-    :set-content (let [title (if v2
-                               (str (:title-prefix state) v2)
+    :set-content (let [title (if y
+                               (str (:title-prefix state) y)
                                (str (:default-title state)))]
-                   (assert (vector? v1))
+                   (assert (vector? x))
                    (when r/is-client
                      (set! js/document.title title))
-                   (assoc state :main-content v1 :title title))
-    :set-page (do (assert (string? v1))
-                  (secretary/dispatch! v1)
-                  (assoc state :page-name v1))
+                   (assoc state :main-content x :title title))
+    :set-page (do (assert (string? x))
+                  (secretary/dispatch! x)
+                  (assoc state :page-name x))
     :goto-page (do
-                 (assert (string? v1))
+                 (assert (string? x))
                  (if history
-                   (do (.setToken history v1)
+                   (do (.setToken history x)
                        (r/next-tick #(set! js/document.body.scrollTop 0))
                        state)
-                   (recur state [:set-page v1])))
-    state))
+                   (recur state [:set-page x])))))
 
 (defn dispatch [event]
   ;; (dbg event)
