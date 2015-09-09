@@ -13,22 +13,23 @@
   (enable-console-print!))
 
 (defn rswap! [a f & args]
-  ;; Like swap!, except that recursive swaps on the same atom are ok.
+  ;; Like swap!, except that recursive swaps on the same atom are ok,
+  ;; and always returns nil.
   {:pre [(satisfies? ISwap a)
          (ifn? f)]}
   (if a.rswapping
-    (do (-> (or a.rswapfs
-                (set! a.rswapfs (array)))
-            (.push #(apply f % args)))
-        (swap! a identity))
+    (-> (or a.rswapfs
+            (set! a.rswapfs (array)))
+        (.push #(apply f % args)))
     (do (set! a.rswapping true)
         (try (swap! a (fn [state]
                         (loop [s (apply f state args)]
-                          (if-some [sf (some-> a .-rswapfs .shift)]
+                          (if-some [sf (some-> a.rswapfs .shift)]
                             (recur (sf s))
                             s))))
              (finally
-               (set! a.rswapping false))))))
+               (set! a.rswapping false)))))
+  nil)
 
 
 ;;; Configuration
@@ -54,27 +55,26 @@
                                (str (:default-title state)))]
                    (assert (vector? v1))
                    (when r/is-client
-                     (r/next-tick #(set! js/document.title title)))
+                     (set! js/document.title title))
                    (assoc state :main-content v1 :title title))
     :set-page (do (assert (string? v1))
                   (secretary/dispatch! v1)
                   (assoc state :page-name v1))
     :goto-page (do
                  (assert (string? v1))
-                 (when r/is-client
-                   (.setToken history v1 false)
-                   (r/next-tick #(set! js/document.body.scrollTop 0)))
-                 (recur state [:set-page v1]))
+                 (if r/is-client
+                   (do (.setToken history v1)
+                       (r/next-tick #(set! js/document.body.scrollTop 0))
+                       state)
+                   (recur state [:set-page v1])))
     state))
 
 (defn dispatch [event]
   ;; (dbg event)
-  (rswap! config demo-handler event)
-  nil)
+  (rswap! config demo-handler event))
 
 (defn add-page-to-generate [url]
-  {:pre [(string? url)]
-   :post [(map? %)]}
+  {:pre [(string? url)]}
   (swap! config update-in [:pages] conj url))
 
 (defn register-page [url comp title]
@@ -208,7 +208,7 @@
   (when r/is-client
     (let [page-conf (when (exists? js/pageConfig)
                       (js->clj js/pageConfig :keywordize-keys true))
-          conf (swap! config merge page-conf)]
-      (init-history (:page-name conf))
-      (r/render-component (:body conf)
-                          (js/document.getElementById (:main-div conf))))))
+          conf (swap! config merge page-conf)
+          {:keys [page-name body main-div]} conf]
+      (init-history page-name)
+      (r/render-component body (js/document.getElementById main-div)))))
