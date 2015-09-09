@@ -20,7 +20,7 @@
     (do (-> (or a.rswapfs
                 (set! a.rswapfs (array)))
             (.push #(apply f % args)))
-        nil)
+        (swap! a identity))
     (do (set! a.rswapping true)
         (try (swap! a (fn [state]
                         (loop [s (apply f state args)]
@@ -86,10 +86,9 @@
 
 ;;; History
 
-(defn init-history []
+(defn init-history [page]
   (when-not history
-    (let [page (:page-name @config)
-          html5 (and page
+    (let [html5 (and page
                      (.isSupported Html5History)
                      (#{"http:" "https:"} js/location.protocol))]
       (doto (set! history
@@ -162,26 +161,26 @@
                                :page-conf {:page-name page-name}
                                :body-html bhtml)))))
 
+(defn fs [] (js/require "fs"))
+(defn path [] (js/require "path"))
+
 (defn mkdirs [f]
-  (let [fs (js/require "fs")
-        path (js/require "path")
-        items (as-> f _
-                (.' path dirname _)
-                (.' path normalize _)
+  (let [items (as-> f _
+                (.' (path) normalize _)
                 (string/split _ #"/"))]
     (doseq [d (reductions #(str %1 "/" %2) items)]
-      (when-not (.' fs existsSync d)
-        (.' fs mkdirSync d)))))
+      (when-not (.' (fs) existsSync d)
+        (.' (fs) mkdirSync d)))))
 
 (defn write-file [f content]
-  (mkdirs f)
-  (.' (js/require "fs") writeFileSync f content))
+  (mkdirs (.' (path) dirname f))
+  (.' (fs) writeFileSync f content))
 
 (defn read-file [f]
-  (.' (js/require "fs") readFileSync f))
+  (.' (fs) readFileSync f))
 
 (defn path-join [& paths]
-  (apply (.' (js/require "path") :join) paths))
+  (apply (.' (path) :join) paths))
 
 (defn read-files [files]
   (string/join "\n" (map read-file files)))
@@ -195,9 +194,9 @@
 
 (defn ^:export genpages [opts]
   (log "Generating site")
-  (swap! config merge (js->clj opts :keywordize-keys true))
-  (let [{:keys [site-dir pages] :as state} @config
-        conf (assoc state :timestamp (str "?" (js/Date.now)))]
+  (let [conf (swap! config merge (js->clj opts :keywordize-keys true))
+        conf (assoc conf :timestamp (str "?" (js/Date.now)))
+        {:keys [site-dir pages]} conf]
     (doseq [f pages]
       (write-file (->> f to-relative (path-join site-dir))
                   (gen-page f conf)))
@@ -207,9 +206,9 @@
 (defn start! [site-config]
   (swap! config merge site-config)
   (when r/is-client
-    (let [conf (when (exists? js/pageConfig)
-                 (js->clj js/pageConfig :keywordize-keys true))]
-      (swap! config merge conf)
-      (init-history)
-      (r/render-component (:body @config)
-                          (js/document.getElementById (:main-div @config))))))
+    (let [page-conf (when (exists? js/pageConfig)
+                      (js->clj js/pageConfig :keywordize-keys true))
+          conf (swap! config merge page-conf)]
+      (init-history (:page-name conf))
+      (r/render-component (:body conf)
+                          (js/document.getElementById (:main-div conf))))))
