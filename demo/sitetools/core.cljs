@@ -18,8 +18,7 @@
   {:pre [(satisfies? ISwap a)
          (ifn? f)]}
   (if a.rswapping
-    (-> (or a.rswapfs
-            (set! a.rswapfs (array)))
+    (-> (or a.rswapfs (set! a.rswapfs (array)))
         (.push #(apply f % args)))
     (do (set! a.rswapping true)
         (try (swap! a (fn [state]
@@ -138,7 +137,7 @@
     (r/render-to-static-markup
      [:html
       [:head
-       [:meta {:charset "utf-8"}]
+       [:meta {:charset 'utf-8}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
        [:base {:href (prefix "" (:page-name page-conf))}]
@@ -155,7 +154,7 @@
   (let [b (:body conf)
         _ (assert (vector? b))
         bhtml (r/render-component-to-string b)]
-    (str "<!doctype html>"
+    (str "<!doctype html>\n"
          (html-template (assoc conf
                                :page-conf {:page-name page-name}
                                :body-html bhtml)))))
