@@ -202,7 +202,7 @@
 (def maybe-dirty 1)
 (def dirty 2)
 
-(deftype Reaction [f ^:mutable state ^:mutable dirtyness
+(deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable ^boolean active?
                    ^:mutable watching ^:mutable watches
                    auto-run on-set on-dispose ^:mutable ^boolean norun?]
@@ -267,19 +267,18 @@
 
   (-handle-change [this sender oldval newval]
     (when active?
-      (let [old-dirty dirtyness]
-        (set! dirtyness (max dirtyness
-                          (if (identical? oldval newval)
-                            (if (instance? Reaction sender)
-                              maybe-dirty clean)
-                            dirty)))
-        (if (and (some? auto-run) (not norun?))
-          (do
-            (-check-clean this)
-            (when-not (== dirtyness clean)
-              ((or auto-run run) this)))
-          (when (and (not (== dirtyness clean))
-                     (== old-dirty clean))
+      (let [old-dirty dirtyness
+            new-dirty (if (identical? oldval newval)
+                        (if (instance? Reaction sender)
+                          maybe-dirty clean)
+                        dirty)]
+        (when (> new-dirty old-dirty)
+          (set! dirtyness new-dirty)
+          (if (some? auto-run)
+            (when-not norun?
+              (-check-clean this)
+              (when-not (== dirtyness clean)
+                (auto-run this)))
             (-notify-watches this state state))))))
 
   (-update-watching [this derefed]
