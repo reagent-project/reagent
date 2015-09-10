@@ -212,15 +212,13 @@
     (set! ra.norun? true)
     (doseq [w ra.watching]
       (when (and (reaction? w)
-                 (not (identical? (.-dirty? w) clean)))
-        (-deref w)))
+                 (not (== (.-dirty? w) clean)))
+        (ra-check-clean w)
+        (when-not (== (.-dirty? w) clean)
+          (run w))))
     (set! ra.norun? false)
     (when (== ra.dirty? maybe-dirty)
       (set! ra.dirty? clean))))
-
-(defn- ra-run-check [ra]
-  (binding [*ratom-context* (js-obj)]
-    (ra-check-clean ra)))
 
 (defn- ra-handle-change [ra sender oldval newval]
   (when ra.active?
@@ -232,9 +230,7 @@
                              is-dirty)))
       (if (and ra.auto-run (not ra.norun?))
         (do
-          ;; FIXME: is this correct?
-          (when (== ra.dirty? maybe-dirty)
-            (ra-run-check ra))
+          (ra-check-clean ra)
           (when-not (== ra.dirty? clean)
             ((or ra.auto-run run) ra)))
         (when (== old-dirty clean)
