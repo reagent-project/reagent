@@ -30,6 +30,10 @@
               (conj (if (nil? captured) #{} captured)
                     derefable))))))
 
+(defn- check-watches [old new]
+  (when debug
+    (swap! -running + (- (count new) (count old))))
+  new)
 
 ;;; Atom
 
@@ -83,9 +87,9 @@
                  nil)
                nil watches))
   (-add-watch [this key f]
-    (set! watches (assoc watches key f)))
+    (set! watches (check-watches watches (assoc watches key f))))
   (-remove-watch [this key]
-    (set! watches (dissoc watches key)))
+    (set! watches (check-watches watches (dissoc watches key))))
 
   IHash
   (-hash [this] (goog/getUid this)))
@@ -203,7 +207,6 @@
 (def dirty 2)
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
-                   ^:mutable ^boolean active?
                    ^:mutable watching ^:mutable watches
                    auto-run on-set on-dispose ^:mutable ^boolean norun?]
   IAtom
@@ -216,11 +219,11 @@
                  nil)
                nil watches))
 
-  (-add-watch [this k wf]
-    (set! watches (assoc watches k wf)))
+  (-add-watch [this key f]
+    (set! watches (check-watches watches (assoc watches key f))))
 
-  (-remove-watch [this k]
-    (set! watches (dissoc watches k))
+  (-remove-watch [this key]
+    (set! watches (check-watches watches (dissoc watches key)))
     (when (and (empty? watches)
                (nil? auto-run))
       (dispose! this)))
@@ -266,20 +269,19 @@
         (set! dirtyness clean))))
 
   (-handle-change [this sender oldval newval]
-    (when active?
-      (let [old-dirty dirtyness
-            new-dirty (if (identical? oldval newval)
-                        (if (instance? Reaction sender)
-                          maybe-dirty clean)
-                        dirty)]
-        (when (> new-dirty old-dirty)
-          (set! dirtyness new-dirty)
-          (if (some? auto-run)
-            (when-not norun?
-              (-check-clean this)
-              (when-not (== dirtyness clean)
-                (auto-run this)))
-            (-notify-watches this state state))))))
+    (let [old-dirty dirtyness
+          new-dirty (if (identical? oldval newval)
+                      (if (instance? Reaction sender)
+                        maybe-dirty clean)
+                      dirty)]
+      (when (> new-dirty old-dirty)
+        (set! dirtyness new-dirty)
+        (if (some? auto-run)
+          (when-not norun?
+            (-check-clean this)
+            (when-not (== dirtyness clean)
+              (auto-run this)))
+          (-notify-watches this state state)))))
 
   (-update-watching [this derefed]
     (doseq [w derefed]
@@ -299,9 +301,6 @@
           derefed (captured this)]
       (when (not= derefed watching)
         (-update-watching this derefed))
-      (when-not active?
-        (when debug (swap! -running inc))
-        (set! active? true))
       (set! norun? false)
       (set! dirtyness clean)
       (set! state res)
@@ -332,9 +331,6 @@
     (set! watching nil)
     (set! state nil)
     (set! dirtyness dirty)
-    (when active?
-      (when debug (swap! -running dec))
-      (set! active? false))
     (when on-dispose
       (on-dispose)))
 
@@ -352,13 +348,10 @@
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed]}]
   (let [runner (if (= auto-run true) run auto-run)
-        active (not (nil? derefed))
-        dirty (if (not active) dirty clean)
-        reaction (Reaction. f nil dirty active
-                            nil nil
+        dirty (if (nil? derefed) dirty clean)
+        reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose false)]
     (when-not (nil? derefed)
-      (when debug (swap! -running inc))
       (-update-watching reaction derefed))
     reaction))
 

@@ -26,7 +26,7 @@
     (time (dotimes [x nite]
             (swap! a inc)))
     (dispose res)
-    (assert (= perf-check nite))))
+    (assert (= perf-check (inc nite)))))
 
 (enable-console-print!)
 ;; (ratom-perf)
@@ -193,13 +193,13 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 3 runs) (running)))
+      (is (= (+ 4 runs) (running)))
       (is (= @count-b 1))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 3 runs) (running)) "still running")
+      (is (= (+ 4 runs) (running)) "still running")
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
