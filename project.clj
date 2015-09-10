@@ -47,6 +47,7 @@
                                {:compiler {:optimizations :advanced
                                            :elide-asserts true
                                            :pretty-print false
+                                           ;; :pseudo-names true
                                            :output-dir "target/client"}}}}}]
 
              :prod-test [:test :prod]
