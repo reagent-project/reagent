@@ -199,51 +199,53 @@
 (def maybe-dirty 1)
 (def is-dirty 2)
 
-(declare reaction?)
+(declare Reaction)
+(defn- ^boolean reaction? [ra]
+  (instance? Reaction ra))
 
 (defn- ra-notify-watches [ra oldval newval]
   (reduce-kv (fn [_ key f]
                (f key ra oldval newval)
                nil)
-             nil ra.watches))
+             nil (.-watches ra)))
 
 (defn- ra-check-clean [ra]
-  (when (== ra.dirty? maybe-dirty)
-    (set! ra.norun? true)
-    (doseq [w ra.watching]
+  (when (== (.-dirty? ra) maybe-dirty)
+    (set! (.-norun? ra) true)
+    (doseq [w (.-watching ra)]
       (when (and (reaction? w)
                  (not (== (.-dirty? w) clean)))
         (ra-check-clean w)
         (when-not (== (.-dirty? w) clean)
           (run w))))
-    (set! ra.norun? false)
-    (when (== ra.dirty? maybe-dirty)
-      (set! ra.dirty? clean))))
+    (set! (.-norun? ra) false)
+    (when (== (.-dirty? ra) maybe-dirty)
+      (set! (.-dirty? ra) clean))))
 
 (defn- ra-handle-change [ra sender oldval newval]
-  (when ra.active?
-    (let [old-dirty ra.dirty?]
-      (set! ra.dirty? (max ra.dirty?
+  (when ^boolean (.-active? ra)
+    (let [old-dirty (.-dirty? ra)]
+      (set! (.-dirty? ra) (max (.-dirty? ra)
                            (if (identical? oldval newval)
                              (if (reaction? sender)
                                maybe-dirty clean)
                              is-dirty)))
-      (if (and ra.auto-run (not ra.norun?))
+      (if (and (some? (.-auto-run ra)) (not ^boolean (.-norun? ra)))
         (do
           (ra-check-clean ra)
-          (when-not (== ra.dirty? clean)
-            ((or ra.auto-run run) ra)))
+          (when-not (== (.-dirty? ra) clean)
+            ((or (.-auto-run ra) run) ra)))
         (when (== old-dirty clean)
-          (ra-notify-watches ra ra.state ra.state))))))
+          (ra-notify-watches ra (.-state ra) (.-state ra)))))))
 
 (defn- ra-update-watching [ra derefed]
   (doseq [w derefed]
-    (when-not (contains? ra.watching w)
-      (add-watch w ra ra-handle-change)))
-  (doseq [w ra.watching]
+    (when-not (contains? (.-watching ra) w)
+      (-add-watch w ra ra-handle-change)))
+  (doseq [w (.-watching ra)]
     (when-not (contains? derefed w)
-      (remove-watch w ra)))
-  (set! ra.watching derefed))
+      (-remove-watch w ra)))
+  (set! (.-watching ra) derefed))
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
                    ^:mutable watching ^:mutable watches
@@ -299,8 +301,8 @@
           derefed (captured this)]
       (when (not= derefed watching)
         (ra-update-watching this derefed))
-      (when-not active?
-        (when debug (swap! -running inc))
+      (when-not ^boolean active?
+        (when ^boolean debug (swap! -running inc))
         (set! active? true))
       (set! norun? false)
       (set! dirty? clean)
@@ -311,7 +313,7 @@
   IDeref
   (-deref [this]
     (ra-check-clean this)
-    (if (or auto-run (some? *ratom-context*))
+    (if (or (some? auto-run) (some? *ratom-context*))
       (do
         (notify-deref-watcher! this)
         (if-not (== dirty? clean)
@@ -332,8 +334,8 @@
     (set! watching nil)
     (set! state nil)
     (set! dirty? is-dirty)
-    (when active?
-      (when debug (swap! -running dec))
+    (when ^boolean active?
+      (when ^boolean debug (swap! -running dec))
       (set! active? false))
     (when on-dispose
       (on-dispose)))
@@ -350,9 +352,6 @@
   IHash
   (-hash [this] (goog/getUid this)))
 
-(defn- reaction? [ra]
-  (instance? Reaction ra))
-
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed]}]
   (let [runner (if (= auto-run true) run auto-run)
         active (not (nil? derefed))
@@ -361,7 +360,7 @@
                             nil nil
                             runner on-set on-dispose false)]
     (when-not (nil? derefed)
-      (when debug (swap! -running inc))
+      (when ^boolean debug (swap! -running inc))
       (ra-update-watching reaction derefed))
     reaction))
 
