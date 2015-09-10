@@ -12,56 +12,6 @@
 
 (defn running [] @-running)
 
-(defn- make-oset []
-  (let [o (js-obj)]
-    (set! (.-size o) 0)
-    o))
-
-(defn- oset-size [o]
-  (.-size o))
-
-(defn- oset-add [o x]
-  (let [h (goog/getUid x)]
-    (when-not (identical? (js-in h o) true)
-      (aset o h x)
-      (set! (.-size o) (inc (.-size o)))))
-  o)
-
-(defn- ^boolean oset-contains? [o x]
-  (if (nil? o)
-    false
-    (identical? true (js-in (goog/getUid x) o))))
-
-(defn- oset-for-each [o f]
-  (when (some? o)
-    (goog.object.forEach o (fn [v k _]
-                             (when-not (identical? k "size")
-                               (f v))))))
-
-(defn- ^boolean oset-equal? [o1 o2]
-  ;; (or (and (nil? o1) (nil? o2))
-  (if (and (nil? o1) (nil? o2))
-    true
-    (and (not (nil? o1)) (not (nil? o2))
-         (== (.-size o1) (.-size o2))
-         (goog.object.every o1 (fn [v k _]
-                                 (js-in k o2))))))
-
-(do
-  (def someobj #js{:foo-bar 1})
-  (def os (make-oset))
-  (oset-add os someobj)
-  (oset-add os someobj)
-  (js/console.log os (oset-size os))
-  (js/console.log (oset-contains? os someobj))
-  (oset-for-each os #(js/console.log "fe" %1))
-
-  (def os2 (make-oset))
-  (js/console.log (oset-equal? os os2))
-  (oset-add os2 someobj)
-  (js/console.log (oset-equal? os os2)))
-
-
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) nil)
   (binding [*ratom-context* obj]
@@ -77,9 +27,7 @@
     (when-not (nil? obj)
       (let [captured (.-cljsCaptured obj)]
         (set! (.-cljsCaptured obj)
-              (oset-add (if (nil? captured) (make-oset) captured)
-                        derefable)
-              #_(conj (if (nil? captured) #{} captured)
+              (conj (if (nil? captured) #{} captured)
                     derefable))))))
 
 
@@ -262,13 +210,12 @@
 (defn- ra-check-clean [ra]
   (when (== ra.dirty? maybe-dirty)
     (set! ra.norun? true)
-    (oset-for-each ra.watching
-                   (fn [w]
-                     (when (and (reaction? w)
-                                (not (== (.-dirty? w) clean)))
-                       (ra-check-clean w)
-                       (when-not (== (.-dirty? w) clean)
-                         (run w)))))
+    (doseq [w ra.watching]
+      (when (and (reaction? w)
+                 (not (== (.-dirty? w) clean)))
+        (ra-check-clean w)
+        (when-not (== (.-dirty? w) clean)
+          (run w))))
     (set! ra.norun? false)
     (when (== ra.dirty? maybe-dirty)
       (set! ra.dirty? clean))))
@@ -290,20 +237,12 @@
           (ra-notify-watches ra ra.state ra.state))))))
 
 (defn- ra-update-watching [ra derefed]
-  (oset-for-each derefed
-                 (fn [w]
-                   (when-not (oset-contains? ra.watching w)
-                     (add-watch w ra ra-handle-change))))
-  (oset-for-each ra.watching
-                 (fn [w]
-                   (when-not (oset-contains? derefed w)
-                     (remove-watch w ra))))
-  ;; (doseq [w derefed]
-  ;;   (when-not (contains? ra.watching w)
-  ;;     (add-watch w ra ra-handle-change)))
-  ;; (doseq [w ra.watching]
-  ;;   (when-not (contains? derefed w)
-  ;;     (remove-watch w ra)))
+  (doseq [w derefed]
+    (when-not (contains? ra.watching w)
+      (add-watch w ra ra-handle-change)))
+  (doseq [w ra.watching]
+    (when-not (contains? derefed w)
+      (remove-watch w ra)))
   (set! ra.watching derefed))
 
 (deftype Reaction [f ^:mutable state ^:mutable dirty? ^:mutable active?
@@ -358,10 +297,8 @@
     (let [oldstate state
           res (capture-derefed f this)
           derefed (captured this)]
-      (when-not (oset-equal? derefed watching)
+      (when (not= derefed watching)
         (ra-update-watching this derefed))
-      ;; (when (not= derefed watching)
-      ;;   (ra-update-watching this derefed))
       (when-not active?
         (when debug (swap! -running inc))
         (set! active? true))
@@ -390,11 +327,8 @@
 
   IDisposable
   (dispose! [this]
-    (oset-for-each watching
-                   (fn [w]
-                     (remove-watch w this)))
-    ;; (doseq [w watching]
-    ;;   (remove-watch w this))
+    (doseq [w watching]
+      (remove-watch w this))
     (set! watching nil)
     (set! state nil)
     (set! dirty? is-dirty)
