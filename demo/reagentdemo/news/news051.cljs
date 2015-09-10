@@ -9,7 +9,7 @@
 (def url "news/news051.html")
 (def title "News in 0.5.1")
 
-(def ns-src (s/syntaxed "(ns example
+(def ns-src (s/syntaxed "(ns example.core
   (:require [reagent.core :as r]))"))
 
 (defn old-and-tired []
@@ -39,7 +39,8 @@
    [:div.demo-text
     [:p "Reagent 0.5.1 contains a new convenient shortcut for nested
     elements, better error messages, new logic for maintaining cursor
-    position in inputs, and some bug fixes and improvements."]
+    position in inputs, a new version of React, and some bug fixes and
+    improvements."]
     
     (if summary
       [link {:href url :class 'news-read-more} "Read more"]
@@ -71,7 +72,8 @@
        code."]
 
        [:p "Previously, the cursor would jump to the end of the text
-       whenever you made a change to something like this:"]
+       whenever you made a change in the middle of the text in
+       something like this:"]
 
        [demo-component {:comp upper-input
                         :src [:pre ns-src
@@ -82,13 +84,20 @@
 
        [:ul
         [:li "React is updated to 0.13.3."]
-        [:li "Better error messages. In particular, the current
+        
+        [:li "A bit better error messages. In particular, the current
         component path is now printed when an exception is thrown."]
+
         [:li "There is a new
         function, " [:code "reagent.core/force-update"] " that will
         make a component render immediately. It takes an optional
-        second parameter that forces re-rendering of all children as
-        well."]
+        second parameter that forces re-rendering of every child
+        component as well."]
+
+        [:li "Calling the result
+        of " [:code "reagent.core/create-class"] " as a function is
+        now deprecated. Use Hiccup syntax instead."]
+
         [:li "Some other bug fixes and performance tweaks."]]])]])
 
 (tools/register-page url [#'main] title)
