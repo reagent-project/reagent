@@ -295,34 +295,29 @@
 
   IRunnable
   (run [this]
-    (set! norun? true)
     (let [oldstate state
           res (capture-derefed f this)
           derefed (captured this)]
       (when (not= derefed watching)
         (-update-watching this derefed))
-      (set! norun? false)
       (set! dirtyness clean)
-      (set! state res)
-      (-notify-watches this oldstate state)
+      (-notify-watches this oldstate (set! state res))
       res))
 
   IDeref
   (-deref [this]
     (-check-clean this)
-    (if (or (some? auto-run) (some? *ratom-context*))
+    (if (and (nil? auto-run) (nil? *ratom-context*))
+      (when-not (== dirtyness clean)
+        (let [oldstate state
+              newstate (f)]
+          (when-not (identical? oldstate newstate)
+            (-notify-watches this oldstate (set! state newstate)))))
       (do
         (notify-deref-watcher! this)
-        (if-not (== dirtyness clean)
-          (run this)
-          state))
-      (do
         (when-not (== dirtyness clean)
-          (let [oldstate state]
-            (set! state (f))
-            (when-not (identical? oldstate state)
-              (-notify-watches this oldstate state))))
-        state)))
+          (run this))))
+    state)
 
   IDisposable
   (dispose! [this]

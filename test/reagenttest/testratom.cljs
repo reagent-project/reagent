@@ -16,6 +16,7 @@
 (def perf-check 0)
 (defn ratom-perf []
   (dbg "ratom-perf")
+  (set! rv/debug false)
   (set! perf-check 0)
   (let [nite 100000
         a (rv/atom 0)
