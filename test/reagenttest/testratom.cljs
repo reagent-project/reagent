@@ -23,6 +23,7 @@
             (swap! a inc)))
     (dispose res)))
 
+(enable-console-print!)
 ;; (ratom-perf)
 
 (deftest basic-ratom
