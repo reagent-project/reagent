@@ -308,7 +308,8 @@
         (set! state res)
         ;; Use = to determine equality from reactions, since
         ;; they are likely to produce new data structures.
-        (when (not= oldstate res)
+        (when (and (some? watches)
+                   (not= oldstate res))
           (-notify-watches this oldstate res)))
       res))
 
@@ -319,8 +320,10 @@
       (when-not (== dirtyness clean)
         (let [oldstate state
               newstate (f)]
-          (when-not (identical? oldstate newstate)
-            (-notify-watches this oldstate (set! state newstate)))))
+          (set! state newstate)
+          (when (and (some? watches)
+                     (not= oldstate newstate))
+            (-notify-watches this oldstate newstate))))
       (do
         (notify-deref-watcher! this)
         (when-not (== dirtyness clean)
