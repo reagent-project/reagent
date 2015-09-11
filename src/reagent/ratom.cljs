@@ -202,9 +202,9 @@
   (-handle-change [this sender oldval newval])
   (-update-watching [this derefed]))
 
-(def clean 0)
-(def maybe-dirty 1)
-(def dirty 2)
+(def ^:const clean 0)
+(def ^:const maybe-dirty 1)
+(def ^:const dirty 2)
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
@@ -326,7 +326,7 @@
     (set! watching nil)
     (set! state nil)
     (set! dirtyness dirty)
-    (when on-dispose
+    (when (some? on-dispose)
       (on-dispose)))
 
   IEquiv
@@ -419,3 +419,24 @@
             (util/partial-ifn. callback-fn args nil)
             false nil))
 
+(comment
+  (def perf-check 0)
+  (defn ratom-perf []
+    (dbg "ratom-perf")
+    (set! debug false)
+    (dotimes [_ 10]
+      (set! perf-check 0)
+      (let [nite 100000
+            a (atom 0)
+            mid (make-reaction (fn [] (inc @a)))
+            res (make-reaction (fn []
+                                 (set! perf-check (inc perf-check))
+                                 (inc @mid))
+                               :auto-run true)]
+        @res
+        (time (dotimes [x nite]
+                (swap! a inc)))
+        (dispose! res)
+        (assert (= perf-check (inc nite))))))
+  (enable-console-print!)
+  (ratom-perf))
