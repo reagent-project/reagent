@@ -37,7 +37,10 @@
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (.' c :cljsIsDirty)
-        (.' c forceUpdate)))))
+        (let [a (.' c :cljsRatom)]
+          (if (ratom/-check-clean a)
+            (.! c :cljsIsDirty false)
+            (.' c forceUpdate)))))))
 
 (defn run-funs [a]
   (dotimes [i (alength a)]
@@ -98,7 +101,8 @@
           (.! c :cljsRatom
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)
-                                   :derefed derefed)))
+                                   :derefed derefed
+                                   :no-cache true)))
         res)
       (ratom/run rat))))
 

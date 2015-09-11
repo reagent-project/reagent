@@ -208,7 +208,8 @@
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
-                   auto-run on-set on-dispose ^:mutable ^boolean norun?]
+                   auto-run on-set on-dispose ^:mutable ^boolean norun?
+                   ^boolean nocache?]
   IAtom
   IReactiveAtom
 
@@ -261,12 +262,12 @@
       (doseq [w watching]
         (when (and (instance? Reaction w)
                    (not (== (.-dirtyness w) clean)))
-          (-check-clean w)
-          (when-not (== (.-dirtyness w) clean)
-            (run w))))
+          (when-not (-check-clean w)
+            ((or (.-auto-run w) run) w))))
       (set! norun? false)
       (when (== dirtyness maybe-dirty)
-        (set! dirtyness clean))))
+        (set! dirtyness clean)))
+    (== dirtyness clean))
 
   (-handle-change [this sender oldval newval]
     (let [old-dirty dirtyness
@@ -278,9 +279,10 @@
         (set! dirtyness new-dirty)
         (if (some? auto-run)
           (when-not norun?
-            (-check-clean this)
-            (when-not (== dirtyness clean)
-              (auto-run this)))
+            (if-not (identical? auto-run run)
+              (auto-run this)
+              (when-not (-check-clean this)
+                (auto-run this))))
           (-notify-watches this state state)))))
 
   (-update-watching [this derefed]
@@ -301,7 +303,9 @@
       (when (not= derefed watching)
         (-update-watching this derefed))
       (set! dirtyness clean)
-      (-notify-watches this oldstate (set! state res))
+      (when-not nocache?
+        (set! state res))
+      (-notify-watches this oldstate state)
       res))
 
   IDeref
@@ -341,11 +345,12 @@
   IHash
   (-hash [this] (goog/getUid this)))
 
-(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed]}]
+(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache]}]
   (let [runner (if (= auto-run true) run auto-run)
         dirty (if (nil? derefed) dirty clean)
+        nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
-                            runner on-set on-dispose false)]
+                            runner on-set on-dispose false nocache)]
     (when-not (nil? derefed)
       (-update-watching reaction derefed))
     reaction))

@@ -103,7 +103,8 @@
           runs (running)
           val (r/atom 0)
           secval (r/atom 0)
-          v1 (reaction @val)
+          v1-ran (atom 0)
+          v1 (reaction (swap! v1-ran inc) @val)
           comp (fn []
                  (swap! ran inc)
                  [:div (str "val " @v1 @val @secval)])]
@@ -120,13 +121,17 @@
           (reset! val 2)
           (reset! val 1)
           (is (= 1 @ran))
+          (is (= 1 @v1-ran))
           (r/flush)
           (is (found-in #"val 1" div))
           (is (= 2 @ran) "ran once more")
+          (is (= 2 @v1-ran))
 
           ;; should not be rendered
           (reset! val 1)
+          (is (= 2 @v1-ran))
           (r/flush)
+          (is (= 2 @v1-ran))
           (is (found-in #"val 1" div))
           (is (= 2 @ran) "did not run")))
       (is (= runs (running)))
