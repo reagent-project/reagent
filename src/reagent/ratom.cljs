@@ -198,7 +198,7 @@
 
 (defprotocol IComputedImpl
   (-peek-at [this])
-  (-check-clean [this])
+  (^boolean -check-clean [this])
   (-handle-change [this sender oldval newval])
   (-update-watching [this derefed]))
 
@@ -261,9 +261,10 @@
       (set! norun? true)
       (doseq [w watching]
         (when (and (instance? Reaction w)
-                   (not (== (.-dirtyness w) clean)))
-          (when-not (-check-clean w)
-            ((or (.-auto-run w) run) w))))
+                   (not (-check-clean w)))
+          (if-some [ar (.-auto-run w)]
+            (ar w)
+            (run w))))
       (set! norun? false)
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
@@ -277,13 +278,13 @@
                       dirty)]
       (when (> new-dirty old-dirty)
         (set! dirtyness new-dirty)
-        (if (some? auto-run)
+        (if-some [arun auto-run]
           (when-not norun?
-            (if-not (identical? auto-run run)
-              (auto-run this)
-              (when-not (-check-clean this)
-                (auto-run this))))
-          (-notify-watches this state state)))))
+            (when-not (and (identical? arun run)
+                           (-check-clean this))
+              (arun this)))
+          (-notify-watches this state state))))
+    nil)
 
   (-update-watching [this derefed]
     (doseq [w derefed]
