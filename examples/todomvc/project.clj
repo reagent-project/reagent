@@ -1,7 +1,7 @@
-(defproject todomvc-reagent "0.5.1-rc3"
+(defproject todomvc-reagent "0.5.1"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.107"]
-                 [reagent "0.5.1-rc3"]
+                 [reagent "0.5.1"]
                  [figwheel "0.3.7"]]
 
   :plugins [[lein-cljsbuild "1.0.6"]
