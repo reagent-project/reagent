@@ -305,8 +305,11 @@
         (-update-watching this derefed))
       (set! dirtyness clean)
       (when-not nocache?
-        (set! state res))
-      (-notify-watches this oldstate state)
+        (set! state res)
+        ;; Use = to determine equality from reactions, since
+        ;; they are likely to produce new data structures.
+        (when (not= oldstate res)
+          (-notify-watches this oldstate res)))
       res))
 
   IDeref

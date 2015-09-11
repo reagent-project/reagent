@@ -175,8 +175,8 @@
           (is (= @ran 7)))))))
 
 (deftest test-cursor
- (let [state (r/atom {:a 1
-                      :b 2})
+ (let [state (r/atom {:a {:v 1}
+                      :b {:v 2}})
        a-count (r/atom 0)
        b-count (r/atom 0)
        derefer (fn derefer [cur count]
@@ -191,26 +191,32 @@
        (is (= @a-count 1))
        (is (= @b-count 1))
 
-       (swap! state update-in [:a] inc)
+       (swap! state update-in [:a :v] inc)
        (is (= @a-count 1))
        
        (r/flush)
        (is (= @a-count 2))
        (is (= @b-count 1))
 
-       (reset! state @state)
+       (reset! state {:a {:v 2} :b {:v 2}})
        (r/flush)
        (is (= @a-count 2))
+       (is (= @b-count 1))
+
+       (reset! state {:a {:v 3} :b {:v 2}})
+       (r/flush)
+       (is (= @a-count 3))
        (is (= @b-count 1))))))
 
 (deftest test-fn-cursor
- (let [state (r/atom {:a 1
-                      :b 2})
+ (let [state (r/atom {:a {:v 1}
+                      :b {:v 2}})
+       statec (r/cursor state [])
        a-count (r/atom 0)
        b-count (r/atom 0)
        derefer (fn derefer [cur count]
                  [:div @cur])
-       f (fn [[x y]] (swap! y inc) (get-in @state x))
+       f (fn [[x y]] (swap! y inc) (get-in @statec x))
        ac (r/cursor f [[:a] a-count])
        bc (r/cursor f [[:b] b-count])
        comp (fn test-cursor []
@@ -222,7 +228,7 @@
        (is (= @a-count 1))
        (is (= @b-count 1))
 
-       (swap! state update-in [:a] inc)
+       (swap! state update-in [:a :v] inc)
        (is (= @a-count 1))
        (is (= @b-count 1))
        
@@ -230,7 +236,12 @@
        (is (= @a-count 2))
        (is (= @b-count 2))
 
-       (reset! state @state)
+       (reset! state {:a {:v 2} :b {:v 2}})
        (r/flush)
        (is (= @a-count 2))
-       (is (= @b-count 2))))))
+       (is (= @b-count 2))
+
+       (reset! state {:a {:v 3} :b {:v 2}})
+       (r/flush)
+       (is (= @a-count 3))
+       (is (= @b-count 3))))))
