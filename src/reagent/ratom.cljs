@@ -208,8 +208,7 @@
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
-                   auto-run on-set on-dispose ^:mutable ^boolean norun?
-                   ^boolean nocache?]
+                   ^:mutable auto-run on-set on-dispose ^boolean nocache?]
   IAtom
   IReactiveAtom
 
@@ -218,7 +217,8 @@
     (reduce-kv (fn [_ key f]
                  (f key this oldval newval)
                  nil)
-               nil watches))
+               nil watches)
+    nil)
 
   (-add-watch [this key f]
     (set! watches (check-watches watches (assoc watches key f))))
@@ -258,14 +258,16 @@
 
   (-check-clean [this]
     (when (== dirtyness maybe-dirty)
-      (set! norun? true)
-      (doseq [w watching]
-        (when (and (instance? Reaction w)
-                   (not (-check-clean w)))
-          (if-some [ar (.-auto-run w)]
-            (ar w)
-            (run w))))
-      (set! norun? false)
+      (let [ar auto-run]
+        ;; TODO: try/catch
+        (set! auto-run nil)
+        (doseq [w watching]
+          (when (and (instance? Reaction w)
+                     (not (-check-clean w)))
+            (if-some [ar (.-auto-run w)]
+              (ar w)
+              (run w))))
+        (set! auto-run ar))
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
     (== dirtyness clean))
@@ -278,12 +280,12 @@
                       dirty)]
       (when (> new-dirty old-dirty)
         (set! dirtyness new-dirty)
-        (if-some [arun auto-run]
-          (when-not norun?
-            (when-not (and (identical? arun run)
+        (when (== old-dirty clean)
+          (if-some [ar auto-run]
+            (when-not (and (identical? ar run)
                            (-check-clean this))
-              (arun this)))
-          (-notify-watches this state state))))
+              (ar this))
+            (-notify-watches this state state)))))
     nil)
 
   (-update-watching [this derefed]
@@ -338,7 +340,8 @@
     (set! state nil)
     (set! dirtyness dirty)
     (when (some? on-dispose)
-      (on-dispose)))
+      (on-dispose))
+    nil)
 
   IEquiv
   (-equiv [o other] (identical? o other))
@@ -357,7 +360,7 @@
         dirty (if (nil? derefed) dirty clean)
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
-                            runner on-set on-dispose false nocache)]
+                            runner on-set on-dispose nocache)]
     (when-not (nil? derefed)
       (-update-watching reaction derefed))
     reaction))
