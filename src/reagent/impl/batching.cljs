@@ -59,14 +59,17 @@
       (set! scheduled? true)
       (next-tick #(.run-queue this))))
   (run-queue [_]
-    (let [q queue aq after-render]
+    (ratom/flush!)
+    (let [q queue
+          aq after-render]
       (set! queue (array))
       (set! after-render (array))
       (set! scheduled? false)
       (run-queue q)
       (run-funs aq))))
 
-(def render-queue (RenderQueue. (array) false (array)))
+(defonce render-queue (RenderQueue. (array) false (array)))
+(set! ratom/render-queue render-queue)
 
 (defn flush []
   (.run-queue render-queue))

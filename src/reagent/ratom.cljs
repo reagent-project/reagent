@@ -35,6 +35,7 @@
     (swap! -running + (- (count new) (count old))))
   new)
 
+
 ;;; Atom
 
 (defprotocol IReactiveAtom)
@@ -338,6 +339,7 @@
       (remove-watch w this))
     (set! watching nil)
     (set! state nil)
+    (set! auto-run nil)
     (set! dirtyness dirty)
     (when (some? on-dispose)
       (on-dispose))
@@ -355,14 +357,44 @@
   IHash
   (-hash [this] (goog/getUid this)))
 
+
+
+;;; Queueing
+
+(defonce render-queue nil) ;; Gets set up from batching
+
+(def dirty-queue nil)
+
+(defn enqueue [r]
+  (when (nil? dirty-queue)
+    (set! dirty-queue (array))
+    (.schedule render-queue))
+  (.push dirty-queue r))
+
+(defn flush! []
+  (let [q dirty-queue]
+    (when (some? q)
+      (set! dirty-queue nil)
+      (dotimes [i (alength q)]
+        (let [r (aget q i)]
+          (when-not (or (nil? (.-auto-run r))
+                        (-check-clean r))
+            (run r)))))))
+
+
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache]}]
-  (let [runner (if (= auto-run true) run auto-run)
+  (let [runner (case auto-run
+                 true run
+                 :async enqueue
+                 auto-run)
         dirty (if (nil? derefed) dirty clean)
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
     (when-not (nil? derefed)
       (-update-watching reaction derefed))
+    (when (keyword-identical? auto-run :async)
+      (enqueue reaction))
     reaction))
 
 
