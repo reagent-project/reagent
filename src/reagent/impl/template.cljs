@@ -304,7 +304,6 @@
     (.apply (.' js/React :createElement) nil
             (reduce-kv
              (fn [a k v]
-               (prn "V" v "nested?" (nested? v))
                (when (>= k first-child)
                  (if (and (not (string? v))
                           (not (and (vector? v) (not (nested? v))))
