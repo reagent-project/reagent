@@ -3,6 +3,7 @@
             [reagenttest.testcursor]
             [reagenttest.testinterop]
             [reagenttest.testratom]
+            [reagenttest.testratomasync]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
             [reagent.core :as r]
