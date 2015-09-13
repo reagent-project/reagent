@@ -254,10 +254,14 @@
         b (reaction (if @a (throw (js/Error. "fail"))))
         c (run! (try @b (catch :default e
                           (swap! catch-count inc))))]
+    (set! rv/silent true)
     (is (= @catch-count 0))
     (reset! a false)
     (is (= @catch-count 0))
     (reset! a true)
     (is (= @catch-count 1))
     (reset! a false)
-    (is (= @catch-count 1))))
+    (is (= @catch-count 1))
+    (set! rv/silent false)
+    (dispose c)
+    (is (= runs (running)))))

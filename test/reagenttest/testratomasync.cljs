@@ -278,6 +278,7 @@
         b (reaction (if @a (throw (js/Error. "reaction fail"))))
         c (ar (fn [] (try @b (catch js/Object e
                                (swap! catch-count inc)))))]
+    (set! rv/silent true)
     (is (= @catch-count 0))
     (reset! a false)
     (sync)
@@ -285,4 +286,7 @@
     (reset! a true)
     (is (= @catch-count 0))
     (sync)
-    (is (= @catch-count 1))))
+    (is (= @catch-count 1))
+    (set! rv/silent false)
+    (dispose c)
+    (is (= runs (running)))))

@@ -7,6 +7,7 @@
 (declare ^:dynamic *ratom-context*)
 
 (defonce ^boolean debug false)
+(defonce ^boolean silent false)
 
 (defonce -running (clojure.core/atom 0))
 
@@ -206,7 +207,6 @@
 (def ^:const clean 0)
 (def ^:const maybe-dirty 1)
 (def ^:const dirty 2)
-(def ^:const failed 3)
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
@@ -304,8 +304,10 @@
         (ar parent)
         (run parent))
       (catch :default e
-        (set! (.-dirtyness parent) failed)
-        (set! (.-state parent) e)
+        ;; Just log error: it will most likely pop up again at deref time.
+        (when-not silent
+          (js/console.error "Error in reaction:" e))
+        (set! (.-dirtyness parent) dirty)
         (set! dirtyness dirty))))
 
   IRunnable
@@ -328,11 +330,6 @@
   IDeref
   (-deref [this]
     (-check-clean this)
-    (when (== dirtyness failed)
-      (let [e state]
-        (set! dirtyness dirty)
-        (set! state nil)
-        (throw e)))
     (if (and (nil? auto-run) (nil? *ratom-context*))
       (when-not (== dirtyness clean)
         (let [oldstate state
@@ -482,7 +479,7 @@
             (util/partial-ifn. callback-fn args nil)
             false nil))
 
-(comment
+(do
   (def perf-check 0)
   (defn ratom-perf []
     (dbg "ratom-perf")
