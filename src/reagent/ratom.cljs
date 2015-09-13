@@ -109,31 +109,47 @@
 
 (defonce cached-reactions {})
 
-(defn- cached-reaction [obj key f]
-  (if-some [r (get cached-reactions [key])]
-    r
+(defn- cached-reaction [f key obj]
+  (if-some [r (get cached-reactions key)]
+    (-deref r)
     (if (some? *ratom-context*)
       (let [r (make-reaction
-               f :on-dispose #(set! cached-reactions
-                                    (dissoc cached-reactions key)))
+               f :on-dispose (fn []
+                               (set! cached-reactions
+                                     (dissoc cached-reactions key))
+                               (set! (.-reaction obj) nil)))
             v (-deref r)]
-        (set! cached-reactions (assoc cached-reactions key f))
+        (set! cached-reactions (assoc cached-reactions key r))
         (set! (.-reaction obj) r)
         v)
       (f))))
 
-(deftype Monitor [f args ^:mutable reaction]
+(deftype Monitor [f key ^:mutable reaction]
   IReactiveAtom
 
   IDeref
   (-deref [this]
     (if-some [r reaction]
       (-deref r)
-      (cached-reaction this [f args]
-                       #(apply f args)))))
+      (cached-reaction f key this)))
+
+  IEquiv
+  (-equiv [o other]
+    (and (instance? Monitor other)
+         (= key (.-key other))))
+
+  IHash
+  (-hash [this] (hash key))
+
+  IPrintWithWriter
+  (-pr-writer [a writer opts]
+    (-write writer (str "#<Monitor: " key " "))
+    (binding [*ratom-context* nil]
+      (pr-writer (-deref a) writer opts))
+    (-write writer ">")))
 
 (defn monitor [f & args]
-  (Monitor. f args nil))
+  (Monitor. #(apply f args) [f args] nil))
 
 ;;; cursor
 
