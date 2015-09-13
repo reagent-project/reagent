@@ -45,12 +45,12 @@
   (let [runs (running)
         start (rv/atom 0)
         c3-count (rv/atom 0)
-        c1 (reaction @start 1)
-        c2 (reaction @start)
+        c1f (fn [] @start 1)
+        c2f (fn [] @start)
         c3 (rv/make-reaction
             (fn []
               (swap! c3-count inc)
-              (+ @c1 @c2))
+              (+ @(monitor c1f) @(monitor c2f)))
             :auto-run true)]
     (is (= @c3-count 0))
     (is (= @c3 1))
@@ -64,22 +64,11 @@
 
 (deftest test-from-reflex
   (let [runs (running)]
-    (let [!counter (rv/atom 0)
-          !signal (rv/atom "All I do is change")
-          co (run!
-              ;;when I change...
-              @!signal
-              ;;update the counter
-              (swap! !counter inc))]
-      (is (= 1 @!counter) "Constraint run on init")
-      (reset! !signal "foo")
-      (is (= 2 @!counter)
-          "Counter auto updated")
-      (dispose co))
     (let [!x (rv/atom 0)
-          !co (rv/make-reaction #(inc @!x) :auto-run true)]
-      (is (= 1 @!co) "CO has correct value on first deref") 
-      (swap! !x inc) 
+          f #(inc @!x)
+          !co (run! @(monitor f))]
+      (is (= 1 @!co) "CO has correct value on first deref")
+      (swap! !x inc)
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
@@ -89,42 +78,42 @@
   (dotimes [x testite]
     (let [runs (running)
           a (rv/atom 0)
-          a1 (reaction (inc @a))
-          a2 (reaction @a)
+          af (fn [x] (+ @a x))
+          a1 (monitor af 1)
+          a2 (monitor af 0)
           b-changed (rv/atom 0)
           c-changed (rv/atom 0)
-          b (reaction
-             (swap! b-changed inc)
-             (inc @a1))
-          c (reaction
-             (swap! c-changed inc)
-             (+ 10 @a2))
+          mf (fn [v x spy]
+               (swap! spy inc)
+               (+ @v x))
           res (run!
-               (if (< @a2 1) @b @c))]
+               (if (< @a2 1)
+                 @(monitor mf a1 1 b-changed)
+                 @(monitor mf a2 10 c-changed)))]
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 2))
       (is (= @c-changed 0))
-             
+
       (reset! a 2)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (dispose res)
