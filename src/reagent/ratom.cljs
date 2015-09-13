@@ -206,6 +206,7 @@
 (def ^:const clean 0)
 (def ^:const maybe-dirty 1)
 (def ^:const dirty 2)
+(def ^:const failed 3)
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
@@ -221,7 +222,7 @@
                nil watches)
     nil)
 
-  (-add-watch [this key f]
+  (-add-watch [_ key f]
     (set! watches (check-watches watches (assoc watches key f))))
 
   (-remove-watch [this key]
@@ -234,7 +235,7 @@
   (-reset! [a newval]
     (let [oldval state]
       (set! state newval)
-      (when on-set
+      (when (some? on-set)
         (set! dirtyness dirty)
         (on-set oldval newval))
       (-notify-watches a oldval newval)
@@ -260,14 +261,11 @@
   (-check-clean [this]
     (when (== dirtyness maybe-dirty)
       (let [ar auto-run]
-        ;; TODO: try/catch
         (set! auto-run nil)
         (doseq [w watching]
           (when (and (instance? Reaction w)
                      (not (-check-clean w)))
-            (if-some [ar (.-auto-run w)]
-              (ar w)
-              (run w))))
+            (._try-run this w)))
         (set! auto-run ar))
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
@@ -299,6 +297,17 @@
     (set! watching derefed)
     nil)
 
+  Object
+  (_try-run [_ parent]
+    (try
+      (if-some [ar (.-auto-run parent)]
+        (ar parent)
+        (run parent))
+      (catch :default e
+        (set! (.-dirtyness parent) failed)
+        (set! (.-state parent) e)
+        (set! dirtyness dirty))))
+
   IRunnable
   (run [this]
     (let [oldstate state
@@ -319,6 +328,11 @@
   IDeref
   (-deref [this]
     (-check-clean this)
+    (when (== dirtyness failed)
+      (let [e state]
+        (set! dirtyness dirty)
+        (set! state nil)
+        (throw e)))
     (if (and (nil? auto-run) (nil? *ratom-context*))
       (when-not (== dirtyness clean)
         (let [oldstate state
@@ -361,7 +375,9 @@
 
 ;;; Queueing
 
-(defonce render-queue nil) ;; Gets set up from batching
+;; Gets set up from batching
+;; TODO: Refactor so that isn't needed
+(defonce render-queue nil)
 
 (def dirty-queue nil)
 

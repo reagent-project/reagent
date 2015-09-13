@@ -247,15 +247,17 @@
     (is (= @b 6))
     (is (= runs (running)))))
 
-;; (deftest catching
-;;   (let [runs (running)
-;;         a (rv/atom false)
-;;         catch-count (atom 0)
-;;         b (reaction (if @a (throw {})))
-;;         c (run! (try @b (catch js/Object e
-;;                           (swap! catch-count inc))))]
-;;     (is (= @catch-count 0))
-;;     (reset! a false)
-;;     (is (= @catch-count 0))
-;;     (reset! a true)
-;;     (is (= @catch-count 1))))
+(deftest catching
+  (let [runs (running)
+        a (rv/atom false)
+        catch-count (atom 0)
+        b (reaction (if @a (throw (js/Error. "fail"))))
+        c (run! (try @b (catch :default e
+                          (swap! catch-count inc))))]
+    (is (= @catch-count 0))
+    (reset! a false)
+    (is (= @catch-count 0))
+    (reset! a true)
+    (is (= @catch-count 1))
+    (reset! a false)
+    (is (= @catch-count 1))))
