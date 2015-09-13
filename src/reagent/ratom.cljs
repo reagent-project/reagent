@@ -103,9 +103,39 @@
 
 
 
-;;; cursor
+;;; monitor
 
 (declare make-reaction)
+
+(defonce cached-reactions {})
+
+(defn- cached-reaction [obj key f]
+  (if-some [r (get cached-reactions [key])]
+    r
+    (if (some? *ratom-context*)
+      (let [r (make-reaction
+               f :on-dispose #(set! cached-reactions
+                                    (dissoc cached-reactions key)))
+            v (-deref r)]
+        (set! cached-reactions (assoc cached-reactions key f))
+        (set! (.-reaction obj) r)
+        v)
+      (f))))
+
+(deftype Monitor [f args ^:mutable reaction]
+  IReactiveAtom
+
+  IDeref
+  (-deref [this]
+    (if-some [r reaction]
+      (-deref r)
+      (cached-reaction this [f args]
+                       #(apply f args)))))
+
+(defn monitor [f & args]
+  (Monitor. f args nil))
+
+;;; cursor
 
 (deftype RCursor [ratom path ^:mutable reaction]
   IAtom
@@ -479,7 +509,7 @@
             (util/partial-ifn. callback-fn args nil)
             false nil))
 
-(do
+(comment
   (def perf-check 0)
   (defn ratom-perf []
     (dbg "ratom-perf")
