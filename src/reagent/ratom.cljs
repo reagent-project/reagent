@@ -285,10 +285,10 @@
 
   IReset
   (-reset! [a newval]
+    (assert (ifn? on-set) "Reaction is read only.")
     (let [oldval state]
       (set! state newval)
-      (when (some? on-set)
-        (on-set oldval newval))
+      (on-set oldval newval)
       (-notify-watches a oldval newval)
       newval))
 
