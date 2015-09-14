@@ -154,7 +154,7 @@
 
 ;;; cursor
 
-(deftype RCursor [ratom path ^:mutable reaction]
+(deftype RCursor [ratom path setter ^:mutable reaction]
   IAtom
   IReactiveAtom
 
@@ -169,12 +169,8 @@
     (if (nil? reaction)
       (set! reaction
             (if (satisfies? IDeref ratom)
-              (make-reaction #(get-in @ratom path)
-                             :on-set (if (= path [])
-                                       #(reset! ratom %2)
-                                       #(swap! ratom assoc-in path %2)))
-              (make-reaction #(ratom path)
-                             :on-set #(ratom path %2))))
+              (make-reaction #(get-in @ratom path) :on-set setter)
+              (make-reaction #(ratom path) :on-set setter)))
       reaction))
 
   (_peek [this]
@@ -191,13 +187,13 @@
 
   ISwap
   (-swap! [a f]
-    (-swap! (._reaction a) f))
+    (-reset! a (f (._peek a))))
   (-swap! [a f x]
-    (-swap! (._reaction a) f x))
+    (-reset! a (f (._peek a) x)))
   (-swap! [a f x y]
-    (-swap! (._reaction a) f x y))
+    (-reset! a (f (._peek a) x y)))
   (-swap! [a f x y more]
-    (-swap! (._reaction a) f x y more))
+    (-reset! a (apply f (._peek a) x y more)))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
@@ -218,22 +214,17 @@
 
 (defn cursor
   [src path]
-  (if (satisfies? IDeref path)
-    (do
-      (warn "Calling cursor with an atom as the second arg is "
-            "deprecated, in (cursor "
-            src " " (pr-str path) ")")
-      (assert (satisfies? IReactiveAtom path)
-              (str "src must be a reactive atom, not "
-                   (pr-str path)))
-      (RCursor. path src nil))
-    (do
-      (assert (or (satisfies? IReactiveAtom src)
-                  (and (ifn? src)
-                       (not (vector? src))))
-              (str "src must be a reactive atom or a function, not "
-                   (pr-str src)))
-      (RCursor. src path nil))))
+  (assert (or (satisfies? IReactiveAtom src)
+              (and (ifn? src)
+                   (not (vector? src))))
+          (str "src must be a reactive atom or a function, not "
+               (pr-str src)))
+  (let [s (if (satisfies? IDeref src)
+            (if (= path [])
+              #(reset! src %2)
+              #(swap! src assoc-in path %2))
+            #(src path %2))]
+    (RCursor. src path s nil)))
 
 
 
