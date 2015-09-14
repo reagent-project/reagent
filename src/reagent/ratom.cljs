@@ -152,6 +152,9 @@
   {:pre [(ifn? f)]}
   (Monitor. #(apply f args) [f args] nil))
 
+(defn monitor! [f & args]
+  (make-reaction #(deref (apply monitor f args))
+                 :auto-run :async))
 
 ;;; cursor
 

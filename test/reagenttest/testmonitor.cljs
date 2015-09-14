@@ -14,6 +14,8 @@
 (defn dispose [v]
   (rv/dispose! v))
 
+(defn sync [] (r/flush))
+
 (enable-console-print!)
 
 
@@ -39,6 +41,39 @@
     (is (= @out 8))
     (is (= @count 2))
     (dispose const)
+    (is (= (running) runs))))
+
+(deftest test-monitor!
+  (let [runs (running)
+        start (rv/atom 0)
+        svf (fn [] @start)
+        sv (monitor svf)
+        compf (fn [x] @sv (+ x @sv))
+        comp (monitor compf 2)
+        c2f (fn [] (inc @comp))
+        count (rv/atom 0)
+        out (rv/atom 0)
+        resf (fn []
+               (swap! count inc)
+               (+ @sv @(monitor c2f) @comp))
+        res (monitor resf)
+        const (rv/monitor!
+               #(reset! out @res))]
+    (is (= @count 0))
+    (sync)
+    (is (= @count 1) "constrain ran")
+    (is (= @out 5))
+    (reset! start 1)
+    (is (= @count 1))
+    (sync)
+    (is (= @out 8))
+    (is (= @count 2))
+    (dispose const)
+    (swap! start inc)
+    (sync)
+    (is (= @count 2))
+    (is (= @const 11))
+    (is (= @count 3))
     (is (= (running) runs))))
 
 (deftest double-dependency
