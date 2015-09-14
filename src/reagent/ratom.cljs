@@ -152,9 +152,10 @@
   {:pre [(ifn? f)]}
   (Monitor. #(apply f args) [f args] nil))
 
+
 ;;; cursor
 
-(deftype RCursor [ratom path setter ^:mutable reaction
+(deftype RCursor [ratom path ^:mutable reaction
                   ^:mutable state ^:mutable watches]
   IAtom
   IReactiveAtom
@@ -184,7 +185,7 @@
                      (let [f (if (satisfies? IDeref ratom)
                                #(get-in @ratom path)
                                #(ratom path))]
-                       (cached-reaction f [ratom path ::cursor] this)))]
+                       (cached-reaction f [::cursor ratom path] this)))]
       (._set-state this oldstate newstate)
       newstate))
 
@@ -192,7 +193,11 @@
   (-reset! [this new-value]
     (let [oldstate state]
       (._set-state this oldstate new-value)
-      (setter path new-value)
+      (if (satisfies? IDeref ratom)
+        (if (= path [])
+          (reset! ratom new-value)
+          (swap! ratom assoc-in path new-value))
+        (ratom path new-value))
       new-value))
 
   ISwap
@@ -230,12 +235,7 @@
                    (not (vector? src))))
           (str "src must be a reactive atom or a function, not "
                (pr-str src)))
-  (let [s (if (satisfies? IDeref src)
-            (if (= path [])
-              #(reset! src %2)
-              #(swap! src assoc-in path %2))
-            #(src path %2))]
-    (RCursor. src path s nil nil nil)))
+  (RCursor. src path nil nil nil))
 
 
 
