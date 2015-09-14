@@ -283,7 +283,6 @@
     (let [oldval state]
       (set! state newval)
       (when (some? on-set)
-        (set! dirtyness dirty)
         (on-set oldval newval))
       (-notify-watches a oldval newval)
       newval))
