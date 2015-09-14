@@ -137,15 +137,13 @@
     (let [a (rv/atom 0)
           f (fn [x] (+ x @a))
           b (monitor f 1)
-          c (monitor f -1)
-          d (run! [@b @c])]
+          d (run! [@b @(monitor f -1)])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a (rv/atom 0)
           f (fn [x] (+ x @a))
-          b (monitor f 1)
           c (monitor f -1)
-          d (run! [@b @c])
+          d (run! [@(monitor f 1) @c])
           res (rv/atom 0)]
       (is (= @d [1 -1]))
       (let [e (run! (reset! res @d))]
