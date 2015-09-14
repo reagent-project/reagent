@@ -154,7 +154,8 @@
 
 ;;; cursor
 
-(deftype RCursor [ratom path setter ^:mutable reaction]
+(deftype RCursor [ratom path setter ^:mutable reaction
+                  ^:mutable state ^:mutable watches]
   IAtom
   IReactiveAtom
 
@@ -169,21 +170,33 @@
     (if (nil? reaction)
       (set! reaction
             (if (satisfies? IDeref ratom)
-              (make-reaction #(get-in @ratom path) :on-set setter)
-              (make-reaction #(ratom path) :on-set setter)))
+              (make-reaction #(get-in @ratom path))
+              (make-reaction #(ratom path))))
       reaction))
 
   (_peek [this]
     (binding [*ratom-context* nil]
-      (-deref (._reaction this))))
+      (-deref this)))
+
+  (_set-state [this oldstate newstate]
+    (when-not (identical? oldstate newstate)
+      (set! state newstate)
+      (when (some? watches)
+        (-notify-watches this oldstate newstate))))
 
   IDeref
   (-deref [this]
-    (-deref (._reaction this)))
+    (let [oldstate state
+          newstate (-deref (._reaction this))]
+      (._set-state this oldstate newstate)
+      newstate))
 
   IReset
   (-reset! [this new-value]
-    (-reset! (._reaction this) new-value))
+    (let [oldstate state]
+      (._set-state this oldstate new-value)
+      (setter path new-value)
+      new-value))
 
   ISwap
   (-swap! [a f]
@@ -203,11 +216,12 @@
 
   IWatchable
   (-notify-watches [this oldval newval]
-    (-notify-watches (._reaction this) oldval newval))
+    (doseq [[key f] watches]
+      (f key this oldval newval)))
   (-add-watch [this key f]
-    (-add-watch (._reaction this) key f))
+    (set! watches (assoc watches key f)))
   (-remove-watch [this key]
-    (-remove-watch (._reaction this) key))
+    (set! watches (dissoc watches key)))
 
   IHash
   (-hash [this] (hash [ratom path])))
@@ -224,7 +238,7 @@
               #(reset! src %2)
               #(swap! src assoc-in path %2))
             #(src path %2))]
-    (RCursor. src path s nil)))
+    (RCursor. src path s nil nil nil)))
 
 
 
