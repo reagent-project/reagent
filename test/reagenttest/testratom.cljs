@@ -268,24 +268,31 @@
 
 (deftest test-rswap
   (let [a (atom {:foo 1})]
-    (r/rswap! a update-in [:foo] inc)
+    (is (nil? (r/rswap! a update-in [:foo] inc)))
     (is (= (:foo @a) 2))
-    (r/rswap! a #(assoc %1 :foo %2) 3)
+    (is (nil? (r/rswap! a identity)))
+    (is (= (:foo @a) 2))
+    (is (nil? (r/rswap! a #(assoc %1 :foo %2) 3)))
     (is (= (:foo @a) 3))
-    (r/rswap! a #(assoc %1 :foo %3) 0 4)
+    (is (nil? (r/rswap! a #(assoc %1 :foo %3) 0 4)))
     (is (= (:foo @a) 4))
-    (r/rswap! a #(assoc %1 :foo %4) 0 0 5)
+    (is (nil? (r/rswap! a #(assoc %1 :foo %4) 0 0 5)))
     (is (= (:foo @a) 5))
-    (r/rswap! a #(assoc %1 :foo %5) 0 0 0 6)
+    (is (nil? (r/rswap! a #(assoc %1 :foo %5) 0 0 0 6)))
     (is (= (:foo @a) 6))
     (let [disp (atom nil)
           f (fn [o v]
               (assert (= v :add))
               (if (< (:foo o) 10)
                 (do
-                  (@disp v)
+                  (is (nil? (@disp v)))
                   (update-in o [:foo] inc))
                 o))
           _ (reset! disp #(r/rswap! a f %))]
       (@disp :add)
       (is (= (:foo @a) 10)))))
+
+
+
+
+
