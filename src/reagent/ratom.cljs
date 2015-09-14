@@ -149,6 +149,7 @@
     (-write writer ">")))
 
 (defn monitor [f & args]
+  {:pre [(ifn? f)]}
   (Monitor. #(apply f args) [f args] nil))
 
 ;;; cursor

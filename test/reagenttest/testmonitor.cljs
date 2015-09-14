@@ -123,9 +123,10 @@
   (let [runs (running)]
     (let [runs (running)
           a (rv/atom 0)
-          b (reaction (inc @a))
-          c (reaction (dec @a))
-          d (reaction (str @b))
+          f (fn [x] (+ x @a))
+          b (monitor f 1)
+          c (monitor f -1)
+          d (monitor #(str @b))
           res (rv/atom 0)
           cs (run!
               (reset! res @d))]
@@ -134,14 +135,16 @@
     ;; should be broken according to https://github.com/lynaghk/reflex/issues/1
     ;; but isnt
     (let [a (rv/atom 0)
-          b (reaction (inc @a))
-          c (reaction (dec @a))
+          f (fn [x] (+ x @a))
+          b (monitor f 1)
+          c (monitor f -1)
           d (run! [@b @c])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a (rv/atom 0)
-          b (reaction (inc @a))
-          c (reaction (dec @a))
+          f (fn [x] (+ x @a))
+          b (monitor f 1)
+          c (monitor f -1)
           d (run! [@b @c])
           res (rv/atom 0)]
       (is (= @d [1 -1]))
@@ -151,72 +154,10 @@
       (dispose d))
     (is (= runs (running)))))
 
-(deftest test-dispose
-  (dotimes [x testite]
-    (let [runs (running)
-          a (rv/atom 0)
-          disposed (rv/atom nil)
-          disposed-c (rv/atom nil)
-          disposed-cns (rv/atom nil)
-          count-b (rv/atom 0)
-          b (rv/make-reaction (fn []
-                                (swap! count-b inc)
-                                (inc @a))
-                              :on-dispose #(reset! disposed true))
-          c (rv/make-reaction #(if (< @a 1) (inc @b) (dec @a))
-                              :on-dispose #(reset! disposed-c true))
-          res (rv/atom nil)
-          cns (rv/make-reaction #(reset! res @c)
-                                :auto-run true
-                                :on-dispose #(reset! disposed-cns true))]
-      @cns
-      (is (= @res 2))
-      (is (= (+ 4 runs) (running)))
-      (is (= @count-b 1))
-      (reset! a -1)
-      (is (= @res 1))
-      (is (= @disposed nil))
-      (is (= @count-b 2))
-      (is (= (+ 4 runs) (running)) "still running")
-      (reset! a 2)
-      (is (= @res 1))
-      (is (= @disposed true))
-      (is (= (+ 2 runs) (running)) "less running count")
-
-      (reset! disposed nil)
-      (reset! a -1)
-      ;; This fails sometimes on node. I have no idea why.
-      (is (= 1 @res) "should be one again")
-      (is (= @disposed nil))
-      (reset! a 2)
-      (is (= @res 1))
-      (is (= @disposed true))
-      (dispose cns)
-      (is (= @disposed-c true))
-      (is (= @disposed-cns true))
-      (is (= runs (running))))))
-
-(deftest test-on-set
-  (let [runs (running)
-        a (rv/atom 0)
-        b (rv/make-reaction #(+ 5 @a)
-                            :auto-run true
-                            :on-set (fn [oldv newv]
-                                      (reset! a (+ 10 newv))))]
-    @b
-    (is (= 5 @b))
-    (reset! a 1)
-    (is (= 6 @b))
-    (reset! b 1)
-    (is (= 11 @a))
-    (is (= 16 @b))
-    (dispose b)
-    (is (= runs (running)))))
-
 (deftest non-reactive-deref
   (let [runs (running)
         a (rv/atom 0)
-        b (rv/make-reaction #(+ 5 @a))]
+        b (monitor #(+ 5 @a))]
     (is (= @b 5))
     (is (= runs (running)))
 
@@ -228,10 +169,11 @@
   (let [runs (running)
         a (rv/atom false)
         catch-count (atom 0)
-        b (reaction (if @a (throw (js/Error. "fail"))))
+        b (monitor #(if @a (throw (js/Error. "fail"))))
         c (run! (try @b (catch :default e
                           (swap! catch-count inc))))]
     (set! rv/silent true)
+
     (is (= @catch-count 0))
     (reset! a false)
     (is (= @catch-count 0))
@@ -239,6 +181,7 @@
     (is (= @catch-count 1))
     (reset! a false)
     (is (= @catch-count 1))
+
     (set! rv/silent false)
     (dispose c)
     (is (= runs (running)))))
