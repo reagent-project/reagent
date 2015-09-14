@@ -166,14 +166,6 @@
          (= ratom (.-ratom other))))
 
   Object
-  (_reaction [this]
-    (if (nil? reaction)
-      (set! reaction
-            (if (satisfies? IDeref ratom)
-              (make-reaction #(get-in @ratom path))
-              (make-reaction #(ratom path))))
-      reaction))
-
   (_peek [this]
     (binding [*ratom-context* nil]
       (-deref this)))
@@ -187,7 +179,12 @@
   IDeref
   (-deref [this]
     (let [oldstate state
-          newstate (-deref (._reaction this))]
+          newstate (if-some [r reaction]
+                     (-deref r)
+                     (let [f (if (satisfies? IDeref ratom)
+                               #(get-in @ratom path)
+                               #(ratom path))]
+                       (cached-reaction f [ratom path ::cursor] this)))]
       (._set-state this oldstate newstate)
       newstate))
 
