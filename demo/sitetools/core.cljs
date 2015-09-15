@@ -46,23 +46,25 @@
 
 (defonce history nil)
 
-(defn demo-handler [state [id x y :as event]]
+(defn demo-handler [state [id x :as event]]
   (case id
-    :set-content (let [title (if y
-                               (str (:title-prefix state) y)
-                               (str (:default-title state)))]
-                   (assert (vector? x))
+    :set-content (let [page x
+                       title (:title page)
+                       _ (assert (vector? (:content page)))
+                       title (if title
+                               (str (:title-prefix state) title)
+                               (str (:default-title state)))
+                       page (assoc page :title title)]
                    (when r/is-client
                      (set! js/document.title title))
-                   (assoc state :main-content x :title title))
-    :set-page (do (assert (string? x))
-                  (let [{pages :pages} state
-                        p (get pages x (get pages "/index.html"))]
-                    (-> state
-                        (assoc :page-path x)
-                        (recur [:set-content (:content p) (:title p)]))))
-    :goto-page (do
-                 (assert (string? x))
+                   (assoc state :current-page page))
+    :set-page (let [path x
+                    _ (assert (string? path))
+                    ps (:pages state)
+                    p (get ps path (get ps "/index.html"))]
+                (recur state [:set-content p]))
+    :goto-page (let [path x
+                     _ (assert (string? path))]
                  (when-some [h history]
                    (.setToken h x)
                    (r/next-tick #(set! js/document.body.scrollTop 0))
@@ -118,7 +120,7 @@
    child])
 
 (defn main-content []
-  (let [{comp :main-content} @config]
+  (let [comp (get-in @config [:current-page :content])]
     (assert (vector? comp))
     comp))
 
@@ -152,12 +154,14 @@
 
 (defn gen-page [page-path conf]
   (dispatch [:set-page page-path])
-  (let [b (:body conf)
+  (let [conf (merge conf @config)
+        b (:body conf)
         _ (assert (vector? b))
         bhtml (r/render-component-to-string b)]
     (str "<!doctype html>\n"
          (html-template (assoc conf
                                :page-conf {:page-path page-path}
+                               :title (-> conf :current-page :title)
                                :body-html bhtml)))))
 
 (defn fs [] (js/require "fs"))
