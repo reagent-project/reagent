@@ -61,11 +61,11 @@
                   (assoc state :page-name x))
     :goto-page (do
                  (assert (string? x))
-                 (if history
-                   (do (.setToken history x)
-                       (r/next-tick #(set! js/document.body.scrollTop 0))
-                       state)
-                   (recur state [:set-page x])))))
+                 (when-some [h history]
+                   (.setToken h x)
+                   (r/next-tick #(set! js/document.body.scrollTop 0))
+                   state)
+                 (recur state [:set-page x]))))
 
 (defn dispatch [event]
   ;; (dbg event)
@@ -98,10 +98,13 @@
                                            (re-pattern (str page "$")) "")
                                           (string/replace #"/*$" ""))))
                     (History.)))
-        (evt/listen hevt/NAVIGATE #(dispatch [:set-page (.-token %)]))
+        (evt/listen hevt/NAVIGATE #(when (.-isNavigation %)
+                                    (dispatch [:set-page (.-token %)])))
         (.setEnabled true))
-      (when (and page (not html5) (-> history .getToken empty?))
-        (.setToken history page)))))
+      (let [p (if (and page (not html5) (-> history .getToken empty?))
+                page
+                (.getToken history))]
+        (dispatch [:set-page p])))))
 
 (defn to-relative [f]
   (string/replace f #"^/" ""))
