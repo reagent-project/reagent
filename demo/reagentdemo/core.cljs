@@ -3,7 +3,6 @@
             [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
             [sitetools.core :as tools :refer [dispatch link]]
-            [secretary.core :as secretary :refer-macros [defroute]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
@@ -24,9 +23,6 @@
 (def title "Minimalistic React for ClojureScript")
 
 (tools/register-page index-page [#'intro/main] title)
-
-(defroute "/" []
-  (dispatch [:set-page index-page]))
 
 
 (defn demo []

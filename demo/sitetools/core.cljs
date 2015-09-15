@@ -3,7 +3,6 @@
             [goog.events :as evt]
             [goog.history.EventType :as hevt]
             [reagent.core :as r]
-            [secretary.core :as secretary :refer-macros [defroute]]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [.' .!]])
   (:import goog.History
@@ -36,8 +35,8 @@
 (declare main-content)
 
 (defonce config (r/atom {:body [#'main-content]
-                         :main-content [:div]
-                         :pages #{}
+                         :pages {"/index.html" {:content [:div]
+                                                :title ""}}
                          :site-dir "outsite/public"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
@@ -57,8 +56,11 @@
                      (set! js/document.title title))
                    (assoc state :main-content x :title title))
     :set-page (do (assert (string? x))
-                  (secretary/dispatch! x)
-                  (assoc state :page-name x))
+                  (let [{pages :pages} state
+                        p (get pages x (get pages "/index.html"))]
+                    (-> state
+                        (assoc :page-path x)
+                        (recur [:set-content (:content p) (:title p)]))))
     :goto-page (do
                  (assert (string? x))
                  (when-some [h history]
@@ -71,15 +73,11 @@
   ;; (dbg event)
   (rswap! config demo-handler event))
 
-(defn add-page-to-generate [url]
-  {:pre [(string? url)]}
-  (swap! config update-in [:pages] conj url))
-
 (defn register-page [url comp title]
   {:pre [(re-matches #"/.*[.]html" url)
          (vector? comp)]}
-  (secretary/add-route! url #(dispatch [:set-content comp title]))
-  (add-page-to-generate url))
+  (swap! config update-in [:pages]
+         assoc url {:content comp :title title}))
 
 
 ;;; History
@@ -143,7 +141,7 @@
        [:meta {:charset 'utf-8}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
-       [:base {:href (prefix "" (:page-name page-conf))}]
+       [:base {:href (prefix "" (:page-path page-conf))}]
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
@@ -152,14 +150,14 @@
                             (-> page-conf clj->js js/JSON.stringify) ";"))
        [:script {:src main :type "text/javascript"}]]])))
 
-(defn gen-page [page-name conf]
-  (dispatch [:set-page page-name])
+(defn gen-page [page-path conf]
+  (dispatch [:set-page page-path])
   (let [b (:body conf)
         _ (assert (vector? b))
         bhtml (r/render-component-to-string b)]
     (str "<!doctype html>\n"
          (html-template (assoc conf
-                               :page-conf {:page-name page-name}
+                               :page-conf {:page-path page-path}
                                :body-html bhtml)))))
 
 (defn fs [] (js/require "fs"))
@@ -193,7 +191,7 @@
   (let [conf (swap! config merge (js->clj opts :keywordize-keys true))
         conf (assoc conf :timestamp (str "?" (js/Date.now)))
         {:keys [site-dir pages]} conf]
-    (doseq [f pages]
+    (doseq [f (keys pages)]
       (write-file (->> f to-relative (path-join site-dir))
                   (gen-page f conf)))
     (write-resources site-dir conf))
@@ -205,6 +203,6 @@
     (let [page-conf (when (exists? js/pageConfig)
                       (js->clj js/pageConfig :keywordize-keys true))
           conf (swap! config merge page-conf)
-          {:keys [page-name body main-div]} conf]
-      (init-history page-name)
+          {:keys [page-path body main-div]} conf]
+      (init-history page-path)
       (r/render-component body (js/document.getElementById main-div)))))
