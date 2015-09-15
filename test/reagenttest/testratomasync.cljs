@@ -8,7 +8,7 @@
   (set! rv/debug true)
   (rv/running))
 
-(def testite 10)
+(def testite 1)
 
 (defn dispose [v]
   (rv/dispose! v))
@@ -32,7 +32,7 @@
         const (ar (fn []
                     (reset! out @res)))]
     (is (= @count 0))
-    (sync)
+    @const
     (is (= @count 1) "constrain ran")
     (is (= @out 2))
     (reset! start 1)
@@ -85,7 +85,7 @@
                    ;;update the counter
                    (swap! !counter inc)))]
       (is (= 0 @!counter))
-      (sync)
+      @co
       (is (= 1 @!counter) "Constraint run on init")
       (reset! !signal "foo")
       (sync)
@@ -94,7 +94,7 @@
       (dispose co))
     (let [!x (rv/atom 0)
           !co (rv/make-reaction #(inc @!x) :auto-run :async)]
-      (sync)
+      @!co
       (is (= 1 @!co) "CO has correct value on first deref") 
       (swap! !x inc)
       (sync)
@@ -126,7 +126,7 @@
              
       (reset! a -1)
       (is (= @b-changed 1))
-      (sync)
+      @res
 
       (is (= @b-changed 2))
       (is (= @c-changed 0))
@@ -166,7 +166,7 @@
           res (rv/atom 0)
           cs (ar
               #(reset! res @d))]
-      (sync)
+      @cs
       (is (= @res "1"))
       (dispose cs))
     ;; should be broken according to https://github.com/lynaghk/reflex/issues/1
@@ -184,7 +184,7 @@
           res (rv/atom 0)]
       (is (= @d [1 -1]))
       (let [e (ar #(reset! res @d))]
-        (sync)
+        @e
         (is (= @res [1 -1]))
         (dispose e))
       (dispose d))
@@ -208,7 +208,7 @@
           cns (rv/make-reaction #(reset! res @c)
                                 :auto-run :async
                                 :on-dispose #(reset! disposed-cns true))]
-      (sync)
+      @cns
       (is (= @res 2))
       (is (= (+ 4 runs) (running)))
       (is (= @count-b 1))
@@ -281,7 +281,7 @@
     (set! rv/silent true)
     (is (= @catch-count 0))
     (reset! a false)
-    (sync)
+    @c
     (is (= @catch-count 0))
     (reset! a true)
     (is (= @catch-count 0))

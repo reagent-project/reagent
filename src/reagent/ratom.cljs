@@ -153,8 +153,10 @@
   (Monitor. #(apply f args) [f args] nil))
 
 (defn monitor! [f & args]
-  (make-reaction #(deref (apply monitor f args))
-                 :auto-run :async))
+  (let [r (make-reaction #(deref (apply monitor f args))
+                         :auto-run :async)]
+    @r
+    r))
 
 ;;; cursor
 
@@ -457,8 +459,6 @@
                             runner on-set on-dispose nocache)]
     (when-not (nil? derefed)
       (-update-watching reaction derefed))
-    (when (keyword-identical? auto-run :async)
-      (enqueue reaction))
     reaction))
 
 

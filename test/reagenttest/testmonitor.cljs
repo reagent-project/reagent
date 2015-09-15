@@ -59,8 +59,6 @@
         res (monitor resf)
         const (rv/monitor!
                #(reset! out @res))]
-    (is (= @count 0))
-    (sync)
     (is (= @count 1) "constrain ran")
     (is (= @out 5))
     (reset! start 1)
