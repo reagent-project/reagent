@@ -1,15 +1,13 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
-            [goog.history.EventType :as hevt]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [.' .!]])
   (:import goog.History
-           goog.history.Html5History))
+           [goog.history Html5History EventType]))
 
-(when (exists? js/console)
-  (enable-console-print!))
+(enable-console-print!)
 
 (defn rswap! [a f & args]
   ;; Like swap!, except that recursive swaps on the same atom are ok,
@@ -50,14 +48,12 @@
   (case id
     :set-content (let [page x
                        title (:title page)
-                       _ (assert (vector? (:content page)))
                        title (if title
                                (str (:title-prefix state) title)
-                               (str (:default-title state)))
-                       page (assoc page :title title)]
+                               (str (:default-title state)))]
                    (when r/is-client
                      (set! js/document.title title))
-                   (assoc state :current-page page))
+                   (assoc state :current-page page :title title))
     :set-page (let [path x
                     _ (assert (string? path))
                     ps (:pages state)
@@ -98,12 +94,13 @@
                                            (re-pattern (str page "$")) "")
                                           (string/replace #"/*$" ""))))
                     (History.)))
-        (evt/listen hevt/NAVIGATE #(when (.-isNavigation %)
-                                    (dispatch [:set-page (.-token %)])))
+        (evt/listen EventType.NAVIGATE #(when (.-isNavigation %)
+                                          (dispatch [:set-page (.-token %)])))
         (.setEnabled true))
-      (let [p (if (and page (not html5) (-> history .getToken empty?))
+      (let [token (.getToken history)
+            p (if (and page (not html5) (empty? token))
                 page
-                (.getToken history))]
+                token)]
         (dispatch [:set-page p])))))
 
 (defn to-relative [f]
@@ -120,16 +117,14 @@
    child])
 
 (defn main-content []
-  (let [comp (get-in @config [:current-page :content])]
-    (assert (vector? comp))
-    comp))
+  (get-in @config [:current-page :content]))
 
 
 ;;; Static site generation
 
-(defn prefix [href page]
-  (let [depth (-> #"/" (re-seq (to-relative page)) count)]
-    (str (->> "../" (repeat depth) (apply str)) href)))
+(defn base [page]
+  (let [depth (->> page to-relative (re-seq #"/") count)]
+    (->> "../" (repeat depth) (apply str))))
 
 (defn danger [t s]
   [t {:dangerouslySetInnerHTML {:__html s}}])
@@ -143,25 +138,23 @@
        [:meta {:charset 'utf-8}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
-       [:base {:href (prefix "" (:page-path page-conf))}]
+       [:base {:href (-> page-conf :page-path base)}]
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
        [:div {:id main-div} (danger :div body-html)]
        (danger :script (str "var pageConfig = "
-                            (-> page-conf clj->js js/JSON.stringify) ";"))
+                            (-> page-conf clj->js js/JSON.stringify)))
        [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-path conf]
   (dispatch [:set-page page-path])
   (let [conf (merge conf @config)
         b (:body conf)
-        _ (assert (vector? b))
         bhtml (r/render-component-to-string b)]
     (str "<!doctype html>\n"
          (html-template (assoc conf
                                :page-conf {:page-path page-path}
-                               :title (-> conf :current-page :title)
                                :body-html bhtml)))))
 
 (defn fs [] (js/require "fs"))
