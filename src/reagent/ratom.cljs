@@ -6,6 +6,8 @@
 
 (declare ^:dynamic *ratom-context*)
 
+(defn reactive? [] (some? *ratom-context*))
+
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
 
@@ -109,7 +111,7 @@
 
 (defonce cached-reactions {})
 
-(defn- cached-reaction [f key obj]
+(defn- cached-reaction [f key obj destroy]
   (if-some [r (get cached-reactions key)]
     (-deref r)
     (if (some? *ratom-context*)
@@ -117,12 +119,19 @@
                f :on-dispose (fn []
                                (set! cached-reactions
                                      (dissoc cached-reactions key))
-                               (set! (.-reaction obj) nil)))
+                               (when (some? obj)
+                                 (set! (.-reaction obj) nil))
+                               (when (some-> destroy .-destroy)
+                                 (.destroy destroy))))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
-        (set! (.-reaction obj) r)
+        (when (some? obj)
+          (set! (.-reaction obj) r))
         v)
-      (f))))
+      (let [res (f)]
+        (when (some-> destroy .-destroy)
+          (.destroy destroy))
+        res))))
 
 (deftype Monitor [f key ^:mutable reaction]
   IReactiveAtom
@@ -131,7 +140,7 @@
   (-deref [this]
     (if-some [r reaction]
       (-deref r)
-      (cached-reaction f key this)))
+      (cached-reaction f key this nil)))
 
   IEquiv
   (-equiv [o other]
@@ -190,7 +199,7 @@
                      (let [f (if (satisfies? IDeref ratom)
                                #(get-in @ratom path)
                                #(ratom path))]
-                       (cached-reaction f [::cursor ratom path] this)))]
+                       (cached-reaction f [::cursor ratom path] this nil)))]
       (._set-state this oldstate newstate)
       newstate))
 
@@ -242,6 +251,15 @@
                (pr-str src)))
   (RCursor. src path nil nil nil))
 
+
+
+;;; with-resource support
+
+(defn get-cached-values [key destroy]
+  (cached-reaction #(let [o #js{}]
+                      (set! (.-values o) #js[])
+                      o)
+                   key nil destroy))
 
 
 ;;;; reaction
@@ -420,7 +438,6 @@
 
   IHash
   (-hash [this] (goog/getUid this)))
-
 
 
 ;;; Queueing
