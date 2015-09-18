@@ -121,7 +121,7 @@
                                      (dissoc cached-reactions key))
                                (when (some? obj)
                                  (set! (.-reaction obj) nil))
-                               (when (some-> destroy .-destroy)
+                               (when (some-> destroy .-destroy some?)
                                  (.destroy destroy))))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
@@ -129,7 +129,7 @@
           (set! (.-reaction obj) r))
         v)
       (let [res (f)]
-        (when (some-> destroy .-destroy)
+        (when (some-> destroy .-destroy some?)
           (.destroy destroy))
         res))))
 
@@ -401,14 +401,19 @@
   IDeref
   (-deref [this]
     (-check-clean this)
-    (if (and (nil? auto-run) (nil? *ratom-context*))
-      (when-not (== dirtyness clean)
-        (let [oldstate state
-              newstate (f)]
-          (set! state newstate)
-          (when (and (some? watches)
-                     (not= oldstate newstate))
-            (-notify-watches this oldstate newstate))))
+    (if (and (nil? *ratom-context*)
+             (nil? auto-run))
+      (do
+        (when-not (== dirtyness clean)
+          (let [oldstate state
+                newstate (f)]
+            (set! state newstate)
+            (when (and (some? watches)
+                       (not= oldstate newstate))
+              (-notify-watches this oldstate newstate))))
+        (when (and (some? on-dispose)
+                   (nil? watches))
+          (on-dispose)))
       (do
         (notify-deref-watcher! this)
         (when-not (== dirtyness clean)
