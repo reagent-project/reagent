@@ -32,7 +32,7 @@
 (defn name-part [key]
   (get-in @person [:name key]))
 
-(def monitor reagent.ratom/monitor)
+(def track reagent.ratom/track)
 
 (defn foo [])
 
@@ -40,12 +40,12 @@
   (let [{:keys [first-name last-name]} @n]
     [:div
      [:p "I'm editing " first-name " " last-name "."]
-     [:p "I'm editing " @(monitor name-part :first-name) " "
-      @(monitor name-part :last-name) "."]
-     [:p "I'm editing " @(monitor name-part :first-name) " "
-      @(monitor name-part :last-name) "."]
-     [:p "I'm editing " @(monitor name-part :first-name) " "
-      @(monitor name-part :last-name) "."]
+     [:p "I'm editing " @(track name-part :first-name) " "
+      @(track name-part :last-name) "."]
+     [:p "I'm editing " @(track name-part :first-name) " "
+      @(track name-part :last-name) "."]
+     [:p "I'm editing " @(track name-part :first-name) " "
+      @(track name-part :last-name) "."]
      
      [input "First name: " (r/wrap first-name
                                    swap! n assoc :first-name)]

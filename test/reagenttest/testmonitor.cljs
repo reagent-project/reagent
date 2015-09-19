@@ -1,7 +1,6 @@
 (ns reagenttest.testmonitor
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer [monitor]
-             :refer-macros [run! reaction]]
+            [reagent.ratom :as rv :refer [track] :refer-macros [run! reaction]]
             [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
@@ -23,16 +22,16 @@
   (let [runs (running)
         start (rv/atom 0)
         svf (fn [] @start)
-        sv (monitor svf)
+        sv (track svf)
         compf (fn [x] @sv (+ x @sv))
-        comp (monitor compf 2)
+        comp (track compf 2)
         c2f (fn [] (inc @comp))
         count (rv/atom 0)
         out (rv/atom 0)
         resf (fn []
                (swap! count inc)
-               (+ @sv @(monitor c2f) @comp))
-        res (monitor resf)
+               (+ @sv @(track c2f) @comp))
+        res (track resf)
         const (run!
                (reset! out @res))]
     (is (= @count 1) "constrain ran")
@@ -43,21 +42,21 @@
     (dispose const)
     (is (= (running) runs))))
 
-(deftest test-monitor!
+(deftest test-track!
   (let [runs (running)
         start (rv/atom 0)
         svf (fn [] @start)
-        sv (monitor svf)
+        sv (track svf)
         compf (fn [x] @sv (+ x @sv))
-        comp (monitor compf 2)
+        comp (track compf 2)
         c2f (fn [] (inc @comp))
         count (rv/atom 0)
         out (rv/atom 0)
         resf (fn []
                (swap! count inc)
-               (+ @sv @(monitor c2f) @comp))
-        res (monitor resf)
-        const (rv/monitor!
+               (+ @sv @(track c2f) @comp))
+        res (track resf)
+        const (rv/track!
                #(reset! out @res))]
     (is (= @count 1) "constrain ran")
     (is (= @out 5))
@@ -83,7 +82,7 @@
         c3 (rv/make-reaction
             (fn []
               (swap! c3-count inc)
-              (+ @(monitor c1f) @(monitor c2f)))
+              (+ @(track c1f) @(track c2f)))
             :auto-run true)]
     (is (= @c3-count 0))
     (is (= @c3 1))
@@ -99,7 +98,7 @@
   (let [runs (running)]
     (let [!x (rv/atom 0)
           f #(inc @!x)
-          !co (run! @(monitor f))]
+          !co (run! @(track f))]
       (is (= 1 @!co) "CO has correct value on first deref")
       (swap! !x inc)
       (is (= 2 @!co) "CO auto-updates")
@@ -112,8 +111,8 @@
     (let [runs (running)
           a (rv/atom 0)
           af (fn [x] (+ @a x))
-          a1 (monitor af 1)
-          a2 (monitor af 0)
+          a1 (track af 1)
+          a2 (track af 0)
           b-changed (rv/atom 0)
           c-changed (rv/atom 0)
           mf (fn [v x spy]
@@ -121,8 +120,8 @@
                (+ @v x))
           res (run!
                (if (< @a2 1)
-                 @(monitor mf a1 1 b-changed)
-                 @(monitor mf a2 10 c-changed)))]
+                 @(track mf a1 1 b-changed)
+                 @(track mf a2 10 c-changed)))]
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
@@ -157,9 +156,9 @@
     (let [runs (running)
           a (rv/atom 0)
           f (fn [x] (+ x @a))
-          b (monitor f 1)
-          c (monitor f -1)
-          d (monitor #(str @b))
+          b (track f 1)
+          c (track f -1)
+          d (track #(str @b))
           res (rv/atom 0)
           cs (run!
               (reset! res @d))]
@@ -169,14 +168,14 @@
     ;; but isnt
     (let [a (rv/atom 0)
           f (fn [x] (+ x @a))
-          b (monitor f 1)
-          d (run! [@b @(monitor f -1)])]
+          b (track f 1)
+          d (run! [@b @(track f -1)])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a (rv/atom 0)
           f (fn [x] (+ x @a))
-          c (monitor f -1)
-          d (run! [@(monitor f 1) @c])
+          c (track f -1)
+          d (run! [@(track f 1) @c])
           res (rv/atom 0)]
       (is (= @d [1 -1]))
       (let [e (run! (reset! res @d))]
@@ -188,7 +187,7 @@
 (deftest non-reactive-deref
   (let [runs (running)
         a (rv/atom 0)
-        b (monitor #(+ 5 @a))]
+        b (track #(+ 5 @a))]
     (is (= @b 5))
     (is (= runs (running)))
 
@@ -200,7 +199,7 @@
   (let [runs (running)
         a (rv/atom false)
         catch-count (atom 0)
-        b (monitor #(if @a (throw (js/Error. "fail"))))
+        b (track #(if @a (throw (js/Error. "fail"))))
         c (run! (try @b (catch :default e
                           (swap! catch-count inc))))]
     (set! rv/silent true)

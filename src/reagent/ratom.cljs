@@ -110,7 +110,7 @@
 
 
 
-;;; monitor
+;;; track
 
 (declare make-reaction)
 
@@ -135,7 +135,7 @@
         v)
       (f))))
 
-(deftype Monitor [f key ^:mutable reaction]
+(deftype Track [f key ^:mutable reaction]
   IReactiveAtom
 
   IDeref
@@ -146,7 +146,7 @@
 
   IEquiv
   (-equiv [o other]
-    (and (instance? Monitor other)
+    (and (instance? Track other)
          (= key (.-key other))))
 
   IHash
@@ -154,17 +154,17 @@
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
-    (-write writer (str "#<Monitor: " key " "))
+    (-write writer (str "#<Track: " key " "))
     (binding [*ratom-context* nil]
       (pr-writer (-deref a) writer opts))
     (-write writer ">")))
 
-(defn monitor [f & args]
+(defn track [f & args]
   {:pre [(ifn? f)]}
-  (Monitor. #(apply f args) [f args] nil))
+  (Track. #(apply f args) [f args] nil))
 
-(defn monitor! [f & args]
-  (let [r (make-reaction #(deref (apply monitor f args))
+(defn track! [f & args]
+  (let [r (make-reaction #(deref (apply track f args))
                          :auto-run :async)]
     @r
     r))
