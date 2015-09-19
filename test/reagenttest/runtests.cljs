@@ -5,7 +5,7 @@
             [reagenttest.testinterop]
             [reagenttest.testratom]
             [reagenttest.testratomasync]
-            [reagenttest.testmonitor]
+            [reagenttest.testtrack]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
             [reagent.core :as r]
