@@ -104,7 +104,7 @@
           (.! c :cljsRatom
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)
-                                   :derefed derefed
+                                   :capture derefed
                                    :no-cache true)))
         res)
       (ratom/run rat))))

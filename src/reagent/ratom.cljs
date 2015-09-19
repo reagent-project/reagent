@@ -21,6 +21,10 @@
     (f)))
 
 (defn captured [obj]
+  (when (some? (.-cljsCaptured obj))
+    obj))
+
+(defn- -captured [obj]
   (let [c (.-cljsCaptured obj)]
     (set! (.-cljsCaptured obj) nil)
     c))
@@ -112,7 +116,7 @@
 (defonce cached-reactions {})
 
 (defn- cached-reaction [f key obj destroy]
-  (if-some [r (get cached-reactions key)]
+  (if-some [r (some->> key (get cached-reactions))]
     (-deref r)
     (if (some? *ratom-context*)
       (let [r (make-reaction
@@ -255,11 +259,23 @@
 
 ;;; with-resource support
 
+(def reaction-counter 0)
+
+(defn reaction-key []
+  (when-some [c *ratom-context*]
+    (if-some [k (.-reaction-id c)]
+      k
+      (->> reaction-counter inc
+           (set! reaction-counter)
+           (set! (.-reaction-id c))))))
+
 (defn get-cached-values [key destroy]
-  (cached-reaction #(let [o #js{}]
-                      (set! (.-values o) #js[])
-                      o)
-                   key nil destroy))
+  (let [key (when-some [k (reaction-key)]
+              [k key])]
+    (cached-reaction #(let [o #js{}]
+                        (set! (.-values o) #js[])
+                        o)
+                     key nil destroy)))
 
 
 ;;;; reaction
@@ -385,7 +401,7 @@
   (run [this]
     (let [oldstate state
           res (capture-derefed f this)
-          derefed (captured this)]
+          derefed (-captured this)]
       (when (not= derefed watching)
         (-update-watching this derefed))
       (set! dirtyness clean)
@@ -470,17 +486,25 @@
             (run r)))))))
 
 
-(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache]}]
+(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
+                                 capture]}]
   (let [runner (case auto-run
                  true run
                  :async enqueue
                  auto-run)
-        dirty (if (nil? derefed) dirty clean)
+        derefs (if-some [c capture]
+                 (-captured c)
+                 derefed)
+        dirty (if (nil? derefs) dirty clean)
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
+    (when-some [rid (some-> capture .-reaction-id)]
+      (set! (.-reaction-id reaction) rid))
     (when-not (nil? derefed)
-      (-update-watching reaction derefed))
+      (warn "using derefed is deprecated"))
+    (when-not (nil? derefs)
+      (-update-watching reaction derefs))
     reaction))
 
 
