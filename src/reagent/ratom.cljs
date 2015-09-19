@@ -6,7 +6,8 @@
 
 (declare ^:dynamic *ratom-context*)
 
-(defn reactive? [] (some? *ratom-context*))
+(defn reactive? []
+  (some? *ratom-context*))
 
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
@@ -116,7 +117,7 @@
 (defonce cached-reactions {})
 
 (defn- cached-reaction [f key obj destroy]
-  (if-some [r (some->> key (get cached-reactions))]
+  (if-some [r (get cached-reactions key)]
     (-deref r)
     (if (some? *ratom-context*)
       (let [r (make-reaction
@@ -132,10 +133,7 @@
         (when (some? obj)
           (set! (.-reaction obj) r))
         v)
-      (let [res (f)]
-        (when (some-> destroy .-destroy some?)
-          (.destroy destroy))
-        res))))
+      (f))))
 
 (deftype Monitor [f key ^:mutable reaction]
   IReactiveAtom
@@ -270,12 +268,10 @@
            (set! (.-reaction-id c))))))
 
 (defn get-cached-values [key destroy]
-  (let [key (when-some [k (reaction-key)]
-              [k key])]
-    (cached-reaction #(let [o #js{}]
-                        (set! (.-values o) #js[])
-                        o)
-                     key nil destroy)))
+  (if-some [k (reaction-key)]
+    (cached-reaction #(array)
+                     [k key] nil destroy)
+    (array)))
 
 
 ;;;; reaction

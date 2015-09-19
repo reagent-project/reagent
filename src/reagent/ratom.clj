@@ -38,5 +38,9 @@
                      (set! (.-init ~v) true)
                      false))]
        (let ~bs
-         (set! (.-destroy o#) ~destroy)
-         ~@forms))))
+         (let [dest# ~destroy
+               res# (do ~@forms)]
+           (if (reagent.ratom/reactive?)
+             (set! (.-destroy o#) ~destroy)
+             (dest#))
+           res#)))))
