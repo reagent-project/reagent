@@ -11,6 +11,7 @@
 
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
+(defonce generation 0)
 
 (defonce -running (clojure.core/atom 0))
 
@@ -18,6 +19,9 @@
 
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) nil)
+  (when (dev?)
+    (set! (.-ratomGeneration obj)
+          (set! generation (inc generation))))
   (binding [*ratom-context* obj]
     (f)))
 
@@ -500,6 +504,9 @@
     (when-not (nil? derefed)
       (warn "using derefed is deprecated"))
     (when-not (nil? derefs)
+      (when (dev?)
+        (set! (.-ratomGeneration reaction)
+              (.-ratomGeneration derefs)))
       (-update-watching reaction derefs))
     reaction))
 

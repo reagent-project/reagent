@@ -32,6 +32,14 @@
                             [body nil]))]
     `(let [destroy-obj# (cljs.core/js-obj)
            ~v (reagent.ratom/get-cached-values (quote ~v) destroy-obj#)]
+       (when *assert*
+         (when-some [c# reagent.ratom/*ratom-context*]
+           (when (== (.-ratomGeneration c#)
+                     (.-generation ~v))
+             (js/console.error
+              "The same with-kept is being used more than once in the
+              same reactive context."))
+           (set! (.-generation ~v) (.-ratomGeneration c#))))
        (let ~bs
          (let [destroy# ~destroy
                res# (do ~@forms)]

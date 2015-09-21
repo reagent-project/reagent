@@ -43,6 +43,7 @@
     (is (= (running) runs))))
 
 (deftest test-track!
+  (sync)
   (let [runs (running)
         start (rv/atom 0)
         svf (fn [] @start)
