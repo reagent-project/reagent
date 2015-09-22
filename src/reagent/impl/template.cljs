@@ -28,7 +28,7 @@
 
 (defn valid-tag? [x]
   (or (hiccup-tag? x)
-      (ifn? x)
+      (fn? x)
       (instance? NativeWrapper x)))
 
 
@@ -287,60 +287,31 @@
 
       :else (reag-element tag v))))
 
-(declare expand-seq)
-(declare expand-seq-check)
+(defn nested? [x]
+  (and (sequential? x) (not (valid-tag? (first x)))))
 
-(defn as-element [x]
+(defn as-element  [x]
   (cond (string? x) x
-        (vector? x) (vec-to-elem x)
-        (seq? x) (if (dev?)
-                   (expand-seq-check x)
-                   (expand-seq x))
+        (and (vector? x) (not (nested? x))) (vec-to-elem x)
+        (or (nested? x) (sequential? x)) (map as-element x)
         true x))
-
-(defn expand-seq [s]
-  (let [a (into-array s)]
-    (dotimes [i (alength a)]
-      (aset a i (as-element (aget a i))))
-    a))
-
-(defn expand-seq-dev [s o]
-  (let [a (into-array s)]
-    (dotimes [i (alength a)]
-      (let [val (aget a i)]
-        (when (and (vector? val)
-                   (nil? (key-from-vec val)))
-          (.! o :no-key true))
-        (aset a i (as-element val))))
-    a))
-
-(defn expand-seq-check [x]
-  (let [ctx #js{}
-        res (if (nil? ratom/*ratom-context*)
-              (expand-seq-dev x ctx)
-              (ratom/capture-derefed #(expand-seq-dev x ctx)
-                                     ctx))]
-    (when (ratom/captured ctx)
-      (warn "Reactive deref not supported in lazy seq, "
-            "it should be wrapped in doall"
-            (comp/comp-name) ". Value:\n" (pr-str x)))
-    (when (and (not comp/*non-reactive*)
-               (.' ctx :no-key))
-      (warn "Every element in a seq should have a unique "
-            ":key" (comp/comp-name) ". Value: " (pr-str x)))
-    res))
 
 (defn make-element [argv comp jsprops first-child]
   (case (- (count argv) first-child)
-    ;; Optimize cases of zero or one child
+    ;; Optimize case of no children
     0 (.' js/React createElement comp jsprops)
 
-    1 (.' js/React createElement comp jsprops
-          (as-element (nth argv first-child)))
-
     (.apply (.' js/React :createElement) nil
-            (reduce-kv (fn [a k v]
-                         (when (>= k first-child)
-                           (.push a (as-element v)))
-                         a)
-                       #js[comp jsprops] argv))))
+            (reduce-kv
+             (fn [a k v]
+               (when (>= k first-child)
+                 (if (and (not (string? v))
+                          (not (and (vector? v) (not (nested? v))))
+                          (or (sequential? v) (nested? v)))
+                   (->> (map as-element v)
+                        (flatten)
+                        (into-array)
+                        (js/Array.prototype.push.apply a))
+                   (.push a (as-element v))))
+               a)
+             #js[comp jsprops] argv))))

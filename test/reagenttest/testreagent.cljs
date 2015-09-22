@@ -434,7 +434,14 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ce "div" nil (ae [:div "foo"])))))
     (is (= (rstr (ae [:div [:div "foo"]]))
-           (rstr (ae [:div (ce "div" nil "foo")]))))))
+           (rstr (ae [:div (ce "div" nil "foo")]))))
+
+    (is (= (rstr (ae [:div (map str (range 3))]))
+           (rstr (ce "div" nil "0" "1" "2"))))
+    (is (= (rstr (ae [:div [[:div "a"] [[:div "b"]]]]))
+           (rstr (ce "div" nil (ce "div" nil "a") (ce "div" nil "b")))))
+    (is (= (rstr (ae [:div [[:div] [:div]]]))
+           (rstr (ce "div" nil (ce "div" nil) (ce "div" nil)))))))
 
 (def ndiv (.' js/React
               createClass
