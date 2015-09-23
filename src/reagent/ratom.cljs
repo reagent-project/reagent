@@ -1,7 +1,7 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
   (:require-macros [reagent.ratom])
-  (:require [reagent.impl.util :as util]
+  (:require [reagent.impl.util :as util :refer [->partial-ifn]]
             [reagent.debug :refer-macros [dbg log warn dev?]]))
 
 (declare ^:dynamic *ratom-context*)
@@ -92,8 +92,8 @@
 
 (defn atom
   "Like clojure.core/atom, except that it keeps track of derefs."
-  ([x] (RAtom. x nil nil nil))
-  ([x & {:keys [meta validator]}] (RAtom. x meta validator nil)))
+  ([x] (->RAtom x nil nil nil))
+  ([x & {:keys [meta validator]}] (->RAtom x meta validator nil)))
 
 
 
@@ -173,14 +173,14 @@
       (assert (satisfies? IReactiveAtom path)
               (str "src must be a reactive atom, not "
                    (pr-str path)))
-      (RCursor. path src nil))
+      (->RCursor path src nil))
     (do
       (assert (or (satisfies? IReactiveAtom src)
                   (and (ifn? src)
                        (not (vector? src))))
               (str "src must be a reactive atom or a function, not "
                    (pr-str src)))
-      (RCursor. src path nil))))
+      (->RCursor src path nil))))
 
 
 
@@ -320,9 +320,9 @@
   (let [runner (if (= auto-run true) run auto-run)
         active (not (nil? derefed))
         dirty (not active)
-        reaction (Reaction. f nil dirty active
-                            nil nil
-                            runner on-set on-dispose)]
+        reaction (->Reaction f nil dirty active
+                             nil nil
+                             runner on-set on-dispose)]
     (when-not (nil? derefed)
       (when debug (swap! -running inc))
       (-update-watching reaction derefed))
@@ -393,7 +393,7 @@
     (-write writer ">")))
 
 (defn make-wrapper [value callback-fn args]
-  (Wrapper. value
-            (util/partial-ifn. callback-fn args nil)
-            false nil))
+  (->Wrapper value
+             (->partial-ifn callback-fn args nil)
+             false nil))
 

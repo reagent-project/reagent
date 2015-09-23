@@ -235,9 +235,9 @@
     (.' js/React createElement c jsprops)))
 
 (defn adapt-react-class [c]
-  (NativeWrapper. #js{:name c
-                      :id nil
-                      :class nil}))
+  (->NativeWrapper #js{:name c
+                       :id nil
+                       :class nil}))
 
 (def tag-name-cache #js{})
 
