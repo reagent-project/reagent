@@ -13,7 +13,7 @@
      (deref co#)
      co#))
 
-(defmacro with-kept [bindings & body]
+(defmacro with-let [bindings & body]
   (assert (vector? bindings))
   (let [v (gensym "bind-v")
         bs (->> bindings
@@ -37,7 +37,7 @@
            (when (== (.-ratomGeneration c#)
                      (.-generation ~v))
              (js/console.error
-              "The same with-kept is being used more than once in the
+              "The same with-let is being used more than once in the
               same reactive context."))
            (set! (.-generation ~v) (.-ratomGeneration c#))))
        (let ~bs

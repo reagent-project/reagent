@@ -1,6 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer-macros [reaction]]
+            [reagent.ratom :as rv :refer-macros [reaction with-let]]
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as r]))
@@ -565,3 +565,23 @@
         c2 (fn []
              [c1 (sorted-map 1 "foo" 2 "bar")])]
     (is (= (rstr [c2]) "<div>foo</div>"))))
+
+(deftest basic-with-let
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        n3 (atom 0)
+        val (r/atom 0)
+        c (fn []
+            (with-let [v (swap! n1 inc)]
+              (swap! n2 inc)
+              [:div @val]
+              (finally
+                (swap! n3 inc))))]
+    (with-mounted-component [c]
+      (fn [_ div]
+        (is (= [1 1 0] [@n1 @n2 @n3]))
+        (swap! val inc)
+        (is (= [1 1 0] [@n1 @n2 @n3]))
+        (r/flush)
+        (is (= [1 2 0] [@n1 @n2 @n3]))))
+    (is (= [1 2 1] [@n1 @n2 @n3]))))
