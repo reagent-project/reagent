@@ -45,5 +45,14 @@
                res# (do ~@forms)]
            (if (reagent.ratom/reactive?)
              (set! (.-destroy destroy-obj#) destroy#)
-             (destroy#))
+             (when (some? destroy#)
+               (destroy#)))
            res#)))))
+
+
+
+
+
+
+
+

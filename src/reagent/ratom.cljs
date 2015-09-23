@@ -259,7 +259,7 @@
 
 
 
-;;; with-resource support
+;;; with-let support
 
 (def reaction-counter 0)
 
