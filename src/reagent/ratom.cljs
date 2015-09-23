@@ -6,7 +6,7 @@
 
 (declare ^:dynamic *ratom-context*)
 
-(defn reactive? []
+(defn ^boolean reactive? []
   (some? *ratom-context*))
 
 (defonce ^boolean debug false)
@@ -168,7 +168,7 @@
   (Track. #(apply f args) [f args] nil))
 
 (defn track! [f & args]
-  (let [r (make-reaction #(deref (apply track f args))
+  (let [r (make-reaction #(-deref (apply track f args))
                          :auto-run :async)]
     @r
     r))

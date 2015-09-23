@@ -29,10 +29,13 @@
                           (if (and (list? fin)
                                    (= 'finally (first fin)))
                             [(butlast body) `(fn [] ~@(rest fin))]
-                            [body nil]))]
-    `(let [destroy-obj# (cljs.core/js-obj)
+                            [body nil]))
+        destroy-obj (when destroy
+                      `(cljs.core/js-obj))
+        asserting (if *assert* true false)]
+    `(let [destroy-obj# ~destroy-obj
            ~v (reagent.ratom/get-cached-values (quote ~v) destroy-obj#)]
-       (when *assert*
+       (when ~asserting
          (when-some [c# reagent.ratom/*ratom-context*]
            (when (== (.-ratomGeneration c#)
                      (.-generation ~v))
@@ -43,16 +46,8 @@
        (let ~bs
          (let [destroy# ~destroy
                res# (do ~@forms)]
-           (if (reagent.ratom/reactive?)
-             (set! (.-destroy destroy-obj#) destroy#)
-             (when (some? destroy#)
+           (when-not (nil? destroy#)
+             (if (reagent.ratom/reactive?)
+               (set! (.-destroy destroy-obj#) destroy#)
                (destroy#)))
            res#)))))
-
-
-
-
-
-
-
-
