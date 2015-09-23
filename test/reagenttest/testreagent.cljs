@@ -585,3 +585,30 @@
         (r/flush)
         (is (= [1 2 0] [@n1 @n2 @n3]))))
     (is (= [1 2 1] [@n1 @n2 @n3]))))
+
+(deftest with-let-destroy-only
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        c (fn []
+            (with-let []
+              (swap! n1 inc)
+              [:div]
+              (finally
+                (swap! n2 inc))))]
+    (with-mounted-component [c]
+      (fn [_ div]
+        (is (= [1 0] [@n1 @n2]))))
+    (is (= [1 1] [@n1 @n2]))))
+
+(deftest with-let-non-reactive
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        n3 (atom 0)
+        c (fn []
+            (with-let [a (swap! n1 inc)]
+              (swap! n2 inc)
+              [:div a]
+              (finally
+                (swap! n3 inc))))]
+    (is (= (rstr [c]) (rstr [:div 1])))
+    (is (= [1 1 1] [@n1 @n2 @n3]))))
