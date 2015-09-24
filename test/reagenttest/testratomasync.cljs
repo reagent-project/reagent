@@ -1,4 +1,4 @@
-(ns reagenttest.testratom
+(ns reagenttest.testratomasync
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
             [reagent.debug :refer-macros [dbg]]
@@ -8,31 +8,17 @@
   (set! rv/debug true)
   (rv/running))
 
-(def testite 10)
+(def testite 1)
 
 (defn dispose [v]
   (rv/dispose! v))
 
-(def perf-check 0)
-(defn ratom-perf []
-  (dbg "ratom-perf")
-  (set! rv/debug false)
-  (set! perf-check 0)
-  (let [nite 100000
-        a (rv/atom 0)
-        mid (reaction (inc @a))
-        res (run!
-             (set! perf-check (inc perf-check))
-             (inc @mid))]
-    (time (dotimes [x nite]
-            (swap! a inc)))
-    (dispose res)
-    (assert (= perf-check (inc nite)))))
+(defn sync [] (r/flush))
 
-(enable-console-print!)
-;; (ratom-perf)
+(defn ar [f] (rv/make-reaction f :auto-run :async))
 
 (deftest basic-ratom
+  (sync)
   (let [runs (running)
         start (rv/atom 0)
         sv (reaction @start)
@@ -43,17 +29,25 @@
         res (reaction
              (swap! count inc)
              @sv @c2 @comp)
-        const (run!
-               (reset! out @res))]
+        const (ar (fn []
+                    (reset! out @res)))]
+    (is (= @count 0))
+    @const
     (is (= @count 1) "constrain ran")
     (is (= @out 2))
     (reset! start 1)
+    (is (= @count 1))
+    (sync)
     (is (= @out 3))
     (is (= @count 2))
+    (reset! start 2)
     (dispose const)
-    (is (= (running) runs))))
+    (is (= (running) runs) "did dispose")
+    (sync)
+    (is (= (running) runs) "should not awaken")))
 
 (deftest double-dependency
+  (sync)
   (let [runs (running)
         start (rv/atom 0)
         c3-count (rv/atom 0)
@@ -63,41 +57,54 @@
             (fn []
               (swap! c3-count inc)
               (+ @c1 @c2))
-            :auto-run true)]
-    (is (= @c3-count 0))
+            :auto-run :async)]
+    (is (= @c3-count 0) "t0")
+    (sync)
     (is (= @c3 1))
     (is (= @c3-count 1) "t1")
     (swap! start inc)
+    (is (= @c3-count 1))
+    (sync)
     (is (= @c3-count 2) "t2")
     (is (= @c3 2))
     (is (= @c3-count 2) "t3")
     (dispose c3)
+    (is (= (running) runs))
+    (sync)
+    (is (= @c3 2))
     (is (= (running) runs))))
 
 (deftest test-from-reflex
+  (sync)
   (let [runs (running)]
     (let [!counter (rv/atom 0)
           !signal (rv/atom "All I do is change")
-          co (run!
-              ;;when I change...
-              @!signal
-              ;;update the counter
-              (swap! !counter inc))]
+          co (ar (fn []
+                   ;;when I change...
+                   @!signal
+                   ;;update the counter
+                   (swap! !counter inc)))]
+      (is (= 0 @!counter))
+      @co
       (is (= 1 @!counter) "Constraint run on init")
       (reset! !signal "foo")
+      (sync)
       (is (= 2 @!counter)
           "Counter auto updated")
       (dispose co))
     (let [!x (rv/atom 0)
-          !co (rv/make-reaction #(inc @!x) :auto-run true)]
+          !co (rv/make-reaction #(inc @!x) :auto-run :async)]
+      @!co
       (is (= 1 @!co) "CO has correct value on first deref") 
-      (swap! !x inc) 
+      (swap! !x inc)
+      (sync)
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
 
 
 (deftest test-unsubscribe
+  (sync)
   (dotimes [x testite]
     (let [runs (running)
           a (rv/atom 0)
@@ -111,31 +118,37 @@
           c (reaction
              (swap! c-changed inc)
              (+ 10 @a2))
-          res (run!
-               (if (< @a2 1) @b @c))]
+          res (ar (fn []
+                    (if (< @a2 1) @b @c)))]
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
              
       (reset! a -1)
-      (is (= @res (+ 2 @a)))
+      (is (= @b-changed 1))
+      @res
+
       (is (= @b-changed 2))
       (is (= @c-changed 0))
+      (is (= @res (+ 2 @a)))
              
       (reset! a 2)
-      (is (= @res (+ 10 @a)))
-      (is (<= 2 @b-changed 3))
+      (sync)
+      (is (= @b-changed 3))
       (is (= @c-changed 1))
+      (is (= @res (+ 10 @a)))
              
       (reset! a 3)
-      (is (= @res (+ 10 @a)))
-      (is (<= 2 @b-changed 3))
+      (sync)
+      (is (= @b-changed 3))
       (is (= @c-changed 2))
+      (is (= @res (+ 10 @a)))
              
       (reset! a 3)
-      (is (= @res (+ 10 @a)))
-      (is (<= 2 @b-changed 3))
+      (sync)
+      (is (= @b-changed 3))
       (is (= @c-changed 2))
+      (is (= @res (+ 10 @a)))
              
       (reset! a -1)
       (is (= @res (+ 2 @a)))
@@ -143,6 +156,7 @@
       (is (= runs (running))))))
 
 (deftest maybe-broken
+  (sync)
   (let [runs (running)]
     (let [runs (running)
           a (rv/atom 0)
@@ -150,8 +164,9 @@
           c (reaction (dec @a))
           d (reaction (str @b))
           res (rv/atom 0)
-          cs (run!
-              (reset! res @d))]
+          cs (ar
+              #(reset! res @d))]
+      @cs
       (is (= @res "1"))
       (dispose cs))
     ;; should be broken according to https://github.com/lynaghk/reflex/issues/1
@@ -159,16 +174,17 @@
     (let [a (rv/atom 0)
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])]
+          d (ar (fn [] [@b @c]))]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a (rv/atom 0)
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])
+          d (ar (fn [] [@b @c]))
           res (rv/atom 0)]
       (is (= @d [1 -1]))
-      (let [e (run! (reset! res @d))]
+      (let [e (ar #(reset! res @d))]
+        @e
         (is (= @res [1 -1]))
         (dispose e))
       (dispose d))
@@ -190,28 +206,33 @@
                               :on-dispose #(reset! disposed-c true))
           res (rv/atom nil)
           cns (rv/make-reaction #(reset! res @c)
-                                :auto-run true
+                                :auto-run :async
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
       (is (= (+ 4 runs) (running)))
       (is (= @count-b 1))
       (reset! a -1)
+      (is (= @res 2))
+      (sync)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
       (is (= (+ 4 runs) (running)) "still running")
       (reset! a 2)
+      (sync)
       (is (= @res 1))
       (is (= @disposed true))
       (is (= (+ 2 runs) (running)) "less running count")
 
       (reset! disposed nil)
       (reset! a -1)
+      (sync)
       ;; This fails sometimes on node. I have no idea why.
       (is (= 1 @res) "should be one again")
       (is (= @disposed nil))
       (reset! a 2)
+      (sync)
       (is (= @res 1))
       (is (= @disposed true))
       (dispose cns)
@@ -220,17 +241,20 @@
       (is (= runs (running))))))
 
 (deftest test-on-set
+  (sync)
   (let [runs (running)
         a (rv/atom 0)
         b (rv/make-reaction #(+ 5 @a)
-                            :auto-run true
+                            :auto-run :async
                             :on-set (fn [oldv newv]
                                       (reset! a (+ 10 newv))))]
-    @b
+    (sync)
     (is (= 5 @b))
     (reset! a 1)
+    (sync)
     (is (= 6 @b))
     (reset! b 1)
+    (sync)
     (is (= 11 @a))
     (is (= 16 @b))
     (dispose b)
@@ -251,48 +275,18 @@
   (let [runs (running)
         a (rv/atom false)
         catch-count (atom 0)
-        b (reaction (if @a (throw (js/Error. "fail"))))
-        c (run! (try @b (catch :default e
-                          (swap! catch-count inc))))]
+        b (reaction (if @a (throw (js/Error. "reaction fail"))))
+        c (ar (fn [] (try @b (catch js/Object e
+                               (swap! catch-count inc)))))]
     (set! rv/silent true)
     (is (= @catch-count 0))
     (reset! a false)
+    @c
     (is (= @catch-count 0))
     (reset! a true)
-    (is (= @catch-count 1))
-    (reset! a false)
+    (is (= @catch-count 0))
+    (sync)
     (is (= @catch-count 1))
     (set! rv/silent false)
     (dispose c)
     (is (= runs (running)))))
-
-(deftest test-rswap
-  (let [a (atom {:foo 1})]
-    (is (nil? (r/rswap! a update-in [:foo] inc)))
-    (is (= (:foo @a) 2))
-    (is (nil? (r/rswap! a identity)))
-    (is (= (:foo @a) 2))
-    (is (nil? (r/rswap! a #(assoc %1 :foo %2) 3)))
-    (is (= (:foo @a) 3))
-    (is (nil? (r/rswap! a #(assoc %1 :foo %3) 0 4)))
-    (is (= (:foo @a) 4))
-    (is (nil? (r/rswap! a #(assoc %1 :foo %4) 0 0 5)))
-    (is (= (:foo @a) 5))
-    (is (nil? (r/rswap! a #(assoc %1 :foo %5) 0 0 0 6)))
-    (is (= (:foo @a) 6))
-    (let [disp (atom nil)
-          f (fn [o v]
-              (assert (= v :add))
-              (if (< (:foo o) 10)
-                (do
-                  (is (nil? (@disp v)))
-                  (update-in o [:foo] inc))
-                o))
-          _ (reset! disp #(r/rswap! a f %))]
-      (@disp :add)
-      (is (= (:foo @a) 10)))))
-
-
-
-
-

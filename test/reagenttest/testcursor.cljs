@@ -11,6 +11,8 @@
   (rv/running))
 (defn dispose [v] (rv/dispose! v))
 
+(def testite 10)
+
 (deftest basic-cursor
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})
@@ -29,7 +31,7 @@
     (is (= @out 2))
     (reset! start 1)
     (is (= @out 3))
-    (is (= @count 4))
+    (is (= @count 2))
     (dispose const)
     (is (= @start-base {:a {:b {:c 1}}}))
     (is (= (running) runs))))
@@ -85,7 +87,7 @@
 
 
 (deftest test-unsubscribe
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:test {:unsubscribe 0 :value 42}})
           a (r/cursor a-base [:test :unsubscribe])
@@ -171,7 +173,7 @@
     (is (= runs (running)))))
 
 (deftest test-dispose
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:a 0 :b 0})
           a (r/cursor a-base [:a])
@@ -191,19 +193,19 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 4 runs) (running)))
+      (is (= (+ 6 runs) (running)))
       (is (= @count-b 1))
       (is (= {:a 0 :b 0} @a-base))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 4 runs) (running)) "still running")
+      (is (= (+ 6 runs) (running)) "still running")
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 3 runs) (running)) "less running count")
+      (is (= (+ 4 runs) (running)) "less running count")
       (is (= {:a 2 :b 0} @a-base))
 
       (reset! disposed nil)

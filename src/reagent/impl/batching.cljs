@@ -37,7 +37,10 @@
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (.' c :cljsIsDirty)
-        (.' c forceUpdate)))))
+        (let [a (.' c :cljsRatom)]
+          (if (ratom/-check-clean a)
+            (.! c :cljsIsDirty false)
+            (.' c forceUpdate)))))))
 
 (defn run-funs [a]
   (dotimes [i (alength a)]
@@ -56,14 +59,17 @@
       (set! scheduled? true)
       (next-tick #(.run-queue this))))
   (run-queue [_]
-    (let [q queue aq after-render]
+    (ratom/flush!)
+    (let [q queue
+          aq after-render]
       (set! queue (array))
       (set! after-render (array))
       (set! scheduled? false)
       (run-queue q)
       (run-funs aq))))
 
-(def render-queue (RenderQueue. (array) false (array)))
+(defonce render-queue (RenderQueue. (array) false (array)))
+(set! ratom/render-queue render-queue)
 
 (defn flush []
   (.run-queue render-queue))
@@ -98,7 +104,8 @@
           (.! c :cljsRatom
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)
-                                   :derefed derefed)))
+                                   :capture derefed
+                                   :no-cache true)))
         res)
       (ratom/run rat))))
 

@@ -1,8 +1,12 @@
-(ns reagenttest.runtests
+(ns ^:figwheel-always
+  reagenttest.runtests
   (:require [reagenttest.testreagent]
             [reagenttest.testcursor]
             [reagenttest.testinterop]
             [reagenttest.testratom]
+            [reagenttest.testratomasync]
+            [reagenttest.testtrack]
+            [reagenttest.testwithlet]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
             [reagent.core :as r]
@@ -51,7 +55,6 @@
     (run-tests)))
 
 (defn reload []
-  (demo/init!)
-  (init!))
+  (demo/init!))
 
 (init!)

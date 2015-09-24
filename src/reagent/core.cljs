@@ -1,5 +1,5 @@
-
 (ns reagent.core
+  (:require-macros [reagent.core])
   (:refer-clojure :exclude [partial atom flush])
   (:require [cljsjs.react]
             [reagent.impl.template :as tmpl]
@@ -221,6 +221,19 @@ re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 
+(defn track
+  [f & args]
+  {:pre [(ifn? f)]}
+  (ratom/make-track f args))
+
+(defn track!
+  [f & args]
+  {:pre [(ifn? f)]}
+  (ratom/make-track! f args))
+
+(defn dispose!
+  [x]
+  (ratom/dispose! x))
 
 (defn wrap
   "Provide a combination of value and callback, that looks like an atom.
@@ -276,6 +289,27 @@ another cursor) these cursors are equivalent:
 
 
 ;; Utilities
+
+(defn rswap!
+  "Swaps the value of a to be (apply f current-value-of-atom args).
+
+  rswap! works like swap!, except that recursive calls to rswap! on
+  the same atom are allowed – and it always returns nil."
+  [a f & args]
+  {:pre [(satisfies? IAtom a)
+         (ifn? f)]}
+  (if a.rswapping
+    (-> (or a.rswapfs (set! a.rswapfs (array)))
+        (.push #(apply f % args)))
+    (do (set! a.rswapping true)
+        (try (swap! a (fn [state]
+                        (loop [s (apply f state args)]
+                          (if-some [sf (some-> a.rswapfs .shift)]
+                            (recur (sf s))
+                            s))))
+             (finally
+               (set! a.rswapping false)))))
+  nil)
 
 (defn next-tick
   "Run f using requestAnimationFrame or equivalent."

@@ -103,7 +103,8 @@
           runs (running)
           val (r/atom 0)
           secval (r/atom 0)
-          v1 (reaction @val)
+          v1-ran (atom 0)
+          v1 (reaction (swap! v1-ran inc) @val)
           comp (fn []
                  (swap! ran inc)
                  [:div (str "val " @v1 @val @secval)])]
@@ -119,15 +120,20 @@
           (reset! val 1)
           (reset! val 2)
           (reset! val 1)
+          (is (= 1 @ran))
+          (is (= 1 @v1-ran))
           (r/flush)
           (is (found-in #"val 1" div))
-          (is (= 2 @ran))
+          (is (= 2 @ran) "ran once more")
+          (is (= 2 @v1-ran))
 
           ;; should not be rendered
           (reset! val 1)
+          (is (= 2 @v1-ran))
           (r/flush)
+          (is (= 2 @v1-ran))
           (is (found-in #"val 1" div))
-          (is (= 2 @ran))))
+          (is (= 2 @ran) "did not run")))
       (is (= runs (running)))
       (is (= 2 @ran)))))
 
@@ -559,3 +565,50 @@
         c2 (fn []
              [c1 (sorted-map 1 "foo" 2 "bar")])]
     (is (= (rstr [c2]) "<div>foo</div>"))))
+
+(deftest basic-with-let
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        n3 (atom 0)
+        val (r/atom 0)
+        c (fn []
+            (r/with-let [v (swap! n1 inc)]
+              (swap! n2 inc)
+              [:div @val]
+              (finally
+                (swap! n3 inc))))]
+    (with-mounted-component [c]
+      (fn [_ div]
+        (is (= [1 1 0] [@n1 @n2 @n3]))
+        (swap! val inc)
+        (is (= [1 1 0] [@n1 @n2 @n3]))
+        (r/flush)
+        (is (= [1 2 0] [@n1 @n2 @n3]))))
+    (is (= [1 2 1] [@n1 @n2 @n3]))))
+
+(deftest with-let-destroy-only
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        c (fn []
+            (r/with-let []
+              (swap! n1 inc)
+              [:div]
+              (finally
+                (swap! n2 inc))))]
+    (with-mounted-component [c]
+      (fn [_ div]
+        (is (= [1 0] [@n1 @n2]))))
+    (is (= [1 1] [@n1 @n2]))))
+
+(deftest with-let-non-reactive
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        n3 (atom 0)
+        c (fn []
+            (r/with-let [a (swap! n1 inc)]
+              (swap! n2 inc)
+              [:div a]
+              (finally
+                (swap! n3 inc))))]
+    (is (= (rstr [c]) (rstr [:div 1])))
+    (is (= [1 1 1] [@n1 @n2 @n3]))))
