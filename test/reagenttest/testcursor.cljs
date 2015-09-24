@@ -193,19 +193,19 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 5 runs) (running)))
+      (is (= (+ 6 runs) (running)))
       (is (= @count-b 1))
       (is (= {:a 0 :b 0} @a-base))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 5 runs) (running)) "still running")
+      (is (= (+ 6 runs) (running)) "still running")
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 3 runs) (running)) "less running count")
+      (is (= (+ 4 runs) (running)) "less running count")
       (is (= {:a 2 :b 0} @a-base))
 
       (reset! disposed nil)

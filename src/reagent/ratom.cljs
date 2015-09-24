@@ -5,6 +5,7 @@
             [reagent.debug :refer-macros [dbg log warn dev?]]))
 
 (declare ^:dynamic *ratom-context*)
+(defonce cached-reactions {})
 
 (defn ^boolean reactive? []
   (some? *ratom-context*))
@@ -15,7 +16,9 @@
 
 (defonce -running (clojure.core/atom 0))
 
-(defn running [] @-running)
+(defn running []
+  (+ @-running
+     (count cached-reactions)))
 
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) nil)
@@ -117,8 +120,6 @@
 ;;; track
 
 (declare make-reaction)
-
-(defonce cached-reactions {})
 
 (defn- cached-reaction [f key obj destroy]
   (if-some [r (get cached-reactions key)]
