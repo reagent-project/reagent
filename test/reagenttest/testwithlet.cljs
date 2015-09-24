@@ -40,8 +40,13 @@
     (swap! a inc)
     (flush)
     (is (= [[11 1] 1 2 1] [@r @n1 @n2 @n3]))
+
     (is (= [12 2] @t))
     (is (= [[12 2] 2 3 2] [@r @n1 @n2 @n3]))
+
+    (is (= [12 3] (f1)))
+    (is (= [[12 2] 3 4 3] [@r @n1 @n2 @n3]))
+
     (is (= runs (running)))))
 
 
@@ -128,4 +133,86 @@
     (is (= @t (w/postwalk #(if (number? %) (+ 42 %) %)
                           expected)))
     (is (= @n2 28))
+    (is (= runs (running)))))
+
+(deftest non-reactive-with-let
+  (let [n1 (atom 0)
+        n2 (atom 0)
+        n3 (atom 0)
+        n4 (atom 0)
+        f1 (fn []
+             (with-let []
+               (swap! n2 inc)))
+        f2 (fn []
+             (with-let [v (swap! n1 inc)]
+               v))
+        f3 (fn []
+             (with-let [v (swap! n1 inc)]
+               (swap! n2 inc)
+               (finally (swap! n3 inc))))
+        f4 (fn []
+             (with-let []
+               (finally (swap! n3 inc)
+                        (swap! n4 inc))))
+        f5 (fn []
+             [(f1) (f2) (f4)])
+        tst (fn [f]
+              [(f) @n1 @n2 @n3])]
+    (is (= [1 0 1 0] (tst f1)))
+    (is (= [1 1 1 0] (tst f2)))
+    (is (= [2 2 2 1] (tst f3)))
+    (is (= 0 @n4))
+    (is (= [nil 2 2 2] (tst f4)))
+    (is (= 1 @n4))
+    (is (= [[3 3 nil] 3 3 3] (tst f5)))))
+
+(deftest with-let-args
+  (let [runs (running)
+        active (atom 0)
+        n1 (atom 0)
+        f1 (fn [x y]
+             (with-let [_ (swap! active inc)
+                        v (r/atom @x)]
+               (swap! n1 inc)
+               (+ y @v)
+               (finally
+                 (reset! v nil)
+                 (swap! active dec))))
+        f2 (fn [x y]
+             (with-let [t1 (track f1 x y)
+                        t2 (track f1 x y)]
+               (let [v @(track f1 x y)]
+                 (is (= v @t1 @t2))
+                 v)))
+        f2t (partial track f2)
+        res (atom nil)
+        val (r/atom 1)
+        valtrack (track deref val)
+        t (track! #(reset! res (let [v valtrack]
+                                 (if (> @v 2)
+                                   [@(f2t v 10)]
+                                   [@(f2t val 0)
+                                    @(f2t val 0)
+                                    @(f2t v 10)
+                                    (f1 v 10)]))))]
+    (is (= [1 1 11 11] @res))
+    (is (= [3 3] [@n1 @active]))
+    (reset! val 1)
+    (flush)
+    (is (= [1 1 11 11] @res))
+    (is (= [3 3] [@n1 @active]))
+
+    (swap! val inc)
+    (is (= [3 3] [@n1 @active]))
+    (flush)
+    (is (= [6 3] [@n1 @active]))
+    (is (= [1 1 11 11] @res))
+
+    (swap! val inc)
+    (flush)
+    (is (= [6 1] [@n1 @active]))
+    (is (= [11] @res))
+
+    (dispose! t)
+    (is (= [6 0] [@n1 @active]))
     (is (= runs (running)))))
