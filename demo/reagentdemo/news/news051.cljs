@@ -6,7 +6,7 @@
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/news051.html")
+(def url "/news/news051.html")
 (def title "News in 0.5.1")
 
 (def ns-src (s/syntaxed "(ns example.core

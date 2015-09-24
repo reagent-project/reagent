@@ -9,25 +9,6 @@
 
 (enable-console-print!)
 
-(defn rswap! [a f & args]
-  ;; Like swap!, except that recursive swaps on the same atom are ok,
-  ;; and always returns nil.
-  {:pre [(satisfies? ISwap a)
-         (ifn? f)]}
-  (if a.rswapping
-    (-> (or a.rswapfs (set! a.rswapfs (array)))
-        (.push #(apply f % args)))
-    (do (set! a.rswapping true)
-        (try (swap! a (fn [state]
-                        (loop [s (apply f state args)]
-                          (if-some [sf (some-> a.rswapfs .shift)]
-                            (recur (sf s))
-                            s))))
-             (finally
-               (set! a.rswapping false)))))
-  nil)
-
-
 ;;; Configuration
 
 (declare main-content)
@@ -69,7 +50,7 @@
 
 (defn dispatch [event]
   ;; (dbg event)
-  (rswap! config demo-handler event))
+  (r/rswap! config demo-handler event))
 
 (defn register-page [url comp title]
   {:pre [(re-matches #"/.*[.]html" url)
