@@ -1,258 +1,205 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
-            [goog.history.EventType :as hevt]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [.' .!]])
-  (:import [goog History]
-           [goog.history Html5History]
-           [goog.net Jsonp]))
+  (:import goog.History
+           [goog.history Html5History EventType]))
 
-(when (exists? js/console)
-  (enable-console-print!))
+(enable-console-print!)
 
-(declare page-content)
+(defn rswap! [a f & args]
+  ;; Like swap!, except that recursive swaps on the same atom are ok,
+  ;; and always returns nil.
+  {:pre [(satisfies? ISwap a)
+         (ifn? f)]}
+  (if a.rswapping
+    (-> (or a.rswapfs (set! a.rswapfs (array)))
+        (.push #(apply f % args)))
+    (do (set! a.rswapping true)
+        (try (swap! a (fn [state]
+                        (loop [s (apply f state args)]
+                          (if-some [sf (some-> a.rswapfs .shift)]
+                            (recur (sf s))
+                            s))))
+             (finally
+               (set! a.rswapping false)))))
+  nil)
 
 
 ;;; Configuration
 
-(defonce config (r/atom {:page-map {"index.html" [:div "Empty"]}
-                         :page-titles {}
-                         :body [page-content]
+(declare main-content)
+
+(defonce config (r/atom {:body [#'main-content]
+                         :pages {"/index.html" {:content [:div]
+                                                :title ""}}
                          :site-dir "outsite/public"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"
-                         :js-dir "js/out"
                          :main-div "main-content"
-                         :allow-html5-history false}))
+                         :default-title ""}))
 
-(defonce page (r/atom "index.html"))
-(defonce page-state (r/atom {:has-history false}))
+(defonce history nil)
 
-(defn register-page
-  ([pageurl comp]
-   (register-page pageurl comp nil))
-  ([pageurl comp title]
-   (assert (string? pageurl)
-           (str "expected string, not " pageurl))
-   (assert (vector? comp)
-           (str "expected vector, not " (pr-str comp)))
-   (assert (or (nil? title)
-               (string? title)))
-   (swap! config update-in [:page-map] assoc pageurl comp)
-   (swap! config update-in [:page-titles] assoc pageurl title)
-   pageurl))
+(defn demo-handler [state [id x :as event]]
+  (case id
+    :set-content (let [page x
+                       title (:title page)
+                       title (if title
+                               (str (:title-prefix state) title)
+                               (str (:default-title state)))]
+                   (when r/is-client
+                     (set! js/document.title title))
+                   (assoc state :current-page page :title title))
+    :set-page (let [path x
+                    _ (assert (string? path))
+                    ps (:pages state)
+                    p (get ps path (get ps "/index.html"))]
+                (recur state [:set-content p]))
+    :goto-page (let [path x
+                     _ (assert (string? path))]
+                 (when-some [h history]
+                   (.setToken h x)
+                   (r/next-tick #(set! js/document.body.scrollTop 0))
+                   state)
+                 (recur state [:set-page x]))))
+
+(defn dispatch [event]
+  ;; (dbg event)
+  (rswap! config demo-handler event))
+
+(defn register-page [url comp title]
+  {:pre [(re-matches #"/.*[.]html" url)
+         (vector? comp)]}
+  (swap! config update-in [:pages]
+         assoc url {:content comp :title title}))
+
+
+;;; History
+
+(defn init-history [page]
+  (when-not history
+    (let [html5 (and page
+                     (Html5History.isSupported)
+                     (#{"http:" "https:"} js/location.protocol))]
+      (doto (set! history
+                  (if html5
+                    (doto (Html5History.)
+                      (.setUseFragment false)
+                      (.setPathPrefix (-> js/location.pathname
+                                          (string/replace
+                                           (re-pattern (str page "$")) "")
+                                          (string/replace #"/*$" ""))))
+                    (History.)))
+        (evt/listen EventType.NAVIGATE #(when (.-isNavigation %)
+                                          (dispatch [:set-page (.-token %)])))
+        (.setEnabled true))
+      (let [token (.getToken history)
+            p (if (and page (not html5) (empty? token))
+                page
+                token)]
+        (dispatch [:set-page p])))))
+
+(defn to-relative [f]
+  (string/replace f #"^/" ""))
 
 
 ;;; Components
 
-(defn link
-  [props child]
-  (let [p (:href props)
-        f ((:page-map @config) p)]
-    (assert (vector? f) (str "couldn't resolve page " p))
-    (assert (string? p))
-    [:a (assoc props
-          :href p
-          :on-click (if (:has-history @page-state)
-                      (fn [e]
-                        (.preventDefault e)
-                        (reset! page p)
-                        (r/next-tick
-                         #(set! (.-scrollTop (.-body js/document))
-                                0)))
-                      identity))
-     child]))
+(defn link [props child]
+  [:a (assoc props
+             :href (-> props :href to-relative)
+             :on-click #(do (.preventDefault %)
+                            (dispatch [:goto-page (:href props)])))
+   child])
 
-(defn page-content []
-  (get-in @config [:page-map @page]
-          (get-in @config [:page-map "index.html"])))
-
-
-
-;;; Implementation:
-
-(defn get-title []
-  (get-in @config [:page-titles @page]
-          (or (get-in @config [:page-titles "index.html"])
-              "")))
-
-(defn default-content []
-  [:div "Empty"])
-
-(add-watch page ::title-watch
-           (fn [_ _ _ p]
-             (when r/is-client
-               (set! (.-title js/document) (get-title)))
-             ;; First title on a page wins
-             #_(reset! page-title "")))
-
-;;; History
-
-(defn use-html5-history []
-  (when r/is-client
-    (let [proto (.' js/window :location.protocol)]
-      (and (:allow-html5-history @config)
-           (.isSupported Html5History)
-           (#{"http:" "https:"} proto)))))
-
-(defn create-history [p]
-  (if (use-html5-history)
-    (doto (Html5History.)
-      (.setUseFragment false))
-    (let [h (History.)]
-      (when p
-        (.setToken h p))
-      h)))
-
-(defonce history nil)
-
-(defn token-base []
-  (if (use-html5-history)
-    (:base-path @config)))
-
-(defn setup-history [p]
-  (when (nil? history)
-    (set! history (create-history p))
-    (swap! page-state assoc :has-history (some? history))
-    (when-let [h history]
-      (evt/listen h hevt/NAVIGATE
-                  (fn [e]
-                    (let [t (.-token e)
-                          tb (token-base)]
-                      (reset! page (if (and tb (== 0 (.indexOf t tb)))
-                                     (subs t (count tb))
-                                     t)))
-                    (r/flush)))
-      (add-watch page ::history
-                 (fn [_ _ oldp newp]
-                   (when-not (= oldp newp)
-                     (.setToken h (str (token-base) newp)))))
-      (.setEnabled h true))))
-
-(defn base-path [loc p]
-  ;; Find base-path for html5 history
-  (let [split #".[^/]*"
-        depth (->> (case p "" "." p) (re-seq split) count)
-        base (->> loc (re-seq split) (drop-last depth) (apply str))]
-    (string/replace (str base "/") #"^/" "")))
-
-(defn set-start-page [p]
-  (when (and (not (:base-path @config))
-             (use-html5-history))
-    (swap! config assoc :base-path
-           (base-path (.' js/window -location.pathname) p)))
-  (reset! page p))
-
-(defn prefix [href]
-  (let [depth (-> #"/" (re-seq @page) count)]
-    (str (->> "../" (repeat depth) (apply str)) href)))
+(defn main-content []
+  (get-in @config [:current-page :content]))
 
 
 ;;; Static site generation
 
-(defn body []
-  (let [b (:body @config)]
-    (assert (vector? b) (str "body is not a vector: " b))
-    b))
+(defn base [page]
+  (let [depth (->> page to-relative (re-seq #"/") count)]
+    (->> "../" (repeat depth) (apply str))))
 
 (defn danger [t s]
   [t {:dangerouslySetInnerHTML {:__html s}}])
 
-(defn html-template [{:keys [title body timestamp page-conf
-                             opt-none req]}]
-  (let [c @config
-        main (str (:js-file c) timestamp)
-        css-file (:css-file c)
-        opt-none (:opt-none c)]
+(defn html-template [{:keys [title body-html timestamp page-conf
+                             js-file css-file main-div]}]
+  (let [main (str js-file timestamp)]
     (r/render-to-static-markup
      [:html
       [:head
-       [:meta {:charset "utf-8"}]
+       [:meta {:charset 'utf-8}]
        [:meta {:name 'viewport
                :content "width=device-width, initial-scale=1.0"}]
-       [:base {:href (prefix "")}]
+       [:base {:href (-> page-conf :page-path base)}]
        [:link {:href (str css-file timestamp) :rel 'stylesheet}]
        [:title title]]
       [:body
-       [:div {:id (:main-div @config)}
-        (danger :div body)]
-       (danger :script (str "var pageConfig = " (-> page-conf
-                                                    clj->js
-                                                    js/JSON.stringify)))
+       [:div {:id main-div} (danger :div body-html)]
+       (danger :script (str "var pageConfig = "
+                            (-> page-conf clj->js js/JSON.stringify)))
        [:script {:src main :type "text/javascript"}]]])))
 
-(defn gen-page [page-name timestamp]
-  (reset! page page-name)
-  (let [b (r/render-component-to-string (body))]
-    (str "<!doctype html>"
-         (html-template {:title (get-title)
-                         :body b
-                         :page-conf {:allow-html5-history true
-                                     :page-name page-name}
-                         :timestamp timestamp}))))
+(defn gen-page [page-path conf]
+  (dispatch [:set-page page-path])
+  (let [conf (merge conf @config)
+        b (:body conf)
+        bhtml (r/render-component-to-string b)]
+    (str "<!doctype html>\n"
+         (html-template (assoc conf
+                               :page-conf {:page-path page-path}
+                               :body-html bhtml)))))
+
+(defn fs [] (js/require "fs"))
+(defn path [] (js/require "path"))
 
 (defn mkdirs [f]
-  (let [fs (js/require "fs")
-        path (js/require "path")
-        items (as-> f _
-                    (.' path dirname _)
-                    (.' path normalize _)
-                    (string/split _ #"/"))
-        parts (reductions #(str %1 "/" %2) items)]
-    (doseq [d parts]
-      (when-not (.' fs existsSync d)
-        (.' fs mkdirSync d)))))
+  (doseq [d (reductions #(str %1 "/" %2)
+                        (-> (.' (path) normalize f)
+                            (string/split #"/")))]
+    (when-not (.' (fs) existsSync d)
+      (.' (fs) mkdirSync d))))
 
 (defn write-file [f content]
-  (let [fs (js/require "fs")]
-    (mkdirs f)
-    (.' fs writeFileSync f content)))
-
-(defn read-file [f]
-  (let [fs (js/require "fs")]
-    (.' fs readFileSync f)))
+  (mkdirs (.' (path) dirname f))
+  (.' (fs) writeFileSync f content))
 
 (defn path-join [& paths]
-  (let [path (js/require "path")]
-    (apply (.' path :join) paths)))
+  (apply (.' (path) :join) paths))
 
-(defn read-css []
-  (clojure.string/join "\n"
-                       (map read-file (:css-infiles @config))))
-
-(defn write-resources [dir]
-  (write-file (path-join dir (:css-file @config))
-              (read-css)))
+(defn write-resources [dir {:keys [css-file css-infiles]}]
+  (write-file (path-join dir css-file)
+              (->> css-infiles
+                   (map #(.' (fs) readFileSync %))
+                   (string/join "\n"))))
 
 
 ;;; Main entry points
 
 (defn ^:export genpages [opts]
   (log "Generating site")
-  (swap! config merge (js->clj opts :keywordize-keys true))
-  (let [dir (:site-dir @config)
-        timestamp (str "?" (.' js/Date now))]
-    (doseq [f (keys (:page-map @config))]
-      (write-file (path-join dir f)
-                  (gen-page f timestamp)))
-    (write-resources dir))
+  (let [conf (swap! config merge (js->clj opts :keywordize-keys true))
+        conf (assoc conf :timestamp (str "?" (js/Date.now)))
+        {:keys [site-dir pages]} conf]
+    (doseq [f (keys pages)]
+      (write-file (->> f to-relative (path-join site-dir))
+                  (gen-page f conf)))
+    (write-resources site-dir conf))
   (log "Wrote site"))
 
 (defn start! [site-config]
   (swap! config merge site-config)
   (when r/is-client
-    (let [conf (when (exists? js/pageConfig)
-                 (js->clj js/pageConfig :keywordize-keys true))
-          page-name (:page-name conf)]
-      (swap! config merge conf)
-      (when (nil? history)
-        (when page-name
-          (set-start-page page-name))
-        (setup-history page-name)
-        (set! (.-title js/document) (get-title)))
-      (r/render-component (body)
-                          (.' js/document getElementById
-                              (:main-div @config))))))
+    (let [page-conf (when (exists? js/pageConfig)
+                      (js->clj js/pageConfig :keywordize-keys true))
+          conf (swap! config merge page-conf)
+          {:keys [page-path body main-div]} conf]
+      (init-history page-path)
+      (r/render-component body (js/document.getElementById main-div)))))

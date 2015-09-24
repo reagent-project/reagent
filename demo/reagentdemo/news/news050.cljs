@@ -6,7 +6,7 @@
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/news050.html")
+(def url "/news/news050.html")
 (def title "News in 0.5.0")
 
 (def new-in-alpha [:strong "New since 0.5.0-alpha: "])

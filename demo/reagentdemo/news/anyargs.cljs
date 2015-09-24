@@ -7,7 +7,7 @@
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
 
-(def url "news/any-arguments.html")
+(def url "/news/any-arguments.html")
 (def title "All arguments allowed")
 
 (def ns-src (s/syntaxed "(ns example
@@ -133,5 +133,4 @@
 
          [demo-component {:comp geometry-example}]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent 0.4.0: " title))
+(tools/register-page url [#'main] title)

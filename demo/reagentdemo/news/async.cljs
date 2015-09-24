@@ -6,7 +6,7 @@
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/reagent-is-async.html")
+(def url "/news/reagent-is-async.html")
 (def title "Faster by waiting")
 
 (def ns-src (s/syntaxed "(ns example
@@ -197,5 +197,4 @@
                             :ncolors-choose :color-plate
                             :palette :color-demo])]}]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent: " title))
+(tools/register-page url [#'main] title)

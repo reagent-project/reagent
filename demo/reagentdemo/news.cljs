@@ -4,7 +4,8 @@
             [reagentdemo.news.undodemo :as undodemo]
             [reagentdemo.news.clockpost :as clock]
             [reagentdemo.news.news050 :as news050]
-            [reagentdemo.news.news051 :as news051]))
+            [reagentdemo.news.news051 :as news051]
+            [sitetools.core :as tools]))
 
 (defn main []
   [:div
@@ -14,3 +15,6 @@
    [anyargs/main {:summary true}]
    [async/main {:summary true}]
    [undodemo/main {:summary true}]])
+
+(def url "/news/index.html")
+(tools/register-page url [#'main] "News")

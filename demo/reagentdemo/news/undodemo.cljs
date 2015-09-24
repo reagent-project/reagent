@@ -7,7 +7,7 @@
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc.core :as todomvc]))
 
-(def url "news/cloact-reagent-undo-demo.html")
+(def url "/news/cloact-reagent-undo-demo.html")
 (def title "Cloact becomes Reagent: Undo is trivial")
 
 (def ns-src (s/syntaxed "(ns example
@@ -89,4 +89,4 @@
 
          [undo-demo-cleanup]])]]))
 
-(tools/register-page url [main] title)
+(tools/register-page url [#'main] title)
