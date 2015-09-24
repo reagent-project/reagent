@@ -164,15 +164,22 @@
       (pr-writer (-deref a) writer opts))
     (-write writer ">")))
 
-(defn track [f & args]
-  {:pre [(ifn? f)]}
+(defn make-track [f args]
   (Track. #(apply f args) [f args] nil))
 
-(defn track! [f & args]
-  (let [r (make-reaction #(-deref (apply track f args))
+(defn make-track! [f args]
+  (let [r (make-reaction #(-deref (make-track f args))
                          :auto-run :async)]
     @r
     r))
+
+(defn track [f & args]
+  {:pre [(ifn? f)]}
+  (make-track f args))
+
+(defn track! [f & args]
+  {:pre [(ifn? f)]}
+  (make-track! f args))
 
 ;;; cursor
 

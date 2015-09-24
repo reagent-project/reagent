@@ -1,5 +1,5 @@
-
 (ns reagent.core
+  (:require-macros [reagent.core])
   (:refer-clojure :exclude [partial atom flush])
   (:require [cljsjs.react]
             [reagent.impl.template :as tmpl]
@@ -221,6 +221,19 @@ re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 
+(defn track
+  [f & args]
+  {:pre [(ifn? f)]}
+  (ratom/make-track f args))
+
+(defn track!
+  [f & args]
+  {:pre [(ifn? f)]}
+  (ratom/make-track! f args))
+
+(defn dispose!
+  [x]
+  (ratom/dispose! x))
 
 (defn wrap
   "Provide a combination of value and callback, that looks like an atom.

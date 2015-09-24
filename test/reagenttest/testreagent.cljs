@@ -1,6 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer-macros [reaction with-let]]
+            [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as r]))
@@ -572,7 +572,7 @@
         n3 (atom 0)
         val (r/atom 0)
         c (fn []
-            (with-let [v (swap! n1 inc)]
+            (r/with-let [v (swap! n1 inc)]
               (swap! n2 inc)
               [:div @val]
               (finally
@@ -590,7 +590,7 @@
   (let [n1 (atom 0)
         n2 (atom 0)
         c (fn []
-            (with-let []
+            (r/with-let []
               (swap! n1 inc)
               [:div]
               (finally
@@ -605,7 +605,7 @@
         n2 (atom 0)
         n3 (atom 0)
         c (fn []
-            (with-let [a (swap! n1 inc)]
+            (r/with-let [a (swap! n1 inc)]
               (swap! n2 inc)
               [:div a]
               (finally

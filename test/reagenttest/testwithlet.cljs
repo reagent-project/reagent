@@ -1,9 +1,9 @@
 (ns reagenttest.testwithlet
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer [track track! dispose!]
-             :refer-macros [with-let]]
+            [reagent.ratom :as rv]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.core :as r :refer [flush]]
+            [reagent.core :as r
+             :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
 
 (defn running []
