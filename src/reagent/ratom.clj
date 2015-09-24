@@ -1,5 +1,6 @@
 (ns reagent.ratom
-  (:refer-clojure :exclude [run!]))
+  (:refer-clojure :exclude [run!])
+  (:require [reagent.debug :as d]))
 
 (defmacro reaction [& body]
   `(reagent.ratom/make-reaction
@@ -39,9 +40,7 @@
          (when-some [c# reagent.ratom/*ratom-context*]
            (when (== (.-ratomGeneration c#)
                      (.-generation ~v))
-             (js/console.error
-              "The same with-let is being used more than once in the
-              same reactive context."))
+             (d/error "Warning: The same with-let is being used more than once in the same reactive context."))
            (set! (.-generation ~v) (.-ratomGeneration c#))))
        (let ~bs
          (let [destroy# ~destroy

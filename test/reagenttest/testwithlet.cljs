@@ -1,7 +1,7 @@
 (ns reagenttest.testwithlet
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv]
-            [reagent.debug :refer-macros [dbg]]
+            [reagent.debug :as d :refer-macros [dbg]]
             [reagent.core :as r
              :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
@@ -216,3 +216,16 @@
     (dispose! t)
     (is (= [6 0] [@n1 @active]))
     (is (= runs (running)))))
+
+(deftest with-let-warning
+  (when (d/dev?)
+    (let [f1 (fn []
+               (with-let [a 1]))
+          w (d/track-warnings
+             (fn []
+               (track! (fn []
+                         (f1)
+                         (f1)))))]
+      (is (= w {:error (list (str "Warning: The same with-let is being "
+                                  "used more than once in the same reactive "
+                                  "context."))})))))

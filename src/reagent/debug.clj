@@ -1,25 +1,35 @@
-
 (ns reagent.debug
   (:refer-clojure :exclude [prn println]))
 
 (defmacro log
   "Print with console.log, if it exists."
   [& forms]
-  `(when (clojure.core/exists? js/console)
+  `(when reagent.debug.has-console
      (.log js/console ~@forms)))
 
 (defmacro warn
   "Print with console.warn."
   [& forms]
   (when *assert*
-    `(when (clojure.core/exists? js/console)
-       (.warn js/console (str "Warning: " ~@forms)))))
+    `(when reagent.debug.has-console
+       (.warn (if reagent.debug.tracking
+                reagent.debug.track-console js/console)
+              (str "Warning: " ~@forms)))))
 
 (defmacro warn-unless
   [cond & forms]
   (when *assert*
-    `(when (and (not ~cond) (clojure.core/exists? js/console))
-       (.warn js/console (str "Warning: " ~@forms)))))
+    `(when (not ~cond)
+       (warn ~@forms))))
+
+(defmacro error
+  "Print with console.error."
+  [& forms]
+  (when *assert*
+    `(when reagent.debug.has-console
+       (.error (if reagent.debug.tracking
+                 reagent.debug.track-console js/console)
+               (str ~@forms)))))
 
 (defmacro println
   "Print string with console.log"
