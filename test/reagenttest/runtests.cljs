@@ -18,6 +18,11 @@
                      :margin-left -35
                      :color :#aaa})
 
+(def callbacks (atom []))
+
+(defn register-callback [f]
+  (swap! callbacks conj f))
+
 (defn all-tests []
   (test/run-all-tests #"reagenttest.test.*"))
 
@@ -25,8 +30,13 @@
   ;; ClojureScript 2814 doesn't return anything from run-tests
   (reset! test-results m)
   (println "\nRan" (:test m) "tests containing"
-    (+ (:pass m) (:fail m) (:error m)) "assertions.")
-  (println (:fail m) "failures," (:error m) "errors."))
+           (+ (:pass m) (:fail m) (:error m)) "assertions.")
+  (println (:fail m) "failures," (:error m) "errors.")
+
+  (let [failures (+ (:fail m) (:error m))]
+    (doall
+     (for [f @callbacks]
+       (f failures)))))
 
 (defn test-output-mini []
   (let [res @test-results]
