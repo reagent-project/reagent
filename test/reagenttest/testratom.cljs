@@ -1,6 +1,6 @@
 (ns reagenttest.testratom
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer-macros [run! reaction]]
+            [reagent.ratom :as rv :refer-macros [react! reaction]]
             [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
@@ -15,7 +15,7 @@
   (dbg "ratom-perf")
   (let [a (rv/atom 0)
         mid (reaction (inc @a))
-        res (run!
+        res (react!
              (inc @mid))]
     (time (dotimes [x 100000]
             (swap! a inc)))
@@ -34,7 +34,7 @@
         res (reaction
              (swap! count inc)
              @sv @c2 @comp)
-        const (run!
+        const (react!
                (reset! out @res))]
     (is (= @count 1) "constrain ran")
     (is (= @out 2))
@@ -69,7 +69,7 @@
   (let [runs (running)]
     (let [!counter (rv/atom 0)
           !signal (rv/atom "All I do is change")
-          co (run!
+          co (react!
               ;;when I change...
               @!signal
               ;;update the counter
@@ -102,7 +102,7 @@
           c (reaction
              (swap! c-changed inc)
              (+ 10 @a2))
-          res (run!
+          res (react!
                (if (< @a2 1) @b @c))]
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
@@ -141,7 +141,7 @@
           c (reaction (dec @a))
           d (reaction (str @b))
           res (rv/atom 0)
-          cs (run!
+          cs (react!
               (reset! res @d))]
       (is (= @res "1"))
       (dispose cs))
@@ -150,16 +150,16 @@
     (let [a (rv/atom 0)
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])]
+          d (react! [@b @c])]
       (is (= @d [1 -1]))
       (dispose d))
     (let [a (rv/atom 0)
           b (reaction (inc @a))
           c (reaction (dec @a))
-          d (run! [@b @c])
+          d (react! [@b @c])
           res (rv/atom 0)]
       (is (= @d [1 -1]))
-      (let [e (run! (reset! res @d))]
+      (let [e (react! (reset! res @d))]
         (is (= @res [1 -1]))
         (dispose e))
       (dispose d))
@@ -243,7 +243,7 @@
 ;;         a (rv/atom false)
 ;;         catch-count (atom 0)
 ;;         b (reaction (if @a (throw {})))
-;;         c (run! (try @b (catch js/Object e
+;;         c (react! (try @b (catch js/Object e
 ;;                           (swap! catch-count inc))))]
 ;;     (is (= @catch-count 0))
 ;;     (reset! a false)
