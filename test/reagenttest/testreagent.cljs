@@ -614,3 +614,70 @@
                 (swap! n3 inc))))]
     (is (= (rstr [c]) (rstr [:div 1])))
     (is (= [1 1 1] [@n1 @n2 @n3]))))
+
+(deftest lifecycle
+  (let [n1 (atom 0)
+        t (atom 0)
+        res (atom {})
+        add-args (fn [key args]
+                   (swap! res assoc key
+                          {:at (swap! n1 inc)
+                           :args (vec args)}))
+        render (fn [& args]
+                 (add-args :render args)
+                 [:div (first args)])
+        ls {:get-initial-state
+            (fn [& args]
+              (reset! t (first args))
+              (add-args :initial-state args)
+              {:foo "bar"})
+            :component-will-mount
+            (fn [& args] (add-args :will-mount args))
+            :component-did-mount
+            (fn [& args] (add-args :did-mount args))
+            :should-component-update
+            (fn [& args] (add-args :should-update args) true)
+            :component-will-update
+            (fn [& args] (add-args :will-update args))
+            :component-did-update
+            (fn [& args] (add-args :did-update args))
+            :component-will-unmount
+            (fn [& args] (add-args :will-unmount args))}        
+        c1 (r/create-class
+            (assoc ls :reagent-render render))
+        defarg ["a" "b"]
+        arg (r/atom defarg)
+        comp (atom c1)
+        c2 (fn []
+             (apply vector @comp @arg))
+        check (fn []
+                (is (= (:initial-state @res)
+                       {:at 1 :args [@t]}))
+                (is (= (:will-mount @res)
+                       {:at 2 :args [@t]}))
+                (is (= (:render @res)
+                       {:at 3 :args ["a" "b"]}))
+                (is (= (:did-mount @res)
+                       {:at 4 :args [@t]}))
+
+                (reset! arg ["a" "c"])
+                (r/flush)
+                (is (= (:should-update @res)
+                       {:at 5 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
+                (is (= (:will-update @res)
+                       {:at 6 :args [@t [@comp "a" "c"]]}))
+                (is (= (:render @res)
+                       {:at 7 :args ["a" "c"]}))
+                (is (= (:did-update @res)
+                       {:at 8 :args [@t [@comp "a" "b"]]})))]
+    (when isClient
+      (with-mounted-component [c2] check)
+      (is (= (:will-unmount @res)
+             {:at 9 :args [@t]}))
+
+      (reset! comp (with-meta render ls))
+      (reset! arg defarg)
+      (reset! n1 0)
+      (with-mounted-component [c2] check)
+      (is (= (:will-unmount @res)
+             {:at 9 :args [@t]})))))
