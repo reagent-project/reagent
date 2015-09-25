@@ -28,10 +28,10 @@
        (some? (.' c :cljsReactClass))))
 
 (defn do-render-sub [c]
-  (let [f (.' c :cljsRender)
+  (let [f (.' c :reagentRender)
         _ (assert (ifn? f))
         p (.' c :props)
-        res (if (nil? (.' c :reagentRender))
+        res (if (true? (.' c :cljsLegacyRender))
               (f c)
               (let [argv (.' p :argv)
                     n (count argv)]
@@ -49,7 +49,7 @@
                   (fn [& args]
                     (as-element (apply vector res args)))
                   res)]
-          (.! c :cljsRender f)
+          (.! c :reagentRender f)
           (recur c))
         res))))
 
@@ -141,7 +141,7 @@
       (this-as c (apply f c args)))
     f))
 
-(def dont-wrap #{:cljsRender :render :reagentRender :cljsName})
+(def dont-wrap #{:render :reagentRender :cljsName})
 
 (defn dont-bind [f]
   (if (fn? f)
@@ -174,7 +174,7 @@
 
 (defn add-render [fun-map render-f name]
   (let [fm (assoc fun-map
-                  :cljsRender render-f
+                  :reagentRender render-f
                   :render (:render static-fns))]
     (if (dev?)
       (assoc fm :cljsName (fn [] name))
@@ -196,21 +196,24 @@
                       (assoc :reagentRender cf)
                       (dissoc :componentFunction))
                   fmap)
-        render-fun (or (:reagentRender fun-map)
+        render-fun (:reagentRender fun-map)
+        legacy-render (nil? render-fun)
+        render-fun (or render-fun
                        (:render fun-map))
         _ (assert (ifn? render-fun)
                   (str "Render must be a function, not "
                        (pr-str render-fun)))
         name (str (or (:displayName fun-map)
                       (fun-name render-fun)))
-        name' (if (empty? name)
-                (str (gensym "reagent"))
-                (clojure.string/replace name #"\$" "."))
+        name (if (empty? name)
+               (str (gensym "reagent"))
+               (clojure.string/replace name #"\$" "."))
         fmap (-> fun-map
-                 (assoc :displayName name')
-                 (add-render render-fun name'))]
+                 (assoc :cljsLegacyRender legacy-render
+                        :displayName name)
+                 (add-render render-fun name))]
     (reduce-kv (fn [m k v]
-                 (assoc m k (get-wrapper k v name')))
+                 (assoc m k (get-wrapper k v name)))
                {} fmap)))
 
 (defn map-to-js [m]
@@ -230,15 +233,9 @@
   [body]
   (assert (map? body))
   (let [spec (cljsify body)
-        res (.' js/React createClass spec)
-        f (fn [& args]
-            (warn "Calling the result of create-class as a function is "
-                  "deprecated in " (.' res :displayName) ". Use a vector "
-                  "instead.")
-            (as-element (apply vector res args)))]
-    (util/cache-react-class f res)
+        res (.' js/React createClass spec)]
     (util/cache-react-class res res)
-    f))
+    res))
 
 (defn component-path [c]
   (let [elem (some-> (or (some-> c
