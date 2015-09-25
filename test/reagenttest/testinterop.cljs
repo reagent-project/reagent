@@ -1,19 +1,28 @@
 (ns reagenttest.testinterop
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .!]]))
+            [reagent.interop :refer-macros [.' .! obj]]))
 
+(def is-adv (let [o #js{}]
+              (set! (.-somethinglong o) true)
+              (not= (aget (.keys js/Object o) 0) "somethinglong")))
 
 (deftest iterop-quote
-  (let [o #js{:foo "foo"
-              :foobar #js{:bar "bar"}
-              :bar-foo "barfoo"}]
+  (let [o (obj :foo "foo"
+               :foobar (obj :bar "bar"
+                            :bar-foo "bar-foo")
+               :bar-foo "barfoo")]
+
     (is (= "foo" (.' o :foo)))
     (is (= "bar" (.' o :foobar.bar)))
     (is (= "barfoo" (.' o :bar-foo)))
+    (when-not is-adv
+      (is (= "barfoo" (.-bar-foo o))))
 
     (is (= "foo" (.' o -foo)))
     (is (= "bar" (.' o -foobar.bar)))
+    (is (= "bar-foo" (.' o -foobar.bar-foo)))
+    (is (= "bar-foo" (.' o :foobar.bar-foo)))
     (is (= "barfoo" (.' o -bar-foo)))
 
     (.! o :foo "foo1")
@@ -48,3 +57,26 @@
 
     (is (= "1bar2" (.' (.' o :foo)
                        call o 1)))))
+
+(deftest interop-munge
+  (let [o (obj :foo-bar "foo-bar"
+               :foo? "foo?"
+               :foo$ "foo$"
+               :foo! "foo!"
+               :foo><*+% "foo><*+%")]
+    (is (= (.' o :foo-bar) "foo-bar"))
+    (is (= (.' o :foo?) "foo?"))
+    (is (= (.' o :foo$) "foo$"))
+    (is (= (.' o -foo!) "foo!"))
+    (is (= (.' o :foo><*+%) "foo><*+%"))
+
+    (when-not is-adv
+      (is (= (.-foo-bar o) "foo-bar"))
+      (is (= (.-foo? o) "foo?"))
+      (is (= (.-foo$ o) "foo$"))
+      (is (= (.-foo><*+% o) "foo><*+%"))
+      (let [x (js-obj)]
+        (.! x -foo-bar "foo-bar")
+        (is (= (.-foo-bar x) "foo-bar"))
+        (set! (.-foo? x) "foo?")
+        (is (= (.' x :foo?) "foo?"))))))
