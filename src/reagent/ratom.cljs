@@ -8,7 +8,7 @@
 (defonce cached-reactions {})
 
 (defn ^boolean reactive? []
-  (some? *ratom-context*))
+  (not (nil? *ratom-context*)))
 
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
@@ -29,7 +29,7 @@
     (f)))
 
 (defn captured [obj]
-  (when (some? (.-cljsCaptured obj))
+  (when-not (nil? (.-cljsCaptured obj))
     obj))
 
 (defn- -captured [obj]
@@ -59,6 +59,19 @@
     (swap! -running + (- (count new) (count old))))
   new)
 
+(defn- add-w [this key f]
+  (let [w (.-watches this)]
+    (set! (.-watches this) (check-watches w (assoc w key f)))))
+
+(defn- remove-w [this key]
+  (let [w (.-watches this)]
+    (set! (.-watches this) (check-watches w (dissoc w key)))))
+
+(defn- pr-atom [a writer opts s]
+  (-write writer (str "#<" s " "))
+  (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
+  (-write writer ">"))
+
 
 ;;; Atom
 
@@ -87,34 +100,23 @@
       new-value))
 
   ISwap
-  (-swap! [a f]
-    (-reset! a (f state)))
-  (-swap! [a f x]
-    (-reset! a (f state x)))
-  (-swap! [a f x y]
-    (-reset! a (f state x y)))
-  (-swap! [a f x y more]
-    (-reset! a (apply f state x y more)))
+  (-swap! [a f]          (-reset! a (f state)))
+  (-swap! [a f x]        (-reset! a (f state x)))
+  (-swap! [a f x y]      (-reset! a (f state x y)))
+  (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
   IMeta
   (-meta [_] meta)
 
   IPrintWithWriter
-  (-pr-writer [a writer opts]
-    (-write writer "#<Atom: ")
-    (pr-writer state writer opts)
-    (-write writer ">"))
+  (-pr-writer [a w opts] (pr-atom a w opts "Atom:"))
 
   IWatchable
-  (-notify-watches [this oldval newval]
-    (reduce-kv (fn [_ key f]
-                 (f key this oldval newval)
-                 nil)
+  (-notify-watches [this old new]
+    (reduce-kv (fn [_ k f] (f k this old new) nil)
                nil watches))
-  (-add-watch [this key f]
-    (set! watches (check-watches watches (assoc watches key f))))
-  (-remove-watch [this key]
-    (set! watches (check-watches watches (dissoc watches key))))
+  (-add-watch [this key f]  (add-w this key f))
+  (-remove-watch [this key] (remove-w this key))
 
   IHash
   (-hash [this] (goog/getUid this)))
@@ -133,19 +135,19 @@
 (defn- cached-reaction [f key obj destroy]
   (if-some [r (get cached-reactions key)]
     (-deref r)
-    (if (some? *ratom-context*)
+    (if-not (nil? *ratom-context*)
       (let [r (make-reaction
                f :on-dispose (fn [x]
                                (set! cached-reactions
                                      (dissoc cached-reactions key))
-                               (when (some? obj)
+                               (when-not (nil? obj)
                                  (set! (.-reaction obj) nil))
-                               (when (some? destroy)
+                               (when-not (nil? destroy)
                                  (destroy x))
                                nil))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
-        (when (some? obj)
+        (when-not (nil? obj)
           (set! (.-reaction obj) r))
         v)
       (f))))
@@ -165,14 +167,10 @@
          (= key (.-key other))))
 
   IHash
-  (-hash [this] (hash key))
+  (-hash [_] (hash key))
 
   IPrintWithWriter
-  (-pr-writer [a writer opts]
-    (-write writer (str "#<Track: " key " "))
-    (binding [*ratom-context* nil]
-      (pr-writer (-deref a) writer opts))
-    (-write writer ">")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Track:")))
 
 (defn make-track [f args]
   (Track. #(apply f args) [f args] nil))
@@ -212,7 +210,7 @@
   (_set-state [this oldstate newstate]
     (when-not (identical? oldstate newstate)
       (set! state newstate)
-      (when (some? watches)
+      (when-not (nil? watches)
         (-notify-watches this oldstate newstate))))
 
   IDeref
@@ -239,32 +237,23 @@
       new-value))
 
   ISwap
-  (-swap! [a f]
-    (-reset! a (f (._peek a))))
-  (-swap! [a f x]
-    (-reset! a (f (._peek a) x)))
-  (-swap! [a f x y]
-    (-reset! a (f (._peek a) x y)))
-  (-swap! [a f x y more]
-    (-reset! a (apply f (._peek a) x y more)))
+  (-swap! [a f]          (-reset! a (f (._peek a))))
+  (-swap! [a f x]        (-reset! a (f (._peek a) x)))
+  (-swap! [a f x y]      (-reset! a (f (._peek a) x y)))
+  (-swap! [a f x y more] (-reset! a (apply f (._peek a) x y more)))
 
   IPrintWithWriter
-  (-pr-writer [a writer opts]
-    (-write writer (str "#<Cursor: " path " "))
-    (pr-writer (._peek a) writer opts)
-    (-write writer ">"))
+  (-pr-writer [a w opts] (pr-atom a w opts (str "Cursor: " path)))
 
   IWatchable
-  (-notify-watches [this oldval newval]
-    (doseq [[key f] watches]
-      (f key this oldval newval)))
-  (-add-watch [this key f]
-    (set! watches (assoc watches key f)))
-  (-remove-watch [this key]
-    (set! watches (dissoc watches key)))
+  (-notify-watches [this old new]
+    (reduce-kv (fn [_ k f] (f k this old new) nil)
+               nil watches))
+  (-add-watch [this key f]  (add-w this key f))
+  (-remove-watch [this key] (remove-w this key))
 
   IHash
-  (-hash [this] (hash [ratom path])))
+  (-hash [_] (hash [ratom path])))
 
 (defn cursor
   [src path]
@@ -315,18 +304,12 @@
   IReactiveAtom
 
   IWatchable
-  (-notify-watches [this oldval newval]
-    (reduce-kv (fn [_ key f]
-                 (f key this oldval newval)
-                 nil)
-               nil watches)
-    nil)
-
-  (-add-watch [_ key f]
-    (set! watches (check-watches watches (assoc watches key f))))
-
+  (-notify-watches [this old new]
+    (reduce-kv (fn [_ k f] (f k this old new) nil)
+               nil watches))
+  (-add-watch [this key f] (add-w this key f))
   (-remove-watch [this key]
-    (set! watches (check-watches watches (dissoc watches key)))
+    (remove-w this key)
     (when (and (empty? watches)
                (nil? auto-run))
       (dispose! this)))
@@ -341,14 +324,10 @@
       newval))
 
   ISwap
-  (-swap! [a f]
-    (-reset! a (f (-peek-at a))))
-  (-swap! [a f x]
-    (-reset! a (f (-peek-at a) x)))
-  (-swap! [a f x y]
-    (-reset! a (f (-peek-at a) x y)))
-  (-swap! [a f x y more]
-    (-reset! a (apply f (-peek-at a) x y more)))
+  (-swap! [a f]          (-reset! a (f (-peek-at a))))
+  (-swap! [a f x]        (-reset! a (f (-peek-at a) x)))
+  (-swap! [a f x y]      (-reset! a (f (-peek-at a) x y)))
+  (-swap! [a f x y more] (-reset! a (apply f (-peek-at a) x y more)))
 
   IComputedImpl
   (-peek-at [this]
@@ -421,8 +400,8 @@
         (set! state res)
         ;; Use = to determine equality from reactions, since
         ;; they are likely to produce new data structures.
-        (when (and (some? watches)
-                   (not= oldstate res))
+        (when-not (or (nil? watches)
+                      (= oldstate res))
           (-notify-watches this oldstate res)))
       res))
 
@@ -436,8 +415,8 @@
           (let [oldstate state
                 newstate (f)]
             (set! state newstate)
-            (when (and (some? watches)
-                       (not= oldstate newstate))
+            (when-not (or (nil? watches)
+                          (= oldstate newstate))
               (-notify-watches this oldstate newstate)))))
       (do
         (notify-deref-watcher! this)
@@ -454,7 +433,7 @@
       (set! state nil)
       (set! auto-run nil)
       (set! dirtyness dirty)
-      (when (some? on-dispose)
+      (when-not (nil? on-dispose)
         (on-dispose s)))
     nil)
 
@@ -462,10 +441,7 @@
   (-equiv [o other] (identical? o other))
 
   IPrintWithWriter
-  (-pr-writer [this writer opts]
-    (-write writer (str "#<Reaction " (hash this) ": "))
-    (pr-writer state writer opts)
-    (-write writer ">"))
+  (-pr-writer [a w opts] (pr-atom a w opts (str "Reaction " (hash a) ":")))
 
   IHash
   (-hash [this] (reaction-key this)))
@@ -487,7 +463,7 @@
 
 (defn flush! []
   (let [q dirty-queue]
-    (when (some? q)
+    (when-not (nil? q)
       (set! dirty-queue nil)
       (dotimes [i (alength q)]
         (let [r (aget q i)]
@@ -548,14 +524,10 @@
       newval))
 
   ISwap
-  (-swap! [a f]
-    (-reset! a (f state)))
-  (-swap! [a f x]
-    (-reset! a (f state x)))
-  (-swap! [a f x y]
-    (-reset! a (f state x y)))
-  (-swap! [a f x y more]
-    (-reset! a (apply f state x y more)))
+  (-swap! [a f]          (-reset! a (f state)))
+  (-swap! [a f x]        (-reset! a (f state x)))
+  (-swap! [a f x y]      (-reset! a (f state x y)))
+  (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
   IEquiv
   (-equiv [_ other]
@@ -568,21 +540,14 @@
                (= callback (.-callback other))))
 
   IWatchable
-  (-notify-watches [this oldval newval]
-    (reduce-kv (fn [_ key f]
-                 (f key this oldval newval)
-                 nil)
+  (-notify-watches [this old new]
+    (reduce-kv (fn [_ k f] (f k this old new) nil)
                nil watches))
-  (-add-watch [this key f]
-    (set! watches (assoc watches key f)))
-  (-remove-watch [this key]
-    (set! watches (dissoc watches key)))
+  (-add-watch [this key f]  (add-w this key f))
+  (-remove-watch [this key] (remove-w this key))
 
   IPrintWithWriter
-  (-pr-writer [_ writer opts]
-    (-write writer "#<wrap: ")
-    (pr-writer state writer opts)
-    (-write writer ">")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Wrap:")))
 
 (defn make-wrapper [value callback-fn args]
   (Wrapper. value
