@@ -1,6 +1,6 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.ratom])
+  (:require-macros [reagent.ratom :refer [with-let]])
   (:require [reagent.impl.util :as util]
             [reagent.debug :refer-macros [dbg log warn dev?]]))
 
@@ -44,6 +44,15 @@
         (set! (.-cljsCaptured obj)
               (conj (if (nil? captured) #{} captured)
                     derefable))))))
+
+(def reaction-counter 0)
+
+(defn reaction-key [r]
+  (if-some [k (.-reaction-id r)]
+    k
+    (->> reaction-counter inc
+         (set! reaction-counter)
+         (set! (.-reaction-id r)))))
 
 (defn- check-watches [old new]
   (when debug
@@ -131,8 +140,10 @@
                                      (dissoc cached-reactions key))
                                (when (some? obj)
                                  (set! (.-reaction obj) nil))
-                               (when (some-> destroy .-destroy some?)
-                                 (.destroy destroy))))
+                               (when-not (or (nil? destroy)
+                                             (nil? (.-destroy destroy)))
+                                 (.destroy destroy))
+                               nil))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
         (when (some? obj)
@@ -269,20 +280,10 @@
 
 ;;; with-let support
 
-(def reaction-counter 0)
-
-(defn reaction-key []
-  (when-some [c *ratom-context*]
-    (if-some [k (.-reaction-id c)]
-      k
-      (->> reaction-counter inc
-           (set! reaction-counter)
-           (set! (.-reaction-id c))))))
-
-(defn get-cached-values [key destroy]
-  (if-some [k (reaction-key)]
-    (cached-reaction #(array)
-                     [k key] nil destroy)
+(defn with-let-value [key destroy]
+  (if-some [c *ratom-context*]
+    (cached-reaction array [(reaction-key c) key]
+                     nil destroy)
     (array)))
 
 
@@ -357,7 +358,7 @@
     (when (== dirtyness maybe-dirty)
       (let [ar auto-run]
         (set! auto-run nil)
-        (doseq [w watching]
+        (doseq [w watching :while (== dirtyness maybe-dirty)]
           (when (and (instance? Reaction w)
                      (not (-check-clean w)))
             (._try-run this w)))
@@ -466,7 +467,7 @@
     (-write writer ">"))
 
   IHash
-  (-hash [this] (goog/getUid this)))
+  (-hash [this] (reaction-key this)))
 
 
 ;;; Queueing
@@ -596,9 +597,13 @@
       (set! perf-check 0)
       (let [nite 100000
             a (atom 0)
-            mid (make-reaction (fn [] (inc @a)))
+            f (fn []
+                ;; (with-let [x 1])
+                (quot @a 10))
+            mid (make-reaction f)
             res (make-reaction (fn []
                                  (set! perf-check (inc perf-check))
+                                 ;; @(track f)
                                  (inc @mid))
                                :auto-run true)]
         @res

@@ -134,19 +134,19 @@
              
       (reset! a 2)
       (sync)
-      (is (= @b-changed 3))
+      (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
       (is (= @res (+ 10 @a)))
              
       (reset! a 3)
       (sync)
-      (is (= @b-changed 3))
+      (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @res (+ 10 @a)))
              
       (reset! a 3)
       (sync)
-      (is (= @b-changed 3))
+      (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @res (+ 10 @a)))
              

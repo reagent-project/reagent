@@ -17,15 +17,7 @@
 (defmacro with-let [bindings & body]
   (assert (vector? bindings))
   (let [v (gensym "bind-v")
-        bs (->> bindings
-                (map-indexed (fn [i x]
-                               (if (even? i)
-                                 x
-                                 (let [pos (quot i 2)]
-                                   `(if (> (alength ~v) ~pos)
-                                      (aget ~v ~pos)
-                                      (aset ~v ~pos ~x))))))
-                vec)
+        key (str v)
         [forms destroy] (let [fin (last body)]
                           (if (and (list? fin)
                                    (= 'finally (first fin)))
@@ -35,18 +27,20 @@
                       `(cljs.core/js-obj))
         asserting (if *assert* true false)]
     `(let [destroy-obj# ~destroy-obj
-           ~v (reagent.ratom/get-cached-values (quote ~v) destroy-obj#)]
+           ~v (reagent.ratom/with-let-value ~key destroy-obj#)]
        (when ~asserting
          (when-some [c# reagent.ratom/*ratom-context*]
-           (when (== (.-ratomGeneration c#)
-                     (.-generation ~v))
+           (when (== (.-generation ~v) (.-ratomGeneration c#))
              (d/error "Warning: The same with-let is being used more than once in the same reactive context."))
            (set! (.-generation ~v) (.-ratomGeneration c#))))
-       (let ~bs
-         (let [destroy# ~destroy
-               res# (do ~@forms)]
-           (when-not (nil? destroy#)
-             (if (reagent.ratom/reactive?)
-               (set! (.-destroy destroy-obj#) destroy#)
-               (destroy#)))
-           res#)))))
+       (when (zero? (alength ~v))
+         (aset ~v 0 (let ~bindings
+                      (fn []
+                        (let [res# (do ~@forms)]
+                          (when-some [destroy# ~destroy]
+                            (if (reagent.ratom/reactive?)
+                              (when (nil? (.-destroy destroy-obj#))
+                                (set! (.-destroy destroy-obj#) destroy#))
+                              (destroy#)))
+                          res#)))))
+       ((aget ~v 0)))))
