@@ -135,14 +135,13 @@
     (-deref r)
     (if (some? *ratom-context*)
       (let [r (make-reaction
-               f :on-dispose (fn []
+               f :on-dispose (fn [x]
                                (set! cached-reactions
                                      (dissoc cached-reactions key))
                                (when (some? obj)
                                  (set! (.-reaction obj) nil))
-                               (when-not (or (nil? destroy)
-                                             (nil? (.-destroy destroy)))
-                                 (.destroy destroy))
+                               (when-not (nil? destroy)
+                                 (destroy x))
                                nil))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
@@ -280,10 +279,14 @@
 
 ;;; with-let support
 
-(defn with-let-value [key destroy]
+(defn with-let-destroy [v]
+  (when (< 1 (alength v))
+    ((aget v 1))))
+
+(defn with-let-value [key]
   (if-some [c *ratom-context*]
     (cached-reaction array [(reaction-key c) key]
-                     nil destroy)
+                     nil with-let-destroy)
     (array)))
 
 
@@ -438,7 +441,7 @@
               (-notify-watches this oldstate newstate))))
         (when (and (some? on-dispose)
                    (nil? watches))
-          (on-dispose)))
+          (on-dispose state)))
       (do
         (notify-deref-watcher! this)
         (when-not (== dirtyness clean)
@@ -449,12 +452,13 @@
   (dispose! [this]
     (doseq [w watching]
       (remove-watch w this))
-    (set! watching nil)
-    (set! state nil)
-    (set! auto-run nil)
-    (set! dirtyness dirty)
-    (when (some? on-dispose)
-      (on-dispose))
+    (let [s state]
+      (set! watching nil)
+      (set! state nil)
+      (set! auto-run nil)
+      (set! dirtyness dirty)
+      (when (some? on-dispose)
+        (on-dispose s)))
     nil)
 
   IEquiv
@@ -589,12 +593,10 @@
             false nil))
 
 (comment
-  (def perf-check 0)
   (defn ratom-perf []
     (dbg "ratom-perf")
     (set! debug false)
     (dotimes [_ 10]
-      (set! perf-check 0)
       (let [nite 100000
             a (atom 0)
             f (fn []
@@ -602,14 +604,12 @@
                 (quot @a 10))
             mid (make-reaction f)
             res (make-reaction (fn []
-                                 (set! perf-check (inc perf-check))
                                  ;; @(track f)
                                  (inc @mid))
                                :auto-run true)]
         @res
         (time (dotimes [x nite]
                 (swap! a inc)))
-        (dispose! res)
-        (assert (= perf-check (inc nite))))))
+        (dispose! res))))
   (enable-console-print!)
   (ratom-perf))

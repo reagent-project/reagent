@@ -16,22 +16,20 @@
 
 (defmacro with-let [bindings & body]
   (assert (vector? bindings))
-  (let [v (gensym "bind-v")
-        key (str v)
+  (let [v (gensym "with-let")
+        k (keyword v)
         [forms destroy] (let [fin (last body)]
                           (if (and (list? fin)
                                    (= 'finally (first fin)))
                             [(butlast body) `(fn [] ~@(rest fin))]
                             [body nil]))
-        destroy-obj (when destroy
-                      `(cljs.core/js-obj))
         asserting (if *assert* true false)]
-    `(let [destroy-obj# ~destroy-obj
-           ~v (reagent.ratom/with-let-value ~key destroy-obj#)]
+    `(let [~v (reagent.ratom/with-let-value ~k)]
        (when ~asserting
          (when-some [c# reagent.ratom/*ratom-context*]
            (when (== (.-generation ~v) (.-ratomGeneration c#))
-             (d/error "Warning: The same with-let is being used more than once in the same reactive context."))
+             (d/error "Warning: The same with-let is being used more "
+                      "than once in the same reactive context."))
            (set! (.-generation ~v) (.-ratomGeneration c#))))
        (when (zero? (alength ~v))
          (aset ~v 0 (let ~bindings
@@ -39,8 +37,8 @@
                         (let [res# (do ~@forms)]
                           (when-some [destroy# ~destroy]
                             (if (reagent.ratom/reactive?)
-                              (when (nil? (.-destroy destroy-obj#))
-                                (set! (.-destroy destroy-obj#) destroy#))
+                              (when (< (alength ~v) 2)
+                                (aset ~v 1 destroy#))
                               (destroy#)))
                           res#)))))
        ((aget ~v 0)))))
