@@ -269,10 +269,10 @@
 ;;; with-let support
 
 (defn with-let-destroy [v]
-  (when (< 1 (alength v))
-    ((aget v 1))))
+  (when-some [f (.-destroy v)]
+    (f)))
 
-(defn with-let-value [key]
+(defn with-let-values [key]
   (if-some [c *ratom-context*]
     (cached-reaction array [(reaction-key c) key]
                      nil with-let-destroy)

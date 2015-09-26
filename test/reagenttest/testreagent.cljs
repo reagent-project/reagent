@@ -602,6 +602,24 @@
           (is (= [1 0] [@n1 @n2]))))
       (is (= [1 1] [@n1 @n2])))))
 
+(deftest with-let-arg
+  (when isClient
+    (let [a (atom 0)
+          s (r/atom "foo")
+          f (fn [x]
+              (r/with-let []
+                (reset! a x)
+                [:div x]))
+          c (fn []
+              (r/with-let []
+                [f @s]))]
+      (with-mounted-component [c]
+        (fn [_ div]
+          (is (= @a "foo"))
+          (reset! s "bar")
+          (r/flush)
+          (is (= @a "bar")))))))
+
 (deftest with-let-non-reactive
   (let [n1 (atom 0)
         n2 (atom 0)
