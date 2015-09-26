@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [atom])
   (:require-macros [reagent.ratom :refer [with-let]])
   (:require [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg log warn dev?]]))
+            [reagent.debug :refer-macros [dbg log warn error dev?]]))
 
 (declare ^:dynamic *ratom-context*)
 (defonce cached-reactions {})
@@ -364,7 +364,7 @@
         (doseq [w watching :while (== dirtyness maybe-dirty)]
           (when (and (instance? Reaction w)
                      (not (-check-clean w)))
-            (._try-run this w)))
+            (._try-run w this)))
         (set! auto-run ar))
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
@@ -397,17 +397,17 @@
     nil)
 
   Object
-  (_try-run [_ parent]
+  (_try-run [this other]
     (try
-      (if-some [ar (.-auto-run parent)]
-        (ar parent)
-        (run parent))
+      (if-some [ar auto-run]
+        (ar this)
+        (run this))
       (catch :default e
         ;; Just log error: it will most likely pop up again at deref time.
-        (when-not silent
-          (js/console.error "Error in reaction:" e))
-        (set! (.-dirtyness parent) dirty)
-        (set! dirtyness dirty))))
+        (when-not silent (error "Error in reaction:" e))
+        (set! dirtyness dirty)
+        (set! (.-dirtyness other) dirty)))
+    nil)
 
   IRunnable
   (run [this]
