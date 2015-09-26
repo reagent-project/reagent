@@ -438,10 +438,7 @@
             (set! state newstate)
             (when (and (some? watches)
                        (not= oldstate newstate))
-              (-notify-watches this oldstate newstate))))
-        (when (and (some? on-dispose)
-                   (nil? watches))
-          (on-dispose state)))
+              (-notify-watches this oldstate newstate)))))
       (do
         (notify-deref-watcher! this)
         (when-not (== dirtyness clean)
