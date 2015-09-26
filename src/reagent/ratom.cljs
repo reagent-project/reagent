@@ -140,7 +140,7 @@
                                      (dissoc cached-reactions key))
                                (when (some? obj)
                                  (set! (.-reaction obj) nil))
-                               (when-not (nil? destroy)
+                               (when (some? destroy)
                                  (destroy x))
                                nil))
             v (-deref r)]

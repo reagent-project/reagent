@@ -23,6 +23,12 @@
                                    (= 'finally (first fin)))
                             [(butlast body) `(fn [] ~@(rest fin))]
                             [body nil]))
+        add-destroy (when destroy
+                      `(let [destroy# ~destroy]
+                         (if (reagent.ratom/reactive?)
+                           (when (< (alength ~v) 2)
+                             (aset ~v 1 destroy#))
+                           (destroy#))))
         asserting (if *assert* true false)]
     `(let [~v (reagent.ratom/with-let-value ~k)]
        (when ~asserting
@@ -35,10 +41,6 @@
          (aset ~v 0 (let ~bindings
                       (fn []
                         (let [res# (do ~@forms)]
-                          (when-some [destroy# ~destroy]
-                            (if (reagent.ratom/reactive?)
-                              (when (< (alength ~v) 2)
-                                (aset ~v 1 destroy#))
-                              (destroy#)))
+                          ~add-destroy
                           res#)))))
        ((aget ~v 0)))))
