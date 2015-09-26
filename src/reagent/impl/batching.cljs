@@ -36,17 +36,16 @@
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (.' c :cljsIsDirty)
-        (let [a (.' c :cljsRatom)]
-          (if (ratom/-check-clean a)
-            (.! c :cljsIsDirty false)
-            (.' c forceUpdate)))))))
+      (when (true? (.' c :cljsIsDirty))
+        (if (ratom/-check-clean (.' c :cljsRatom))
+          (.! c :cljsIsDirty false)
+          (.' c forceUpdate))))))
 
 (defn run-funs [a]
   (dotimes [i (alength a)]
     ((aget a i))))
 
-(deftype RenderQueue [^:mutable queue ^:mutable scheduled?
+(deftype RenderQueue [^:mutable queue ^:mutable ^boolean scheduled?
                       ^:mutable after-render]
   Object
   (queue-render [this c]
@@ -113,4 +112,3 @@
   (some-> (.' c :cljsRatom)
           ratom/dispose!)
   (mark-rendered c))
-
