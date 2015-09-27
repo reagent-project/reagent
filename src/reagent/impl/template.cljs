@@ -18,15 +18,15 @@
 
 ;;; Common utilities
 
-(defn named? [x]
+(defn ^boolean named? [x]
   (or (keyword? x)
       (symbol? x)))
 
-(defn hiccup-tag? [x]
+(defn ^boolean hiccup-tag? [x]
   (or (named? x)
       (string? x)))
 
-(defn valid-tag? [x]
+(defn ^boolean valid-tag? [x]
   (or (hiccup-tag? x)
       (ifn? x)
       (instance? NativeWrapper x)))
@@ -39,7 +39,7 @@
                          :charset "charSet"})
 
 (defn obj-get [o k]
-  (when (.hasOwnProperty o k)
+  (when (true? (.hasOwnProperty o k))
     (aget o k)))
 
 (defn cached-prop-name [k]
@@ -95,7 +95,7 @@
 ;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
 (def these-inputs-have-selection-api #{"text" "textarea" "password" "search" "tel" "url"})
 
-(defn has-selection-api?
+(defn ^boolean has-selection-api?
   [input-type]
   (contains? these-inputs-have-selection-api input-type))
 
@@ -160,7 +160,7 @@
         (.! :onChange #(input-handle-change this on-change %))))
     (.! this :cljsInputValue nil)))
 
-(defn input-component? [x]
+(defn ^boolean input-component? [x]
   (or (identical? x "input")
       (identical? x "textarea")))
 
@@ -188,13 +188,13 @@
 
 (defn parse-tag [hiccup-tag]
   (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
-        class' (when class
-                 (string/replace class #"\." " "))]
+        class (when-not (nil? class)
+                (string/replace class #"\." " "))]
     (assert tag (str "Invalid tag: '" hiccup-tag "'"
                      (comp/comp-name)))
     #js{:name tag
         :id id
-        :className class'}))
+        :className class}))
 
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
@@ -320,7 +320,7 @@
               (expand-seq-dev x ctx)
               (ratom/capture-derefed #(expand-seq-dev x ctx)
                                      ctx))]
-    (when (ratom/captured ctx)
+    (when-not (nil? (ratom/captured ctx))
       (warn "Reactive deref not supported in lazy seq, "
             "it should be wrapped in doall"
             (comp/comp-name) ". Value:\n" (pr-str x)))
