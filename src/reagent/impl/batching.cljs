@@ -37,7 +37,7 @@
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (true? (.' c :cljsIsDirty))
-        (if (ratom/-check-clean (.' c :cljsRatom))
+        (if (true? (._check-clean (.' c :cljsRatom)))
           (.! c :cljsIsDirty false)
           (.' c forceUpdate))))))
 
@@ -99,7 +99,7 @@
     (if (nil? rat)
       (let [res (ratom/capture-derefed run c)
             derefed (ratom/captured c)]
-        (when (not (nil? derefed))
+        (when-not (nil? derefed)
           (.! c :cljsRatom
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)

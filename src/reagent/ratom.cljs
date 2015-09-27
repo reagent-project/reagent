@@ -38,12 +38,11 @@
     c))
 
 (defn- notify-deref-watcher! [derefable]
-  (let [obj *ratom-context*]
-    (when-not (nil? obj)
-      (let [captured (.-cljsCaptured obj)]
-        (set! (.-cljsCaptured obj)
-              (conj (if (nil? captured) #{} captured)
-                    derefable))))))
+  (when-some [obj *ratom-context*]
+    (let [captured (.-cljsCaptured obj)]
+      (set! (.-cljsCaptured obj)
+            (conj (if (nil? captured) #{} captured)
+                  derefable)))))
 
 (def reaction-counter 0)
 
@@ -67,11 +66,17 @@
   (let [w (.-watches this)]
     (set! (.-watches this) (check-watches w (dissoc w key)))))
 
+(defn- notify-w [this old new]
+  (reduce-kv (fn [_ k f]
+               (f k this old new)
+               nil)
+             nil (.-watches this))
+  nil)
+
 (defn- pr-atom [a writer opts s]
   (-write writer (str "#<" s " "))
   (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
   (-write writer ">"))
-
 
 ;;; Atom
 
@@ -96,7 +101,7 @@
     (let [old-value state]
       (set! state new-value)
       (when-not (nil? watches)
-        (-notify-watches a old-value new-value))
+        (notify-w a old-value new-value))
       new-value))
 
   ISwap
@@ -112,11 +117,9 @@
   (-pr-writer [a w opts] (pr-atom a w opts "Atom:"))
 
   IWatchable
-  (-notify-watches [this old new]
-    (reduce-kv (fn [_ k f] (f k this old new) nil)
-               nil watches))
-  (-add-watch [this key f]  (add-w this key f))
-  (-remove-watch [this key] (remove-w this key))
+  (-notify-watches [this old new] (notify-w this old new))
+  (-add-watch [this key f]        (add-w this key f))
+  (-remove-watch [this key]       (remove-w this key))
 
   IHash
   (-hash [this] (goog/getUid this)))
@@ -162,7 +165,7 @@
       (cached-reaction f key this nil)))
 
   IEquiv
-  (-equiv [o other]
+  (-equiv [_ other]
     (and (instance? Track other)
          (= key (.-key other))))
 
@@ -197,7 +200,7 @@
   IReactiveAtom
 
   IEquiv
-  (-equiv [o other]
+  (-equiv [_ other]
     (and (instance? RCursor other)
          (= path (.-path other))
          (= ratom (.-ratom other))))
@@ -211,7 +214,7 @@
     (when-not (identical? oldstate newstate)
       (set! state newstate)
       (when-not (nil? watches)
-        (-notify-watches this oldstate newstate))))
+        (notify-w this oldstate newstate))))
 
   IDeref
   (-deref [this]
@@ -246,11 +249,9 @@
   (-pr-writer [a w opts] (pr-atom a w opts (str "Cursor: " path)))
 
   IWatchable
-  (-notify-watches [this old new]
-    (reduce-kv (fn [_ k f] (f k this old new) nil)
-               nil watches))
-  (-add-watch [this key f]  (add-w this key f))
-  (-remove-watch [this key] (remove-w this key))
+  (-notify-watches [this old new] (notify-w this old new))
+  (-add-watch [this key f]        (add-w this key f))
+  (-remove-watch [this key]       (remove-w this key))
 
   IHash
   (-hash [_] (hash [ratom path])))
@@ -287,15 +288,12 @@
 (defprotocol IRunnable
   (run [this]))
 
-(defprotocol IComputedImpl
-  (-peek-at [this])
-  (^boolean -check-clean [this])
-  (-handle-change [this sender oldval newval])
-  (-update-watching [this derefed]))
-
 (def ^:const clean 0)
 (def ^:const maybe-dirty 1)
 (def ^:const dirty 2)
+
+(defn- handle-reaction-change [this sender old new]
+  (._handle-change this sender old new))
 
 (deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
                    ^:mutable watching ^:mutable watches
@@ -304,10 +302,8 @@
   IReactiveAtom
 
   IWatchable
-  (-notify-watches [this old new]
-    (reduce-kv (fn [_ k f] (f k this old new) nil)
-               nil watches))
-  (-add-watch [this key f] (add-w this key f))
+  (-notify-watches [this old new] (notify-w this old new))
+  (-add-watch [this key f]        (add-w this key f))
   (-remove-watch [this key]
     (remove-w this key)
     (when (and (empty? watches)
@@ -320,36 +316,36 @@
     (let [oldval state]
       (set! state newval)
       (on-set oldval newval)
-      (-notify-watches a oldval newval)
+      (notify-w a oldval newval)
       newval))
 
   ISwap
-  (-swap! [a f]          (-reset! a (f (-peek-at a))))
-  (-swap! [a f x]        (-reset! a (f (-peek-at a) x)))
-  (-swap! [a f x y]      (-reset! a (f (-peek-at a) x y)))
-  (-swap! [a f x y more] (-reset! a (apply f (-peek-at a) x y more)))
+  (-swap! [a f]          (-reset! a (f (._peek-at a))))
+  (-swap! [a f x]        (-reset! a (f (._peek-at a) x)))
+  (-swap! [a f x y]      (-reset! a (f (._peek-at a) x y)))
+  (-swap! [a f x y more] (-reset! a (apply f (._peek-at a) x y more)))
 
-  IComputedImpl
-  (-peek-at [this]
+  Object
+  (_peek-at [this]
     (if (== dirtyness clean)
       state
       (binding [*ratom-context* nil]
         (-deref this))))
 
-  (-check-clean [this]
+  (_check-clean [this]
     (when (== dirtyness maybe-dirty)
       (let [ar auto-run]
         (set! auto-run nil)
         (doseq [w watching :while (== dirtyness maybe-dirty)]
           (when (and (instance? Reaction w)
-                     (not (-check-clean w)))
+                     (false? (._check-clean w)))
             (._try-run w this)))
         (set! auto-run ar))
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
     (== dirtyness clean))
 
-  (-handle-change [this sender oldval newval]
+  (_handle-change [this sender oldval newval]
     (let [old-dirty dirtyness
           new-dirty (if (identical? oldval newval)
                       (if (instance? Reaction sender)
@@ -360,22 +356,21 @@
         (when (== old-dirty clean)
           (if-some [ar auto-run]
             (when-not (and (identical? ar run)
-                           (-check-clean this))
+                           (true? (._check-clean this)))
               (ar this))
-            (-notify-watches this state state)))))
+            (notify-w this state state)))))
     nil)
 
-  (-update-watching [this derefed]
+  (_update-watching [this derefed]
     (doseq [w derefed]
       (when-not (contains? watching w)
-        (-add-watch w this -handle-change)))
+        (-add-watch w this handle-reaction-change)))
     (doseq [w watching]
       (when-not (contains? derefed w)
         (-remove-watch w this)))
     (set! watching derefed)
     nil)
 
-  Object
   (_try-run [this other]
     (try
       (if-some [ar auto-run]
@@ -394,7 +389,7 @@
           res (capture-derefed f this)
           derefed (-captured this)]
       (when (not= derefed watching)
-        (-update-watching this derefed))
+        (._update-watching this derefed))
       (set! dirtyness clean)
       (when-not nocache?
         (set! state res)
@@ -402,12 +397,12 @@
         ;; they are likely to produce new data structures.
         (when-not (or (nil? watches)
                       (= oldstate res))
-          (-notify-watches this oldstate res)))
+          (notify-w this oldstate res)))
       res))
 
   IDeref
   (-deref [this]
-    (-check-clean this)
+    (._check-clean this)
     (if (and (nil? *ratom-context*)
              (nil? auto-run))
       (do
@@ -417,7 +412,7 @@
             (set! state newstate)
             (when-not (or (nil? watches)
                           (= oldstate newstate))
-              (-notify-watches this oldstate newstate)))))
+              (notify-w this oldstate newstate)))))
       (do
         (notify-deref-watcher! this)
         (when-not (== dirtyness clean)
@@ -468,7 +463,7 @@
       (dotimes [i (alength q)]
         (let [r (aget q i)]
           (when-not (or (nil? (.-auto-run r))
-                        (-check-clean r))
+                        (true? (._check-clean r)))
             (run r)))))))
 
 
@@ -493,14 +488,14 @@
       (when (dev?)
         (set! (.-ratomGeneration reaction)
               (.-ratomGeneration derefs)))
-      (-update-watching reaction derefs))
+      (._update-watching reaction derefs))
     reaction))
 
 
 
 ;;; wrap
 
-(deftype Wrapper [^:mutable state callback ^:mutable changed
+(deftype Wrapper [^:mutable state callback ^:mutable ^boolean changed
                   ^:mutable watches]
 
   IAtom
@@ -519,7 +514,7 @@
       (set! changed true)
       (set! state newval)
       (when-not (nil? watches)
-        (-notify-watches this oldval newval))
+        (notify-w this oldval newval))
       (callback newval)
       newval))
 
@@ -540,11 +535,9 @@
                (= callback (.-callback other))))
 
   IWatchable
-  (-notify-watches [this old new]
-    (reduce-kv (fn [_ k f] (f k this old new) nil)
-               nil watches))
-  (-add-watch [this key f]  (add-w this key f))
-  (-remove-watch [this key] (remove-w this key))
+  (-notify-watches [this old new] (notify-w this old new))
+  (-add-watch [this key f]        (add-w this key f))
+  (-remove-watch [this key]       (remove-w this key))
 
   IPrintWithWriter
   (-pr-writer [a w opts] (pr-atom a w opts "Wrap:")))
