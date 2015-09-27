@@ -6,15 +6,16 @@
 
 (declare ^:dynamic *ratom-context*)
 (defonce cached-reactions {})
+(defonce ^boolean debug false)
+(defonce ^boolean silent false)
+(defonce generation 0)
+(defonce -running (clojure.core/atom 0))
 
 (defn ^boolean reactive? []
   (not (nil? *ratom-context*)))
 
-(defonce ^boolean debug false)
-(defonce ^boolean silent false)
-(defonce generation 0)
 
-(defonce -running (clojure.core/atom 0))
+;;; Utilities
 
 (defn running []
   (+ @-running
@@ -39,20 +40,28 @@
 
 (defn- notify-deref-watcher! [derefable]
   (when-some [obj *ratom-context*]
-    (let [captured (.-cljsCaptured obj)]
-      (set! (.-cljsCaptured obj)
-            (if (nil? captured)
-              (let [old (.-watching obj)]
-                (if (and (== 1 (count old))
-                         (identical? derefable (first old)))
-                  ;; Optimize common case of one deref
-                  old
-                  #{derefable}))
-              (conj captured derefable))))))
+    (let [c (.-cljsCaptured obj)]
+      (if (nil? c)
+        (set! (.-cljsCaptured obj) (array derefable))
+        (when (== -1 (.indexOf c derefable))
+          (.push c derefable)))))
+  nil)
+
+(defn- ^number arr-len [x]
+  (if (nil? x) 0 (alength x)))
+
+(defn- ^boolean arr-eq [x y]
+  (let [len (arr-len x)]
+    (and (== len (arr-len y))
+         (loop [i 0]
+           (or (== i len)
+               (if (identical? (aget x i) (aget y i))
+                 (recur (inc i))
+                 false))))))
 
 (def reaction-counter 0)
 
-(defn reaction-key [r]
+(defn- reaction-key [r]
   (if-some [k (.-reaction-id r)]
     k
     (->> reaction-counter inc
@@ -83,6 +92,7 @@
   (-write writer (str "#<" s " "))
   (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
   (-write writer ">"))
+
 
 ;;; Atom
 
@@ -340,12 +350,17 @@
 
   (_check-clean [this]
     (when (== dirtyness maybe-dirty)
-      (let [ar auto-run]
+      (let [ar auto-run
+            len (arr-len watching)]
         (set! auto-run nil)
-        (doseq [w watching :while (== dirtyness maybe-dirty)]
-          (when (and (instance? Reaction w)
-                     (false? (._check-clean w)))
-            (._try-run w this)))
+        (loop [i 0]
+          (when (< i len)
+            (let [w (aget watching i)]
+              (when (and (instance? Reaction w)
+                         (false? (._check-clean w)))
+                (._try-run w this)))
+            (when (== dirtyness maybe-dirty)
+              (recur (inc i)))))
         (set! auto-run ar))
       (when (== dirtyness maybe-dirty)
         (set! dirtyness clean)))
@@ -369,10 +384,12 @@
 
   (_update-watching [this derefed]
     (doseq [w derefed]
-      (when-not (contains? watching w)
+      (when (or (nil? watching)
+                (== -1 (.indexOf watching w)))
         (-add-watch w this handle-reaction-change)))
     (doseq [w watching]
-      (when-not (contains? derefed w)
+      (when (or (nil? derefed)
+                (== -1 (.indexOf derefed w)))
         (-remove-watch w this)))
     (set! watching derefed)
     nil)
@@ -394,7 +411,7 @@
     (let [oldstate state
           res (capture-derefed f this)
           derefed (-captured this)]
-      (when (not= derefed watching)
+      (when-not (arr-eq derefed watching)
         (._update-watching this derefed))
       (set! dirtyness clean)
       (when-not nocache?
