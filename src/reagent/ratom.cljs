@@ -41,8 +41,14 @@
   (when-some [obj *ratom-context*]
     (let [captured (.-cljsCaptured obj)]
       (set! (.-cljsCaptured obj)
-            (conj (if (nil? captured) #{} captured)
-                  derefable)))))
+            (if (nil? captured)
+              (let [old (.-watching obj)]
+                (if (and (== 1 (count old))
+                         (identical? derefable (first old)))
+                  ;; Optimize common case of one deref
+                  old
+                  #{derefable}))
+              (conj captured derefable))))))
 
 (def reaction-counter 0)
 
