@@ -105,7 +105,6 @@
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)
                                    :capture derefed
-                                   :async true
                                    :no-cache true)))
         res)
       (ratom/run rat))))

@@ -5,6 +5,7 @@
             [reagent.core :as r]))
 
 (defn fixture [f]
+  (r/flush)
   (set! rv/debug true)
   (f)
   (set! rv/debug false))
@@ -44,6 +45,7 @@
     (is (= @count 1) "constrain ran")
     (is (= @out 5))
     (reset! start 1)
+    (r/flush)
     (is (= @out 8))
     (is (= @count 4))
     (dispose const)
@@ -96,6 +98,7 @@
     (is (= @c3 1))
     (is (= @c3-count 1) "t1")
     (swap! start inc)
+    (sync)
     (is (= @c3-count 2) "t2")
     (is (= @c3 2))
     (is (= @c3-count 2) "t3")
@@ -214,10 +217,13 @@
 
     (is (= @catch-count 0))
     (reset! a false)
+    (sync)
     (is (= @catch-count 0))
     (reset! a true)
+    (sync)
     (is (= @catch-count 1))
     (reset! a false)
+    (sync)
     (is (= @catch-count 1))
 
     (set! rv/silent false)

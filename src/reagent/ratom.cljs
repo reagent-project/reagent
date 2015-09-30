@@ -17,11 +17,8 @@
 
 ;;; Utilities
 
-(defonce rea-sync-count 0)
-
 (defn running []
   (+ @-running
-     rea-sync-count
      (count cached-reactions)))
 
 (defn capture-derefed [f obj]
@@ -147,9 +144,6 @@
       (set! state new-value)
       (when-not (nil? watches)
         (notify-w a old-value new-value))
-      ;; Support deprecated sync reactions
-      (when-not (== 0 rea-sync-count)
-        (flush!))
       new-value))
 
   ISwap
@@ -195,8 +189,7 @@
                                  (set! (.-reaction obj) nil))
                                (when-not (nil? destroy)
                                  (destroy x))
-                               nil)
-               :async true)
+                               nil))
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
         (when-not (nil? obj)
@@ -230,8 +223,7 @@
 (defn make-track! [f args]
   (let [t (make-track f args)
         r (make-reaction #(-deref t)
-                         :auto-run true
-                         :async true)]
+                         :auto-run true)]
     @r
     r))
 
@@ -436,14 +428,14 @@
 
   IDeref
   (-deref [this]
+    (when-not (or *flushing* (not (nil? *ratom-context*)))
+      (flush!))
     (if-not (and (nil? auto-run) (nil? *ratom-context*))
       (do
         (notify-deref-watcher! this)
         (when dirty?
           (run this)))
       (do
-        (when-not *flushing*
-          (flush!))
         (when dirty?
           (let [oldstate state]
             (set! state (f))
@@ -460,9 +452,6 @@
       (set! state nil)
       (set! auto-run nil)
       (set! dirty? true)
-      (when (true? (.-sync this))
-        (set! (.-sync this) false)
-        (set! rea-sync-count (dec rea-sync-count)))
       (doseq [w wg]
         (remove-watch w this))
       (when-not (nil? on-dispose)
@@ -481,7 +470,7 @@
 
 ;; TOOD: Fix arguments
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
-                                 capture async]}]
+                                 capture]}]
   (let [runner (case auto-run
                  true run
                  auto-run)
@@ -492,11 +481,6 @@
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
-    (when (and runner (not async))
-      (when-not debug
-        (warn "deprecated sync"))
-      (set! (.-sync reaction) true)
-      (set! rea-sync-count (inc rea-sync-count)))
     (when-some [rid (some-> capture .-reaction-id)]
       (set! (.-reaction-id reaction) rid))
     (when-not (nil? derefed)

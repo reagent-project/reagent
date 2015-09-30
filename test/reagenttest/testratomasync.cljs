@@ -249,7 +249,7 @@
   (let [runs (running)
         a (rv/atom 0)
         b (rv/make-reaction #(+ 5 @a)
-                            :auto-run true :async true
+                            :auto-run true
                             :on-set (fn [oldv newv]
                                       (reset! a (+ 10 newv))))]
     (sync)
