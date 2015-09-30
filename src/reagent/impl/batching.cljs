@@ -107,7 +107,7 @@
                                    :capture derefed
                                    :no-cache true)))
         res)
-      (ratom/run rat))))
+      (._run rat))))
 
 (defn dispose [c]
   (some-> (.' c :cljsRatom)
@@ -123,11 +123,11 @@
       (let [nite 100000
             a (ratom/atom 0)
             f (fn []
-                ;; (with-let [x 1])
+                ;; (ratom/with-let [x 1])
                 (quot @a 10))
             mid (ratom/make-reaction f)
             res (ratom/track! (fn []
-                          ;; @(track f)
+                          ;; @(ratom/track f)
                           (inc @mid)
                         ))]
         @res

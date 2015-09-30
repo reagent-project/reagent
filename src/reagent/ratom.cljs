@@ -377,7 +377,7 @@
           (auto-run this)
           (when-not dirty?
             (set! dirty? true)
-            (run this)))
+            (._run this)))
         (do
           (set! dirty? true)
           (rea-enqueue this))))
@@ -401,7 +401,7 @@
       (auto-run this)
       (when (and dirty? (not (nil? watching)))
         (try
-          (run this)
+          (._run this)
           (catch :default e
             ;; Just log error: it will most likely pop up again at deref time.
             (when-not silent (error "Error in reaction:" e))
@@ -409,8 +409,7 @@
             (notify-w this e nil)))))
     nil)
 
-  IRunnable
-  (run [this]
+  (_run [this]
     (let [oldstate state
           res (capture-derefed f this)
           derefed (-captured this)]
@@ -426,6 +425,11 @@
           (notify-w this oldstate res)))
       res))
 
+  IRunnable
+  (run [this]
+    (flush!)
+    (._run this))
+
   IDeref
   (-deref [this]
     (when (nil? *ratom-context*)
@@ -434,7 +438,7 @@
       (do
         (notify-deref-watcher! this)
         (when dirty?
-          (run this)))
+          (._run this)))
       (do
         (when dirty?
           (let [oldstate state]
@@ -468,7 +472,6 @@
   (-hash [this] (reaction-key this)))
 
 
-;; TOOD: Fix arguments
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
                                  capture]}]
   (let [runner (case auto-run
