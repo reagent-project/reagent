@@ -98,8 +98,7 @@
 ;;; Queueing
 
 (defonce rea-queue nil)
-
-(def ^boolean ^:dynamic *flushing*)
+(def empty-context #js{})
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
@@ -116,8 +115,9 @@
 (defn flush! []
   (when-some [q rea-queue]
     (set! rea-queue nil)
-    (binding [*flushing* true]
-      (run-queue q))))
+    (binding [*ratom-context* empty-context]
+      (run-queue q))
+    (assert (nil? (-captured empty-context)))))
 
 
 ;;; Atom
@@ -372,7 +372,7 @@
 
   (_handle-change [this sender oldval newval]
     (when-not (identical? oldval newval)
-      (if *flushing*
+      (if-not (nil? *ratom-context*)
         (if-not (nil? auto-run)
           (auto-run this)
           (when-not dirty?
@@ -428,7 +428,7 @@
 
   IDeref
   (-deref [this]
-    (when-not (or *flushing* (not (nil? *ratom-context*)))
+    (when (nil? *ratom-context*)
       (flush!))
     (if-not (and (nil? auto-run) (nil? *ratom-context*))
       (do
