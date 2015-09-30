@@ -5,6 +5,13 @@
             [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as r]))
 
+(defn fixture [f]
+  (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
 (defn running [] (rv/running))
 
 (def isClient r/is-client)

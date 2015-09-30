@@ -6,9 +6,15 @@
              :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
 
+(defn fixture [f]
+  (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
 (defn running []
   (r/flush)
-  (set! rv/debug true)
   (rv/running))
 
 (deftest basic-with-let

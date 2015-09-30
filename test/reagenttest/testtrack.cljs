@@ -4,8 +4,14 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
-(defn running []
+(defn fixture [f]
   (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
+(defn running []
   (rv/running))
 
 (def testite 10)
@@ -13,7 +19,8 @@
 (defn dispose [v]
   (rv/dispose! v))
 
-(defn sync [] (r/flush))
+(defn sync []
+  (r/flush))
 
 (enable-console-print!)
 
@@ -38,7 +45,7 @@
     (is (= @out 5))
     (reset! start 1)
     (is (= @out 8))
-    (is (= @count 2))
+    (is (= @count 4))
     (dispose const)
     (is (= (running) runs))))
 
@@ -65,13 +72,13 @@
     (is (= @count 1))
     (sync)
     (is (= @out 8))
-    (is (= @count 2))
+    (is (= @count 4))
     (dispose const)
     (swap! start inc)
     (sync)
-    (is (= @count 2))
+    (is (= @count 4))
     (is (= @const 11))
-    (is (= @count 3))
+    (is (= @count 5))
     (is (= (running) runs))))
 
 (deftest double-dependency

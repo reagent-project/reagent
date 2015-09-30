@@ -6,9 +6,16 @@
 
 ;; this repeats all the atom tests but using cursors instead
 
-(defn running []
+(defn fixture [f]
   (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
+(defn running []
   (rv/running))
+
 (defn dispose [v] (rv/dispose! v))
 
 (def testite 10)
@@ -31,7 +38,7 @@
     (is (= @out 2))
     (reset! start 1)
     (is (= @out 3))
-    (is (= @count 2))
+    (is (= @count 4))
     (dispose const)
     (is (= @start-base {:a {:b {:c 1}}}))
     (is (= (running) runs))))
@@ -193,19 +200,19 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 6 runs) (running)))
+      (is (= (+ 7 runs) (running)))
       (is (= @count-b 1))
       (is (= {:a 0 :b 0} @a-base))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 6 runs) (running)) "still running")
+      (is (= (+ 7 runs) (running)) "still running")
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 4 runs) (running)) "less running count")
+      (is (= (+ 5 runs) (running)) "less running count")
       (is (= {:a 2 :b 0} @a-base))
 
       (reset! disposed nil)

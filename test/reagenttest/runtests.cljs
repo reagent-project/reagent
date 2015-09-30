@@ -23,6 +23,7 @@
                      :color :#aaa})
 
 (defn all-tests []
+  #_(test/run-tests 'reagenttest.testratomasync)
   (test/run-all-tests #"reagenttest.test.*"))
 
 (defmethod test/report [::test/default :summary] [m]

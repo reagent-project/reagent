@@ -37,9 +37,8 @@
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (true? (.' c :cljsIsDirty))
-        (if (true? (._check-clean (.' c :cljsRatom)))
-          (.! c :cljsIsDirty false)
-          (.' c forceUpdate))))))
+        (.! c :cljsIsDirty false)
+        (.' c forceUpdate)))))
 
 (defn run-funs [a]
   (dotimes [i (alength a)]
@@ -68,7 +67,6 @@
       (run-funs aq))))
 
 (defonce render-queue (RenderQueue. (array) false (array)))
-(set! ratom/render-queue render-queue)
 
 (defn flush []
   (.run-queue render-queue))
@@ -85,6 +83,9 @@
 
 (defn do-later [f]
   (do-after-flush f)
+  (.schedule render-queue))
+
+(defn schedule []
   (.schedule render-queue))
 
 ;; Render helper
@@ -104,6 +105,7 @@
               (ratom/make-reaction run
                                    :auto-run #(queue-render c)
                                    :capture derefed
+                                   :async true
                                    :no-cache true)))
         res)
       (ratom/run rat))))
@@ -112,3 +114,27 @@
   (some-> (.' c :cljsRatom)
           ratom/dispose!)
   (mark-rendered c))
+
+
+(comment
+  (defn ratom-perf []
+    (dbg "ratom-perf")
+    (set! ratom/debug false)
+    (dotimes [_ 10]
+      (let [nite 100000
+            a (ratom/atom 0)
+            f (fn []
+                ;; (with-let [x 1])
+                (quot @a 10))
+            mid (ratom/make-reaction f)
+            res (ratom/track! (fn []
+                          ;; @(track f)
+                          (inc @mid)
+                        ))]
+        @res
+        (time (dotimes [x nite]
+                (swap! a inc)
+                (ratom/flush!)))
+        (ratom/dispose! res))))
+  (enable-console-print!)
+  (ratom-perf))

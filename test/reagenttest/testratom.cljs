@@ -4,8 +4,14 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
-(defn running []
+(defn fixture [f]
   (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
+(defn running []
   (rv/running))
 
 (def testite 10)
@@ -49,7 +55,7 @@
     (is (= @out 2))
     (reset! start 1)
     (is (= @out 3))
-    (is (= @count 2))
+    (is (= @count 4))
     (dispose const)
     (is (= (running) runs))))
 
@@ -194,17 +200,17 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 4 runs) (running)))
+      (is (= (+ 5 runs) (running)))
       (is (= @count-b 1))
       (reset! a -1)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 4 runs) (running)) "still running")
+      (is (= (+ 5 runs) (running)) "still running")
       (reset! a 2)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 2 runs) (running)) "less running count")
+      (is (= (+ 3 runs) (running)) "less running count")
 
       (reset! disposed nil)
       (reset! a -1)

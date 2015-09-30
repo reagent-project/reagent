@@ -17,8 +17,11 @@
 
 ;;; Utilities
 
+(defonce rea-sync-count 0)
+
 (defn running []
   (+ @-running
+     rea-sync-count
      (count cached-reactions)))
 
 (defn capture-derefed [f obj]
@@ -78,7 +81,8 @@
     (set! (.-watches this) (check-watches w (assoc w key f)))))
 
 (defn- remove-w [this key]
-  (let [w (.-watches this)]
+  (let [w (.-watches this)
+        r -running]
     (set! (.-watches this) (check-watches w (dissoc w key)))))
 
 (defn- notify-w [this old new]
@@ -92,6 +96,31 @@
   (-write writer (str "#<" s " "))
   (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
   (-write writer ">"))
+
+
+;;; Queueing
+
+(defonce rea-queue nil)
+
+(def ^boolean ^:dynamic *flushing*)
+
+(defn- rea-enqueue [r]
+  (when (nil? rea-queue)
+    (set! rea-queue (array))
+    ;; Get around ugly circular dependency. TODO: Fix.
+    (js/reagent.impl.batching.schedule))
+  (.push rea-queue r))
+
+(defn- run-queue [q]
+  (dotimes [i (alength q)]
+      (let [r (aget q i)]
+        (._try-run r))))
+
+(defn flush! []
+  (when-some [q rea-queue]
+    (set! rea-queue nil)
+    (binding [*flushing* true]
+      (run-queue q))))
 
 
 ;;; Atom
@@ -118,6 +147,9 @@
       (set! state new-value)
       (when-not (nil? watches)
         (notify-w a old-value new-value))
+      ;; Support deprecated sync reactions
+      (when-not (== 0 rea-sync-count)
+        (flush!))
       new-value))
 
   ISwap
@@ -163,7 +195,8 @@
                                  (set! (.-reaction obj) nil))
                                (when-not (nil? destroy)
                                  (destroy x))
-                               nil))
+                               nil)
+               :async true)
             v (-deref r)]
         (set! cached-reactions (assoc cached-reactions key r))
         (when-not (nil? obj)
@@ -195,8 +228,10 @@
   (Track. #(apply f args) [f args] nil))
 
 (defn make-track! [f args]
-  (let [r (make-reaction #(-deref (make-track f args))
-                         :auto-run :async)]
+  (let [t (make-track f args)
+        r (make-reaction #(-deref t)
+                         :auto-run true
+                         :async true)]
     @r
     r))
 
@@ -304,14 +339,11 @@
 (defprotocol IRunnable
   (run [this]))
 
-(def ^:const clean 0)
-(def ^:const maybe-dirty 1)
-(def ^:const dirty 2)
-
 (defn- handle-reaction-change [this sender old new]
   (._handle-change this sender old new))
 
-(deftype Reaction [f ^:mutable state ^:mutable ^number dirtyness
+
+(deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty?
                    ^:mutable watching ^:mutable watches
                    ^:mutable auto-run on-set on-dispose ^boolean nocache?]
   IAtom
@@ -343,67 +375,46 @@
 
   Object
   (_peek-at [this]
-    (if (== dirtyness clean)
-      state
-      (binding [*ratom-context* nil]
-        (-deref this))))
-
-  (_check-clean [this]
-    (when (== dirtyness maybe-dirty)
-      (let [ar auto-run
-            len (arr-len watching)]
-        (set! auto-run nil)
-        (loop [i 0]
-          (when (< i len)
-            (let [w (aget watching i)]
-              (when (and (instance? Reaction w)
-                         (false? (._check-clean w)))
-                (._try-run w this)))
-            (when (== dirtyness maybe-dirty)
-              (recur (inc i)))))
-        (set! auto-run ar))
-      (when (== dirtyness maybe-dirty)
-        (set! dirtyness clean)))
-    (== dirtyness clean))
+    (binding [*ratom-context* nil]
+      (-deref this)))
 
   (_handle-change [this sender oldval newval]
-    (let [old-dirty dirtyness
-          new-dirty (if (identical? oldval newval)
-                      (if (instance? Reaction sender)
-                        maybe-dirty clean)
-                      dirty)]
-      (when (> new-dirty old-dirty)
-        (set! dirtyness new-dirty)
-        (when (== old-dirty clean)
-          (if-some [ar auto-run]
-            (when-not (and (identical? ar run)
-                           (true? (._check-clean this)))
-              (ar this))
-            (notify-w this state state)))))
+    (when-not (identical? oldval newval)
+      (if *flushing*
+        (if-not (nil? auto-run)
+          (auto-run this)
+          (when-not dirty?
+            (set! dirty? true)
+            (run this)))
+        (do
+          (set! dirty? true)
+          (rea-enqueue this))))
     nil)
 
   (_update-watching [this derefed]
-    (doseq [w derefed]
-      (when (or (nil? watching)
-                (== -1 (.indexOf watching w)))
-        (-add-watch w this handle-reaction-change)))
-    (doseq [w watching]
-      (when (or (nil? derefed)
-                (== -1 (.indexOf derefed w)))
-        (-remove-watch w this)))
-    (set! watching derefed)
+    (let [wg watching]
+      (set! watching derefed)
+      (doseq [w derefed]
+        (when (or (nil? wg)
+                  (== -1 (.indexOf wg w)))
+          (-add-watch w this handle-reaction-change)))
+      (doseq [w wg]
+        (when (or (nil? derefed)
+                  (== -1 (.indexOf derefed w)))
+          (-remove-watch w this))))
     nil)
 
   (_try-run [this other]
-    (try
-      (if-some [ar auto-run]
-        (ar this)
-        (run this))
-      (catch :default e
-        ;; Just log error: it will most likely pop up again at deref time.
-        (when-not silent (error "Error in reaction:" e))
-        (set! dirtyness dirty)
-        (set! (.-dirtyness other) dirty)))
+    (if-not (nil? auto-run)
+      (auto-run this)
+      (when (and dirty? (not (nil? watching)))
+        (try
+          (run this)
+          (catch :default e
+            ;; Just log error: it will most likely pop up again at deref time.
+            (when-not silent (error "Error in reaction:" e))
+            (set! state nil)
+            (notify-w this e nil)))))
     nil)
 
   IRunnable
@@ -411,9 +422,9 @@
     (let [oldstate state
           res (capture-derefed f this)
           derefed (-captured this)]
+      (set! dirty? false)
       (when-not (arr-eq derefed watching)
         (._update-watching this derefed))
-      (set! dirtyness clean)
       (when-not nocache?
         (set! state res)
         ;; Use = to determine equality from reactions, since
@@ -425,32 +436,35 @@
 
   IDeref
   (-deref [this]
-    (._check-clean this)
-    (if (and (nil? *ratom-context*)
-             (nil? auto-run))
-      (do
-        (when-not (== dirtyness clean)
-          (let [oldstate state
-                newstate (f)]
-            (set! state newstate)
-            (when-not (or (nil? watches)
-                          (= oldstate newstate))
-              (notify-w this oldstate newstate)))))
+    (if-not (and (nil? auto-run) (nil? *ratom-context*))
       (do
         (notify-deref-watcher! this)
-        (when-not (== dirtyness clean)
-          (run this))))
+        (when dirty?
+          (run this)))
+      (do
+        (when-not *flushing*
+          (flush!))
+        (when dirty?
+          (let [oldstate state]
+            (set! state (f))
+            (when-not (or (nil? watches)
+                          (= oldstate state))
+              (notify-w this oldstate state))))))
     state)
 
   IDisposable
   (dispose! [this]
-    (doseq [w watching]
-      (remove-watch w this))
-    (let [s state]
+    (let [s state
+          wg watching]
       (set! watching nil)
       (set! state nil)
       (set! auto-run nil)
-      (set! dirtyness dirty)
+      (set! dirty? true)
+      (when (true? (.-sync this))
+        (set! (.-sync this) false)
+        (set! rea-sync-count (dec rea-sync-count)))
+      (doseq [w wg]
+        (remove-watch w this))
       (when-not (nil? on-dispose)
         (on-dispose s)))
     nil)
@@ -465,44 +479,24 @@
   (-hash [this] (reaction-key this)))
 
 
-;;; Queueing
-
-;; Gets set up from batching
-;; TODO: Refactor so that isn't needed
-(defonce render-queue nil)
-
-(def dirty-queue nil)
-
-(defn enqueue [r]
-  (when (nil? dirty-queue)
-    (set! dirty-queue (array))
-    (.schedule render-queue))
-  (.push dirty-queue r))
-
-(defn flush! []
-  (let [q dirty-queue]
-    (when-not (nil? q)
-      (set! dirty-queue nil)
-      (dotimes [i (alength q)]
-        (let [r (aget q i)]
-          (when-not (or (nil? (.-auto-run r))
-                        (true? (._check-clean r)))
-            (run r)))))))
-
-
+;; TOOD: Fix arguments
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
-                                 capture]}]
+                                 capture async]}]
   (let [runner (case auto-run
                  true run
-                 :async enqueue
                  auto-run)
         derefs (if-some [c capture]
                  (-captured c)
                  derefed)
-        dirty (if (nil? derefs) dirty clean)
+        dirty (if (nil? derefs) true false)
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
+    (when (and runner (not async))
+      (when-not debug
+        (warn "deprecated sync"))
+      (set! (.-sync reaction) true)
+      (set! rea-sync-count (inc rea-sync-count)))
     (when-some [rid (some-> capture .-reaction-id)]
       (set! (.-reaction-id reaction) rid))
     (when-not (nil? derefed)
@@ -513,7 +507,6 @@
               (.-ratomGeneration derefs)))
       (._update-watching reaction derefs))
     reaction))
-
 
 
 ;;; wrap
@@ -569,25 +562,3 @@
   (Wrapper. value
             (util/partial-ifn. callback-fn args nil)
             false nil))
-
-(comment
-  (defn ratom-perf []
-    (dbg "ratom-perf")
-    (set! debug false)
-    (dotimes [_ 10]
-      (let [nite 100000
-            a (atom 0)
-            f (fn []
-                ;; (with-let [x 1])
-                (quot @a 10))
-            mid (make-reaction f)
-            res (make-reaction (fn []
-                                 ;; @(track f)
-                                 (inc @mid))
-                               :auto-run true)]
-        @res
-        (time (dotimes [x nite]
-                (swap! a inc)))
-        (dispose! res))))
-  (enable-console-print!)
-  (ratom-perf))
