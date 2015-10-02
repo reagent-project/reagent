@@ -5,7 +5,6 @@
             [reagent.debug :refer-macros [dbg log warn error dev?]]))
 
 (declare ^:dynamic *ratom-context*)
-(defonce cached-reactions {})
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
 (defonce generation 0)
@@ -18,8 +17,7 @@
 ;;; Utilities
 
 (defn running []
-  (+ @-running
-     (count cached-reactions)))
+  (+ @-running))
 
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) nil)
@@ -177,34 +175,47 @@
 
 (declare make-reaction)
 
-(defn- cached-reaction [f key obj destroy]
-  (if-some [r (get cached-reactions key)]
-    (-deref r)
-    (if-not (nil? *ratom-context*)
-      (let [r (make-reaction
-               f :on-dispose (fn [x]
-                               (set! cached-reactions
-                                     (dissoc cached-reactions key))
-                               (when-not (nil? obj)
-                                 (set! (.-reaction obj) nil))
-                               (when-not (nil? destroy)
-                                 (destroy x))
-                               nil))
-            v (-deref r)]
-        (set! cached-reactions (assoc cached-reactions key r))
-        (when-not (nil? obj)
-          (set! (.-reaction obj) r))
-        v)
-      (f))))
+(defonce cached-reactions (transient {}))
 
-(deftype Track [f key ^:mutable reaction]
+(defn- cached-reaction [f k1 k2 obj destroy]
+  (let [m (if-some [v (get cached-reactions k1)]
+            v
+            (let [newm (transient {})]
+              (assoc! cached-reactions k1 newm)
+              newm))]
+    (if-some [r (get m k2)]
+      (-deref r)
+      (if-not (nil? *ratom-context*)
+        (let [r (make-reaction
+                 f :on-dispose (fn [x]
+                                 (when debug (swap! -running dec))
+                                 (let [m (get cached-reactions k1)]
+                                   (->> (dissoc! m k2)
+                                        (assoc! cached-reactions k1)
+                                        (set! cached-reactions)))
+                                 (when-not (nil? obj)
+                                   (set! (.-reaction obj) nil))
+                                 (when-not (nil? destroy)
+                                   (destroy x))
+                                 nil))
+              v (-deref r)]
+          (->> (assoc! m k2 r)
+               (assoc! cached-reactions k1)
+               (set! cached-reactions))
+          (when debug (swap! -running inc))
+          (when-not (nil? obj)
+            (set! (.-reaction obj) r))
+          v)
+        (f)))))
+
+(deftype Track [f args ^:mutable reaction]
   IReactiveAtom
 
   IDeref
   (-deref [this]
     (if-some [r reaction]
       (-deref r)
-      (cached-reaction f key this nil)))
+      (cached-reaction #(apply f args) f args this nil)))
 
   IEquiv
   (-equiv [_ other]
@@ -218,7 +229,7 @@
   (-pr-writer [a w opts] (pr-atom a w opts "Track:")))
 
 (defn make-track [f args]
-  (Track. #(apply f args) [f args] nil))
+  (Track. f args nil))
 
 (defn make-track! [f args]
   (let [t (make-track f args)
@@ -267,7 +278,7 @@
                      (let [f (if (satisfies? IDeref ratom)
                                #(get-in @ratom path)
                                #(ratom path))]
-                       (cached-reaction f [::cursor ratom path] this nil)))]
+                       (cached-reaction f ratom path this nil)))]
       (._set-state this oldstate newstate)
       newstate))
 
@@ -318,7 +329,7 @@
 
 (defn with-let-values [key]
   (if-some [c *ratom-context*]
-    (cached-reaction array [(reaction-key c) key]
+    (cached-reaction array key (reaction-key c)
                      nil with-let-destroy)
     (array)))
 
