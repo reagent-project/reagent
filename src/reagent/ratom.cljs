@@ -21,6 +21,9 @@
 
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) nil)
+  ;; (if-not (nil? (.-watching obj))
+  ;;   (set! (.-reaPos obj) 0))
+  (set! (.-reaPos obj) -1)
   (when (dev?)
     (set! (.-ratomGeneration obj)
           (set! generation (inc generation))))
@@ -28,18 +31,40 @@
     (f)))
 
 (defn captured [obj]
-  (when-not (nil? (.-cljsCaptured obj))
+  (when-not (and (== -1 (.-reaPos obj))
+                 (nil? (.-cljsCaptured obj)))
     obj))
 
 (defn- -captured [obj]
   (let [c (.-cljsCaptured obj)]
     (set! (.-cljsCaptured obj) nil)
-    c))
+    (if (nil? c)
+      (when (== (inc (.-reaPos obj))
+                (some-> (.-watching obj) alength))
+        (.-watching obj))
+      c)))
+
+(defn- add-item [a x]
+  (when (== -1 (.indexOf a x))
+    (.push a x)))
 
 (defn- notify-deref-watcher! [derefable]
   (when-some [obj *ratom-context*]
     (let [c (.-cljsCaptured obj)]
       (if (nil? c)
+        ;; Try to avoid allocating new array
+        (let [p (inc (.-reaPos obj))
+              w (.-watching obj)]
+          (if (and (not (nil? w))
+                   (identical? derefable (aget w p)))
+            (set! (.-reaPos obj) p)
+            (set! (.-cljsCaptured obj)
+                  (if (nil? w)
+                    (array derefable)
+                    (doto (.slice w 0 p)
+                      (add-item derefable))))))
+        (add-item c derefable))
+      #_(if (nil? c)
         (set! (.-cljsCaptured obj) (array derefable))
         (when (== -1 (.indexOf c derefable))
           (.push c derefable)))))
