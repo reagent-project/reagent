@@ -208,20 +208,12 @@
 
 (declare make-reaction)
 
-(defonce cached-reactions (transient {}))
+(def ^{:private true :const true} cache-key "reaction-cache")
 
-(defn- get-sub-map [k]
-  (let [m (get cached-reactions k)]
-    (if-not (nil? m)
-      m
-      (let [m (transient {})]
-        (->> (assoc! cached-reactions k m)
-             (set! cached-reactions))
-        m))))
-
-(defn- cached-reaction [f k1 k2 obj destroy]
-  (let [m (get-sub-map k1)
-        r (get m k2)]
+(defn- cached-reaction [f o k obj destroy]
+  (let [m (aget o cache-key)
+        m (if (nil? m) {} m)
+        r (get m k)]
     (if-not (nil? r)
       (-deref r)
       (if (nil? *ratom-context*)
@@ -229,22 +221,16 @@
         (let [r (make-reaction
                  f :on-dispose (fn [x]
                                  (when debug (swap! -running dec))
-                                 (let [c cached-reactions
-                                       m (-> (get c k1)
-                                             (dissoc! k2))
-                                       c (if (zero? (count m))
-                                           (dissoc! c k1)
-                                           (assoc! c k1 m))]
-                                   (set! cached-reactions c))
+                                 (as-> (aget o cache-key) _
+                                   (dissoc _ k)
+                                   (aset o cache-key _))
                                  (when-not (nil? obj)
                                    (set! (.-reaction obj) nil))
                                  (when-not (nil? destroy)
                                    (destroy x))
                                  nil))
               v (-deref r)]
-          (->> (assoc! m k2 r)
-               (assoc! cached-reactions k1)
-               (set! cached-reactions))
+          (aset o cache-key (assoc m k r))
           (when debug (swap! -running inc))
           (when-not (nil? obj)
             (set! (.-reaction obj) r))
@@ -257,7 +243,7 @@
   (-deref [this]
     (if-some [r reaction]
       (-deref r)
-      (cached-reaction #(apply f args) (goog/getUid f) args this nil)))
+      (cached-reaction #(apply f args) f args this nil)))
 
   IEquiv
   (-equiv [_ other]
@@ -371,7 +357,7 @@
 
 (defn with-let-values [key]
   (if-some [c *ratom-context*]
-    (cached-reaction array key (reaction-key c)
+    (cached-reaction array c key
                      nil with-let-destroy)
     (array)))
 
@@ -537,6 +523,10 @@
         nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
+    (when-not (nil? capture)
+      (when-some [c (aget capture cache-key)]
+        (aset reaction cache-key c)))
+    ;; TODO: get rid of reaction-id
     (when-some [rid (some-> capture .-reaction-id)]
       (set! (.-reaction-id reaction) rid))
     (when-not (nil? derefed)
