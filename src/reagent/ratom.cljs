@@ -20,10 +20,8 @@
   (+ @-running))
 
 (defn capture-derefed [f obj]
-  (set! (.-cljsCaptured obj) nil)
-  ;; (if-not (nil? (.-watching obj))
-  ;;   (set! (.-reaPos obj) 0))
-  (set! (.-reaPos obj) -1)
+  (set! (.-cljsCaptured obj) (.-watching obj))
+  (set! (.-reaPos obj) 0)
   (when (dev?)
     (set! (.-ratomGeneration obj)
           (set! generation (inc generation))))
@@ -31,18 +29,19 @@
     (f)))
 
 (defn captured [obj]
-  (when-not (and (== -1 (.-reaPos obj))
-                 (nil? (.-cljsCaptured obj)))
-    obj))
+  (let [c (.-cljsCaptured obj)]
+    (when-not (nil? c)
+      (let [p (.-reaPos obj)]
+        (when (or (== p -1)
+                  (== p (alength c)))
+          obj)))))
 
 (defn- -captured [obj]
-  (let [c (.-cljsCaptured obj)]
-    (set! (.-cljsCaptured obj) nil)
-    (if (nil? c)
-      (when (== (inc (.-reaPos obj))
-                (some-> (.-watching obj) alength))
-        (.-watching obj))
-      c)))
+  (let [obj (captured obj)]
+    (when-not (nil? obj)
+      (let [c (.-cljsCaptured obj)]
+        (set! (.-cljsCaptured obj) nil)
+        c))))
 
 (defn- add-item [a x]
   (when (== -1 (.indexOf a x))
@@ -52,22 +51,18 @@
   (when-some [obj *ratom-context*]
     (let [c (.-cljsCaptured obj)]
       (if (nil? c)
+        (do (set! (.-reaPos obj) -1)
+            (set! (.-cljsCaptured obj) (array derefable)))
         ;; Try to avoid allocating new array
-        (let [p (inc (.-reaPos obj))
-              w (.-watching obj)]
-          (if (and (not (nil? w))
-                   (identical? derefable (aget w p)))
-            (set! (.-reaPos obj) p)
-            (set! (.-cljsCaptured obj)
-                  (if (nil? w)
-                    (array derefable)
-                    (doto (.slice w 0 p)
-                      (add-item derefable))))))
-        (add-item c derefable))
-      #_(if (nil? c)
-        (set! (.-cljsCaptured obj) (array derefable))
-        (when (== -1 (.indexOf c derefable))
-          (.push c derefable)))))
+        (let [p (.-reaPos obj)]
+          (if (and (not (== p -1))
+                   (identical? derefable (aget c p)))
+            (set! (.-reaPos obj) (inc p))
+            (if (== p -1)
+              (add-item c derefable)
+              (let [c1 (set! (.-cljsCaptured obj) (.slice c 0 p))]
+                (add-item c1 derefable)
+                (set! (.-reaPos obj) -1))))))))
   nil)
 
 (defn- ^number arr-len [x]
