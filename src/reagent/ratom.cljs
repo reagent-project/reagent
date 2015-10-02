@@ -7,8 +7,8 @@
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
 (defonce ^boolean silent false)
-(defonce generation 0)
-(defonce -running (clojure.core/atom 0))
+(defonce ^:private generation 0)
+(defonce ^:private -running (clojure.core/atom 0))
 
 (defn ^boolean reactive? []
   (not (nil? *ratom-context*)))
@@ -75,7 +75,7 @@
                  (recur (inc i))
                  false))))))
 
-(def reaction-counter 0)
+(def ^:private reaction-counter 0)
 
 (defn- reaction-key [r]
   (if-some [k (.-reaction-id r)]
@@ -90,19 +90,34 @@
   new)
 
 (defn- add-w [this key f]
+  (set! (.-watchesArr this) nil)
   (let [w (.-watches this)]
     (set! (.-watches this) (check-watches w (assoc w key f)))))
 
 (defn- remove-w [this key]
+  (set! (.-watchesArr this) nil)
   (let [w (.-watches this)
         r -running]
     (set! (.-watches this) (check-watches w (dissoc w key)))))
 
 (defn- notify-w [this old new]
-  (reduce-kv (fn [_ k f]
-               (f k this old new)
-               nil)
-             nil (.-watches this))
+  (let [w (.-watchesArr this)
+        a (if (nil? w)
+            (set! (.-watchesArr this) (array))
+            w)]
+    (when (nil? w)
+      ;; Copy watches to an array for speed
+      (reduce-kv (fn [_ k f]
+                   (.push a k)
+                   (.push a f))
+                 nil (.-watches this)))
+    (let [len (alength a)]
+      (loop [i 0]
+        (when (< i len)
+          (let [k (aget a i)
+                f (aget a (inc i))]
+            (f k this old new))
+          (recur (+ 2 i))))))
   nil)
 
 (defn- pr-atom [a writer opts s]
@@ -113,8 +128,8 @@
 
 ;;; Queueing
 
-(defonce rea-queue nil)
-(def empty-context #js{})
+(defonce ^:private rea-queue nil)
+(def ^:private empty-context #js{})
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
