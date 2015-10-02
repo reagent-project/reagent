@@ -21,7 +21,7 @@
 
 (defn capture-derefed [f obj]
   (set! (.-cljsCaptured obj) (.-watching obj))
-  (set! (.-reaPos obj) 0)
+  (set! (.-cljsCapPos obj) 0)
   (when (dev?)
     (set! (.-ratomGeneration obj)
           (set! generation (inc generation))))
@@ -31,7 +31,7 @@
 (defn captured [obj]
   (let [c (.-cljsCaptured obj)]
     (when-not (nil? c)
-      (let [p (.-reaPos obj)]
+      (let [p (.-cljsCapPos obj)]
         (when (or (== p -1)
                   (== p (alength c)))
           obj)))))
@@ -51,19 +51,17 @@
   (when-some [obj *ratom-context*]
     (let [c (.-cljsCaptured obj)]
       (if (nil? c)
-        (do (set! (.-reaPos obj) -1)
+        (do (set! (.-cljsCapPos obj) -1)
             (set! (.-cljsCaptured obj) (array derefable)))
         ;; Try to avoid allocating new array
-        (let [p (.-reaPos obj)]
-          (if (and (not (== p -1))
-                   (identical? derefable (aget c p)))
-            (set! (.-reaPos obj) (inc p))
-            (if (== p -1)
-              (add-item c derefable)
+        (let [p (.-cljsCapPos obj)]
+          (if (== p -1)
+            (add-item c derefable)
+            (if (identical? derefable (aget c p))
+              (set! (.-cljsCapPos obj) (inc p))
               (let [c1 (set! (.-cljsCaptured obj) (.slice c 0 p))]
                 (add-item c1 derefable)
-                (set! (.-reaPos obj) -1))))))))
-  nil)
+                (set! (.-cljsCapPos obj) -1)))))))))
 
 (defn- ^number arr-len [x]
   (if (nil? x) 0 (alength x)))
@@ -197,22 +195,32 @@
 
 (defonce cached-reactions (transient {}))
 
+(defn- get-sub-map [k]
+  (let [m (get cached-reactions k)]
+    (if-not (nil? m)
+      m
+      (let [m (transient {})]
+        (->> (assoc! cached-reactions k m)
+             (set! cached-reactions))
+        m))))
+
 (defn- cached-reaction [f k1 k2 obj destroy]
-  (let [m (if-some [v (get cached-reactions k1)]
-            v
-            (let [newm (transient {})]
-              (assoc! cached-reactions k1 newm)
-              newm))]
-    (if-some [r (get m k2)]
+  (let [m (get-sub-map k1)
+        r (get m k2)]
+    (if-not (nil? r)
       (-deref r)
-      (if-not (nil? *ratom-context*)
+      (if (nil? *ratom-context*)
+        (f)
         (let [r (make-reaction
                  f :on-dispose (fn [x]
                                  (when debug (swap! -running dec))
-                                 (let [m (get cached-reactions k1)]
-                                   (->> (dissoc! m k2)
-                                        (assoc! cached-reactions k1)
-                                        (set! cached-reactions)))
+                                 (let [c cached-reactions
+                                       m (-> (get c k1)
+                                             (dissoc! k2))
+                                       c (if (zero? (count m))
+                                           (dissoc! c k1)
+                                           (assoc! c k1 m))]
+                                   (set! cached-reactions c))
                                  (when-not (nil? obj)
                                    (set! (.-reaction obj) nil))
                                  (when-not (nil? destroy)
@@ -225,8 +233,7 @@
           (when debug (swap! -running inc))
           (when-not (nil? obj)
             (set! (.-reaction obj) r))
-          v)
-        (f)))))
+          v)))))
 
 (deftype Track [f args ^:mutable reaction]
   IReactiveAtom
@@ -235,7 +242,7 @@
   (-deref [this]
     (if-some [r reaction]
       (-deref r)
-      (cached-reaction #(apply f args) f args this nil)))
+      (cached-reaction #(apply f args) (goog/getUid f) args this nil)))
 
   IEquiv
   (-equiv [_ other]

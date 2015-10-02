@@ -17,7 +17,7 @@
 (defmacro with-let [bindings & body]
   (assert (vector? bindings))
   (let [v (gensym "with-let")
-        k (keyword v)
+        k (str v)
         init (gensym "init")
         bs (into [init `(zero? (alength ~v))]
                  (map-indexed (fn [i x]
