@@ -75,15 +75,6 @@
                  (recur (inc i))
                  false))))))
 
-(def ^:private reaction-counter 0)
-
-(defn- reaction-key [r]
-  (if-some [k (.-reaction-id r)]
-    k
-    (->> reaction-counter inc
-         (set! reaction-counter)
-         (set! (.-reaction-id r)))))
-
 (defn- check-watches [old new]
   (when debug
     (swap! -running + (- (count new) (count old))))
@@ -208,7 +199,7 @@
 
 (declare make-reaction)
 
-(def ^{:private true :const true} cache-key "reaction-cache")
+(def ^{:private true :const true} cache-key "reagReactionCache")
 
 (defn- cached-reaction [f o k obj destroy]
   (let [m (aget o cache-key)
@@ -508,7 +499,7 @@
   (-pr-writer [a w opts] (pr-atom a w opts (str "Reaction " (hash a) ":")))
 
   IHash
-  (-hash [this] (reaction-key this)))
+  (-hash [this] (goog/getUid this)))
 
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
@@ -524,17 +515,16 @@
         reaction (Reaction. f nil dirty nil nil
                             runner on-set on-dispose nocache)]
     (when-not (nil? capture)
+      (when (dev?)
+        ;; TODO: Add test
+        (set! (.-ratomGeneration reaction)
+              (.-ratomGeneration capture)))
       (when-some [c (aget capture cache-key)]
+        (aset capture cache-key nil)
         (aset reaction cache-key c)))
-    ;; TODO: get rid of reaction-id
-    (when-some [rid (some-> capture .-reaction-id)]
-      (set! (.-reaction-id reaction) rid))
     (when-not (nil? derefed)
       (warn "using derefed is deprecated"))
     (when-not (nil? derefs)
-      (when (dev?)
-        (set! (.-ratomGeneration reaction)
-              (.-ratomGeneration derefs)))
       (._update-watching reaction derefs))
     reaction))
 
