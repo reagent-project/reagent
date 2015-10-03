@@ -359,9 +359,8 @@
   (._handle-change this sender old new))
 
 
-(deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty?
-                   ^:mutable watching ^:mutable watches
-                   ^:mutable auto-run on-set on-dispose ^boolean nocache?]
+(deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty? ^boolean nocache?
+                   ^:mutable watching ^:mutable watches ^:mutable auto-run]
   IAtom
   IReactiveAtom
 
@@ -376,10 +375,10 @@
 
   IReset
   (-reset! [a newval]
-    (assert (ifn? on-set) "Reaction is read only.")
+    (assert (fn? (.-on-set a)) "Reaction is read only.")
     (let [oldval state]
       (set! state newval)
-      (on-set oldval newval)
+      (.on-set a oldval newval)
       (notify-w a oldval newval)
       newval))
 
@@ -408,15 +407,16 @@
     nil)
 
   (_update-watching [this derefed]
-    (let [wg watching]
-      (set! watching derefed)
-      (doseq [w derefed]
+    (let [der (if (zero? (arr-len derefed)) nil derefed)
+          wg watching]
+      (set! watching der)
+      (doseq [w der]
         (when (or (nil? wg)
                   (== -1 (.indexOf wg w)))
           (-add-watch w this handle-reaction-change)))
       (doseq [w wg]
-        (when (or (nil? derefed)
-                  (== -1 (.indexOf derefed w)))
+        (when (or (nil? der)
+                  (== -1 (.indexOf der w)))
           (-remove-watch w this))))
     nil)
 
@@ -490,8 +490,8 @@
       (set! dirty? true)
       (doseq [w wg]
         (remove-watch w this))
-      (when-not (nil? on-dispose)
-        (on-dispose s)))
+      (when-not (nil? (.-on-dispose this))
+        (.on-dispose this s)))
     nil)
 
   IEquiv
@@ -505,8 +505,7 @@
 
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
-  (let [reaction (Reaction. f nil true nil nil
-                            nil nil nil false)]
+  (let [reaction (Reaction. f nil true false nil nil nil)]
     (._set-opts reaction {:auto-run auto-run
                           :on-set on-set
                           :on-dispose on-dispose})
