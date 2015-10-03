@@ -32,28 +32,23 @@
                  false))))))
 
 (defn- in-context [obj f]
-  (set! (.-cljsCapPos obj) 0)
+  (set! (.-capPos obj) 0)
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture [f obj]
   (let [watch (.-watching obj)]
-    (set! (.-cljsCaptured obj) (.-watching obj))
+    (set! (.-captured obj) (.-watching obj))
     (when (dev?)
       (set! (.-ratomGeneration obj)
             (set! generation (inc generation))))
     (let [res (in-context obj f)
-          capt (.-cljsCaptured obj)]
-      (set! (.-cljsCaptured obj) nil)
+          capt (.-captured obj)]
       (set! (.-dirty? obj) false)
-      (when-not (arr-eq capt watch)
+      (when-not (or (identical? capt watch)
+                    (arr-eq capt watch))
         (._update-watching obj capt))
       res)))
-
-(defn check-derefs [f]
-  (let [ctx (js-obj)
-        res (in-context ctx f)]
-    [res (some? (.-cljsCaptured ctx))]))
 
 (defn- add-item [a x]
   (when (== -1 (.indexOf a x))
@@ -61,19 +56,19 @@
 
 (defn- notify-deref-watcher! [derefable]
   (when-some [obj *ratom-context*]
-    (let [c (.-cljsCaptured obj)]
+    (let [c (.-captured obj)]
       (if (nil? c)
-        (do (set! (.-cljsCapPos obj) -1)
-            (set! (.-cljsCaptured obj) (array derefable)))
+        (do (set! (.-capPos obj) -1)
+            (set! (.-captured obj) (array derefable)))
         ;; Try to avoid allocating new array
-        (let [p (.-cljsCapPos obj)]
+        (let [p (.-capPos obj)]
           (if (== p -1)
             (add-item c derefable)
             (if (identical? derefable (aget c p))
-              (set! (.-cljsCapPos obj) (inc p))
-              (let [c1 (set! (.-cljsCaptured obj) (.slice c 0 p))]
+              (set! (.-capPos obj) (inc p))
+              (let [c1 (set! (.-captured obj) (.slice c 0 p))]
                 (add-item c1 derefable)
-                (set! (.-cljsCapPos obj) -1)))))))))
+                (set! (.-capPos obj) -1)))))))))
 
 (defn- check-watches [old new]
   (when debug
@@ -530,6 +525,11 @@
       (set! (.-auto-run rea) #(run obj))
       (aset obj key rea))
     res))
+
+(defn check-derefs [f]
+  (let [ctx (js-obj)
+        res (in-context ctx f)]
+    [res (some? (.-captured ctx))]))
 
 
 ;;; wrap
