@@ -315,17 +315,13 @@
     a))
 
 (defn expand-seq-check [x]
-  (let [ctx #js{}
-        res (if (nil? ratom/*ratom-context*)
-              (expand-seq-dev x ctx)
-              (ratom/capture-derefed #(expand-seq-dev x ctx)
-                                     ctx))]
-    (when-not (nil? (ratom/captured ctx))
+  (let [ctx #js {}
+        [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx))]
+    (when derefed
       (warn "Reactive deref not supported in lazy seq, "
             "it should be wrapped in doall"
             (comp/comp-name) ". Value:\n" (pr-str x)))
-    (when (and (not comp/*non-reactive*)
-               (.' ctx :no-key))
+    (when (.' ctx :no-key)
       (warn "Every element in a seq should have a unique "
             ":key" (comp/comp-name) ". Value: " (pr-str x)))
     res))

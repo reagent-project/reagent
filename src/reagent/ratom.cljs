@@ -19,29 +19,41 @@
 (defn running []
   (+ @-running))
 
-(defn capture-derefed [f obj]
-  (set! (.-cljsCaptured obj) (.-watching obj))
+(defn- ^number arr-len [x]
+  (if (nil? x) 0 (alength x)))
+
+(defn- ^boolean arr-eq [x y]
+  (let [len (arr-len x)]
+    (and (== len (arr-len y))
+         (loop [i 0]
+           (or (== i len)
+               (if (identical? (aget x i) (aget y i))
+                 (recur (inc i))
+                 false))))))
+
+(defn- in-context [obj f]
   (set! (.-cljsCapPos obj) 0)
-  (when (dev?)
-    (set! (.-ratomGeneration obj)
-          (set! generation (inc generation))))
   (binding [*ratom-context* obj]
     (f)))
 
-(defn captured [obj]
-  (let [c (.-cljsCaptured obj)]
-    (when-not (nil? c)
-      (let [p (.-cljsCapPos obj)]
-        (when (or (== p -1)
-                  (== p (alength c)))
-          obj)))))
+(defn- deref-capture [f obj]
+  (let [watch (.-watching obj)]
+    (set! (.-cljsCaptured obj) (.-watching obj))
+    (when (dev?)
+      (set! (.-ratomGeneration obj)
+            (set! generation (inc generation))))
+    (let [res (in-context obj f)
+          capt (.-cljsCaptured obj)]
+      (set! (.-cljsCaptured obj) nil)
+      (set! (.-dirty? obj) false)
+      (when-not (arr-eq capt watch)
+        (._update-watching obj capt))
+      res)))
 
-(defn- -captured [obj]
-  (let [obj (captured obj)]
-    (when-not (nil? obj)
-      (let [c (.-cljsCaptured obj)]
-        (set! (.-cljsCaptured obj) nil)
-        c))))
+(defn check-derefs [f]
+  (let [ctx (js-obj)
+        res (in-context ctx f)]
+    [res (some? (.-cljsCaptured ctx))]))
 
 (defn- add-item [a x]
   (when (== -1 (.indexOf a x))
@@ -62,18 +74,6 @@
               (let [c1 (set! (.-cljsCaptured obj) (.slice c 0 p))]
                 (add-item c1 derefable)
                 (set! (.-cljsCapPos obj) -1)))))))))
-
-(defn- ^number arr-len [x]
-  (if (nil? x) 0 (alength x)))
-
-(defn- ^boolean arr-eq [x y]
-  (let [len (arr-len x)]
-    (and (== len (arr-len y))
-         (loop [i 0]
-           (or (== i len)
-               (if (identical? (aget x i) (aget y i))
-                 (recur (inc i))
-                 false))))))
 
 (defn- check-watches [old new]
   (when debug
@@ -138,8 +138,7 @@
   (when-some [q rea-queue]
     (set! rea-queue nil)
     (binding [*ratom-context* empty-context]
-      (run-queue q))
-    (assert (nil? (-captured empty-context)))))
+      (run-queue q))))
 
 
 ;;; Atom
@@ -441,11 +440,7 @@
 
   (_run [this]
     (let [oldstate state
-          res (capture-derefed f this)
-          derefed (-captured this)]
-      (set! dirty? false)
-      (when-not (arr-eq derefed watching)
-        (._update-watching this derefed))
+          res (deref-capture f this)]
       (when-not nocache?
         (set! state res)
         ;; Use = to determine equality from reactions, since
@@ -456,12 +451,16 @@
       res))
 
   (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
-    (set! (.-auto-run this) (case auto-run
-                              true run
-                              auto-run))
-    (set! (.-on-set this) on-set)
-    (set! (.-on-dispose this) on-dispose)
-    (set! (.-nocache? this) (if (nil? no-cache) false no-cache)))
+    (when-not (nil? auto-run)
+      (set! (.-auto-run this) (case auto-run
+                                true run
+                                auto-run)))
+    (when-not (nil? on-set)
+      (set! (.-on-set this) on-set))
+    (when-not (nil? on-dispose)
+      (set! (.-on-dispose this) on-dispose))
+    (when-not (nil? no-cache)
+      (set! (.-nocache? this) no-cache)))
 
   IRunnable
   (run [this]
@@ -510,33 +509,12 @@
   (-hash [this] (goog/getUid this)))
 
 
-(defn make-reaction [f & {:keys [auto-run on-set on-dispose derefed no-cache
-                                 capture]}]
-  (let [runner (case auto-run
-                 true run
-                 auto-run)
-        derefs (if-some [c capture]
-                 (-captured c)
-                 derefed)
-        dirty (if (nil? derefs) true false)
-        reaction (Reaction. f nil dirty nil nil
+(defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
+  (let [reaction (Reaction. f nil true nil nil
                             nil nil nil false)]
     (._set-opts reaction {:auto-run auto-run
                           :on-set on-set
-                          :on-dispose on-dispose
-                          :no-cache no-cache})
-    (when-not (nil? capture)
-      (when (dev?)
-        ;; TODO: Add test
-        (set! (.-ratomGeneration reaction)
-              (.-ratomGeneration capture)))
-      (when-some [c (aget capture cache-key)]
-        (aset capture cache-key nil)
-        (aset reaction cache-key c)))
-    (when-not (nil? derefed)
-      (warn "using derefed is deprecated"))
-    (when-not (nil? derefs)
-      (._update-watching reaction derefs))
+                          :on-dispose on-dispose})
     reaction))
 
 
@@ -544,14 +522,12 @@
 
 (defn run-in-reaction [f obj key run opts]
   (let [rea temp-reaction
-        res (capture-derefed f rea)
-        derefed (-captured rea)]
-    (when-not (nil? derefed)
+        res (deref-capture f rea)]
+    (when-not (nil? (.-watching rea))
       (set! temp-reaction (make-reaction nil))
       (set! (.-f rea) f)
       (._set-opts rea opts)
       (set! (.-auto-run rea) #(run obj))
-      (._update-watching rea derefed)
       (aset obj key rea))
     res))
 
