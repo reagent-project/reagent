@@ -31,29 +31,32 @@
                  (recur (inc i))
                  false))))))
 
+(defn- ^boolean in-arr [a x]
+  (not (or (nil? a)
+           (== -1 (.indexOf a x)))))
+
 (defn- in-context [obj f]
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture [f r]
-  (let [watch (.-watching r)]
-    (set! (.-captured r) nil)
-    (when (dev?)
-      (set! (.-ratomGeneration r)
-            (set! generation (inc generation))))
-    (let [res (in-context r f)
-          capt (.-captured r)]
-      (set! (.-dirty? r) false)
-      (when-not (arr-eq capt watch)
-        (._update-watching r capt))
-      res)))
+  (set! (.-captured r) nil)
+  (when (dev?)
+    (set! (.-ratomGeneration r)
+          (set! generation (inc generation))))
+  (let [res (in-context r f)
+        c (.-captured r)]
+    (set! (.-dirty? r) false)
+    (when-not (arr-eq c (.-watching r))
+      (._update-watching r c))
+    res))
 
 (defn- notify-deref-watcher! [derefable]
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
         (set! (.-captured r) (array derefable))
-        (when (== -1 (.indexOf c derefable))
+        (when-not (in-arr c derefable)
           (.push c derefable))))))
 
 (defn- check-watches [old new]
@@ -62,15 +65,14 @@
   new)
 
 (defn- add-w [this key f]
-  (set! (.-watchesArr this) nil)
   (let [w (.-watches this)]
-    (set! (.-watches this) (check-watches w (assoc w key f)))))
+    (set! (.-watches this) (check-watches w (assoc w key f)))
+    (set! (.-watchesArr this) nil)))
 
 (defn- remove-w [this key]
-  (set! (.-watchesArr this) nil)
-  (let [w (.-watches this)
-        r -running]
-    (set! (.-watches this) (check-watches w (dissoc w key)))))
+  (let [w (.-watches this)]
+    (set! (.-watches this) (check-watches w (dissoc w key)))
+    (set! (.-watchesArr this) nil)))
 
 (defn- notify-w [this old new]
   (let [w (.-watchesArr this)
@@ -79,9 +81,7 @@
             w)]
     (when (nil? w)
       ;; Copy watches to an array for speed
-      (reduce-kv (fn [_ k f]
-                   (.push a k)
-                   (.push a f))
+      (reduce-kv #(.push a %2 %3)
                  nil (.-watches this)))
     (let [len (alength a)]
       (loop [i 0]
@@ -89,8 +89,7 @@
           (let [k (aget a i)
                 f (aget a (inc i))]
             (f k this old new))
-          (recur (+ 2 i))))))
-  nil)
+          (recur (+ 2 i)))))))
 
 (defn- pr-atom [a writer opts s]
   (-write writer (str "#<" s " "))
@@ -397,12 +396,10 @@
           wg watching]
       (set! watching der)
       (doseq [w der]
-        (when (or (nil? wg)
-                  (== -1 (.indexOf wg w)))
+        (when-not (in-arr wg w) 
           (-add-watch w this handle-reaction-change)))
       (doseq [w wg]
-        (when (or (nil? der)
-                  (== -1 (.indexOf der w)))
+        (when-not (in-arr der w)
           (-remove-watch w this))))
     nil)
 
