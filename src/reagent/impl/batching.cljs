@@ -93,20 +93,14 @@
 (defn is-reagent-component [c]
   (some-> c (.' :props) (.' :argv)))
 
+(def rat-opts {:no-cache true})
+
 (defn run-reactively [c run]
   (assert (is-reagent-component c))
   (mark-rendered c)
   (let [rat (.' c :cljsRatom)]
     (if (nil? rat)
-      (let [res (ratom/capture-derefed run c)
-            derefed (ratom/captured c)]
-        (when-not (nil? derefed)
-          (.! c :cljsRatom
-              (ratom/make-reaction run
-                                   :auto-run #(queue-render c)
-                                   :capture derefed
-                                   :no-cache true)))
-        res)
+      (ratom/run-in-reaction run c "cljsRatom" queue-render rat-opts)
       (._run rat))))
 
 (defn dispose [c]

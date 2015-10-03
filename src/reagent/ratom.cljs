@@ -455,6 +455,14 @@
           (notify-w this oldstate res)))
       res))
 
+  (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
+    (set! (.-auto-run this) (case auto-run
+                              true run
+                              auto-run))
+    (set! (.-on-set this) on-set)
+    (set! (.-on-dispose this) on-dispose)
+    (set! (.-nocache? this) (if (nil? no-cache) false no-cache)))
+
   IRunnable
   (run [this]
     (flush!)
@@ -511,9 +519,12 @@
                  (-captured c)
                  derefed)
         dirty (if (nil? derefs) true false)
-        nocache (if (nil? no-cache) false no-cache)
         reaction (Reaction. f nil dirty nil nil
-                            runner on-set on-dispose nocache)]
+                            nil nil nil false)]
+    (._set-opts reaction {:auto-run auto-run
+                          :on-set on-set
+                          :on-dispose on-dispose
+                          :no-cache no-cache})
     (when-not (nil? capture)
       (when (dev?)
         ;; TODO: Add test
@@ -527,6 +538,22 @@
     (when-not (nil? derefs)
       (._update-watching reaction derefs))
     reaction))
+
+
+(def temp-reaction (make-reaction nil))
+
+(defn run-in-reaction [f obj key run opts]
+  (let [rea temp-reaction
+        res (capture-derefed f rea)
+        derefed (-captured rea)]
+    (when-not (nil? derefed)
+      (set! temp-reaction (make-reaction nil))
+      (set! (.-f rea) f)
+      (._set-opts rea opts)
+      (set! (.-auto-run rea) #(run obj))
+      (._update-watching rea derefed)
+      (aset obj key rea))
+    res))
 
 
 ;;; wrap
