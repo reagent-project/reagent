@@ -32,43 +32,29 @@
                  false))))))
 
 (defn- in-context [obj f]
-  (set! (.-capPos obj) 0)
   (binding [*ratom-context* obj]
     (f)))
 
-(defn- deref-capture [f obj]
-  (let [watch (.-watching obj)]
-    (set! (.-captured obj) (.-watching obj))
+(defn- deref-capture [f r]
+  (let [watch (.-watching r)]
+    (set! (.-captured r) nil)
     (when (dev?)
-      (set! (.-ratomGeneration obj)
+      (set! (.-ratomGeneration r)
             (set! generation (inc generation))))
-    (let [res (in-context obj f)
-          capt (.-captured obj)]
-      (set! (.-dirty? obj) false)
-      (when-not (or (identical? capt watch)
-                    (arr-eq capt watch))
-        (._update-watching obj capt))
+    (let [res (in-context r f)
+          capt (.-captured r)]
+      (set! (.-dirty? r) false)
+      (when-not (arr-eq capt watch)
+        (._update-watching r capt))
       res)))
 
-(defn- add-item [a x]
-  (when (== -1 (.indexOf a x))
-    (.push a x)))
-
 (defn- notify-deref-watcher! [derefable]
-  (when-some [obj *ratom-context*]
-    (let [c (.-captured obj)]
+  (when-some [r *ratom-context*]
+    (let [c (.-captured r)]
       (if (nil? c)
-        (do (set! (.-capPos obj) -1)
-            (set! (.-captured obj) (array derefable)))
-        ;; Try to avoid allocating new array
-        (let [p (.-capPos obj)]
-          (if (== p -1)
-            (add-item c derefable)
-            (if (identical? derefable (aget c p))
-              (set! (.-capPos obj) (inc p))
-              (let [c1 (set! (.-captured obj) (.slice c 0 p))]
-                (add-item c1 derefable)
-                (set! (.-capPos obj) -1)))))))))
+        (set! (.-captured r) (array derefable))
+        (when (== -1 (.indexOf c derefable))
+          (.push c derefable))))))
 
 (defn- check-watches [old new]
   (when debug
