@@ -1,7 +1,7 @@
 (ns reagenttest.testratomasync
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :refer-macros [dbg]]
+            [reagent.debug :as debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
 (defn fixture [f]
@@ -282,15 +282,15 @@
         b (reaction (if @a (throw (js/Error. "reaction fail"))))
         c (ar (fn [] (try @b (catch js/Object e
                                (swap! catch-count inc)))))]
-    (set! rv/silent true)
-    (is (= @catch-count 0))
-    (reset! a false)
-    @c
-    (is (= @catch-count 0))
-    (reset! a true)
-    (is (= @catch-count 0))
-    (sync)
-    (is (= @catch-count 1))
-    (set! rv/silent false)
-    (dispose c)
+    (debug/track-warnings
+     (fn []
+       (is (= @catch-count 0))
+       (reset! a false)
+       @c
+       (is (= @catch-count 0))
+       (reset! a true)
+       (is (= @catch-count 0))
+       (sync)
+       (is (= @catch-count 1))
+       (dispose c)))
     (is (= runs (running)))))

@@ -8,12 +8,11 @@
 
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
-(defonce ^boolean silent false)
 (defonce ^:private generation 0)
 (defonce ^:private -running (clojure.core/atom 0))
 
 (defn ^boolean reactive? []
-  (not (nil? *ratom-context*)))
+  (some? *ratom-context*))
 
 
 ;;; Utilities
@@ -189,14 +188,14 @@
                                  (as-> (aget o cache-key) _
                                    (dissoc _ k)
                                    (aset o cache-key _))
-                                 (when-not (nil? obj)
+                                 (when (some? obj)
                                    (set! (.-reaction obj) nil))
-                                 (when-not (nil? destroy)
+                                 (when (some? destroy)
                                    (destroy x))))
               v (-deref r)]
           (aset o cache-key (assoc m k r))
           (when debug (swap! -running inc))
-          (when-not (nil? obj)
+          (when (some? obj)
             (set! (.-reaction obj) r))
           v)))))
 
@@ -260,7 +259,7 @@
   (_set-state [this oldstate newstate]
     (when-not (identical? oldstate newstate)
       (set! state newstate)
-      (when-not (nil? watches)
+      (when (some? watches)
         (notify-w this oldstate newstate))))
 
   IDeref
@@ -348,9 +347,9 @@
   (-notify-watches [this old new] (notify-w this old new))
   (-add-watch [this key f]        (add-w this key f))
   (-remove-watch [this key]
-    (let [n (count watches)]
+    (let [was-empty (empty? watches)]
       (remove-w this key)
-      (when (and (pos? n)
+      (when (and (not was-empty)
                  (empty? watches)
                  (nil? auto-run))
         (dispose! this))))
@@ -396,14 +395,14 @@
         (-remove-watch w this))))
 
   (_try-run [this other]
-    (if-not (nil? auto-run)
+    (if (some? auto-run)
       (auto-run this)
-      (when (and dirty? (not (nil? watching)))
+      (when (and dirty? (some? watching))
         (try
           (._run this)
           (catch :default e
             ;; Just log error: it will most likely pop up again at deref time.
-            (when-not silent (error "Error in reaction:" e))
+            (error "Error in reaction:" e)
             (set! state nil)
             (notify-w this e nil))))))
 
@@ -420,15 +419,15 @@
       res))
 
   (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
-    (when-not (nil? auto-run)
+    (when (some? auto-run)
       (set! (.-auto-run this) (case auto-run
                                 true run
                                 auto-run)))
-    (when-not (nil? on-set)
+    (when (some? on-set)
       (set! (.-on-set this) on-set))
-    (when-not (nil? on-dispose)
+    (when (some? on-dispose)
       (set! (.-on-dispose this) on-dispose))
-    (when-not (nil? no-cache)
+    (when (some? no-cache)
       (set! (.-nocache? this) no-cache)))
 
   IRunnable
@@ -463,7 +462,7 @@
       (set! dirty? true)
       (doseq [w (set wg)]
         (-remove-watch w this))
-      (when-not (nil? (.-on-dispose this))
+      (when (some? (.-on-dispose this))
         (.on-dispose this s))))
 
   IEquiv
@@ -523,7 +522,7 @@
     (let [oldval state]
       (set! changed true)
       (set! state newval)
-      (when-not (nil? watches)
+      (when (some? watches)
         (notify-w this oldval newval))
       (callback newval)
       newval))

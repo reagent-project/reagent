@@ -1,7 +1,7 @@
 (ns reagenttest.testtrack
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer [track] :refer-macros [run! reaction]]
-            [reagent.debug :refer-macros [dbg]]
+            [reagent.debug :as debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
 (defn fixture [f]
@@ -213,19 +213,17 @@
         b (track #(if @a (throw (js/Error. "fail"))))
         c (run! (try @b (catch :default e
                           (swap! catch-count inc))))]
-    (set! rv/silent true)
-
-    (is (= @catch-count 0))
-    (reset! a false)
-    (sync)
-    (is (= @catch-count 0))
-    (reset! a true)
-    (sync)
-    (is (= @catch-count 1))
-    (reset! a false)
-    (sync)
-    (is (= @catch-count 1))
-
-    (set! rv/silent false)
+    (debug/track-warnings
+     (fn []
+       (is (= @catch-count 0))
+       (reset! a false)
+       (sync)
+       (is (= @catch-count 0))
+       (reset! a true)
+       (sync)
+       (is (= @catch-count 1))
+       (reset! a false)
+       (sync)
+       (is (= @catch-count 1))))
     (dispose c)
     (is (= runs (running)))))
