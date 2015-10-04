@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [atom])
   (:require-macros [reagent.ratom :refer [with-let]])
   (:require [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg log warn error dev?]]))
+            [reagent.debug :refer-macros [dbg log warn error dev?]]
+            [clojure.set :as s]))
 
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
@@ -31,10 +32,6 @@
                  (recur (inc i))
                  false))))))
 
-(defn- ^boolean in-arr [a x]
-  (not (or (nil? a)
-           (== -1 (.indexOf a x)))))
-
 (defn- in-context [obj f]
   (binding [*ratom-context* obj]
     (f)))
@@ -42,22 +39,21 @@
 (defn- deref-capture [f r]
   (set! (.-captured r) nil)
   (when (dev?)
-    (set! (.-ratomGeneration r)
-          (set! generation (inc generation))))
+    (set! (.-ratomGeneration r) (set! generation (inc generation))))
   (let [res (in-context r f)
         c (.-captured r)]
     (set! (.-dirty? r) false)
+    ;; Optimize common case where derefs occur in same order
     (when-not (arr-eq c (.-watching r))
       (._update-watching r c))
     res))
 
-(defn- notify-deref-watcher! [derefable]
+(defn- notify-deref-watcher! [derefed]
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
-        (set! (.-captured r) (array derefable))
-        (when-not (in-arr c derefable)
-          (.push c derefable))))))
+         (set! (.-captured r) (array derefed))
+         (.push c derefed)))))
 
 (defn- check-watches [old new]
   (when debug
@@ -77,12 +73,10 @@
 (defn- notify-w [this old new]
   (let [w (.-watchesArr this)
         a (if (nil? w)
-            (set! (.-watchesArr this) (array))
+            ;; Copy watches to array for speed
+            (->> this .-watches seq flatten into-array
+                 (set! (.-watchesArr this)))
             w)]
-    (when (nil? w)
-      ;; Copy watches to an array for speed
-      (reduce-kv #(.push a %2 %3)
-                 nil (.-watches this)))
     (let [len (alength a)]
       (loop [i 0]
         (when (< i len)
@@ -110,13 +104,13 @@
   (.push rea-queue r))
 
 (defn- run-queue [q]
+  (set! rea-queue nil)
   (dotimes [i (alength q)]
       (let [r (aget q i)]
         (._try-run r))))
 
 (defn flush! []
   (when-some [q rea-queue]
-    (set! rea-queue nil)
     (binding [*ratom-context* empty-context]
       (run-queue q))))
 
@@ -197,8 +191,7 @@
                                  (when-not (nil? obj)
                                    (set! (.-reaction obj) nil))
                                  (when-not (nil? destroy)
-                                   (destroy x))
-                                 nil))
+                                   (destroy x))))
               v (-deref r)]
           (aset o cache-key (assoc m k r))
           (when debug (swap! -running inc))
@@ -218,10 +211,11 @@
   IEquiv
   (-equiv [_ other]
     (and (instance? Track other)
-         (= key (.-key other))))
+         (= f (.-f other))
+         (= args (.-args other))))
 
   IHash
-  (-hash [_] (hash key))
+  (-hash [_] (hash [f args]))
 
   IPrintWithWriter
   (-pr-writer [a w opts] (pr-atom a w opts "Track:")))
@@ -353,10 +347,12 @@
   (-notify-watches [this old new] (notify-w this old new))
   (-add-watch [this key f]        (add-w this key f))
   (-remove-watch [this key]
-    (remove-w this key)
-    (when (and (empty? watches)
-               (nil? auto-run))
-      (dispose! this)))
+    (let [n (count watches)]
+      (remove-w this key)
+      (when (and (pos? n)
+                 (empty? watches)
+                 (nil? auto-run))
+        (dispose! this))))
 
   IReset
   (-reset! [a newval]
@@ -380,28 +376,23 @@
 
   (_handle-change [this sender oldval newval]
     (when-not (identical? oldval newval)
-      (if-not (nil? *ratom-context*)
-        (if-not (nil? auto-run)
-          (auto-run this)
+      (if (nil? *ratom-context*)
+        (do (set! dirty? true)
+            (rea-enqueue this))
+        (if (nil? auto-run)
           (when-not dirty?
             (set! dirty? true)
-            (._run this)))
-        (do
-          (set! dirty? true)
-          (rea-enqueue this))))
-    nil)
+            (._run this))
+          (auto-run this)))))
 
   (_update-watching [this derefed]
-    (let [der (if (zero? (arr-len derefed)) nil derefed)
-          wg watching]
-      (set! watching der)
-      (doseq [w der]
-        (when-not (in-arr wg w) 
-          (-add-watch w this handle-reaction-change)))
-      (doseq [w wg]
-        (when-not (in-arr der w)
-          (-remove-watch w this))))
-    nil)
+    (let [new (set derefed)
+          old (set watching)]
+      (set! watching derefed)
+      (doseq [w (s/difference new old)]
+        (-add-watch w this handle-reaction-change))
+      (doseq [w (s/difference old new)]
+        (-remove-watch w this))))
 
   (_try-run [this other]
     (if-not (nil? auto-run)
@@ -413,8 +404,7 @@
             ;; Just log error: it will most likely pop up again at deref time.
             (when-not silent (error "Error in reaction:" e))
             (set! state nil)
-            (notify-w this e nil)))))
-    nil)
+            (notify-w this e nil))))))
 
   (_run [this]
     (let [oldstate state
@@ -449,18 +439,17 @@
   (-deref [this]
     (when (nil? *ratom-context*)
       (flush!))
-    (if-not (and (nil? auto-run) (nil? *ratom-context*))
-      (do
-        (notify-deref-watcher! this)
-        (when dirty?
-          (._run this)))
+    (if (and (nil? auto-run) (nil? *ratom-context*))
       (do
         (when dirty?
           (let [oldstate state]
             (set! state (f))
-            (when-not (or (nil? watches)
-                          (= oldstate state))
-              (notify-w this oldstate state))))))
+            (when-not (or (nil? watches) (= oldstate state))
+              (notify-w this oldstate state)))))
+      (do
+        (notify-deref-watcher! this)
+        (when dirty?
+          (._run this))))
     state)
 
   IDisposable
@@ -471,11 +460,10 @@
       (set! state nil)
       (set! auto-run nil)
       (set! dirty? true)
-      (doseq [w wg]
-        (remove-watch w this))
+      (doseq [w (set wg)]
+        (-remove-watch w this))
       (when-not (nil? (.-on-dispose this))
-        (.on-dispose this s)))
-    nil)
+        (.on-dispose this s))))
 
   IEquiv
   (-equiv [o other] (identical? o other))
