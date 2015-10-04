@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.ratom :as ratom]
             [reagent.impl.util :refer [is-client]]
             [clojure.string :as string]))
 
@@ -44,6 +43,9 @@
   (dotimes [i (alength a)]
     ((aget a i))))
 
+;; Set from ratom.cljs
+(defonce ratom-flush identity)
+
 (deftype RenderQueue [^:mutable queue ^:mutable ^boolean scheduled?
                       ^:mutable after-render]
   Object
@@ -57,7 +59,7 @@
       (set! scheduled? true)
       (next-tick #(.run-queue this))))
   (run-queue [_]
-    (ratom/flush!)
+    (ratom-flush)
     (let [q queue
           aq after-render]
       (set! queue (array))
@@ -87,47 +89,3 @@
 
 (defn schedule []
   (.schedule render-queue))
-
-;; Render helper
-
-(defn is-reagent-component [c]
-  (some-> c (.' :props) (.' :argv)))
-
-(def rat-opts {:no-cache true})
-
-(defn run-reactively [c run]
-  (assert (is-reagent-component c))
-  (mark-rendered c)
-  (let [rat (.' c :cljsRatom)]
-    (if (nil? rat)
-      (ratom/run-in-reaction run c "cljsRatom" queue-render rat-opts)
-      (._run rat))))
-
-(defn dispose [c]
-  (some-> (.' c :cljsRatom)
-          ratom/dispose!)
-  (mark-rendered c))
-
-
-(comment
-  (defn ratom-perf []
-    (dbg "ratom-perf")
-    (set! ratom/debug false)
-    (dotimes [_ 10]
-      (let [nite 100000
-            a (ratom/atom 0)
-            f (fn []
-                ;; (ratom/with-let [x 1])
-                (quot @a 10))
-            mid (ratom/make-reaction f)
-            res (ratom/track! (fn []
-                          ;; @(ratom/track f)
-                          (inc @mid)
-                        ))]
-        @res
-        (time (dotimes [x nite]
-                (swap! a inc)
-                (ratom/flush!)))
-        (ratom/dispose! res))))
-  (enable-console-print!)
-  (ratom-perf))

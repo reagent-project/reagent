@@ -3,6 +3,7 @@
   (:require-macros [reagent.ratom :refer [with-let]])
   (:require [reagent.impl.util :as util]
             [reagent.debug :refer-macros [dbg log warn error dev?]]
+            [reagent.impl.batching :as batch]
             [clojure.set :as s]))
 
 (declare ^:dynamic *ratom-context*)
@@ -99,8 +100,7 @@
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
     (set! rea-queue (array))
-    ;; Get around ugly circular dependency. TODO: Fix.
-    (js/reagent.impl.batching.schedule))
+    (batch/schedule))
   (.push rea-queue r))
 
 (defn- run-queue [q]
@@ -114,6 +114,7 @@
     (binding [*ratom-context* empty-context]
       (run-queue q))))
 
+(set! batch/ratom-flush flush!)
 
 ;;; Atom
 
@@ -555,3 +556,29 @@
   (Wrapper. value
             (util/partial-ifn. callback-fn args nil)
             false nil))
+
+
+
+
+(comment
+  (defn ratom-perf []
+    (dbg "ratom-perf")
+    (set! debug false)
+    (dotimes [_ 10]
+      (let [nite 100000
+            a (atom 0)
+            f (fn []
+                ;; (ratom/with-let [x 1])
+                (quot @a 10))
+            mid (make-reaction f)
+            res (track! (fn []
+                          ;; @(ratom/track f)
+                          (inc @mid)
+                        ))]
+        @res
+        (time (dotimes [x nite]
+                (swap! a inc)
+                (flush!)))
+        (dispose! res))))
+  (enable-console-print!)
+  (ratom-perf))

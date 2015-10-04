@@ -73,12 +73,19 @@
 
 ;;; Method wrapping
 
-(def static-fns {:render
-                 (fn []
-                   (this-as c
-                            (if-not *non-reactive*
-                              (batch/run-reactively c #(do-render c))
-                              (do-render c))))})
+(def rat-opts {:no-cache true})
+
+(def static-fns
+  {:render
+   (fn render []
+     (this-as c (if *non-reactive*
+                  (do-render c)
+                  (let [rat (.' c :cljsRatom)]
+                    (batch/mark-rendered c)
+                    (if (nil? rat)
+                      (ratom/run-in-reaction #(do-render c) c "cljsRatom"
+                                             batch/queue-render rat-opts)
+                      (._run rat))))))})
 
 (defn custom-wrapper [key f]
   (case key
@@ -129,7 +136,9 @@
     :componentWillUnmount
     (fn []
       (this-as c
-               (batch/dispose c)
+               (some-> (.' c :cljsRatom)
+                       ratom/dispose!)
+               (batch/mark-rendered c)
                (when-not (nil? f)
                  (f c))))
 
