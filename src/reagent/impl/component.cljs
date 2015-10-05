@@ -25,7 +25,7 @@
 
 (defn reagent-class? [c]
   (and (fn? c)
-       (some? (.' c :cljsReactClass))))
+       (some? (.' c :prototype.reagentRender))))
 
 (defn do-render-sub [c]
   (let [f (.' c :reagentRender)
@@ -42,16 +42,15 @@
                   4 (f (nth argv 1) (nth argv 2) (nth argv 3))
                   5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
                   (apply f (subvec argv 1)))))]
-    (if (vector? res)
-      (as-element res)
-      (if (ifn? res)
-        (let [f (if (reagent-class? res)
-                  (fn [& args]
-                    (as-element (apply vector res args)))
-                  res)]
-          (.! c :reagentRender f)
-          (recur c))
-        res))))
+    (cond
+      (vector? res) (as-element res)
+      (ifn? res) (let [f (if (reagent-class? res)
+                           (fn [& args]
+                             (as-element (apply vector res args)))
+                           res)]
+                   (.! c :reagentRender f)
+                   (recur c))
+      :else res)))
 
 (declare comp-name)
 
@@ -150,7 +149,7 @@
       (this-as c (apply f c args)))
     f))
 
-(def dont-wrap #{:render :reagentRender :cljsName})
+(def dont-wrap #{:render :reagentRender})
 
 (defn dont-bind [f]
   (if (fn? f)
@@ -182,12 +181,9 @@
   (merge obligatory fun-map))
 
 (defn add-render [fun-map render-f name]
-  (let [fm (assoc fun-map
-                  :reagentRender render-f
-                  :render (:render static-fns))]
-    (if (dev?)
-      (assoc fm :cljsName (fn [] name))
-      fm)))
+  (assoc fun-map
+         :reagentRender render-f
+         :render (:render static-fns)))
 
 (defn fun-name [f]
   (or (and (fn? f)
@@ -200,27 +196,28 @@
           (:name m)))))
 
 (defn wrap-funs [fmap]
-  (let [fun-map (if-some [cf (:componentFunction fmap)]
-                  (-> fmap
-                      (assoc :reagentRender cf)
-                      (dissoc :componentFunction))
-                  fmap)
-        render-fun (:reagentRender fun-map)
+  (when (dev?)
+    (let [renders (select-keys fmap [:render :reagentRender :componentFunction])
+          render-fun (-> renders vals first)]
+      (assert (pos? (count renders)) "Missing reagent-render")
+      (assert (== 1 (count renders)) "Too many render functions supplied")
+      (assert (ifn? render-fun) (str "Render must be a function, not "
+                                     (pr-str render-fun)))))
+  (let [render-fun (or (:reagentRender fmap)
+                       (:componentFunction fmap))
         legacy-render (nil? render-fun)
         render-fun (or render-fun
-                       (:render fun-map))
-        _ (assert (ifn? render-fun)
-                  (str "Render must be a function, not "
-                       (pr-str render-fun)))
-        name (str (or (:displayName fun-map)
+                       (:render fmap))
+        name (str (or (:displayName fmap)
                       (fun-name render-fun)))
         name (if (empty? name)
                (str (gensym "reagent"))
-               (clojure.string/replace name #"\$" "."))
-        fmap (-> fun-map
-                 (assoc :cljsLegacyRender legacy-render
-                        :displayName name)
-                 (add-render render-fun name))]
+               (clojure.string/replace name "$" "."))
+        fmap (assoc fmap
+                    :displayName name
+                    :cljsLegacyRender legacy-render
+                    :reagentRender render-fun
+                    :render (:render static-fns))]
     (reduce-kv (fn [m k v]
                  (assoc m k (get-wrapper k v name)))
                {} fmap)))
@@ -238,17 +235,15 @@
       wrap-funs
       map-to-js))
 
-(defn create-class
-  [body]
-  (assert (map? body))
+(defn create-class [body]
+  {:pre [(map? body)]}
   (let [spec (cljsify body)
         res (.' js/React createClass spec)]
     (util/cache-react-class res res)
     res))
 
 (defn component-path [c]
-  (let [elem (some-> (or (some-> c
-                                 (.' :_reactInternalInstance))
+  (let [elem (some-> (or (some-> c (.' :_reactInternalInstance))
                           c)
                      (.' :_currentElement))
         name (some-> elem
@@ -265,7 +260,7 @@
   (if (dev?)
     (let [c *current-component*
           n (or (component-path c)
-                (some-> c (.' cljsName)))]
+                (some-> c .-constructor fun-name))]
       (if-not (empty? n)
         (str " (in " n ")")
         ""))
