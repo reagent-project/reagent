@@ -8,12 +8,6 @@
 
 ;;; Props accessors
 
-(defn cached-react-class [c]
-  (.' c :cljsReactClass))
-
-(defn cache-react-class [c constructor]
-  (.! c :cljsReactClass constructor))
-
 ;; Misc utilities
 
 (defn memoize-1 [f]

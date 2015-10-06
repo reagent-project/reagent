@@ -3,7 +3,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg prn dev? warn]]))
+            [reagent.debug :refer-macros [dbg prn dev? warn warn-unless]]))
 
 (declare ^:dynamic *current-component*)
 
@@ -11,6 +11,16 @@
 
 
 ;;; Argv access
+
+(defn shallow-obj-to-map [o]
+  (let [ks (js-keys o)
+        len (alength ks)]
+    (persistent!
+     (loop [m (transient {}) i 0]
+       (if (< i len)
+         (let [k (aget ks i)]
+           (recur (assoc! m (keyword k) (aget o k)) (inc i)))
+         m)))))
 
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
@@ -22,11 +32,13 @@
     (if (> (count v) first-child)
       (subvec v first-child))))
 
-(defn props-argv [p]
-  (.' p :argv))
+(defn props-argv [c p]
+  (if-some [a (.' p :argv)]
+    a
+    [c (shallow-obj-to-map p)]))
 
 (defn get-argv [c]
-  (.' c :props.argv))
+  (props-argv c (.' c :props)))
 
 (defn get-props [c]
   (-> (get-argv c) extract-props))
@@ -36,6 +48,12 @@
 
 (defn reagent-component? [c]
   (-> (get-argv c) nil? not))
+
+(defn cached-react-class [c]
+  (.' c :cljsReactClass))
+
+(defn cache-react-class [c constructor]
+  (.! c :cljsReactClass constructor))
 
 
 ;;; State
@@ -137,22 +155,22 @@
                    ;; Don't care about nextstate here, we use forceUpdate
                    ;; when only when state has changed anyway.
                    (let [old-argv (.' c :props.argv)
-                         new-argv (.' nextprops :argv)]
-                     (if (nil? f)
-                       (or (nil? old-argv)
-                           (nil? new-argv)
-                           (not= old-argv new-argv))
-                       (f c old-argv new-argv))))))
+                         new-argv (.' nextprops :argv)
+                         no-argv (or (nil? old-argv) (nil? new-argv))]
+                     (cond
+                       (nil? f) (or no-argv (not= old-argv new-argv))
+                       no-argv (f c (get-argv c) (props-argv c nextprops))
+                       :else (f c old-argv new-argv))))))
 
     :componentWillUpdate
     (fn [nextprops]
       (this-as c
-               (f c (props-argv nextprops))))
+               (f c (props-argv c nextprops))))
 
     :componentDidUpdate
     (fn [oldprops]
       (this-as c
-               (f c (props-argv oldprops))))
+               (f c (props-argv c oldprops))))
 
     :componentWillMount
     (fn []
@@ -268,8 +286,7 @@
   {:pre [(map? body)]}
   (let [spec (cljsify body)
         res (.' js/React createClass spec)]
-    (util/cache-react-class res res)
-    res))
+    (cache-react-class res res)))
 
 (defn component-path [c]
   (let [elem (some-> (or (some-> c (.' :_reactInternalInstance))
@@ -295,23 +312,24 @@
         ""))
     ""))
 
-(defn shallow-obj-to-map [o]
-  (into {} (for [k (js-keys o)]
-             [(keyword k) (aget o k)])))
 
-(def elem-counter 0)
+(defn fn-to-class [f]
+  (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
+  (warn-unless (not (and (fn? f)
+                         (some? (.' f :type))))
+               "Using native React classes directly in Hiccup forms "
+               "is not supported. Use create-element or "
+               "adapt-react-class instead: " (.' f :type)
+               (comp-name))
+  (let [spec (meta f)
+        withrender (assoc spec :reagent-render f)
+        res (create-class withrender)]
+    (cache-react-class f res)))
+
+(defn as-class [tag]
+  (if-some [cached-class (cached-react-class tag)]
+    cached-class
+    (fn-to-class tag)))
 
 (defn reactify-component [comp]
-  (.' js/React createClass
-      #js{:displayName "react-wrapper"
-          :render
-          (fn []
-            (this-as this
-                     (as-element
-                      [comp
-                       (-> (.' this :props)
-                           shallow-obj-to-map
-                           ;; ensure re-render, might get mutable js data
-                           (assoc :-elem-count
-                                  (set! elem-counter
-                                        (inc elem-counter))))])))}))
+  (as-class comp))

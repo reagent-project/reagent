@@ -487,11 +487,14 @@
 (deftest test-reactize-component
   (let [ae r/as-element
         ce r/create-element
-        c1r (fn [p]
+        a (atom nil)
+        c1r (fn [p & args]
+              (reset! a args)
               [:p "p:" (:a p) (:children p)])
         c1 (r/reactify-component c1r)]
     (is (= (rstr [:p "p:a"])
            (rstr (ce c1 #js{:a "a"}))))
+    (is (= @a nil))
     (is (= (rstr [:p "p:"])
            (rstr (ce c1 #js{:a nil}))))
     (is (= (rstr [:p "p:"])
@@ -500,10 +503,12 @@
     (is (= (rstr [:p "p:a" [:b "b"]])
            (rstr (ce c1 #js{:a "a"}
                      (ae [:b "b"])))))
+    (is (= @a nil))
     (is (= (rstr [:p "p:a" [:b "b"] [:i "i"]])
            (rstr (ce c1 #js{:a "a"}
                      (ae [:b "b"])
-                     (ae [:i "i"])))))))
+                     (ae [:i "i"])))))
+    (is (= @a nil))))
 
 (deftest test-keys
   (let [a nil ;; (r/atom "a")

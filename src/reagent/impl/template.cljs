@@ -196,26 +196,6 @@
         :id id
         :className class}))
 
-(defn fn-to-class [f]
-  (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
-  (warn-unless (not (and (fn? f)
-                         (some? (.' f :type))))
-               "Using native React classes directly in Hiccup forms "
-               "is not supported. Use create-element or "
-               "adapt-react-class instead: " (.' f :type)
-               (comp/comp-name))
-  (let [spec (meta f)
-        withrender (assoc spec :reagent-render f)
-        res (comp/create-class withrender)
-        wrapf (util/cached-react-class res)]
-    (util/cache-react-class f wrapf)
-    wrapf))
-
-(defn as-class [tag]
-  (if-some [cached-class (util/cached-react-class tag)]
-    cached-class
-    (fn-to-class tag)))
-
 (defn get-key [x]
   (when (map? x)
     ;; try catch to avoid clojurescript peculiarity with
@@ -229,7 +209,7 @@
     (-> v (nth 1 nil) get-key)))
 
 (defn reag-element [tag v]
-  (let [c (as-class tag)
+  (let [c (comp/as-class tag)
         jsprops #js{:argv v}]
     (some->> v key-from-vec (.! jsprops :key))
     (.' js/React createElement c jsprops)))
