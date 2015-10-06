@@ -10,6 +10,8 @@
 (declare ^:dynamic *non-reactive*)
 
 
+;;; Argv access
+
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
     (if (map? p) p)))
@@ -20,17 +22,20 @@
     (if (> (count v) first-child)
       (subvec v first-child))))
 
+(defn props-argv [p]
+  (.' p :argv))
+
 (defn get-argv [c]
   (.' c :props.argv))
 
 (defn get-props [c]
-  (-> (.' c :props.argv) extract-props))
+  (-> (get-argv c) extract-props))
 
 (defn get-children [c]
-  (-> (.' c :props.argv) extract-children))
+  (-> (get-argv c) extract-children))
 
 (defn reagent-component? [c]
-  (-> (.' c :props.argv) nil? not))
+  (-> (get-argv c) nil? not))
 
 
 ;;; State
@@ -45,6 +50,7 @@
 (defn as-element [x]
   (js/reagent.impl.template.as-element x))
 
+
 ;;; Rendering
 
 (defn reagent-class? [c]
@@ -54,10 +60,9 @@
 (defn do-render-sub [c]
   (let [f (.' c :reagentRender)
         _ (assert (ifn? f))
-        p (.' c :props)
         res (if (true? (.' c :cljsLegacyRender))
               (f c)
-              (let [argv (.' p :argv)
+              (let [argv (get-argv c)
                     n (count argv)]
                 (case n
                   1 (f)
@@ -123,7 +128,7 @@
     :componentWillReceiveProps
     (fn [props]
       (this-as c
-               (f c (.' props :argv))))
+               (f c (get-argv c))))
 
     :shouldComponentUpdate
     (fn [nextprops nextstate]
@@ -142,12 +147,12 @@
     :componentWillUpdate
     (fn [nextprops]
       (this-as c
-               (f c (.' nextprops :argv))))
+               (f c (props-argv nextprops))))
 
     :componentDidUpdate
     (fn [oldprops]
       (this-as c
-               (f c (.' oldprops :argv))))
+               (f c (props-argv oldprops))))
 
     :componentWillMount
     (fn []
