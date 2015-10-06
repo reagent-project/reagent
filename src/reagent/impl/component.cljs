@@ -71,9 +71,9 @@
 
 ;;; Rendering
 
-(defn reagent-class? [c]
+(defn ^boolean reagent-class? [c]
   (and (fn? c)
-       (some? (.' c :prototype.reagentRender))))
+       (some? (some-> c .-prototype (.' :reagentRender)))))
 
 (defn do-render-sub [c]
   (let [f (.' c :reagentRender)
@@ -316,10 +316,11 @@
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
   (warn-unless (not (and (fn? f)
-                         (some? (.' f :type))))
+                         (some? (some-> f .-prototype (.' :render)))))
                "Using native React classes directly in Hiccup forms "
                "is not supported. Use create-element or "
-               "adapt-react-class instead: " (.' f :type)
+               "adapt-react-class instead: " (let [n (fun-name f)]
+                                               (if (empty? n) f n))
                (comp-name))
   (let [spec (meta f)
         withrender (assoc spec :reagent-render f)

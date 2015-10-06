@@ -228,12 +228,12 @@
 
 (declare as-element)
 
-(defn native-element [parsed argv]
+(defn native-element [parsed argv first]
   (let [comp (.' parsed :name)]
-    (let [props (nth argv 1 nil)
+    (let [props (nth argv first nil)
           hasprops (or (nil? props) (map? props))
           jsprops (convert-props (if hasprops props) parsed)
-          first-child (if hasprops 2 1)]
+          first-child (+ first (if hasprops 1 0))]
       (if (input-component? comp)
         (-> [(reagent-input) argv comp jsprops first-child]
             (with-meta (meta argv))
@@ -253,17 +253,20 @@
             (str "Invalid Hiccup form: "
                  (pr-str v) (comp/comp-name)))
     (cond
+      (keyword-identical? tag :>)
+      (native-element #js{:name (nth v 1)} v 2)
+
       (hiccup-tag? tag)
       (let [n (name tag)
             pos (.indexOf n ">")]
         (if (== pos -1)
-          (native-element (cached-parse n) v)
+          (native-element (cached-parse n) v 1)
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           (recur [(subs n 0 pos)
                   (assoc v 0 (subs n (inc pos)))])))
 
       (instance? NativeWrapper tag)
-      (native-element (.-comp tag) v)
+      (native-element (.-comp tag) v 1)
 
       :else (reag-element tag v))))
 
