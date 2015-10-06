@@ -9,6 +9,30 @@
 
 (declare ^:dynamic *non-reactive*)
 
+
+(defn extract-props [v]
+  (let [p (nth v 1 nil)]
+    (if (map? p) p)))
+
+(defn extract-children [v]
+  (let [p (nth v 1 nil)
+        first-child (if (or (nil? p) (map? p)) 2 1)]
+    (if (> (count v) first-child)
+      (subvec v first-child))))
+
+(defn get-argv [c]
+  (.' c :props.argv))
+
+(defn get-props [c]
+  (-> (.' c :props.argv) extract-props))
+
+(defn get-children [c]
+  (-> (.' c :props.argv) extract-children))
+
+(defn reagent-component? [c]
+  (-> (.' c :props.argv) nil? not))
+
+
 ;;; State
 
 (defn state-atom [this]

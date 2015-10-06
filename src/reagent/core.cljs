@@ -136,21 +136,21 @@ Everything is optional, except either :reagent-render or :render.
 (defn state-atom
   "Returns an atom containing a components state."
   [this]
-  (assert (util/reagent-component? this))
+  (assert (comp/reagent-component? this))
   (comp/state-atom this))
 
 (defn state
   "Returns the state of a component, as set with replace-state or set-state.
 Equivalent to (deref (r/state-atom this))"
   [this]
-  (assert (util/reagent-component? this))
+  (assert (comp/reagent-component? this))
   (deref (state-atom this)))
 
 (defn replace-state
   "Set state of a component.
 Equivalent to (reset! (state-atom this) new-state)"
   [this new-state]
-  (assert (util/reagent-component? this))
+  (assert (comp/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
   (reset! (state-atom this) new-state))
 
@@ -158,7 +158,7 @@ Equivalent to (reset! (state-atom this) new-state)"
   "Merge component state with new-state.
 Equivalent to (swap! (state-atom this) merge new-state)"
   [this new-state]
-  (assert (util/reagent-component? this))
+  (assert (comp/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
   (swap! (state-atom this) merge new-state))
 
@@ -176,20 +176,20 @@ Equivalent to (swap! (state-atom this) merge new-state)"
 (defn props
   "Returns the props passed to a component."
   [this]
-  (assert (util/reagent-component? this))
-  (util/get-props this))
+  (assert (comp/reagent-component? this))
+  (comp/get-props this))
 
 (defn children
   "Returns the children passed to a component."
   [this]
-  (assert (util/reagent-component? this))
-  (util/get-children this))
+  (assert (comp/reagent-component? this))
+  (comp/get-children this))
 
 (defn argv
   "Returns the entire Hiccup form passed to the component."
   [this]
-  (assert (util/reagent-component? this))
-  (util/get-argv this))
+  (assert (comp/reagent-component? this))
+  (comp/get-argv this))
 
 (defn dom-node
   "Returns the root DOM node of a mounted component."
