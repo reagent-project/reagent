@@ -112,6 +112,7 @@
 
 (set! batch/ratom-flush flush!)
 
+
 ;;; Atom
 
 (defprotocol IReactiveAtom)
@@ -164,7 +165,6 @@
   ([x & {:keys [meta validator]}] (RAtom. x meta validator nil)))
 
 
-
 ;;; track
 
 (declare make-reaction)
@@ -174,27 +174,26 @@
 (defn- cached-reaction [f o k obj destroy]
   (let [m (aget o cache-key)
         m (if (nil? m) {} m)
-        r (get m k)]
-    (if-not (nil? r)
-      (-deref r)
-      (if (nil? *ratom-context*)
-        (f)
-        (let [r (make-reaction
-                 f :on-dispose (fn [x]
-                                 (when debug (swap! -running dec))
-                                 (as-> (aget o cache-key) _
-                                   (dissoc _ k)
-                                   (aset o cache-key _))
-                                 (when (some? obj)
-                                   (set! (.-reaction obj) nil))
-                                 (when (some? destroy)
-                                   (destroy x))))
-              v (-deref r)]
-          (aset o cache-key (assoc m k r))
-          (when debug (swap! -running inc))
-          (when (some? obj)
-            (set! (.-reaction obj) r))
-          v)))))
+        r (m k nil)]
+    (cond
+      (some? r) (-deref r)
+      (nil? *ratom-context*) (f)
+      :else (let [r (make-reaction
+                     f :on-dispose (fn [x]
+                                     (when debug (swap! -running dec))
+                                     (as-> (aget o cache-key) _
+                                       (dissoc _ k)
+                                       (aset o cache-key _))
+                                     (when (some? obj)
+                                       (set! (.-reaction obj) nil))
+                                     (when (some? destroy)
+                                       (destroy x))))
+                  v (-deref r)]
+              (aset o cache-key (assoc m k r))
+              (when debug (swap! -running inc))
+              (when (some? obj)
+                (set! (.-reaction obj) r))
+              v))))
 
 (deftype Track [f args ^:mutable reaction]
   IReactiveAtom
@@ -307,7 +306,6 @@
           (str "src must be a reactive atom or a function, not "
                (pr-str src)))
   (RCursor. src path nil nil nil))
-
 
 
 ;;; with-let support
@@ -429,19 +427,19 @@
 
   IDeref
   (-deref [this]
-    (when (nil? *ratom-context*)
-      (flush!))
-    (if (and (nil? auto-run) (nil? *ratom-context*))
-      (do
+    (let [non-reactive (nil? *ratom-context*)]
+      (when non-reactive
+        (flush!))
+      (if (and non-reactive (nil? auto-run))
         (when dirty?
           (let [oldstate state]
             (set! state (f))
             (when-not (or (nil? watches) (= oldstate state))
-              (notify-w this oldstate state)))))
-      (do
-        (notify-deref-watcher! this)
-        (when dirty?
-          (._run this))))
+              (notify-w this oldstate state))))
+        (do
+          (notify-deref-watcher! this)
+          (when dirty?
+            (._run this)))))
     state)
 
   IDisposable
@@ -478,14 +476,14 @@
 (def temp-reaction (make-reaction nil))
 
 (defn run-in-reaction [f obj key run opts]
-  (let [rea temp-reaction
-        res (deref-capture f rea)]
-    (when-not (nil? (.-watching rea))
+  (let [r temp-reaction
+        res (deref-capture f r)]
+    (when-not (nil? (.-watching r))
       (set! temp-reaction (make-reaction nil))
-      (set! (.-f rea) f)
-      (._set-opts rea opts)
-      (set! (.-auto-run rea) #(run obj))
-      (aset obj key rea))
+      (._set-opts r opts)
+      (set! (.-f r) f)
+      (set! (.-auto-run r) #(run obj))
+      (aset obj key r))
     res))
 
 (defn check-derefs [f]
