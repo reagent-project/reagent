@@ -694,6 +694,8 @@
             (fn [& args] (add-args :did-mount args))
             :should-component-update
             (fn [& args] (add-args :should-update args) true)
+            :component-will-receive-props
+            (fn [& args] (add-args :will-receive args))
             :component-will-update
             (fn [& args] (add-args :will-update args))
             :component-did-update
@@ -719,25 +721,27 @@
 
                 (reset! arg ["a" "c"])
                 (r/flush)
+                (is (= (:will-receive @res)
+                       {:at 5 :args [@t [@comp "a" "b"]]}))
                 (is (= (:should-update @res)
-                       {:at 5 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
+                       {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
                 (is (= (:will-update @res)
-                       {:at 6 :args [@t [@comp "a" "c"]]}))
+                       {:at 7 :args [@t [@comp "a" "c"]]}))
                 (is (= (:render @res)
-                       {:at 7 :args ["a" "c"]}))
+                       {:at 8 :args ["a" "c"]}))
                 (is (= (:did-update @res)
-                       {:at 8 :args [@t [@comp "a" "b"]]})))]
+                       {:at 9 :args [@t [@comp "a" "b"]]})))]
     (when isClient
       (with-mounted-component [c2] check)
       (is (= (:will-unmount @res)
-             {:at 9 :args [@t]}))
+             {:at 10 :args [@t]}))
 
       (reset! comp (with-meta render ls))
       (reset! arg defarg)
       (reset! n1 0)
       (with-mounted-component [c2] check)
       (is (= (:will-unmount @res)
-             {:at 9 :args [@t]})))))
+             {:at 10 :args [@t]})))))
 
 (defn foo []
   [:div])
