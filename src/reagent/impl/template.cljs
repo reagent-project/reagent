@@ -244,23 +244,25 @@
                   jsprops)]
           (make-element argv comp p first-child))))))
 
-(defn vec-to-elem [v]
-  (assert (pos? (count v))
-          (str "Hiccup form should not be empty: "
-               (pr-str v) (comp/comp-name)))
-  (let [tag (nth v 0)]
-    (assert (valid-tag? tag)
-            (str "Invalid Hiccup form: "
-                 (pr-str v) (comp/comp-name)))
-    (cond
-      (keyword-identical? tag :>)
-      (native-element #js{:name (nth v 1)} v 2)
+(defn hiccup-err [v msg]
+  (str msg (pr-str v) (comp/comp-name)))
 
+(defn vec-to-elem [v]
+  (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty: "))
+  (let [tag (nth v 0)]
+    (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form: "))
+    (cond
       (hiccup-tag? tag)
       (let [n (name tag)
             pos (.indexOf n ">")]
-        (if (== pos -1)
-          (native-element (cached-parse n) v 1)
+        (case pos
+          -1 (native-element (cached-parse n) v 1)
+          0 (let [comp (nth v 1)]
+              ;; Support [:> comp ...]
+              (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag: "))
+              (assert (or (string? comp) (fn? comp))
+                      (hiccup-err v "Expected React component in: "))
+              (native-element #js{:name comp} v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           (recur [(subs n 0 pos)
                   (assoc v 0 (subs n (inc pos)))])))
