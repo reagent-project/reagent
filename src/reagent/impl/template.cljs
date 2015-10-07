@@ -244,8 +244,8 @@
                   jsprops)]
           (make-element argv comp p first-child))))))
 
-(defn hiccup-err [v msg]
-  (str msg (pr-str v) (comp/comp-name)))
+(defn hiccup-err [v & msg]
+  (str (apply str msg) (pr-str v) (comp/comp-name)))
 
 (defn vec-to-elem [v]
   (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty: "))
@@ -300,15 +300,13 @@
     a))
 
 (defn expand-seq-check [x]
-  (let [ctx #js {}
+  (let [ctx #js{}
         [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx))]
     (when derefed
-      (warn "Reactive deref not supported in lazy seq, "
-            "it should be wrapped in doall"
-            (comp/comp-name) ". Value:\n" (pr-str x)))
+      (warn (hiccup-err x "Reactive deref not supported in lazy seq, "
+                        "it should be wrapped in doall: ")))
     (when (.' ctx :no-key)
-      (warn "Every element in a seq should have a unique "
-            ":key" (comp/comp-name) ". Value: " (pr-str x)))
+      (warn (hiccup-err x "Every element in a seq should have a unique :key: ")))
     res))
 
 (defn make-element [argv comp jsprops first-child]
