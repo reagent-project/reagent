@@ -24,17 +24,16 @@
 (defn ratom-perf []
   (dbg "ratom-perf")
   (set! rv/debug false)
-  (set! perf-check 0)
-  (let [nite 100000
-        a (rv/atom 0)
-        mid (reaction (inc @a))
-        res (run!
-             (set! perf-check (inc perf-check))
-             (inc @mid))]
-    (time (dotimes [x nite]
-            (swap! a inc)))
-    (dispose res)
-    (assert (= perf-check (inc nite)))))
+  (dotimes [_ 10]
+    (let [nite 100000
+          a (rv/atom 0)
+          mid (reaction (quot @a 10))
+          res (run!
+               (inc @mid))]
+      (time (dotimes [x nite]
+              (swap! a inc)
+              (rv/flush!)))
+      (dispose res))))
 
 (enable-console-print!)
 ;; (ratom-perf)
@@ -57,7 +56,7 @@
     (reset! start 1)
     (r/flush)
     (is (= @out 3))
-    (is (= @count 4))
+    (is (<= 2 @count 3))
     (dispose const)
     (is (= (running) runs))))
 

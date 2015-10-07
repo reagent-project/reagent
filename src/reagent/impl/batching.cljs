@@ -88,4 +88,5 @@
   (.schedule render-queue))
 
 (defn schedule []
-  (.schedule render-queue))
+  (when (false? (.-scheduled? render-queue))
+    (.schedule render-queue)))

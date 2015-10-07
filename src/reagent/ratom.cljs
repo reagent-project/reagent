@@ -52,8 +52,8 @@
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
-         (set! (.-captured r) (array derefed))
-         (.push c derefed)))))
+        (set! (.-captured r) (array derefed))
+        (.push c derefed)))))
 
 (defn- check-watches [old new]
   (when debug
@@ -94,7 +94,6 @@
 ;;; Queueing
 
 (defonce ^:private rea-queue nil)
-(def ^:private empty-context #js{})
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
@@ -102,16 +101,14 @@
     (batch/schedule))
   (.push rea-queue r))
 
-(defn- run-queue [q]
-  (set! rea-queue nil)
-  (dotimes [i (alength q)]
-      (let [r (aget q i)]
-        (._try-run r))))
-
 (defn flush! []
-  (when-some [q rea-queue]
-    (binding [*ratom-context* empty-context]
-      (run-queue q))))
+  (loop []
+    (let [q rea-queue]
+      (when-not (nil? q)
+        (set! rea-queue nil)
+        (dotimes [i (alength q)]
+          (._try-run (aget q i)))
+        (recur)))))
 
 (set! batch/ratom-flush flush!)
 
@@ -375,15 +372,12 @@
       (-deref this)))
 
   (_handle-change [this sender oldval newval]
-    (when-not (identical? oldval newval)
-      (if (nil? *ratom-context*)
-        (do (set! dirty? true)
-            (rea-enqueue this))
-        (if (nil? auto-run)
-          (when-not dirty?
-            (set! dirty? true)
-            (._run this))
-          (auto-run this)))))
+    (when-not (or (identical? oldval newval)
+                  dirty?)
+      (set! dirty? true)
+      (if (nil? auto-run)
+        (rea-enqueue this)
+        (auto-run this))))
 
   (_update-watching [this derefed]
     (let [new (set derefed)
@@ -395,16 +389,14 @@
         (-remove-watch w this))))
 
   (_try-run [this other]
-    (if (some? auto-run)
-      (auto-run this)
-      (when (and dirty? (some? watching))
-        (try
-          (._run this)
-          (catch :default e
-            ;; Just log error: it will most likely pop up again at deref time.
-            (error "Error in reaction:" e)
-            (set! state nil)
-            (notify-w this e nil))))))
+    (when (and dirty? (some? watching))
+      (try
+        (._run this)
+        (catch :default e
+          ;; Just log error: it will most likely pop up again at deref time.
+          (error "Error in reaction:" e)
+          (set! state nil)
+          (notify-w this e nil)))))
 
   (_run [this]
     (let [oldstate state
@@ -567,13 +559,13 @@
       (let [nite 100000
             a (atom 0)
             f (fn []
-                ;; (ratom/with-let [x 1])
                 (quot @a 10))
             mid (make-reaction f)
             res (track! (fn []
-                          ;; @(ratom/track f)
+                          ;; (with-let [x 1])
+                          ;; @(track f)
                           (inc @mid)
-                        ))]
+                          ))]
         @res
         (time (dotimes [x nite]
                 (swap! a inc)

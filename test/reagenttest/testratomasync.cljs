@@ -43,7 +43,7 @@
     (is (= @count 1))
     (sync)
     (is (= @out 3))
-    (is (= @count 4))
+    (is (<= 2 @count 3))
     (reset! start 2)
     (dispose const)
     (is (= (running) runs) "did dispose")
