@@ -14,7 +14,7 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(deftype NativeWrapper [comp])
+(deftype NativeWrapper [])
 
 
 ;;; Common utilities
@@ -221,9 +221,10 @@
     (.' js/React createElement c jsprops)))
 
 (defn adapt-react-class [c]
-  (NativeWrapper. #js{:name c
-                      :id nil
-                      :class nil}))
+  (doto (NativeWrapper.)
+    (.! :name c)
+    (.! :id nil)
+    (.! :class nil)))
 
 (def tag-name-cache #js{})
 
@@ -283,7 +284,7 @@
                   (assoc v 0 (subs n (inc pos)))])))
 
       (instance? NativeWrapper tag)
-      (native-element (.-comp tag) v 1)
+      (native-element tag v 1)
 
       :else (reag-element tag v))))
 
