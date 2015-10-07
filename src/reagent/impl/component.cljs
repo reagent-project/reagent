@@ -3,7 +3,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg prn dev? warn warn-unless]]))
+            [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless]]))
 
 (declare ^:dynamic *current-component*)
 
@@ -112,8 +112,8 @@
             res)
           (finally
             (when-not (aget ok 0)
-              (js/console.error (str "Error rendering component "
-                                     (comp-name)))))))
+              (error (str "Error rendering component"
+                          (comp-name)))))))
       (do-render-sub c))))
 
 

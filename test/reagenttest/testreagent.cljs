@@ -1,7 +1,7 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [reaction]]
-            [reagent.debug :refer-macros [dbg println log dev?]]
+            [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as r]))
 
@@ -762,4 +762,22 @@
          (rstr [:> [:div]])))
     (is (thrown-with-msg?
          :default #"Invalid tag: 'p.'"
-         (rstr [:p.])))))
+         (rstr [:p.])))
+
+    (let [comp1 (fn comp1 [x]
+                  x)
+          comp2 (fn comp2 [x]
+                  [comp1 x])
+          pkg "reagenttest.testreagent."
+          stack (str "in " pkg "comp2 > " pkg "comp1")
+          lstr (fn [& s] (list (apply str s)))
+          re (fn [& s]
+               (re-pattern (apply str s)))
+          rend (fn [x]
+                 (with-mounted-component x identity))]
+      (let [e (debug/track-warnings
+               #(is (thrown-with-msg?
+                     :default (re "Invalid tag: 'div.' \\(" stack "\\)")
+                     (rend [comp2 [:div. "foo"]]))))]
+        (is (= e
+               {:error (lstr "Error rendering component (" stack ")")}))))))
