@@ -232,16 +232,6 @@
          :reagentRender render-f
          :render (:render static-fns)))
 
-(defn fun-name [f]
-  (or (and (fn? f)
-           (or (.' f :displayName)
-               (.' f :name)))
-      (and (implements? INamed f)
-           (name f))
-      (let [m (meta f)]
-        (if (map? m)
-          (:name m)))))
-
 (defn wrap-funs [fmap]
   (when (dev?)
     (let [renders (select-keys fmap [:render :reagentRender :componentFunction])
@@ -256,10 +246,10 @@
         render-fun (or render-fun
                        (:render fmap))
         name (str (or (:displayName fmap)
-                      (fun-name render-fun)))
-        name (if (empty? name)
-               (str (gensym "reagent"))
-               (clojure.string/replace name "$" "."))
+                      (util/fun-name render-fun)))
+        name (case name
+               "" (str (gensym "reagent"))
+               name)
         fmap (assoc fmap
                     :displayName name
                     :cljsLegacyRender legacy-render
@@ -306,7 +296,7 @@
   (if (dev?)
     (let [c *current-component*
           n (or (component-path c)
-                (some-> c .-constructor fun-name))]
+                (some-> c .-constructor util/fun-name))]
       (if-not (empty? n)
         (str " (in " n ")")
         ""))
@@ -319,7 +309,7 @@
                          (some? (some-> f .-prototype (.' :render)))))
                "Using native React classes directly in Hiccup forms "
                "is not supported. Use create-element or "
-               "adapt-react-class instead: " (let [n (fun-name f)]
+               "adapt-react-class instead: " (let [n (util/fun-name f)]
                                                (if (empty? n) f n))
                (comp-name))
   (let [spec (meta f)

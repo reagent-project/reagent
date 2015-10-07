@@ -1,5 +1,6 @@
 (ns reagent.impl.template
   (:require [clojure.string :as string]
+            [clojure.walk :refer [prewalk]]
             [reagent.impl.util :as util :refer [is-client]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
@@ -249,13 +250,22 @@
                   jsprops)]
           (make-element argv comp p first-child))))))
 
+(defn str-coll [coll]
+  (if (dev?)
+    (str (prewalk (fn [x]
+                    (if (fn? x)
+                      (let [n (util/fun-name x)]
+                        (case n "" x (symbol n)))
+                      x)) coll))
+    (str coll)))
+
 (defn hiccup-err [v & msg]
-  (str (apply str msg) (pr-str v) (comp/comp-name)))
+  (str (apply str msg) ": " (str-coll v) "\n" (comp/comp-name)))
 
 (defn vec-to-elem [v]
-  (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty: "))
+  (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
   (let [tag (nth v 0)]
-    (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form: "))
+    (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
     (cond
       (hiccup-tag? tag)
       (let [n (name tag)
@@ -264,9 +274,9 @@
           -1 (native-element (cached-parse n) v 1)
           0 (let [comp (nth v 1)]
               ;; Support [:> comp ...]
-              (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag: "))
+              (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
               (assert (or (string? comp) (fn? comp))
-                      (hiccup-err v "Expected React component in: "))
+                      (hiccup-err v "Expected React component in"))
               (native-element #js{:name comp} v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           (recur [(subs n 0 pos)
@@ -309,9 +319,9 @@
         [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx))]
     (when derefed
       (warn (hiccup-err x "Reactive deref not supported in lazy seq, "
-                        "it should be wrapped in doall: ")))
+                        "it should be wrapped in doall")))
     (when (.' ctx :no-key)
-      (warn (hiccup-err x "Every element in a seq should have a unique :key: ")))
+      (warn (hiccup-err x "Every element in a seq should have a unique :key")))
     res))
 
 (defn make-element [argv comp jsprops first-child]

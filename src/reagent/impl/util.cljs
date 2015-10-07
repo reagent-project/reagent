@@ -36,6 +36,18 @@
         name-str
         (apply str start (map capitalize parts))))))
 
+(defn fun-name [f]
+  (let [n (or (and (fn? f)
+                   (or (.' f :displayName)
+                       (.' f :name)))
+              (and (implements? INamed f)
+                   (name f))
+              (let [m (meta f)]
+                (if (map? m)
+                  (:name m))))]
+    (-> n
+        str
+        (clojure.string/replace "$" "."))))
 
 (deftype partial-ifn [f args ^:mutable p]
   IFn

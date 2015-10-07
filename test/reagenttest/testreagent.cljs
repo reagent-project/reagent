@@ -1,7 +1,7 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [reaction]]
-            [reagent.debug :refer-macros [dbg println log]]
+            [reagent.debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [.' .!]]
             [reagent.core :as r]))
 
@@ -738,3 +738,24 @@
       (with-mounted-component [c2] check)
       (is (= (:will-unmount @res)
              {:at 9 :args [@t]})))))
+
+(defn foo []
+  [:div])
+
+(deftest test-err-messages
+  (when (dev?)
+    (is (thrown-with-msg?
+         :default #"Hiccup form should not be empty: \[]"
+         (rstr [])))
+    (is (thrown-with-msg?
+         :default #"Invalid Hiccup tag: \[:>div \[reagenttest.testreagent.foo]]"
+         (rstr [:>div [foo]])))
+    (is (thrown-with-msg?
+         :default #"Invalid Hiccup form: \[23]"
+         (rstr [23])))
+    (is (thrown-with-msg?
+         :default #"Expected React component in: \[:> \[:div]]"
+         (rstr [:> [:div]])))
+    (is (thrown-with-msg?
+         :default #"Invalid tag: 'p.'"
+         (rstr [:p.])))))
