@@ -768,8 +768,17 @@
                   x)
           comp2 (fn comp2 [x]
                   [comp1 x])
+          comp3 (fn comp3 []
+                  (r/with-let [a (r/atom "foo")]
+                    [:p (for [i (range 0 1)]
+                          ^{:key i} [:p @a])]))
+          comp4 (fn comp4 []
+                  (for [i (range 0 1)]
+                    [:p "foo"]))
+          nat (.' js/React createClass #js{:render (fn [])})
           pkg "reagenttest.testreagent."
-          stack (str "in " pkg "comp2 > " pkg "comp1")
+          stack1 (str "in " pkg "comp1")
+          stack2 (str "in " pkg "comp2 > " pkg "comp1")
           lstr (fn [& s] (list (apply str s)))
           re (fn [& s]
                (re-pattern (apply str s)))
@@ -777,7 +786,28 @@
                  (with-mounted-component x identity))]
       (let [e (debug/track-warnings
                #(is (thrown-with-msg?
-                     :default (re "Invalid tag: 'div.' \\(" stack "\\)")
+                     :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
                      (rend [comp2 [:div. "foo"]]))))]
         (is (= e
-               {:error (lstr "Error rendering component (" stack ")")}))))))
+               {:error (lstr "Error rendering component (" stack2 ")")})))
+
+      (let [e (debug/track-warnings
+               #(is (thrown-with-msg?
+                     :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                     (rend [comp1 [:div. "foo"]]))))]
+        (is (= e
+               {:error (lstr "Error rendering component (" stack1 ")")})))
+
+      (let [e (debug/track-warnings #(r/reactify-component nat))]
+        (is (re-find #"Using native React classes directly"
+                     (-> e :warn first))))
+
+      (let [e (debug/track-warnings
+               #(rend [comp3]))]
+        (is (re-find #"Reactive deref not supported"
+                     (-> e :warn first))))
+
+      (let [e (debug/track-warnings
+               #(r/as-element (comp4)))]
+        (is (re-find #"Every element in a seq should have a unique :key"
+                     (-> e :warn first)))))))

@@ -5,7 +5,7 @@
 
 (def ^boolean tracking false)
 
-(def warnings (atom nil))
+(defonce warnings (atom nil))
 
 (defonce track-console
   (let [o #js{}]
@@ -19,6 +19,7 @@
 
 (defn track-warnings [f]
   (set! tracking true)
+  (reset! warnings nil)
   (f)
   (let [warns @warnings]
     (reset! warnings nil)
