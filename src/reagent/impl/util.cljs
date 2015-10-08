@@ -1,7 +1,11 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg log warn]]
+  (:require [cljsjs.react]
+            [reagent.debug :refer-macros [dbg log warn]]
             [reagent.interop :refer-macros [.' .!]]
             [clojure.string :as string]))
+
+(def react js/React)
+(assert react)
 
 (def is-client (and (exists? js/window)
                     (-> js/window (.' :document) nil? not)))

@@ -1,8 +1,7 @@
 (ns reagent.core
   (:require-macros [reagent.core])
   (:refer-clojure :exclude [partial atom flush])
-  (:require [cljsjs.react]
-            [reagent.impl.template :as tmpl]
+  (:require [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -32,13 +31,13 @@ which is equivalent to
    (create-element type nil))
   ([type props]
    (assert (not (map? props)))
-   (js/React.createElement type props))
+   (.' util/react createElement type props))
   ([type props child]
    (assert (not (map? props)))
-   (js/React.createElement type props child))
+   (.' util/react createElement type props child))
   ([type props child & children]
    (assert (not (map? props)))
-   (apply js/React.createElement type props child children)))
+   (apply (.' util/react :createElement) type props child children)))
 
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form unchanged if it is not a vector."
@@ -68,11 +67,9 @@ Optionally takes a callback that is called when the component is in place.
 
 Returns the mounted component instance."
   ([comp container]
-   (render comp container nil))
+   (dom/render comp container))
   ([comp container callback]
-   (let [f (fn []
-             (as-element (if (fn? comp) (comp) comp)))]
-     (dom/render-component f container callback))))
+   (dom/render comp container callback)))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."

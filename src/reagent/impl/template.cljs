@@ -40,7 +40,7 @@
                          :charset "charSet"})
 
 (defn obj-get [o k]
-  (when (true? (.hasOwnProperty o k))
+  (when ^boolean (.hasOwnProperty o k)
     (aget o k)))
 
 (defn cached-prop-name [k]
@@ -88,6 +88,9 @@
 
 ;;; Specialization for input components
 
+;; This gets set from dom.cljs
+(def find-dom-node nil)
+
 (defn input-unmount [this]
   (.! this :cljsInputValue nil))
 
@@ -103,7 +106,7 @@
 (defn input-set-value [this]
   (when-some [value (.' this :cljsInputValue)]
              (.! this :cljsInputDirty false)
-             (let [node       (.' this getDOMNode)
+             (let [node       (find-dom-node this)
                    node-value (.' node :value)]
                (when (not= value node-value)
                  (if-not (and (identical? node (.-activeElement js/document))
@@ -154,7 +157,8 @@
 (defn input-render-setup [this jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
-  (if (and (.' jsprops hasOwnProperty "onChange")
+  (if (and (some? find-dom-node)
+           (.' jsprops hasOwnProperty "onChange")
            (.' jsprops hasOwnProperty "value"))
     (let [v (.' jsprops :value)
           value (if (nil? v) "" v)
@@ -167,8 +171,9 @@
     (.! this :cljsInputValue nil)))
 
 (defn ^boolean input-component? [x]
-  (or (identical? x "input")
-      (identical? x "textarea")))
+  (case x
+    ("input" "textarea") true
+    false))
 
 (def reagent-input-class nil)
 
@@ -218,7 +223,7 @@
   (let [c (comp/as-class tag)
         jsprops #js{:argv v}]
     (some->> v key-from-vec (.! jsprops :key))
-    (.' js/React createElement c jsprops)))
+    (.' util/react createElement c jsprops)))
 
 (defn adapt-react-class [c]
   (doto (NativeWrapper.)
@@ -328,12 +333,12 @@
 (defn make-element [argv comp jsprops first-child]
   (case (- (count argv) first-child)
     ;; Optimize cases of zero or one child
-    0 (.' js/React createElement comp jsprops)
+    0 (.' util/react createElement comp jsprops)
 
-    1 (.' js/React createElement comp jsprops
+    1 (.' util/react createElement comp jsprops
           (as-element (nth argv first-child)))
 
-    (.apply (.' js/React :createElement) nil
+    (.apply (.' util/react :createElement) nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
                            (.push a (as-element v)))

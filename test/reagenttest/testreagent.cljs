@@ -3,7 +3,8 @@
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [reagent.impl.util :as util]))
 
 (defn fixture [f]
   (set! rv/debug true)
@@ -449,7 +450,7 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ae [:div (ce "div" nil "foo")]))))))
 
-(def ndiv (.' js/React
+(def ndiv (.' util/react
               createClass
               #js{:displayName "ndiv"
                   :render
@@ -775,7 +776,7 @@
           comp4 (fn comp4 []
                   (for [i (range 0 1)]
                     [:p "foo"]))
-          nat (.' js/React createClass #js{:render (fn [])})
+          nat (.' util/react createClass #js{:render (fn [])})
           pkg "reagenttest.testreagent."
           stack1 (str "in " pkg "comp1")
           stack2 (str "in " pkg "comp2 > " pkg "comp1")

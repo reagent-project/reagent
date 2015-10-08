@@ -273,7 +273,7 @@
 (defn create-class [body]
   {:pre [(map? body)]}
   (let [spec (cljsify body)
-        res (.' js/React createClass spec)]
+        res (.' util/react createClass spec)]
     (cache-react-class res res)))
 
 (defn component-path [c]
