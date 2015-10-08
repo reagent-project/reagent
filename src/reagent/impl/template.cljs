@@ -330,6 +330,33 @@
       (warn (hiccup-err x "Every element in a seq should have a unique :key")))
     res))
 
+;; From https://github.com/babel/babel/commit/1d0e68f5a19d721fe8799b1ea331041d8bf9120e
+;; (def react-element-type (or (and (exists? js/Symbol)
+;;                                  (.' js/Symbol :for)
+;;                                  (.' js/Symbol for "react.element"))
+;;                             60103))
+
+;; (defn make-element-fast [argv comp jsprops first-child]
+;;   (let [key (some-> jsprops (.' :key))
+;;         ref (some-> jsprops (.' :ref))
+;;         props (if (nil? jsprops) (js-obj) jsprops)]
+;;     (.! props :children
+;;         (case (- (count argv) first-child)
+;;           0 nil
+;;           1 (as-element (nth argv first-child))
+;;           (reduce-kv (fn [a k v]
+;;                        (when (>= k first-child)
+;;                          (.push a (as-element v)))
+;;                        a)
+;;                      #js[] argv)))
+;;     (js-obj "key" key
+;;             "ref" ref
+;;             "props" props
+;;             "$$typeof" react-element-type
+;;             "type" comp
+;;             ;; "_store" (js-obj)
+;;             )))
+
 (defn make-element [argv comp jsprops first-child]
   (case (- (count argv) first-child)
     ;; Optimize cases of zero or one child
