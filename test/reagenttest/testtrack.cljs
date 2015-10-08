@@ -227,3 +227,70 @@
        (is (= @catch-count 1))))
     (dispose c)
     (is (= runs (running)))))
+
+(deftest track-equality
+  (let [f1 (fn [])
+        f2 (fn [])
+        t r/track]
+    (is (= (t f1) (t f1)))
+    (is (not= (t f1) (t f2)))
+    (is (not= (hash (t f1)) (hash (t f2))))
+    (is (= (t f1 "foo") (t f1 "foo")))
+    (is (not= (t f2 "foo") (t f1 "foo")))
+    (is (not= (t f1 "foo") (t f1 "foobar")))
+    (is (= (t f1 "foo" 1) (t f1 "foo" 1)))
+    (is (not= (t f1 "foo" 2) (t f1 "foo" 1)))
+    (is (= (t f1 2 "foo" 1) (t f1 2 "foo" 1)))
+    (is (not= (t f1 2 "foo" 1) (t f2 2 "foo" 1)))
+    (is (not= (t f1 2 "foo" 1) (t f1 2 "foo" 3)))
+    (is (not= (hash (t f1 2 "foo" 1)) (hash (t f1 2 "foo" 3))))))
+
+(deftest track-identity
+  (let [runs (running)
+        ts (atom {})
+        t r/track
+        trigger (r/atom 1)
+        f1 (fn [& args]
+             (r/with-let [k [:f1 args]
+                          _ (is (nil? (@ts k)))
+                          _ (swap! ts assoc k k)]
+               @trigger
+               (finally
+                 (is (= k (@ts k)))
+                 (swap! ts dissoc k))))
+        f2' (fn [& args]
+              (r/with-let [k [(t f1) args]
+                           _ (is (nil? (@ts k)))
+                           _ (swap! ts assoc k k)]
+                @trigger
+                (finally
+                  (is (= k (@ts k)))
+                  (swap! ts dissoc k))))
+        f2 (fn [& args]
+             @(apply t f2' args))
+        refs (r/atom nil)
+        run (r/track! #(doseq [i @refs]
+                         @i))
+        check (fn [n & args]
+                (reset! refs args)
+                (r/flush)
+                (is (= (count @ts) n))
+                (swap! trigger inc)
+                (r/flush)
+                (is (= (count @ts) n)))]
+    (check 1 (t f1))
+    (check 1 (t f1) (t f1))
+    (check 2 (t f1) (t f1 1))
+    (check 2 (t f1 1) (t f1 1) (t f1 2))
+    (check 2 (t f1 1) (t f1 1) (t f2 1))
+    (check 0)
+    (check 2 (t f2 1) (t f2 1) (t f1 1))
+    (check 2 (t f2 2) (t f2 2) (t f1 2))
+    (check 2 (t f2 2 3) (t f2 2 3) (t f1 2 3))
+    (check 1 (t f2 2 3) (t f2 2 3) (t f2 2 3))
+    (check 5 (t f1) (t f1 1) (t f1 2) (t f1 1 2) (t f1 1 2 3))
+    (check 4 (t f1) (t f1 1) (t f1 2) (t f1 1 2) (t f1 1 2))
+
+    (r/dispose! run)
+    (is (= 0 (count @ts)))
+    (is (= runs (running)))))
