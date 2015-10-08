@@ -375,7 +375,9 @@
       (set! dirty? true)
       (if (nil? auto-run)
         (rea-enqueue this)
-        (auto-run this))))
+        (if (true? auto-run)
+          (._run this)
+          (auto-run this)))))
 
   (_update-watching [this derefed]
     (let [new (set derefed)
@@ -410,9 +412,7 @@
 
   (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
     (when (some? auto-run)
-      (set! (.-auto-run this) (case auto-run
-                                true run
-                                auto-run)))
+      (set! (.-auto-run this) auto-run))
     (when (some? on-set)
       (set! (.-on-set this) on-set))
     (when (some? on-dispose)
