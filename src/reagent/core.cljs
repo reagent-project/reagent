@@ -8,7 +8,9 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [dbg prn]]
-            [reagent.interop :refer-macros [.' .!]]))
+            [reagent.interop :refer-macros [.' .!]]
+            [reagent.dom :as dom]
+            [reagent.dom.server :as server]))
 
 (def is-client util/is-client)
 
@@ -70,18 +72,17 @@ Returns the mounted component instance."
   ([comp container callback]
    (let [f (fn []
              (as-element (if (fn? comp) (comp) comp)))]
-     (util/render-component f container callback))))
+     (dom/render-component f container callback))))
 
 (defn unmount-component-at-node
   "Remove a component from the given DOM node."
   [container]
-  (util/unmount-component-at-node container))
+  (dom/unmount-component-at-node container))
 
 (defn render-to-string
   "Turns a component into an HTML string."
   ([component]
-     (binding [comp/*non-reactive* true]
-       (.' js/React renderToString (as-element component)))))
+   (server/render-to-string component)))
 
 ;; For backward compatibility
 (def as-component as-element)
@@ -91,8 +92,7 @@ Returns the mounted component instance."
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
   ([component]
-     (binding [comp/*non-reactive* true]
-       (.' js/React renderToStaticMarkup (as-element component)))))
+   (server/render-to-static-markup component)))
 
 (defn ^:export force-update-all
   "Force re-rendering of all mounted Reagent components. This is
@@ -105,7 +105,7 @@ Returns the mounted component instance."
   ClojureScript). To get around this you'll have to introduce a layer
   of indirection, for example by using `(render [#'foo])` instead."
   []
-  (util/force-update-all))
+  (dom/force-update-all))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
@@ -194,7 +194,7 @@ Equivalent to (swap! (state-atom this) merge new-state)"
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  (.' this getDOMNode))
+  (dom/dom-node this))
 
 (defn merge-props
   "Utility function that merges two maps, handling :class and :style

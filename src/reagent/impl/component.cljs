@@ -7,8 +7,6 @@
 
 (declare ^:dynamic *current-component*)
 
-(declare ^:dynamic *non-reactive*)
-
 
 ;;; Argv access
 
@@ -124,7 +122,7 @@
 (def static-fns
   {:render
    (fn render []
-     (this-as c (if *non-reactive*
+     (this-as c (if util/*non-reactive*
                   (do-render c)
                   (let [rat (.' c :cljsRatom)]
                     (batch/mark-rendered c)

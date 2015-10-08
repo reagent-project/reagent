@@ -515,7 +515,7 @@
   (let [ae r/as-element
         ce r/create-element
         a (atom nil)
-        c1r (fn [p & args]
+        c1r (fn reactize [p & args]
               (reset! a args)
               [:p "p:" (:a p) (:children p)])
         c1 (r/reactify-component c1r)]
@@ -571,7 +571,7 @@
              [:p (swap! v update-in [:v1] inc)])
         c2 (fn []
              (swap! comps assoc :c2 (r/current-component))
-             [:p (swap! v update-in [:v2] inc)
+             [:div (swap! v update-in [:v2] inc)
               [c1]])]
     (with-mounted-component [c2]
       (fn [c div]
@@ -770,7 +770,7 @@
                   [comp1 x])
           comp3 (fn comp3 []
                   (r/with-let [a (r/atom "foo")]
-                    [:p (for [i (range 0 1)]
+                    [:div (for [i (range 0 1)]
                           ^{:key i} [:p @a])]))
           comp4 (fn comp4 []
                   (for [i (range 0 1)]
@@ -811,3 +811,18 @@
                #(r/as-element (comp4)))]
         (is (re-find #"Every element in a seq should have a unique :key"
                      (-> e :warn first)))))))
+
+(deftest test-dom-node
+  (let [node (atom nil)
+        ref (atom nil)
+        comp (r/create-class
+              {:reagent-render (fn test-dom []
+                                 [:div {:ref #(reset! ref %)} "foobar"])
+               :component-did-mount
+               (fn [this]
+                 (reset! node (r/dom-node this)))})]
+    (with-mounted-component [comp]
+      (fn [c div]
+        (is (= (.-innerHTML @ref) "foobar"))
+        (is (= (.-innerHTML @node) "foobar"))
+        (is (identical? @ref @node))))))

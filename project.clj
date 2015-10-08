@@ -5,9 +5,9 @@
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.48"]
-                 [cljsjs/react "0.13.3-1"]]
+                 [cljsjs/react-dom "0.14.0-rc1-0"]]
 
-  :plugins [[lein-cljsbuild "1.0.6"]
+  :plugins [[lein-cljsbuild "1.1.0"]
             [codox "0.8.12"]]
 
   :source-paths ["src"]
@@ -19,8 +19,8 @@
                     {:builds {:client {:source-paths ["test"]}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.3.7"]]
-                    :plugins [[lein-figwheel "0.3.7"]]
+                   {:dependencies [[figwheel "0.4.0"]]
+                    :plugins [[lein-figwheel "0.4.0"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}

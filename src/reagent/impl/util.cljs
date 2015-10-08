@@ -6,6 +6,8 @@
 (def is-client (and (exists? js/window)
                     (-> js/window (.' :document) nil? not)))
 
+(def ^:dynamic ^boolean *non-reactive* false)
+
 ;;; Props accessors
 
 ;; Misc utilities
@@ -85,41 +87,6 @@
 
 
 (def ^:dynamic *always-update* false)
-
-(defonce roots (atom {}))
-
-(defn clear-container [node]
-  ;; If render throws, React may get confused, and throw on
-  ;; unmount as well, so try to force React to start over.
-  (some-> node
-          (.! :innerHTML "")))
-
-(defn render-component [comp container callback]
-  (let [rendered (volatile! nil)]
-    (try
-      (binding [*always-update* true]
-        (->> (.' js/React render (comp) container
-                 (fn []
-                   (binding [*always-update* false]
-                     (swap! roots assoc container [comp container])
-                     (if (some? callback)
-                       (callback)))))
-             (vreset! rendered)))
-      (finally
-        (when-not @rendered
-          (clear-container container))))))
-
-(defn re-render-component [comp container]
-  (render-component comp container nil))
-
-(defn unmount-component-at-node [container]
-  (swap! roots dissoc container)
-  (.' js/React unmountComponentAtNode container))
-
-(defn force-update-all []
-  (doseq [v (vals @roots)]
-    (apply re-render-component v))
-  "Updated")
 
 (defn force-update [comp deep]
   (if deep
