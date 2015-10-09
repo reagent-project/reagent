@@ -39,13 +39,13 @@
                          :for "htmlFor"
                          :charset "charSet"})
 
-(defn obj-get [o k]
+(defn cache-get [o k]
   (when ^boolean (.hasOwnProperty o k)
     (aget o k)))
 
 (defn cached-prop-name [k]
   (if (named? k)
-    (if-some [k' (obj-get prop-name-cache (name k))]
+    (if-some [k' (cache-get prop-name-cache (name k))]
       k'
       (aset prop-name-cache (name k)
             (util/dash-to-camel k)))
@@ -68,30 +68,32 @@
         (coll? x) (clj->js x)
         (ifn? x) (fn [& args]
                    (apply x args))
-        true (clj->js x)))
+        :else (clj->js x)))
 
-(defn set-id-class [props id class]
-  (let [p (if (nil? props) #js{} props)]
-    (when (and (some? id)
-               (nil? (.' p :id)))
-      (.! p :id id))
-    (when (some? class)
-      (let [old (.' p :className)]
-        (.! p :className (if (some? old)
-                           (str class " " old)
-                           class))))
-    p))
+(defn oset [o k v]
+  (doto (if (nil? o) #js{} o)
+    (aset k v)))
+
+(defn oget [o k]
+  (if (nil? o) nil (aget o k)))
+
+(defn set-id-class [p id-class]
+  (let [id (.' id-class :id)
+        p (if (and (some? id)
+                   (nil? (oget p "id")))
+            (oset p "id" id)
+            p)]
+    (if-some [class (.' id-class :className)]
+      (let [old (oget p "className")]
+        (oset p "className" (if (nil? old)
+                              class
+                              (str class " " old))))
+      p)))
 
 (defn convert-props [props id-class]
-  (let [id (.' id-class :id)
-        class (.' id-class :className)
-        no-id-class (and (nil? id) (nil? class))]
-    (if (and no-id-class (empty? props))
-      nil
-      (let [objprops (convert-prop-value props)]
-        (if no-id-class
-          objprops
-          (set-id-class objprops id class))))))
+  (-> props
+      convert-prop-value
+      (set-id-class id-class)))
 
 
 ;;; Specialization for input components
@@ -215,22 +217,26 @@
         :id id
         :className class}))
 
+(defn try-get-key [x]
+  ;; try catch to avoid clojurescript peculiarity with
+  ;; sorted-maps with keys that are numbers
+  (try (get x :key)
+       (catch :default e)))
+
 (defn get-key [x]
   (when (map? x)
-    ;; try catch to avoid clojurescript peculiarity with
-    ;; sorted-maps with keys that are numbers
-    (try (get x :key)
-         (catch :default e))))
+    (try-get-key x)))
 
 (defn key-from-vec [v]
-  (if-some [k (some-> (meta v) get-key)]
+  (if-some [k (-> (meta v) get-key)]
     k
     (-> v (nth 1 nil) get-key)))
 
 (defn reag-element [tag v]
   (let [c (comp/as-class tag)
         jsprops #js{:argv v}]
-    (some->> v key-from-vec (.! jsprops :key))
+    (when-some [key (key-from-vec v)]
+      (.! jsprops :key key))
     (.' util/react createElement c jsprops)))
 
 (defn adapt-react-class [c]
@@ -242,7 +248,7 @@
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
-  (if-some [s (obj-get tag-name-cache x)]
+  (if-some [s (cache-get tag-name-cache x)]
     s
     (aset tag-name-cache x (parse-tag x))))
 
@@ -258,11 +264,10 @@
         (-> [(reagent-input) argv comp jsprops first-child]
             (with-meta (meta argv))
             as-element)
-        (let [key (some-> (meta argv) get-key)
+        (let [key (-> (meta argv) get-key)
               p (if (nil? key)
                   jsprops
-                  (doto (if (nil? jsprops) #js{} jsprops)
-                    (.! :key key)))]
+                  (oset jsprops "key" key))]
           (make-element argv comp p first-child))))))
 
 (defn str-coll [coll]
@@ -279,7 +284,7 @@
 
 (defn vec-to-elem [v]
   (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
-  (let [tag (nth v 0)]
+  (let [tag (nth v 0 nil)]
     (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
     (cond
       (hiccup-tag? tag)
@@ -287,7 +292,7 @@
             pos (.indexOf n ">")]
         (case pos
           -1 (native-element (cached-parse n) v 1)
-          0 (let [comp (nth v 1)]
+          0 (let [comp (nth v 1 nil)]
               ;; Support [:> comp ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
               (assert (or (string? comp) (fn? comp))
@@ -372,7 +377,7 @@
     0 (.' util/react createElement comp jsprops)
 
     1 (.' util/react createElement comp jsprops
-          (as-element (nth argv first-child)))
+          (as-element (nth argv first-child nil)))
 
     (.apply (.' util/react :createElement) nil
             (reduce-kv (fn [a k v]
