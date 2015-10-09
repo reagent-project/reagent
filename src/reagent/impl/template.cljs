@@ -51,21 +51,29 @@
             (util/dash-to-camel k)))
     k))
 
+(defn ^boolean js-val? [x]
+  (not (identical? "object" (goog/typeOf x))))
+
+(declare convert-prop-value)
+
+(defn kv-conv [o k v]
+  (doto o
+    (aset (cached-prop-name k)
+          (convert-prop-value v))))
+
 (defn convert-prop-value [x]
-  (cond (or (string? x) (number? x) (fn? x)) x
+  (cond (js-val? x) x
         (named? x) (name x)
-        (map? x) (reduce-kv (fn [o k v]
-                              (doto o
-                                (aset (cached-prop-name k)
-                                      (convert-prop-value v))))
-                            #js{} x)
+        (map? x) (reduce-kv kv-conv #js{} x)
         (coll? x) (clj->js x)
-        (ifn? x) (fn [& args] (apply x args))
+        (ifn? x) (fn [& args]
+                   (apply x args))
         true (clj->js x)))
 
 (defn set-id-class [props id class]
   (let [p (if (nil? props) #js{} props)]
-    (when (and (some? id) (nil? (.' p :id)))
+    (when (and (some? id)
+               (nil? (.' p :id)))
       (.! p :id id))
     (when (some? class)
       (let [old (.' p :className)]
@@ -250,10 +258,11 @@
         (-> [(reagent-input) argv comp jsprops first-child]
             (with-meta (meta argv))
             as-element)
-        (let [p (if-some [key (some-> (meta argv) get-key)]
+        (let [key (some-> (meta argv) get-key)
+              p (if (nil? key)
+                  jsprops
                   (doto (if (nil? jsprops) #js{} jsprops)
-                    (.! :key key))
-                  jsprops)]
+                    (.! :key key)))]
           (make-element argv comp p first-child))))))
 
 (defn str-coll [coll]
@@ -297,12 +306,12 @@
 (declare expand-seq-check)
 
 (defn as-element [x]
-  (cond (string? x) x
+  (cond (js-val? x) x
         (vector? x) (vec-to-elem x)
         (seq? x) (if (dev?)
                    (expand-seq-check x)
                    (expand-seq x))
-        true x))
+        :else x))
 
 (defn expand-seq [s]
   (let [a (into-array s)]
