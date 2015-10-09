@@ -74,7 +74,8 @@
   (let [w (.-watchesArr this)
         a (if (nil? w)
             ;; Copy watches to array for speed
-            (->> this .-watches seq flatten into-array
+            (->> (.-watches this)
+                 (reduce-kv #(doto %1 (.push %2) (.push %3)) #js[])
                  (set! (.-watchesArr this)))
             w)]
     (let [len (alength a)]
