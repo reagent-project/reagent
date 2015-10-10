@@ -5,7 +5,10 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [.' .!]]))
 
-(def react-dom js/ReactDOM)
+(defonce react-dom (or (and (exists? js/ReactDOM)
+                            js/ReactDOM)
+                       (and (exists? js/require)
+                            (js/require "react-dom"))))
 (assert react-dom)
 
 (defonce ^:private roots (atom {}))

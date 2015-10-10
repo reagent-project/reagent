@@ -50,6 +50,15 @@
                                            ;; :pseudo-names true
                                            :output-dir "target/client"}}}}}]
 
+             :webpack {:cljsbuild
+                       {:builds {:client
+                                 {:compiler
+                                  {:foreign-libs
+                                   [{:file "target/webpack/bundle.js"
+                                     :file-min "target/webpack/bundle.min.js"
+                                     :provides ["cljsjs.react.dom"
+                                                "cljsjs.react"]}]}}}}}
+
              :prod-test [:test :prod]
              
              :dev-notest [:dev

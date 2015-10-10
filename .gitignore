@@ -14,3 +14,7 @@ figwheel_server.log
 reagent.iml
 .idea
 .lein-failures
+
+outsite/bundle.js
+outsite/bundle.min.js
+node_modules

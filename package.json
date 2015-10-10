@@ -1,0 +1,13 @@
+{
+    "dependencies": {
+        "react": "^0.14.0",
+        "react-dom": "^0.14.0"
+    },
+    "scripts": {
+        "bundle": "webpack && NODE_ENV=production webpack -p"
+    },
+    "devDependencies": {
+        "babel-core": "^5.8.25",
+        "webpack": "^1.12.2"
+    }
+}

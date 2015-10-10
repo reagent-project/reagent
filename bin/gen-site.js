@@ -12,7 +12,6 @@ if (typeof location === "undefined") {
     // for some reason
     global.location = {};
 }
-
 var gensite = function () {
     console.log("Loading " + srcFile);
     var optNone = cljsLoad.load(srcFile, outputDirectory, devFile);
@@ -26,6 +25,8 @@ var compileFail = function () {
     return true;
   }
 };
+
+process.env.NODE_ENV = "production";
 
 if (!compileFail()) {
   try {

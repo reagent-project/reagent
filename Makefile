@@ -17,6 +17,10 @@ run: figwheel
 runsite:
 	@$(MAKE) run PROF=+site,$(PROF)
 
+# development build with auto-reloading and webpacked source
+runpack: target/webpack/bundle.js
+	@$(MAKE) run PROF=+webpack,$(PROF)
+
 # development build with figwheel, but no tests
 runnotest:
 	@$(MAKE) run PROF=+dev-notest,$(PROF)
@@ -24,6 +28,10 @@ runnotest:
 # production build with auto-rebuild
 runprod: clean
 	@$(MAKE) serve-site PROF=prod,$(PROF)
+
+# production build with auto-rebuild and webpacked source
+runprodpack: clean target/webpack/bundle.js
+	@$(MAKE) serve-site PROF=prod,webpack,$(PROF)
 
 # production build with auto-rebuild and testing
 runprodtest: clean
@@ -88,6 +96,16 @@ gh-pages-add:
 	mv tmp/.git . && \
 	git add . && git commit -m "Updated" && \
 	git push && rm -rf .git tmp
+
+
+## Webpack
+##########
+
+target/webpack/bundle.js: node_modules lib/modules.js package.json Makefile
+	npm run bundle
+
+node_modules:
+	npm install
 
 
 ## Misc utilities

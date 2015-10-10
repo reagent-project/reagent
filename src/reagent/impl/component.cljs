@@ -250,6 +250,7 @@
                name)
         fmap (assoc fmap
                     :displayName name
+                    :autobind false
                     :cljsLegacyRender legacy-render
                     :reagentRender render-fun
                     :render (:render static-fns))]

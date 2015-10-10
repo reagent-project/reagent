@@ -4,7 +4,10 @@
             [reagent.interop :refer-macros [.' .!]]
             [clojure.string :as string]))
 
-(def react js/React)
+(defonce react (or (and (exists? js/React)
+                        js/React)
+                   (and (exists? js/require)
+                        (js/require "react"))))
 (assert react)
 
 (def is-client (and (exists? js/window)

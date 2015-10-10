@@ -5,7 +5,11 @@
             [reagent.interop :refer-macros [.' .!]]))
 
 ;; TODO: Where the hell is ReactDOMServer?
-(def react-dom-server js/React)
+(defonce react-dom-server (or (and (exists? js/ReactDOMServer)
+                                   js/ReactDOMServer)
+                              (and (exists? js/require)
+                                   (js/require "react-dom/server"))
+                              js/React))
 (assert react-dom-server)
 
 (defn render-to-string
