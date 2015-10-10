@@ -5,7 +5,7 @@
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.48"]
-                 [cljsjs/react-dom "0.14.0-rc1-0"]]
+                 [cljsjs/react-dom "0.14.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.0"]
             [codox "0.8.12"]]
