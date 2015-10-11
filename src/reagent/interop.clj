@@ -20,32 +20,8 @@
         names (-> (if (symbol? member)
                     (string/replace n #"^-" "")
                     n)
-                  (string/split #"\."))
-        names (map munge names)]
+                  (string/split #"\."))]
     [field? names]))
-
-(defmacro obj
-  "Create a javascript object in a Closure-safe way. The arguments
-  are expected to be key-value pairs, where the keys should be either
-  keywords or strings.
-
-  (obj :foo 1)
-  is equivalent to
-  (let [o (js-obj)]
-    (set! (.-foo o) 1)
-    o)
-  except that it gives the same result under advanced compilation."
-  [& args]
-  (assert (= 0 (mod (count args) 2))
-          "Even number of arguments expected")
-  (let [munged (map-indexed (fn [i x]
-                              (if (odd? i)
-                                x
-                                (if (keyword? x)
-                                  (munge (name x))
-                                  x)))
-                            args)]
-    `(cljs.core/js-obj ~@munged)))
 
 (defmacro .'
   "Access member in a javascript object, in a Closure-safe way.
