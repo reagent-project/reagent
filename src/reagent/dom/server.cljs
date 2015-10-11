@@ -9,7 +9,7 @@
                                    js/ReactDOMServer)
                               (and (exists? js/require)
                                    (js/require "react-dom/server"))
-                              js/React))
+                              util/react))
 (assert react-dom-server)
 
 (defn render-to-string
