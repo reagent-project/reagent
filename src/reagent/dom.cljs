@@ -17,28 +17,14 @@
   (swap! roots dissoc container)
   (.' react-dom unmountComponentAtNode container))
 
-(defn- clear-container [node]
-  ;; If render throws, React may get confused, and throw on
-  ;; unmount as well, so try to force React to start over.
-  (try (unmount-comp node)
-       (catch :default e))
-  (some-> node
-          (.! :innerHTML "")))
-
 (defn- render-comp [comp container callback]
-  (let [rendered (volatile! nil)]
-    (try
-      (binding [util/*always-update* true]
-        (->> (.' react-dom render (comp) container
-                 (fn []
-                   (binding [util/*always-update* false]
-                     (swap! roots assoc container [comp container])
-                     (if (some? callback)
-                       (callback)))))
-             (vreset! rendered)))
-      (finally
-        (when-not @rendered
-          (clear-container container))))))
+  (binding [util/*always-update* true]
+    (->> (.' react-dom render (comp) container
+             (fn []
+               (binding [util/*always-update* false]
+                 (swap! roots assoc container [comp container])
+                 (if (some? callback)
+                   (callback))))))))
 
 (defn- re-render-component [comp container]
   (render-comp comp container nil))
