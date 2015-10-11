@@ -161,7 +161,7 @@
     ;; wants to keep the value unchanged
     (when-not (.' this :cljsInputDirty)
       (.! this :cljsInputDirty true)
-      (batch/do-later #(input-set-value this)))
+      (batch/do-after-render #(input-set-value this)))
     res))
 
 (defn input-render-setup [this jsprops]

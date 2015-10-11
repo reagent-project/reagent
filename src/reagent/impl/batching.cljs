@@ -39,36 +39,49 @@
         (.! c :cljsIsDirty false)
         (.' c forceUpdate)))))
 
-(defn run-funs [a]
-  (dotimes [i (alength a)]
-    ((aget a i))))
 
 ;; Set from ratom.cljs
 (defonce ratom-flush identity)
 
-(deftype RenderQueue [^:mutable queue ^:mutable ^boolean scheduled?
-                      ^:mutable after-render]
+(deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
-  (queue-render [this c]
-    (.push queue c)
+  (enqueue [this k f]
+    (assert (some? f))
+    (when (nil? (aget this k))
+      (aset this k (array)))
+    (.push (aget this k) f)
     (.schedule this))
-  (add-after-render [_ f]
-    (.push after-render f))
+
+  (run-funs [this k]
+    (when-some [fs (aget this k)]
+      (aset this k nil)
+      (dotimes [i (alength fs)]
+        ((aget fs i)))))
+
   (schedule [this]
     (when-not scheduled?
       (set! scheduled? true)
       (next-tick #(.run-queue this))))
-  (run-queue [_]
-    (ratom-flush)
-    (let [q queue
-          aq after-render]
-      (set! queue (array))
-      (set! after-render (array))
-      (set! scheduled? false)
-      (run-queue q)
-      (run-funs aq))))
 
-(defonce render-queue (RenderQueue. (array) false (array)))
+  (queue-render [this c]
+    (.enqueue this "componentQueue" c))
+
+  (add-before-flush [this f]
+    (.enqueue this "beforeFlush" f))
+
+  (add-after-render [this f]
+    (.enqueue this "afterRender" f))
+
+  (run-queue [this]
+    (set! scheduled? false)
+    (.run-funs this "beforeFlush")
+    (ratom-flush)
+    (when-some [cs (aget this "componentQueue")]
+      (aset this "componentQueue" nil)
+      (run-queue cs))
+    (.run-funs this "afterRender")))
+
+(defonce render-queue (RenderQueue. false))
 
 (defn flush []
   (.run-queue render-queue))
@@ -80,12 +93,11 @@
 (defn mark-rendered [c]
   (.! c :cljsIsDirty false))
 
-(defn do-after-flush [f]
-  (.add-after-render render-queue f))
+(defn do-before-flush [f]
+  (.add-before-flush render-queue f))
 
-(defn do-later [f]
-  (do-after-flush f)
-  (.schedule render-queue))
+(defn do-after-render [f]
+  (.add-after-render render-queue f))
 
 (defn schedule []
   (when (false? (.-scheduled? render-queue))

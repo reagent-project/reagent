@@ -309,9 +309,18 @@ another cursor) these cursors are equivalent:
   nil)
 
 (defn next-tick
-  "Run f using requestAnimationFrame or equivalent."
+  "Run f using requestAnimationFrame or equivalent.
+
+  f will be called just before components are rendered."
   [f]
-  (batch/next-tick f))
+  (batch/do-before-flush f))
+
+(defn after-render
+  "Run f using requestAnimationFrame or equivalent.
+
+  f will be called just after components are rendered."
+  [f]
+  (batch/do-after-render f))
 
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and

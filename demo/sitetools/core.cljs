@@ -44,7 +44,7 @@
                      _ (assert (string? path))]
                  (when-some [h history]
                    (.setToken h x)
-                   (r/next-tick #(set! js/document.body.scrollTop 0))
+                   (r/after-render #(set! js/document.body.scrollTop 0))
                    state)
                  (recur state [:set-page x]))))
 
