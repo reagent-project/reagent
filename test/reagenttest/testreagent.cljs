@@ -682,6 +682,10 @@
                           {:at (swap! n1 inc)
                            :args (vec args)}))
         render (fn [& args]
+                 (this-as c (is (= c (r/current-component))))
+                 (add-args :render args)
+                 [:div (first args)])
+        render2 (fn [& args]
                  (add-args :render args)
                  [:div (first args)])
         ls {:get-initial-state
@@ -690,19 +694,33 @@
               (add-args :initial-state args)
               {:foo "bar"})
             :component-will-mount
-            (fn [& args] (add-args :will-mount args))
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-mount args))
             :component-did-mount
-            (fn [& args] (add-args :did-mount args))
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :did-mount args))
             :should-component-update
-            (fn [& args] (add-args :should-update args) true)
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :should-update args) true)
             :component-will-receive-props
-            (fn [& args] (add-args :will-receive args))
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-receive args))
             :component-will-update
-            (fn [& args] (add-args :will-update args))
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-update args))
             :component-did-update
-            (fn [& args] (add-args :did-update args))
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :did-update args))
             :component-will-unmount
-            (fn [& args] (add-args :will-unmount args))}        
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-unmount args))}
         c1 (r/create-class
             (assoc ls :reagent-render render))
         defarg ["a" "b"]
@@ -737,7 +755,7 @@
       (is (= (:will-unmount @res)
              {:at 10 :args [@t]}))
 
-      (reset! comp (with-meta render ls))
+      (reset! comp (with-meta render2 ls))
       (reset! arg defarg)
       (reset! n1 0)
       (with-mounted-component [c2] check)

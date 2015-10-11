@@ -73,20 +73,20 @@
   (and (fn? c)
        (some? (some-> c .-prototype (.' :reagentRender)))))
 
-(defn do-render-sub [c]
+(defn wrap-render [c]
   (let [f (.' c :reagentRender)
         _ (assert (ifn? f))
         res (if (true? (.' c :cljsLegacyRender))
-              (f c)
-              (let [argv (get-argv c)
-                    n (count argv)]
+              (.call f c c)
+              (let [v (get-argv c)
+                    n (count v)]
                 (case n
-                  1 (f)
-                  2 (f (nth argv 1))
-                  3 (f (nth argv 1) (nth argv 2))
-                  4 (f (nth argv 1) (nth argv 2) (nth argv 3))
-                  5 (f (nth argv 1) (nth argv 2) (nth argv 3) (nth argv 4))
-                  (apply f (subvec argv 1)))))]
+                  1 (.call f c)
+                  2 (.call f c (nth v 1))
+                  3 (.call f c (nth v 1) (nth v 2))
+                  4 (.call f c (nth v 1) (nth v 2) (nth v 3))
+                  5 (.call f c (nth v 1) (nth v 2) (nth v 3) (nth v 4))
+                  (.apply f c (.slice (into-array v) 1)))))]
     (cond
       (vector? res) (as-element res)
       (ifn? res) (let [f (if (reagent-class? res)
@@ -105,19 +105,24 @@
       ;; Log errors, without using try/catch (and mess up call stack)
       (let [ok (array false)]
         (try
-          (let [res (do-render-sub c)]
+          (let [res (wrap-render c)]
             (aset ok 0 true)
             res)
           (finally
             (when-not (aget ok 0)
               (error (str "Error rendering component"
                           (comp-name)))))))
-      (do-render-sub c))))
+      (wrap-render c))))
 
 
 ;;; Method wrapping
 
 (def rat-opts {:no-cache true})
+
+(defn get-render [c]
+  (if-some [f (.' c :cljsBoundRender)]
+    f
+    (.! c :cljsBoundRender #(do-render c))))
 
 (def static-fns
   {:render
@@ -127,89 +132,73 @@
                   (let [rat (.' c :cljsRatom)]
                     (batch/mark-rendered c)
                     (if (nil? rat)
-                      (ratom/run-in-reaction #(do-render c) c "cljsRatom"
+                      (ratom/run-in-reaction (get-render c) c "cljsRatom"
                                              batch/queue-render rat-opts)
                       (._run rat))))))})
 
 (defn custom-wrapper [key f]
   (case key
     :getDefaultProps
-    (assert false "getDefaultProps not supported yet")
+    (assert false "getDefaultProps not supported")
 
     :getInitialState
-    (fn []
-      (this-as c
-               (reset! (state-atom c) (f c))))
+    (fn getInitialState []
+      (this-as c (reset! (state-atom c) (.call f c c))))
 
     :componentWillReceiveProps
-    (fn [props]
-      (this-as c
-               (f c (get-argv c))))
+    (fn componentWillReceiveProps [props]
+      (this-as c (.call f c c (get-argv c))))
 
     :shouldComponentUpdate
-    (fn [nextprops nextstate]
+    (fn shouldComponentUpdate [nextprops nextstate]
       (or util/*always-update*
           (this-as c
                    ;; Don't care about nextstate here, we use forceUpdate
                    ;; when only when state has changed anyway.
                    (let [old-argv (.' c :props.argv)
                          new-argv (.' nextprops :argv)
-                         no-argv (or (nil? old-argv) (nil? new-argv))]
+                         noargv (or (nil? old-argv) (nil? new-argv))]
                      (cond
-                       (nil? f) (or no-argv (not= old-argv new-argv))
-                       no-argv (f c (get-argv c) (props-argv c nextprops))
-                       :else (f c old-argv new-argv))))))
+                       (nil? f) (or noargv (not= old-argv new-argv))
+                       noargv (.call f c c (get-argv c) (props-argv c nextprops))
+                       :else  (.call f c c old-argv new-argv))))))
 
     :componentWillUpdate
-    (fn [nextprops]
-      (this-as c
-               (f c (props-argv c nextprops))))
+    (fn componentWillUpdate [nextprops]
+      (this-as c (.call f c c (props-argv c nextprops))))
 
     :componentDidUpdate
-    (fn [oldprops]
-      (this-as c
-               (f c (props-argv c oldprops))))
+    (fn componentDidUpdate [oldprops]
+      (this-as c (.call f c c (props-argv c oldprops))))
 
     :componentWillMount
-    (fn []
+    (fn componentWillMount []
       (this-as c
                (.! c :cljsMountOrder (batch/next-mount-count))
                (when-not (nil? f)
-                 (f c))))
+                 (.call f c c))))
+
+    :componentDidMount
+    (fn componentDidMount []
+      (this-as c (.call f c c)))
 
     :componentWillUnmount
-    (fn []
+    (fn componentWillUnmount []
       (this-as c
                (some-> (.' c :cljsRatom)
                        ratom/dispose!)
                (batch/mark-rendered c)
                (when-not (nil? f)
-                 (f c))))
+                 (.call f c c))))
 
     nil))
 
-(defn default-wrapper [f]
-  (if (ifn? f)
-    (fn [& args]
-      (this-as c (apply f c args)))
-    f))
-
-(def dont-wrap #{:render :reagentRender})
-
-(defn dont-bind [f]
-  (if (fn? f)
-    (doto f
-      (.! :__reactDontBind true))
-    f))
-
 (defn get-wrapper [key f name]
-  (if (dont-wrap key)
-    (dont-bind f)
-    (let [wrap (custom-wrapper key f)]
-      (when (and wrap f)
-        (assert (ifn? f)
-                (str "Expected function in " name key " but got " f)))
-      (or wrap (default-wrapper f)))))
+  (let [wrap (custom-wrapper key f)]
+    (when (and wrap f)
+      (assert (ifn? f)
+              (str "Expected function in " name key " but got " f)))
+    (or wrap f)))
 
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillMount nil
@@ -224,11 +213,6 @@
 
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
-
-(defn add-render [fun-map render-f name]
-  (assoc fun-map
-         :reagentRender render-f
-         :render (:render static-fns)))
 
 (defn wrap-funs [fmap]
   (when (dev?)
@@ -248,15 +232,15 @@
         name (case name
                "" (str (gensym "reagent"))
                name)
-        fmap (assoc fmap
-                    :displayName name
-                    :autobind false
-                    :cljsLegacyRender legacy-render
-                    :reagentRender render-fun
-                    :render (:render static-fns))]
-    (reduce-kv (fn [m k v]
-                 (assoc m k (get-wrapper k v name)))
-               {} fmap)))
+        fmap (reduce-kv (fn [m k v]
+                          (assoc m k (get-wrapper k v name)))
+                        {} fmap)]
+    (assoc fmap
+           :displayName name
+           :autobind false
+           :cljsLegacyRender legacy-render
+           :reagentRender render-fun
+           :render (:render static-fns))))
 
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
