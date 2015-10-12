@@ -13,12 +13,11 @@
 (defn shallow-obj-to-map [o]
   (let [ks (js-keys o)
         len (alength ks)]
-    (persistent!
-     (loop [m (transient {}) i 0]
-       (if (< i len)
-         (let [k (aget ks i)]
-           (recur (assoc! m (keyword k) (aget o k)) (inc i)))
-         m)))))
+    (loop [m {} i 0]
+      (if (< i len)
+        (let [k (aget ks i)]
+          (recur (assoc m (keyword k) (aget o k)) (inc i)))
+        m))))
 
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
@@ -85,7 +84,6 @@
 
 ;;; Rendering
 
-
 (defn wrap-render [c]
   (let [f (.' c :reagentRender)
         _ (assert (ifn? f))
@@ -132,11 +130,6 @@
 
 (def rat-opts {:no-cache true})
 
-(defn get-render [c]
-  (if-some [f (.' c :cljsBoundRender)]
-    f
-    (.! c :cljsBoundRender #(do-render c))))
-
 (def static-fns
   {:render
    (fn render []
@@ -145,7 +138,7 @@
                   (let [rat (.' c :cljsRatom)]
                     (batch/mark-rendered c)
                     (if (nil? rat)
-                      (ratom/run-in-reaction (get-render c) c "cljsRatom"
+                      (ratom/run-in-reaction #(do-render c) c "cljsRatom"
                                              batch/queue-render rat-opts)
                       (._run rat))))))})
 
