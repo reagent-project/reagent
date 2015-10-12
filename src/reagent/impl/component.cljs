@@ -39,13 +39,29 @@
   (props-argv c (.' c :props)))
 
 (defn get-props [c]
-  (-> (get-argv c) extract-props))
+  (let [p (.' c :props)]
+    (if-some [v (.' p :argv)]
+      (extract-props v)
+      (shallow-obj-to-map p))))
 
 (defn get-children [c]
-  (-> (get-argv c) extract-children))
+  (let [p (.' c :props)]
+    (if-some [v (.' p :argv)]
+      (extract-children v)
+      (->> (.' p :children)
+           (.' util/react Children.toArray)
+           (into [])))))
 
-(defn reagent-component? [c]
-  (-> (get-argv c) nil? not))
+(defn ^boolean reagent-class? [c]
+  (and (fn? c)
+       (some? (some-> c .-prototype (.' :reagentRender)))))
+
+(defn ^boolean react-class? [c]
+  (and (fn? c)
+       (some? (some-> c .-prototype (.' :render)))))
+
+(defn ^boolean reagent-component? [c]
+  (some? (.' c :reagentRender)))
 
 (defn cached-react-class [c]
   (.' c :cljsReactClass))
@@ -69,9 +85,6 @@
 
 ;;; Rendering
 
-(defn ^boolean reagent-class? [c]
-  (and (fn? c)
-       (some? (some-> c .-prototype (.' :reagentRender)))))
 
 (defn wrap-render [c]
   (let [f (.' c :reagentRender)
@@ -146,8 +159,8 @@
       (this-as c (reset! (state-atom c) (.call f c c))))
 
     :componentWillReceiveProps
-    (fn componentWillReceiveProps [props]
-      (this-as c (.call f c c (get-argv c))))
+    (fn componentWillReceiveProps [nextprops]
+      (this-as c (.call f c c (props-argv c nextprops))))
 
     :shouldComponentUpdate
     (fn shouldComponentUpdate [nextprops nextstate]
@@ -257,9 +270,9 @@
 
 (defn create-class [body]
   {:pre [(map? body)]}
-  (let [spec (cljsify body)
-        res (.' util/react createClass spec)]
-    (cache-react-class res res)))
+  (->> body
+       cljsify
+       (.' util/react createClass)))
 
 (defn component-path [c]
   (let [elem (some-> (or (some-> c (.' :_reactInternalInstance))
@@ -285,20 +298,21 @@
         ""))
     ""))
 
-
 (defn fn-to-class [f]
   (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
-  (warn-unless (not (and (fn? f)
-                         (some? (some-> f .-prototype (.' :render)))))
+  (warn-unless (not (and (react-class? f)
+                         (not (reagent-class? f))))
                "Using native React classes directly in Hiccup forms "
                "is not supported. Use create-element or "
                "adapt-react-class instead: " (let [n (util/fun-name f)]
                                                (if (empty? n) f n))
                (comp-name))
-  (let [spec (meta f)
-        withrender (assoc spec :reagent-render f)
-        res (create-class withrender)]
-    (cache-react-class f res)))
+  (if (reagent-class? f)
+    (cache-react-class f f)
+    (let [spec (meta f)
+          withrender (assoc spec :reagent-render f)
+          res (create-class withrender)]
+      (cache-react-class f res))))
 
 (defn as-class [tag]
   (if-some [cached-class (cached-react-class tag)]
@@ -306,4 +320,6 @@
     (fn-to-class tag)))
 
 (defn reactify-component [comp]
-  (as-class comp))
+  (if (react-class? comp)
+    comp
+    (as-class comp)))

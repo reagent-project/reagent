@@ -728,6 +728,8 @@
         comp (atom c1)
         c2 (fn []
              (apply vector @comp @arg))
+        cnative (fn []
+                  (into [:> @comp] @arg))
         check (fn []
                 (is (= (:initial-state @res)
                        {:at 1 :args [@t]}))
@@ -741,7 +743,7 @@
                 (reset! arg ["a" "c"])
                 (r/flush)
                 (is (= (:will-receive @res)
-                       {:at 5 :args [@t [@comp "a" "b"]]}))
+                       {:at 5 :args [@t [@comp "a" "c"]]}))
                 (is (= (:should-update @res)
                        {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
                 (is (= (:will-update @res)
@@ -759,6 +761,111 @@
       (reset! arg defarg)
       (reset! n1 0)
       (with-mounted-component [c2] check)
+      (is (= (:will-unmount @res)
+             {:at 10 :args [@t]})))))
+
+
+(deftest lifecycle-native
+  (let [n1 (atom 0)
+        t (atom 0)
+        res (atom {})
+        oldprops (atom nil)
+        newprops (atom nil)
+        add-args (fn [key args]
+                   (swap! res assoc key
+                          {:at (swap! n1 inc)
+                           :args (vec args)}))
+        render (fn [& args]
+                 (this-as
+                  c
+                  (when @newprops
+                    (is (= @newprops) (first args))
+                    (is (= @newprops) (r/props c)))
+                  (is (= c (r/current-component)))
+                  (is (= (first args) (r/props c)))
+                  (add-args :render
+                            {:children (r/children c)})
+                  [:div (first args)]))
+        ls {:get-initial-state
+            (fn [& args]
+              (reset! t (first args))
+              (reset! oldprops (-> args first r/props))
+              (add-args :initial-state args)
+              {:foo "bar"})
+            :component-will-mount
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-mount args))
+            :component-did-mount
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :did-mount args))
+            :should-component-update
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :should-update args) true)
+            :component-will-receive-props
+            (fn [& args]
+              (reset! newprops (-> args second second))
+              (this-as c
+                       (is (= c (first args)))
+                       (add-args :will-receive (into [(dissoc (r/props c) :children)]
+                                                     (:children (r/props c))))))
+            :component-will-update
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-update args))
+            :component-did-update
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :did-update args))
+            :component-will-unmount
+            (fn [& args]
+              (this-as c (is (= c (first args))))
+              (add-args :will-unmount args))}
+        c1 (r/create-class
+            (assoc ls :reagent-render render))
+        defarg [{:foo "bar"} "a" "b"]
+        arg (r/atom defarg)
+        comp (atom c1)
+        cnative (fn []
+                  (into [:> @comp] @arg))
+        check (fn []
+                (is (= (:initial-state @res)
+                       {:at 1 :args [@t]}))
+                (is (= (:will-mount @res)
+                       {:at 2 :args [@t]}))
+                (is (= (:render @res)
+                       {:at 3 :args [[:children ["a" "b"]]]}))
+                (is (= (:did-mount @res)
+                       {:at 4 :args [@t]}))
+
+                (reset! arg [{:f "oo"} "a" "c"])
+                (r/flush)
+
+                (is (= (:will-receive @res)
+                       {:at 5 :args [{:foo "bar"} "a" "b"]}))
+                (let [a (:should-update @res)
+                      {at :at
+                       [this oldv newv] :args} a]
+                  (is (= at 6))
+                  (is (= (count (:args a)) 3))
+                  (is (= (js->clj oldv) (js->clj [@t @oldprops])))
+                  (is (= newv [@t @newprops])))
+                (let [a (:will-update @res)
+                      {at :at
+                       [this newv] :args} a]
+                  (is (= at 7))
+                  (is (= newv [@t @newprops])))
+                (is (= (:render @res)
+                       {:at 8 :args [[:children ["a" "c"]]]}))
+                (let [a (:did-update @res)
+                      {at :at
+                       [this oldv] :args} a]
+                  (is (= at 9))
+                  (is (= oldv [@t @oldprops]))))]
+    (when isClient
+      (with-mounted-component [cnative] check)
       (is (= (:will-unmount @res)
              {:at 10 :args [@t]})))))
 
@@ -817,7 +924,7 @@
         (is (= e
                {:error (lstr "Error rendering component (" stack1 ")")})))
 
-      (let [e (debug/track-warnings #(r/reactify-component nat))]
+      (let [e (debug/track-warnings #(r/as-element [nat]))]
         (is (re-find #"Using native React classes directly"
                      (-> e :warn first))))
 
