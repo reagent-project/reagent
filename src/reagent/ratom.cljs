@@ -474,7 +474,8 @@
     reaction))
 
 
-(def temp-reaction (make-reaction nil))
+
+(def ^:private temp-reaction (make-reaction nil))
 
 (defn run-in-reaction [f obj key run opts]
   (let [r temp-reaction

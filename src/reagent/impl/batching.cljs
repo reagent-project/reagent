@@ -36,7 +36,6 @@
   (dotimes [i (alength a)]
     (let [c (aget a i)]
       (when (true? (.' c :cljsIsDirty))
-        (.! c :cljsIsDirty false)
         (.' c forceUpdate)))))
 
 
@@ -61,7 +60,7 @@
   (schedule [this]
     (when-not scheduled?
       (set! scheduled? true)
-      (next-tick #(.run-queue this))))
+      (next-tick #(.run-queues this))))
 
   (queue-render [this c]
     (.enqueue this "componentQueue" c))
@@ -72,8 +71,11 @@
   (add-after-render [this f]
     (.enqueue this "afterRender" f))
 
-  (run-queue [this]
+  (run-queues [this]
     (set! scheduled? false)
+    (.flush-queues this))
+
+  (flush-queues [this]
     (.run-funs this "beforeFlush")
     (ratom-flush)
     (when-some [cs (aget this "componentQueue")]
@@ -84,7 +86,7 @@
 (defonce render-queue (RenderQueue. false))
 
 (defn flush []
-  (.run-queue render-queue))
+  (.flush-queues render-queue))
 
 (defn queue-render [c]
   (.! c :cljsIsDirty true)
