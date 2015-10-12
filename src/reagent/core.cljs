@@ -13,6 +13,8 @@
 
 (def is-client util/is-client)
 
+(def react util/react)
+
 (defn create-element
   "Create a native React element, by calling React.createElement directly.
 
@@ -31,13 +33,13 @@ which is equivalent to
    (create-element type nil))
   ([type props]
    (assert (not (map? props)))
-   (.' util/react createElement type props))
+   (.' react createElement type props))
   ([type props child]
    (assert (not (map? props)))
-   (.' util/react createElement type props child))
+   (.' react createElement type props child))
   ([type props child & children]
    (assert (not (map? props)))
-   (apply (.' util/react :createElement) type props child children)))
+   (apply (.' react :createElement) type props child children)))
 
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form unchanged if it is not a vector."
