@@ -15,6 +15,11 @@
     clear: both;
 }
 
+body {
+    background-color: #eeeeec;
+    text-rendering: optimizeLegibility;
+}
+
 div.nav {
     position: absolute;
     top: 0;
@@ -27,7 +32,7 @@ ul.nav {
     width: 750px;
     height: 40px;
     padding-left: 60px;
-    padding-top: 10px;
+    padding-top: 18px;
     list-style-type: none;
 }
 
@@ -39,7 +44,7 @@ ul.nav > li {
 ul.nav > li > a {
     text-decoration: none;
     text-transform: uppercase;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     font-size: 11px;
     color: #777;
 }
@@ -66,12 +71,12 @@ ul.nav > li.brand > a {
 .reagent-demo {
     background-color: #fff;
     margin: 60px -100px;
-    padding: 36px 60px;
+    padding: 29px 60px 45px 60px;
 }
 
 .reagent-demo > h1 {
     font-size: 48px;
-    color: #555;
+    color: rgba(0, 0, 0, 0.75);
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue', arial;
     font-weight: normal;
     line-height: 1.25em;
@@ -111,24 +116,30 @@ ul.nav > li.brand > a {
 }
 
 .reagent-demo h2 {
-    font-size: 20px;
-    line-height: 1.25em;
-    margin-top: 48px;
-    color: #555;
+    font-size: 19px;
+    line-height: 26px;
+    margin-top: 45px;
+    margin-bottom: 3px;
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.reagent-demo h2 + p {
+    margin-top: 0;
 }
 
 .demo-text > p, .demo-text > ul {
     font-family: georgia, serif;
     font-size: 18px;
-    line-height: 1.5em;
-    color: #444;
+    line-height: 1.611em;
+    color: rgba(0, 0, 0, 0.8);
+    margin-bottom: 29px;
+    margin-top: 29px;
 }
 
 .demo-text > p > code, .demo-text > ul > li > code {
-    font-size: 17px;
-    color: #554;
-    background-color: #f6f6f2;
-    padding: 0 2px;
+    font-size: 16px;
+    background-color: #f5f5f2;
+    padding: 0 3px;
 }
 
 .demo-text > ul > li {
@@ -136,17 +147,28 @@ ul.nav > li.brand > a {
 }
 
 .demo-example {
-    background-color: #ebebeb;
+    background-color: #f3f3f2;
 }
 
 .demo-source {
-    background-color: #f8f8f5;
-    color: #555;
+    background-color: #fbfbfa;
+    color: rgba(0, 0, 0, 0.75);
+}
+
+.demo-source pre {
+    font-family: Consolas, Menlo, Courier, monospace;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.demo-example div, .demo-example p {
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.2em;
 }
 
 .demo-example, .demo-source {
-    margin: 0px -22px;
-    padding: 22px 22px;
+    margin: 0px -60px;
+    padding: 21px 60px;
 }
 
 .simple-demo, .simple-demo input {
@@ -155,13 +177,17 @@ ul.nav > li.brand > a {
 
 .demo-heading {
     margin-top: 0;
-    color: #999;
+    color: #aaa;
     font-size: 14px;
+    line-height: 29px;
+    margin-top: 3px;
 }
 
 .demo-example-hide {
+    margin-top: 3px;
     float: right;
     cursor: pointer;
+    color: #bbb;
 }
 
 .news-read-more {

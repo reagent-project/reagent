@@ -9,7 +9,7 @@
 (def url "/news/news050.html")
 (def title "News in 0.5.0")
 
-(def new-in-alpha [:strong "New since 0.5.0-alpha: "])
+(def new-in-alpha nil)
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -29,24 +29,11 @@
    [:input {:value @val
             :on-change #(reset! val (.-target.value %))}]])
 
-(defn name-part [key]
-  (get-in @person [:name key]))
-
-(def track reagent.ratom/track)
-
-(defn foo [])
-
 (defn name-edit [n]
   (let [{:keys [first-name last-name]} @n]
     [:div
      [:p "I'm editing " first-name " " last-name "."]
-     [:p "I'm editing " @(track name-part :first-name) " "
-      @(track name-part :last-name) "."]
-     [:p "I'm editing " @(track name-part :first-name) " "
-      @(track name-part :last-name) "."]
-     [:p "I'm editing " @(track name-part :first-name) " "
-      @(track name-part :last-name) "."]
-     
+
      [input "First name: " (r/wrap first-name
                                    swap! n assoc :first-name)]
      [input "Last name:  " (r/wrap last-name
@@ -224,7 +211,7 @@
        the getter function will re-run to change the value of the
        cursor just like a Reagent component does."]
 
-       [:h3 "Values and references"]
+       [:h2 "Values and references"]
 
        [:p "So what’s the difference between wraps and cursors? Why
        have both?"]
