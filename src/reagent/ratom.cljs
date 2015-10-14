@@ -335,7 +335,8 @@
 
 
 (deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty? ^boolean nocache?
-                   ^:mutable watching ^:mutable watches ^:mutable auto-run]
+                   ^:mutable watching ^:mutable watches ^:mutable auto-run
+                   ^:mutable caught]
   IAtom
   IReactiveAtom
 
@@ -394,9 +395,8 @@
       (try
         (._run this)
         (catch :default e
-          ;; Just log error: it will most likely pop up again at deref time.
-          (error "Error in reaction:" e)
           (set! state nil)
+          (set! caught e)
           (notify-w this e nil)))))
 
   (_run [this]
@@ -428,6 +428,9 @@
 
   IDeref
   (-deref [this]
+    (when-some [e caught]
+      (set! caught nil)
+      (throw e))
     (let [non-reactive (nil? *ratom-context*)]
       (when non-reactive
         (flush!))
@@ -467,7 +470,7 @@
 
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
-  (let [reaction (Reaction. f nil true false nil nil nil)]
+  (let [reaction (Reaction. f nil true false nil nil nil nil)]
     (._set-opts reaction {:auto-run auto-run
                           :on-set on-set
                           :on-dispose on-dispose})
