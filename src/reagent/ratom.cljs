@@ -554,7 +554,10 @@
 
 
 
-(comment
+#_(do
+  ;; Workaround for cljs bug
+  (when (exists? js/process)
+    (set! (.-hrtime js/process) (aget js/process "hrtime")))
   (defn ratom-perf []
     (dbg "ratom-perf")
     (set! debug false)

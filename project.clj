@@ -4,7 +4,7 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.48"]
+                 [org.clojure/clojurescript "1.7.145"]
                  [cljsjs/react-dom "0.14.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.0"]
@@ -16,7 +16,9 @@
           :exclude clojure.string}
 
   :profiles {:test {:cljsbuild
-                    {:builds {:client {:source-paths ["test"]}}}}
+                    {:builds {:client {:source-paths ["test"]
+                                       :compiler
+                                       {:main "reagenttest.runtests"}}}}}
 
              :dev [:test
                    {:dependencies [[figwheel "0.4.0"]]
@@ -28,8 +30,7 @@
                     {:builds
                      {:client
                       {:figwheel {:on-jsload "reagenttest.runtests/reload"}
-                       :compiler {:main "reagenttest.runtests"
-                                  :source-map true
+                       :compiler {:source-map true
                                   :source-map-timestamp true
                                   :optimizations :none
                                   :output-dir "outsite/public/js/out"
@@ -47,6 +48,7 @@
                                {:compiler {:optimizations :advanced
                                            :elide-asserts true
                                            :pretty-print false
+                                           :main "reagentdemo.core"
                                            ;; :pseudo-names true
                                            :output-dir "target/client"}}}}}]
 
@@ -59,7 +61,7 @@
                                      :provides ["cljsjs.react.dom"
                                                 "cljsjs.react"]}]}}}}}
 
-             :prod-test [:test :prod]
+             :prod-test [:prod :test]
              
              :dev-notest [:dev
                           {:cljsbuild
