@@ -5,9 +5,7 @@
             [reagent.interop :refer-macros [.' .!]]))
 
 ;; TODO: Where the hell is ReactDOMServer?
-(defonce react-dom-server (or (and (exists? js/ReactDOMServer)
-                                   js/ReactDOMServer)
-                              (and (exists? js/require)
+(defonce react-dom-server (or (and (exists? js/require)
                                    (js/require "react-dom/server"))
                               util/react))
 (assert react-dom-server)
