@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [atom])
   (:require-macros [reagent.ratom :refer [with-let]])
   (:require [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg log warn error dev?]]
+            [reagent.debug :refer-macros [dbg log warn error dev? time]]
             [reagent.impl.batching :as batch]
             [clojure.set :as s]))
 
@@ -555,11 +555,7 @@
 
 
 #_(do
-  ;; Workaround for cljs bug
-  (when (exists? js/process)
-    (set! (.-hrtime js/process) (aget js/process "hrtime")))
   (defn ratom-perf []
-    (dbg "ratom-perf")
     (set! debug false)
     (dotimes [_ 10]
       (let [nite 100000
@@ -577,5 +573,4 @@
                 (swap! a inc)
                 (flush!)))
         (dispose! res))))
-  (enable-console-print!)
   (ratom-perf))

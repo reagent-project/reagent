@@ -1,5 +1,5 @@
 (ns reagent.debug
-  (:refer-clojure :exclude [prn println]))
+  (:refer-clojure :exclude [prn println time]))
 
 (defmacro log
   "Print with console.log, if it exists."
@@ -61,3 +61,13 @@ as well as package name and line number. Returns x."
   "True if assertions are enabled."
   []
   (if *assert* true false))
+
+(defmacro time [& forms]
+  (let [ns (str cljs.analyzer/*cljs-ns*)
+        label (str ns ":" (:line (meta &form)))]
+    `(let [label# ~label
+           res# (do
+                  (js/console.time label#)
+                  ~@forms)]
+       (js/console.timeEnd label#)
+       res#)))

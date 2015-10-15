@@ -1,7 +1,7 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
             [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg println]]
+            [reagent.debug :refer-macros [dbg println time]]
             [clojure.string :as string]
             [reagentdemo.syntax :as s]
             [sitetools.core :refer [link]]
@@ -336,3 +336,8 @@
        ;; Show heavy examples on load, to make html file smaller
        (when @show-all [complete-simple-demo])
        (when @show-all [todomvc-demo])])))
+
+
+#_(dotimes [_ 30]
+  (time
+   (r/render-to-string [main])))
