@@ -5,21 +5,29 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [.' .!]]))
 
-(defonce react-dom (or (and (exists? js/ReactDOM)
-                            js/ReactDOM)
-                       (and (exists? js/require)
-                            (js/require "react-dom"))))
-(assert react-dom)
+(defonce ^:private react-dom nil)
 
 (defonce ^:private roots (atom {}))
 
-(defn unmount-comp [container]
+(defn- dom []
+  (if-some [r react-dom]
+    r
+    (do
+      (set! react-dom
+            (or (and (exists? js/ReactDOM)
+                     js/ReactDOM)
+                (and (exists? js/require)
+                     (js/require "react-dom"))))
+      (assert react-dom "Could not find ReactDOM")
+      react-dom)))
+
+(defn- unmount-comp [container]
   (swap! roots dissoc container)
-  (.' react-dom unmountComponentAtNode container))
+  (.' (dom) unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
-    (->> (.' react-dom render (comp) container
+    (->> (.' (dom) render (comp) container
              (fn []
                (binding [util/*always-update* false]
                  (swap! roots assoc container [comp container])
@@ -49,11 +57,21 @@ Returns the mounted component instance."
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  (.' react-dom findDOMNode this))
+  (.' (dom) findDOMNode this))
 
 (set! tmpl/find-dom-node dom-node)
 
-(defn force-update-all []
+(defn force-update-all
+  "Force re-rendering of all mounted Reagent components. This is
+  probably only useful in a development environment, when you want to
+  update components in response to some dynamic changes to code.
+
+  Note that force-update-all may not update root components. This
+  happens if a component 'foo' is mounted with `(render [foo])` (since
+  functions are passed by value, and not by reference, in
+  ClojureScript). To get around this you'll have to introduce a layer
+  of indirection, for example by using `(render [#'foo])` instead."
+  []
   (doseq [v (vals @roots)]
     (apply re-render-component v))
   "Updated")
