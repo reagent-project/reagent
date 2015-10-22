@@ -168,6 +168,7 @@
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
   (if (and (some? find-dom-node)
+           (some? jsprops)
            ($ jsprops hasOwnProperty "onChange")
            ($ jsprops hasOwnProperty "value"))
     (let [v ($ jsprops :value)

@@ -952,3 +952,7 @@
         (is (= (.-innerHTML @ref) "foobar"))
         (is (= (.-innerHTML @node) "foobar"))
         (is (identical? @ref @node))))))
+
+(deftest test-empty-input
+  (is (= "<div><input/></div>"
+         (rstr [:div [:input]]))))
