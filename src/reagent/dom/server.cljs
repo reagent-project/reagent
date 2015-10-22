@@ -2,7 +2,7 @@
   (:require [cljsjs.react.dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
-            [reagent.interop :refer-macros [.' .!]]))
+            [reagent.interop :refer-macros [$ $!]]))
 
 (defonce ^:private react-server nil)
 
@@ -18,10 +18,10 @@
   "Turns a component into an HTML string."
   [component]
   (binding [util/*non-reactive* true]
-    (.' (server) renderToString (tmpl/as-element component))))
+    ($ (server) renderToString (tmpl/as-element component))))
 
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
   [component]
   (binding [util/*non-reactive* true]
-    (.' (server) renderToStaticMarkup (tmpl/as-element component))))
+    ($ (server) renderToStaticMarkup (tmpl/as-element component))))

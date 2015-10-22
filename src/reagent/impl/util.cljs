@@ -1,7 +1,7 @@
 (ns reagent.impl.util
   (:require [cljsjs.react]
             [reagent.debug :refer-macros [dbg log warn]]
-            [reagent.interop :refer-macros [.' .!]]
+            [reagent.interop :refer-macros [$ $!]]
             [clojure.string :as string]))
 
 (defonce react (or (and (exists? js/React)
@@ -11,7 +11,7 @@
 (assert react)
 
 (def is-client (and (exists? js/window)
-                    (-> js/window (.' :document) nil? not)))
+                    (-> js/window ($ :document) nil? not)))
 
 (def ^:dynamic ^boolean *non-reactive* false)
 
@@ -47,8 +47,8 @@
 
 (defn fun-name [f]
   (let [n (or (and (fn? f)
-                   (or (.' f :displayName)
-                       (.' f :name)))
+                   (or ($ f :displayName)
+                       ($ f :name)))
               (and (implements? INamed f)
                    (name f))
               (let [m (meta f)]
@@ -98,5 +98,5 @@
 (defn force-update [comp deep]
   (if deep
     (binding [*always-update* true]
-      (.' comp forceUpdate))
-    (.' comp forceUpdate)))
+      ($ comp forceUpdate))
+    ($ comp forceUpdate)))

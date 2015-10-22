@@ -1,7 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .!]]
+            [reagent.interop :refer-macros [$ $!]]
             [reagent.impl.util :refer [is-client]]
             [clojure.string :as string]))
 
@@ -19,15 +19,15 @@
   (if-not is-client
     fake-raf
     (let [w js/window]
-      (or (.' w :requestAnimationFrame)
-          (.' w :webkitRequestAnimationFrame)
-          (.' w :mozRequestAnimationFrame)
-          (.' w :msRequestAnimationFrame)
+      (or ($ w :requestAnimationFrame)
+          ($ w :webkitRequestAnimationFrame)
+          ($ w :mozRequestAnimationFrame)
+          ($ w :msRequestAnimationFrame)
           fake-raf))))
 
 (defn compare-mount-order [c1 c2]
-  (- (.' c1 :cljsMountOrder)
-     (.' c2 :cljsMountOrder)))
+  (- ($ c1 :cljsMountOrder)
+     ($ c2 :cljsMountOrder)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents
@@ -35,8 +35,8 @@
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (true? (.' c :cljsIsDirty))
-        (.' c forceUpdate)))))
+      (when (true? ($ c :cljsIsDirty))
+        ($ c forceUpdate)))))
 
 
 ;; Set from ratom.cljs
@@ -89,11 +89,11 @@
   (.flush-queues render-queue))
 
 (defn queue-render [c]
-  (.! c :cljsIsDirty true)
+  ($! c :cljsIsDirty true)
   (.queue-render render-queue c))
 
 (defn mark-rendered [c]
-  (.! c :cljsIsDirty false))
+  ($! c :cljsIsDirty false))
 
 (defn do-before-flush [f]
   (.add-before-flush render-queue f))

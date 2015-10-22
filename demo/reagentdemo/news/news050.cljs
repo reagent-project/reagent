@@ -1,6 +1,5 @@
 (ns reagentdemo.news.news050
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
@@ -111,7 +110,7 @@
     [:p "Reagent 0.5.0 has automatic importing of React.js, two kinds
     of cursors, better integration of native React components, better
     performance, easier integration with e.g Figwheel, and more."]
-    
+
     (if summary
       [link {:href url
              :class 'news-read-more} "Read more"]
@@ -232,7 +231,7 @@
        they " [:code "deref"] " a normal Reagent atom (unnecessary
        re-rendering is avoided by checking if the cursor's value has
        changed using " [:code "identical?"] ")."]
-       
+
 
        [:h2 "Faster rendering"]
 

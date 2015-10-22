@@ -1,6 +1,5 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println time]]
             [clojure.string :as string]
             [reagentdemo.syntax :as s]

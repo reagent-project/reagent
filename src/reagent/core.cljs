@@ -7,7 +7,7 @@
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [dbg prn]]
-            [reagent.interop :refer-macros [.' .!]]
+            [reagent.interop :refer-macros [$ $!]]
             [reagent.dom :as dom]
             [reagent.dom.server :as server]))
 
@@ -33,13 +33,13 @@ which is equivalent to
    (create-element type nil))
   ([type props]
    (assert (not (map? props)))
-   (.' react createElement type props))
+   ($ react createElement type props))
   ([type props child]
    (assert (not (map? props)))
-   (.' react createElement type props child))
+   ($ react createElement type props child))
   ([type props child & children]
    (assert (not (map? props)))
-   (apply (.' react :createElement) type props child children)))
+   (apply ($ react :createElement) type props child children)))
 
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form unchanged if it is not a vector."

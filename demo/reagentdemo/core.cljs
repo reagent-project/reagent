@@ -1,6 +1,5 @@
 (ns reagentdemo.core
   (:require [reagent.core :as r]
-            [reagent.interop :as i :refer-macros [.' .!]]
             [clojure.string :as string]
             [sitetools.core :as tools :refer [dispatch link]]
             [reagentdemo.common :as common :refer [demo-component]]

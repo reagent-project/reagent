@@ -3,7 +3,7 @@
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .!]]))
+            [reagent.interop :refer-macros [$ $!]]))
 
 (defonce ^:private react-dom nil)
 
@@ -23,11 +23,11 @@
 
 (defn- unmount-comp [container]
   (swap! roots dissoc container)
-  (.' (dom) unmountComponentAtNode container))
+  ($ (dom) unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
-    (->> (.' (dom) render (comp) container
+    (->> ($ (dom) render (comp) container
              (fn []
                (binding [util/*always-update* false]
                  (swap! roots assoc container [comp container])
@@ -57,7 +57,7 @@ Returns the mounted component instance."
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  (.' (dom) findDOMNode this))
+  ($ (dom) findDOMNode this))
 
 (set! tmpl/find-dom-node dom-node)
 

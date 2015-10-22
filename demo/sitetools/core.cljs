@@ -3,7 +3,7 @@
             [goog.events :as evt]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log dev?]]
-            [reagent.interop :as i :refer-macros [.' .!]])
+            [reagent.interop :as i :refer-macros [$ $!]])
   (:import goog.History
            [goog.history Html5History EventType]))
 
@@ -143,22 +143,22 @@
 
 (defn mkdirs [f]
   (doseq [d (reductions #(str %1 "/" %2)
-                        (-> (.' (path) normalize f)
+                        (-> ($ (path) normalize f)
                             (string/split #"/")))]
-    (when-not (.' (fs) existsSync d)
-      (.' (fs) mkdirSync d))))
+    (when-not ($ (fs) existsSync d)
+      ($ (fs) mkdirSync d))))
 
 (defn write-file [f content]
-  (mkdirs (.' (path) dirname f))
-  (.' (fs) writeFileSync f content))
+  (mkdirs ($ (path) dirname f))
+  ($ (fs) writeFileSync f content))
 
 (defn path-join [& paths]
-  (apply (.' (path) :join) paths))
+  (apply ($ (path) :join) paths))
 
 (defn write-resources [dir {:keys [css-file css-infiles]}]
   (write-file (path-join dir css-file)
               (->> css-infiles
-                   (map #(.' (fs) readFileSync %))
+                   (map #($ (fs) readFileSync %))
                    (string/join "\n"))))
 
 

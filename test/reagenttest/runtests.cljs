@@ -10,7 +10,6 @@
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
             [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg log]]
             [reagentdemo.core :as demo]))
 

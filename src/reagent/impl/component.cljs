@@ -2,7 +2,7 @@
   (:require [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [.' .!]]
+            [reagent.interop :refer-macros [$ $!]]
             [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless]]))
 
 (declare ^:dynamic *current-component*)
@@ -30,52 +30,52 @@
       (subvec v first-child))))
 
 (defn props-argv [c p]
-  (if-some [a (.' p :argv)]
+  (if-some [a ($ p :argv)]
     a
     [c (shallow-obj-to-map p)]))
 
 (defn get-argv [c]
-  (props-argv c (.' c :props)))
+  (props-argv c ($ c :props)))
 
 (defn get-props [c]
-  (let [p (.' c :props)]
-    (if-some [v (.' p :argv)]
+  (let [p ($ c :props)]
+    (if-some [v ($ p :argv)]
       (extract-props v)
       (shallow-obj-to-map p))))
 
 (defn get-children [c]
-  (let [p (.' c :props)]
-    (if-some [v (.' p :argv)]
+  (let [p ($ c :props)]
+    (if-some [v ($ p :argv)]
       (extract-children v)
-      (->> (.' p :children)
-           (.' util/react Children.toArray)
+      (->> ($ p :children)
+           ($ util/react Children.toArray)
            (into [])))))
 
 (defn ^boolean reagent-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype (.' :reagentRender)))))
+       (some? (some-> c .-prototype ($ :reagentRender)))))
 
 (defn ^boolean react-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype (.' :render)))))
+       (some? (some-> c .-prototype ($ :render)))))
 
 (defn ^boolean reagent-component? [c]
-  (some? (.' c :reagentRender)))
+  (some? ($ c :reagentRender)))
 
 (defn cached-react-class [c]
-  (.' c :cljsReactClass))
+  ($ c :cljsReactClass))
 
 (defn cache-react-class [c constructor]
-  (.! c :cljsReactClass constructor))
+  ($! c :cljsReactClass constructor))
 
 
 ;;; State
 
 (defn state-atom [this]
-  (let [sa (.' this :cljsState)]
+  (let [sa ($ this :cljsState)]
     (if-not (nil? sa)
       sa
-      (.! this :cljsState (ratom/atom nil)))))
+      ($! this :cljsState (ratom/atom nil)))))
 
 ;; ugly circular dependency
 (defn as-element [x]
@@ -85,9 +85,9 @@
 ;;; Rendering
 
 (defn wrap-render [c]
-  (let [f (.' c :reagentRender)
+  (let [f ($ c :reagentRender)
         _ (assert (ifn? f))
-        res (if (true? (.' c :cljsLegacyRender))
+        res (if (true? ($ c :cljsLegacyRender))
               (.call f c c)
               (let [v (get-argv c)
                     n (count v)]
@@ -104,7 +104,7 @@
                            (fn [& args]
                              (as-element (apply vector res args)))
                            res)]
-                   (.! c :reagentRender f)
+                   ($! c :reagentRender f)
                    (recur c))
       :else res)))
 
@@ -135,7 +135,7 @@
    (fn render []
      (this-as c (if util/*non-reactive*
                   (do-render c)
-                  (let [rat (.' c :cljsRatom)]
+                  (let [rat ($ c :cljsRatom)]
                     (batch/mark-rendered c)
                     (if (nil? rat)
                       (ratom/run-in-reaction #(do-render c) c "cljsRatom"
@@ -161,8 +161,8 @@
           (this-as c
                    ;; Don't care about nextstate here, we use forceUpdate
                    ;; when only when state has changed anyway.
-                   (let [old-argv (.' c :props.argv)
-                         new-argv (.' nextprops :argv)
+                   (let [old-argv ($ c :props.argv)
+                         new-argv ($ nextprops :argv)
                          noargv (or (nil? old-argv) (nil? new-argv))]
                      (cond
                        (nil? f) (or noargv (not= old-argv new-argv))
@@ -180,7 +180,7 @@
     :componentWillMount
     (fn componentWillMount []
       (this-as c
-               (.! c :cljsMountOrder (batch/next-mount-count))
+               ($! c :cljsMountOrder (batch/next-mount-count))
                (when-not (nil? f)
                  (.call f c c))))
 
@@ -191,7 +191,7 @@
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (some-> (.' c :cljsRatom)
+               (some-> ($ c :cljsRatom)
                        ratom/dispose!)
                (batch/mark-rendered c)
                (when-not (nil? f)
@@ -265,17 +265,17 @@
   {:pre [(map? body)]}
   (->> body
        cljsify
-       (.' util/react createClass)))
+       ($ util/react createClass)))
 
 (defn component-path [c]
-  (let [elem (some-> (or (some-> c (.' :_reactInternalInstance))
+  (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
                           c)
-                     (.' :_currentElement))
+                     ($ :_currentElement))
         name (some-> elem
-                     (.' :type)
-                     (.' :displayName))
+                     ($ :type)
+                     ($ :displayName))
         path (some-> elem
-                     (.' :_owner)
+                     ($ :_owner)
                      component-path
                      (str " > "))
         res (str path name)]
