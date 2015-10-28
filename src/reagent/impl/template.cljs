@@ -8,6 +8,8 @@
             [reagent.debug :refer-macros [dbg prn println log dev?
                                           warn warn-unless]]))
 
+(def registered-components (atom {}))
+
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
@@ -268,7 +270,8 @@
   (assert (pos? (count v))
           (str "Hiccup form should not be empty: "
                (pr-str v) (comp/comp-name)))
-  (let [tag (nth v 0)]
+  (let [tag (nth v 0)
+        tag (or (@registered-components tag) tag)]
     (assert (valid-tag? tag)
             (str "Invalid Hiccup form: "
                  (pr-str v) (comp/comp-name)))
@@ -344,3 +347,6 @@
                            (.push a (as-element v)))
                          a)
                        #js[comp jsprops] argv))))
+
+(defn register-component [name component]
+  (swap! registered-components assoc name component))
