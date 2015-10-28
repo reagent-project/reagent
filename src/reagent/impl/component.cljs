@@ -32,7 +32,7 @@
 (defn props-argv [c p]
   (if-some [a ($ p :argv)]
     a
-    [c (shallow-obj-to-map p)]))
+    [(.-constructor c) (shallow-obj-to-map p)]))
 
 (defn get-argv [c]
   (props-argv c ($ c :props)))

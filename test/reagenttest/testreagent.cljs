@@ -850,20 +850,20 @@
                        [this oldv newv] :args} a]
                   (is (= at 6))
                   (is (= (count (:args a)) 3))
-                  (is (= (js->clj oldv) (js->clj [@t @oldprops])))
-                  (is (= newv [@t @newprops])))
+                  (is (= (js->clj oldv) (js->clj [@comp @oldprops])))
+                  (is (= newv [@comp @newprops])))
                 (let [a (:will-update @res)
                       {at :at
                        [this newv] :args} a]
                   (is (= at 7))
-                  (is (= newv [@t @newprops])))
+                  (is (= newv [@comp @newprops])))
                 (is (= (:render @res)
                        {:at 8 :args [[:children ["a" "c"]]]}))
                 (let [a (:did-update @res)
                       {at :at
                        [this oldv] :args} a]
                   (is (= at 9))
-                  (is (= oldv [@t @oldprops]))))]
+                  (is (= oldv [@comp @oldprops]))))]
     (when isClient
       (with-mounted-component [cnative] check)
       (is (= (:will-unmount @res)
