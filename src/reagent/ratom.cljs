@@ -19,7 +19,6 @@
 
 (defn captured [obj]
   (let [c (.-cljsCaptured obj)]
-    (set! (.-cljsCaptured obj) nil)
     c))
 
 (defn- notify-deref-watcher! [derefable]

@@ -238,6 +238,26 @@
     (is (= @b 6))
     (is (= runs (running)))))
 
+(deftest reset-in-reaction
+  (let [runs (running)
+        state (rv/atom {})
+        c1 (reaction (get-in @state [:data :a]))
+        c2 (reaction (get-in @state [:data :b]))
+        rxn (rv/make-reaction
+             #(let [cc1 @c1
+                    cc2 @c2]
+                (swap! state assoc :derived (+ cc1 cc2))
+                nil)
+             :auto-run true)]
+    @rxn
+    (is (= (:derived @state) 0))
+    (swap! state assoc :data {:a 1, :b 2})
+    (is (= (:derived @state) 3))
+    (swap! state assoc :data {:a 11, :b 22})
+    (is (= (:derived @state) 33))
+    (dispose rxn)
+    (is (= runs (running)))))
+
 ;; (deftest catching
 ;;   (let [runs (running)
 ;;         a (rv/atom false)
