@@ -8,12 +8,12 @@
                  [cljsjs/react-dom "0.14.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.0"]
-            [codox "0.8.12"]]
+            [lein-codox "0.9.0"]]
 
   :source-paths ["src"]
 
   :codox {:language :clojurescript
-          :exclude clojure.string}
+          :namespaces [#"^reagent\."]}
 
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]
@@ -35,13 +35,13 @@
                                   :optimizations :none
                                   :output-dir "outsite/public/js/out"
                                   :asset-path "js/out"}}}}}]
-             
+
              :site {:resource-paths ^:replace ["outsite"]
                     :figwheel {:css-dirs ^:replace ["outsite/public/css"]}
                     :cljsbuild
                     {:builds {:client
                               {:notify-command ["node" "bin/gen-site.js"]}}}}
-             
+
              :prod [:site
                     {:cljsbuild
                      {:builds {:client
@@ -62,7 +62,7 @@
                                                 "cljsjs.react"]}]}}}}}
 
              :prod-test [:prod :test]
-             
+
              :dev-notest [:dev
                           {:cljsbuild
                            {:builds {:client
@@ -83,6 +83,6 @@
                                        "examples/simple/src"
                                        "examples/geometry/src"]
                         :compiler {:output-to "outsite/public/js/main.js"}}}}
-  
+
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
