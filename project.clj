@@ -8,7 +8,7 @@
                  [cljsjs/react-dom "0.14.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.0"]
-            [codox "0.8.12"]]
+            [codox "0.9.0"]]
 
   :source-paths ["src"]
 
