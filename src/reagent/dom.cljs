@@ -5,45 +5,38 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [$ $!]]))
 
-(defonce ^:private react-dom nil)
+(defonce dom (or (and (exists? js/ReactDOM)
+                      js/ReactDOM)
+                 (and (exists? js/require)
+                      (js/require "react-dom"))))
+
+(assert dom "Could not find ReactDOM")
 
 (defonce ^:private roots (atom {}))
 
-(defn- dom []
-  (if-some [r react-dom]
-    r
-    (do
-      (set! react-dom
-            (or (and (exists? js/ReactDOM)
-                     js/ReactDOM)
-                (and (exists? js/require)
-                     (js/require "react-dom"))))
-      (assert react-dom "Could not find ReactDOM")
-      react-dom)))
-
 (defn- unmount-comp [container]
   (swap! roots dissoc container)
-  ($ (dom) unmountComponentAtNode container))
+  ($ dom unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
-    (->> ($ (dom) render (comp) container
-             (fn []
-               (binding [util/*always-update* false]
-                 (swap! roots assoc container [comp container])
-                 (if (some? callback)
-                   (callback))))))))
+    (->> ($ dom render (comp) container
+            (fn []
+              (binding [util/*always-update* false]
+                (swap! roots assoc container [comp container])
+                (if (some? callback)
+                  (callback))))))))
 
 (defn- re-render-component [comp container]
   (render-comp comp container nil))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be
-either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
+  either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
 
-Optionally takes a callback that is called when the component is in place.
+  Optionally takes a callback that is called when the component is in place.
 
-Returns the mounted component instance."
+  Returns the mounted component instance."
   ([comp container]
    (render comp container nil))
   ([comp container callback]
@@ -57,7 +50,7 @@ Returns the mounted component instance."
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  ($ (dom) findDOMNode this))
+  ($ dom findDOMNode this))
 
 (set! tmpl/find-dom-node dom-node)
 
