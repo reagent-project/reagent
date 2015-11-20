@@ -1,5 +1,5 @@
 (ns reagent.dom.server
-  (:require [cljsjs.react.dom]
+  (:require [cljsjs.react.dom.server]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.interop :refer-macros [$ $!]]))
@@ -9,10 +9,14 @@
 (defn- server []
   (if-some [r react-server]
     r
-    (set! react-server
-          (or (and (exists? js/require)
-                   (js/require "react-dom/server"))
-              util/react))))
+    (do
+      (set! react-server
+            (or (and (exists? js/ReactDOMServer)
+                     js/ReactDOMServer)
+                (and (exists? js/require)
+                     (js/require "react-dom/server"))))
+      (assert react-server "Could not find ReactDOMServer")
+      react-server)))
 
 (defn render-to-string
   "Turns a component into an HTML string."

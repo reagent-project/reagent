@@ -5,7 +5,8 @@
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.145"]
-                 [cljsjs/react-dom "0.14.0-0"]]
+                 [cljsjs/react-dom "0.14.3-1"]
+                 [cljsjs/react-dom-server "0.14.3-0"]]
 
   :plugins [[lein-cljsbuild "1.1.0"]
             [codox "0.9.0"]]
@@ -59,6 +60,7 @@
                                    [{:file "target/webpack/bundle.js"
                                      :file-min "target/webpack/bundle.min.js"
                                      :provides ["cljsjs.react.dom"
+                                                "cljsjs.react.dom.server"
                                                 "cljsjs.react"]}]}}}}}
 
              :prod-test [:prod :test]
