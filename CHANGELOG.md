@@ -1,6 +1,36 @@
 
 # Changelog
 
+## Upcoming
+
+- React updated to 0.14.3
+
+- Added `reagent.dom` and `reagent.dom.server` namespaces, corresponding to new React packages.
+
+- `create-class` now returns a normal React class, that can be used directly from javascript.
+
+- Add `track`: turns a function call into a reactive value.
+
+- Add `track!`: eager version of `track`.
+
+- Add `with-let` macro: simpler handling of lifecycle in components and reactions.
+
+- Add `rswap!`: works like `swap!`, except that recursive calls are allowed, and they always return nil.
+
+- Support `[:> nativeComp {:foo "bar"}]`
+
+- Reagent now falls back to using `require` if global `React` is undefined, to simplify use with e.g webpack and node.js.
+
+
+### Breaking changes
+
+- Reagent now depends on `cljsjs/react-dom` and `cljsjs/react-dom-server`, rather than on `cljsjs/react` directly.
+
+- Reactions are now asynchronous, just like Reagent components. `flush` forces outstanding reactions to run.
+
+- The macros `.'` and `.!` in `reagent.interop` have been renamed to `$` and `$!` respectively.
+
+
 ## 0.5.1
 
 - React updated to 0.13.3
