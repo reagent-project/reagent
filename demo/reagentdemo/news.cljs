@@ -5,10 +5,12 @@
             [reagentdemo.news.clockpost :as clock]
             [reagentdemo.news.news050 :as news050]
             [reagentdemo.news.news051 :as news051]
+            [reagentdemo.news.news060 :as news060]
             [sitetools.core :as tools]))
 
 (defn main []
   [:div
+   ;; [news060/main {:summary true}]
    [news051/main {:summary true}]
    [news050/main {:summary true}]
    [clock/main {:summary true}]
