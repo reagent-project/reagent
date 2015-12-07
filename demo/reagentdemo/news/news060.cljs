@@ -12,10 +12,10 @@
   (:require [reagent.core :as r]))"))
 
 (defonce app-state (r/atom {:people
-                            {1 {:first-name "John"
-                                :last-name "Smith"}
-                             2 {:first-name "Maggie"
-                                :last-name "Johnson"}}}))
+                            {1 {:name "John Smith"
+                                :title "Manager"}
+                             2 {:name "Maggie Johnson"
+                                :title "Senior Executive Manager"}}}))
 
 (defn people []
   (:people @app-state))
@@ -32,7 +32,7 @@
 (defn name-comp [id]
   (let [p @(r/track person id)]
     [:li
-     (:first-name p) " " (:last-name p)]))
+     (:name p)]))
 
 (defn name-list []
   (let [ids @(r/track person-keys)]
@@ -67,6 +67,35 @@
   [:div
    "Pointer moved to: "
    (str @(r/track mouse-pos))])
+
+
+(defn event-handler [state [event-name id value]]
+  (case event-name
+    :set-name   (assoc-in state [:people id :name]
+                          value)
+    :add-person (let [new-key (->> state :people keys (apply max) inc)]
+                  (assoc-in state [:people new-key]
+                            {:name ""}))
+    state))
+
+(defn dispatch [e]
+  ;; (js/console.log "Handling event" (str e))
+  (r/rswap! app-state event-handler e))
+
+(defn name-edit [id]
+  (let [p @(r/track person id)]
+    [:div
+     [:input {:value (:name p)
+              :on-change #(dispatch [:set-name id (.-target.value %)])}]]))
+
+(defn edit-fields []
+  (let [ids @(r/track person-keys)]
+    [:div
+     (for [i ids]
+       ^{:key i} [name-edit i])
+     [:input {:type 'button
+              :value "Add person"
+              :on-click #(dispatch [:add-person])}]]))
 
 
 (defn main [{:keys [summary]}]
@@ -159,7 +188,61 @@
                                         :tracked-pos])}]
 
        [:p "The " [:code "finally"] " clause will run
-       when " [:code "mouse-pos"] " is no longer tracked anywhere."]
+       when " [:code "mouse-pos"] " is no longer tracked anywhere, i.e
+       in this case when " [:code "tracked-pos"] "is unmounted."]
+
+
+       [:section.demo-text
+        [:h2 "Event handling with rswap!"]
+
+        [:p [:code "rswap!"] " is another new function in 0.6.0. It
+        works like standard "[:code "swap!"]" except that it"]
+
+        [:ul
+         [:li "always returns nil"]
+         [:li "allows recursive applications of "[:code "rswap!"]" on the same
+         atom."]]
+
+        [:p "Here’s an example that uses "[:code "rswap!"]" to edit
+        the data introduced in the section about track above:"]
+
+        [demo-component {:comp edit-fields
+                         :src (s/src-of [:event-handler
+                                         :dispatch
+                                         :name-edit
+                                         :edit-fields])}]
+
+        [:p "All events are passed through the "[:code "dispatch"]"
+        function, consisting of a trivial application
+        of "[:code "rswap!"]" and some optional logging. This is the
+        only place where application state actually changes – the rest
+        is pure functions all the way."]
+
+        [:p "The actual event handling is done
+        in "[:code "event-handler"]", which takes state and event as
+        parameters, and returns a new state (events are represented by
+        vectors, with an event name in the first position)."]
+
+        [:p "All the UI components have to do is then just to return
+        some markup, and set up routing of events through the dispatch
+        function. "]
+
+        [:p "This architecture basically divides the application into
+        two logical functions: "]
+
+        [:ul
+         [:li "The first takes state and an event as input, and returns
+         the next state."]
+         [:li "The other takes state as input, and returns a UI
+         definition."]]
+
+        [:p "This simple application could probably just as well use
+        the common "[:code "swap!"]" instead of "[:code "rswap!"]",
+        but using "[:code "swap!"]" in React’s event handlers may
+        trigger warnings due to unexpected return values, and may
+        cause severe headaches if an event handler called by dispatch
+        itself dispatches a new event (that would result in lost
+        events, and much confusion)."]]
 
        ])]])
 
