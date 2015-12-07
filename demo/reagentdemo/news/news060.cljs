@@ -40,6 +40,35 @@
      (for [i ids]
        ^{:key i} [name-comp i])]))
 
+
+(defn mouse-pos-comp []
+  (r/with-let [pointer (r/atom nil)
+               handler #(swap! pointer assoc
+                               :x (.-pageX %)
+                               :y (.-pageY %))
+               _ (.addEventListener js/document "mousemove" handler)]
+    [:div
+     "Pointer moved to: "
+     (str @pointer)]
+    (finally
+      (.removeEventListener js/document "mousemove" handler))))
+
+(defn mouse-pos []
+  (r/with-let [pointer (r/atom nil)
+               handler #(swap! pointer assoc
+                               :x (.-pageX %)
+                               :y (.-pageY %))
+               _ (.addEventListener js/document "mousemove" handler)]
+    @pointer
+    (finally
+      (.removeEventListener js/document "mousemove" handler))))
+
+(defn tracked-pos []
+  [:div
+   "Pointer moved to: "
+   (str @(r/track mouse-pos))])
+
+
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
@@ -102,6 +131,35 @@
         uses of " [:code "@(r/track people)"] " in the example above
         will only result in one call to the " [:code "people"] "
         function (both initially, and when the state atom changes)."]]
+
+       [:h2 "Handling destruction"]
+
+       [:p "Reagent now has a new way of writing components that need
+       to do something when they are no longer around:
+       the "[:code "with-let"]" macro. It looks just
+       like " [:code "let"] " – but the bindings only execute once,
+       and it takes an optional " [:code "finally"] " clause, that
+       runs when the component is no longer rendered."]
+
+       [:p "For example: here's a component that sets up an event
+       listener for mouse moves, and stops listening when the
+       component is removed."]
+
+       [demo-component {:comp mouse-pos-comp
+                        :src (s/src-of [:mouse-pos-comp])}]
+
+       [:p "The same thing could of course be achieved with React
+       lifecycle methods, but that would be a lot more verbose."]
+
+       [:p [:code "with-let"] " can also be combined with " [:code "track"] ". For
+       example, the component above could also be written as: "]
+
+       [demo-component {:comp tracked-pos
+                        :src (s/src-of [:mouse-pos
+                                        :tracked-pos])}]
+
+       [:p "The " [:code "finally"] " clause will run
+       when " [:code "mouse-pos"] " is no longer tracked anywhere."]
 
        ])]])
 

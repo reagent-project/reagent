@@ -26,7 +26,7 @@
                "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
                "=" "partial" "first" "second" "rest" "list" "conj"
                "drop" "when-let" "if-let" "add-watch" "mod" "quot"
-               "bit-test" "vector" "do"})
+               "bit-test" "vector" "do" "try" "catch" "finally"})
 
 (def styles {:comment  comment-style
              :str-litt string-style
