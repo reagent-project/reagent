@@ -21,12 +21,13 @@
   (:people @app-state))
 
 (defn person-keys []
-  (let [m @(r/track people)]
-    (keys m)))
+  (-> @(r/track people)
+      keys
+      sort))
 
 (defn person [id]
-  (let [m @(r/track people)]
-    (get m id)))
+  (-> @(r/track people)
+      (get id)))
 
 (defn name-comp [id]
   (let [p @(r/track person id)]
@@ -53,8 +54,8 @@
        [:h2 "Use any function as a reactive value"]
 
        [:p [:code "reagent.core/track"] " takes a function, and
-       optional arguments for that function, and returns an
-       ”atom-like” value that can be derefed, and gives whatever is
+       optional arguments for that function, and gives a
+       derefable (i.e ”atom-like”) value, containing whatever is
        returned by that function. If the tracked function depends on a
        Reagent atom, the function is called again whenever that atom
        changes – just like a Reagent component function. If the value
@@ -64,7 +65,7 @@
 
        [:p "In other words, " [:code "@(r/track foo x)"] " gives the
        same result as " [:code "(foo x)"] " – but in the first case,
-       foo is only called again when the atoms it depends on
+       foo is only called again when the atom(s) it depends on
        changes."]
 
        [:p "Here's an example: "]
@@ -78,9 +79,29 @@
                                         :name-list])}]
 
        [:p "Here, the " [:code "name-list"] " component will only be
-       re-rendered if the keys to the " [:code ":people"] " map
+       re-rendered if the keys of the " [:code ":people"] " map
        changes. Every " [:code "name-comp"] " only renders again when
        needed, etc."]
+
+       [:p "Use of " [:code "track"] " can improve performance in
+       three ways:" ]
+
+       [:ul
+        [:li "It can be used as a cache for an expensive function,
+        that is automatically updated if that function depends on Reagent
+        atoms (or other tracks, cursors, etc)."]
+
+        [:li "It can also be used to limit the number of times a
+        component is re-rendered. The user of " [:code "track"] " is
+        only updated when the function’s result changes. In other
+        words, you can use track as a kind of generalized, read-only
+        cursor."]
+
+        [:li "Every use of " [:code "track"] " with the same arguments
+        will only result in one execution of the function. E.g the two
+        uses of " [:code "@(r/track people)"] " in the example above
+        will only result in one call to the " [:code "people"] "
+        function (both initially, and when the state atom changes)."]]
 
        ])]])
 
