@@ -244,6 +244,43 @@
         itself dispatches a new event (that would result in lost
         events, and much confusion)."]]
 
+       [:section.demo-text
+        [:h2 "New React version and new namespaces"]
+
+        [:p "Reagent now depends on React version 0.14.3. React itself
+        is now split into three parts, with separate packages for
+        browser specific code, and HTML generation respectively."]
+
+        [:p "To reflect that, two new namespaces have been introduced
+        in Reagent as well: "[:code "reagent.dom"]"
+        and "[:code "reagent.dom.server"]". They contain functions
+        that used to be in "[:code "reagent.core"]". "]
+
+        [:p [:code "reagent.dom"]" contains: "]
+
+        [:ul
+         [:li [:code "render"]]
+         [:li [:code "unmount-component-at-node"]]
+         [:li [:code "dom-node"]]
+         [:li [:code "force-update-all"]]]
+
+        [:p [:code "reagent.dom.server"]" contains: "]
+
+        [:ul
+         [:li [:code "render-to-string"]]
+         [:li [:code "render-to-static-markup"]]]
+
+        [:p "These functions are still available
+        in "[:code "reagent.core"]" in this release (for backward
+        compatibility reasons), but they may be deprecated in the
+        future."]
+
+        [:p "The changes in React also mean that if you specify the
+        React version to use in your project.clj,
+        with "[:code "cljsjs/react"]" in the "[:code ":dependencies"]"
+        section, you now have to specify "[:code "cljsjs/react-dom"]"
+        and "[:code "cljsjs/react-dom-server"]" instead."]]
+
        ])]])
 
 (tools/register-page url [#'main] title)
