@@ -98,6 +98,12 @@
               :on-click #(dispatch [:add-person])}]]))
 
 
+(defn cursor-example []
+  (let [first-person (r/cursor app-state [:people 1])]
+    (dbg first-person)
+    [:p "A person: " (:name @first-person)]))
+
+
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
@@ -298,6 +304,52 @@
         and "[:code "ReactDOMServer"]"), Reagent tries to
         use "[:code "require"]" instead, to get react, react-dom and
         react-dom/server from npm."]]
+
+       [:section.demo-text
+        [:h2 "Better cursor"]
+
+        [:p "Cursors are now cached, which should make them a bit
+        easier to use. Previously, every instance
+        of "[:code "cursor"]" had its own state.
+        Now "[:code "cursor"]"s called with the same arguments share
+        data, which means that components like this now make sense: "]
+
+        [demo-component {:comp cursor-example
+                         :src (s/src-of [:cursor-example])}]
+
+        [:p "Previously cursors were really only useful (in the sense
+        that unnecessary re-renderings were avoided) when passed as
+        arguments to child components."]]
+
+       [:section.demo-text
+        [:h2 "Breaking changes"]
+
+        [:ul
+         [:li "Reagent now depends on "[:code "cljsjs/react-dom"]"
+         and "[:code "cljsjs/react-dom-server"]" (see above)."]
+
+         [:li "The javascript interop macros "[:code ".'"]"
+         and "[:code ".!"]", in the "[:code "reagent.interop"]"
+         namespace are now called "[:code "$"]" and "[:code "$!"]"
+         respectively (the old names clashed with bootstrapped
+         ClojureScript)."]
+
+         [:li "Reactions, i.e "[:code "cursor"]" called with a
+         function, "[:code "reagent.ratom/reaction"]", "[:code "reagent.ratom/run!"]"
+         and "[:code "reagent.ratom/make-reaction"]" are now lazy and
+         executed asynchronously. Previously, reactions used to
+         execute directly whenever the atoms they depended on changed.
+         This could cause performance issues in code with expensive
+         reactions and frequent updates to state. However, this change
+         may break existing code that depends on the timing of
+         side-effects from running reactions. "[:code "flush"]" can be
+         used to force outstanding reactions to run at a given
+         time."]
+
+         [:li "Reactions now only trigger updates of dependent
+         components and other reactions if they produce a new result,
+         compared with "[:code "="]".
+         Previously, "[:code "identical?"]" was used."]]]
 
        ])]])
 
