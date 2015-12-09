@@ -281,6 +281,24 @@
         section, you now have to specify "[:code "cljsjs/react-dom"]"
         and "[:code "cljsjs/react-dom-server"]" instead."]]
 
+       [:section.demo-text
+        [:h2 "Better interop with native React"]
+
+        [:p "The output of "[:code "create-class"]" can now be used
+        directly in JSX."]
+
+        [:p "”Native React components” can now be used directly in
+        Reagent’s hiccup forms, using this syntax: "[:code "[:>
+        nativeComp {:key \"value\"}]"]". This might sometimes be more
+        convenient than using "[:code "adapt-react-class"]". "]
+
+        [:p "Reagent should now also be a bit easier to use in
+        node.js. If global React is not
+        defined (i.e "[:code "React"]", "[:code "ReactDOM"]"
+        and "[:code "ReactDOMServer"]"), Reagent tries to
+        use "[:code "require"]" instead, to get react, react-dom and
+        react-dom/server from npm."]]
+
        ])]])
 
 (tools/register-page url [#'main] title)
