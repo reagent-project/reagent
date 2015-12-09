@@ -5,6 +5,8 @@
 
 - React updated to 0.14.3
 
+- Reagent now depends on cljsjs/react-dom and cljsjs/react-dom-server instead of cljsjs/react.
+
 - Added `reagent.dom` and `reagent.dom.server` namespaces, corresponding to new React packages.
 
 - `create-class` now returns a normal React class, that can be used directly from javascript.
