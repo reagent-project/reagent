@@ -132,8 +132,8 @@ ul.nav > li.brand > a {
     font-size: 18px;
     line-height: 1.611em;
     color: rgba(0, 0, 0, 0.8);
-    margin-bottom: 29px;
-    margin-top: 29px;
+    margin-bottom: 1em;
+    martin-top: 1em;
 }
 
 .demo-text > p > code, .demo-text > ul > li > code {
@@ -143,7 +143,7 @@ ul.nav > li.brand > a {
 }
 
 .demo-text > ul > li {
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
 }
 
 .demo-example {
@@ -167,8 +167,12 @@ ul.nav > li.brand > a {
 }
 
 .demo-example, .demo-source {
-    margin: 0px -60px;
-    padding: 21px 60px;
+    margin: 29px -60px;
+    padding: 29px 60px;
+}
+
+.demo-example + .demo-source {
+    margin-top: -29px;
 }
 
 .simple-demo, .simple-demo input {
