@@ -322,6 +322,18 @@
         arguments to child components."]]
 
        [:section.demo-text
+        [:h2 "Tapping into the rendering loop"]
+
+        [:p [:code "next-tick"]" is an existing function, that now has
+        a more predictable timing. It takes a function that is invoked
+        immediately before the next rendering (which is in turn
+        triggered using "[:code "requestAnimationFrame"]")."]
+
+        [:p [:code "after-update"]" works just
+        like "[:code "next-tick"]", except that the function given is
+        invoked immediately "[:b "after"]" the next rendering."]]
+
+       [:section.demo-text
         [:h2 "Breaking changes"]
 
         [:ul
@@ -338,13 +350,13 @@
          function, "[:code "reagent.ratom/reaction"]", "[:code "reagent.ratom/run!"]"
          and "[:code "reagent.ratom/make-reaction"]" are now lazy and
          executed asynchronously. Previously, reactions used to
-         execute directly whenever the atoms they depended on changed.
-         This could cause performance issues in code with expensive
-         reactions and frequent updates to state. However, this change
-         may break existing code that depends on the timing of
-         side-effects from running reactions. "[:code "flush"]" can be
-         used to force outstanding reactions to run at a given
-         time."]
+         execute immediately whenever the atoms they depended on
+         changed. This could cause performance issues in code with
+         expensive reactions and frequent updates to state. However,
+         this change may break existing code that depends on the
+         timing of side-effects from running
+         reactions. "[:code "flush"]" can be used to force outstanding
+         reactions to run at a given time."]
 
          [:li "Reactions now only trigger updates of dependent
          components and other reactions if they produce a new result,

@@ -21,6 +21,10 @@
 
 - `cursor` now shares state between all instances corresponding to a given set of parameters.
 
+- `next-tick` now evokes its argument function at a clearly defined time (immediately before rendering, which is in turn triggered using requestAnimationFrame).
+
+- `after-update` is a new function, similar to `next-tick`, except that the function is evoked immediately after rendering.
+
 - Support `[:> nativeComp {:foo "bar"}]`
 
 - Reagent now falls back to using `require` if global `React` is undefined, to simplify use with e.g webpack and node.js.
