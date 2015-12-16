@@ -41,6 +41,16 @@
        ^{:key i} [name-comp i])]))
 
 
+(defn log-app-state []
+  (prn @app-state))
+
+(def --space nil)
+
+#_(defonce logger (r/track! log-app-state))
+
+#_(r/dispose! logger)
+
+
 (defn mouse-pos-comp []
   (r/with-let [pointer (r/atom nil)
                handler #(swap! pointer assoc
@@ -100,7 +110,6 @@
 
 (defn cursor-example []
   (let [first-person (r/cursor app-state [:people 1])]
-    (dbg first-person)
     [:p "A person: " (:name @first-person)]))
 
 
@@ -135,12 +144,13 @@
        [:p "Here's an example: "]
 
        [demo-component {:comp name-list
-                        :src (s/src-of [:app-state
-                                        :people
-                                        :person-keys
-                                        :person
-                                        :name-comp
-                                        :name-list])}]
+                        :src [:pre ns-src
+                              (s/src-of [:app-state
+                                         :people
+                                         :person-keys
+                                         :person
+                                         :name-comp
+                                         :name-list])]}]
 
        [:p "Here, the " [:code "name-list"] " component will only be
        re-rendered if the keys of the " [:code ":people"] " map
@@ -166,6 +176,23 @@
         uses of " [:code "@(r/track people)"] " in the example above
         will only result in one call to the " [:code "people"] "
         function (both initially, and when the state atom changes)."]]
+
+       [:h2 "track!"]
+
+       [:p [:code "track!"]" is another new function. It works just
+       like "[:code "track"]", except that the function passed is
+       invoked immediately, and continues to be invoked whenever any
+       atoms used within it changes."]
+
+       [:p "For example, given this function:"]
+
+       [demo-component {:src (s/src-of [:log-app-state])}]
+
+       [:p "you could use " [:code "(defonce logger (r/track!
+       log-app-state))"]" to monitor changes
+       to "[:code "app-state"]". "[:code "log-app-state"]" would
+       continue to run until you stop it, using "[:code "(r/dispose!
+       logger)"]"."]
 
        [:h2 "Handling destruction"]
 
@@ -209,8 +236,9 @@
          [:li "allows recursive applications of "[:code "rswap!"]" on the same
          atom."]]
 
-        [:p "Here’s an example that uses "[:code "rswap!"]" to edit
-        the data introduced in the section about track above:"]
+        [:p "Here’s an example that uses event handling
+        with "[:code "rswap!"]" to edit the data introduced in the
+        section about "[:code "track"]" above:"]
 
         [demo-component {:comp edit-fields
                          :src (s/src-of [:event-handler
@@ -222,7 +250,7 @@
         function, consisting of a trivial application
         of "[:code "rswap!"]" and some optional logging. This is the
         only place where application state actually changes – the rest
-        is pure functions all the way."]
+        is pure functions."]
 
         [:p "The actual event handling is done
         in "[:code "event-handler"]", which takes state and event as
@@ -324,10 +352,11 @@
        [:section.demo-text
         [:h2 "Tapping into the rendering loop"]
 
-        [:p [:code "next-tick"]" is an existing function, that now has
-        a more predictable timing. It takes a function that is invoked
-        immediately before the next rendering (which is in turn
-        triggered using "[:code "requestAnimationFrame"]")."]
+        [:p "The "[:code "next-tick"]" function now has a more
+        predictable timing. The function passed
+        to "[:code "next-tick"]" is now invoked immediately before the
+        next rendering (which is in turn triggered
+        using "[:code "requestAnimationFrame"]")."]
 
         [:p [:code "after-update"]" works just
         like "[:code "next-tick"]", except that the function given is
