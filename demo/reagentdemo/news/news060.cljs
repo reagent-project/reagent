@@ -12,10 +12,8 @@
   (:require [reagent.core :as r]))"))
 
 (defonce app-state (r/atom {:people
-                            {1 {:name "John Smith"
-                                :title "Manager"}
-                             2 {:name "Maggie Johnson"
-                                :title "Senior Executive Manager"}}}))
+                            {1 {:name "John Smith"}
+                             2 {:name "Maggie Johnson"}}}))
 
 (defn people []
   (:people @app-state))
@@ -118,23 +116,60 @@
    [:h1 [link {:href url} title]]
    [:div.demo-text
     [:p "Reagent 0.6.0-alpha contains new reactivity helpers, better
-    integration with native React components, a new version of React,
-    and much more. "]
+    integration with native React components, a new version of
+    React (0.14.3), new React dependencies ("[:code "react-dom"]"
+    and "[:code "react-dom-server"]"), better performance, and much
+    more. "]
+
+    [:p "This is a quite big release, so it probably contains a fair
+    amount of bugs as well…"]
 
     (if summary
       [link {:href url :class 'news-read-more} "Read more"]
       [:div.demo-text
-       [:h2 "Use any function as a reactive value"]
+       [:section.demo-text
+        [:h2 "Breaking changes"]
+
+        [:ul
+         [:li "Reagent now depends on "[:code "cljsjs/react-dom"]"
+         and "[:code "cljsjs/react-dom-server"]" (see below)."]
+
+         [:li "The javascript interop macros "[:code ".'"]"
+         and "[:code ".!"]", in the "[:code "reagent.interop"]"
+         namespace are now called "[:code "$"]" and "[:code "$!"]"
+         respectively (the old names clashed with bootstrapped
+         ClojureScript)."]
+
+         [:li "Reactions, i.e "[:code "cursor"]" called with a
+         function, "[:code "reagent.ratom/reaction"]", "[:code "reagent.ratom/run!"]"
+         and "[:code "reagent.ratom/make-reaction"]" are now lazy and
+         executed asynchronously. Previously, reactions used to
+         execute immediately whenever the atoms they depended on
+         changed. This could cause performance issues in code with
+         expensive reactions and frequent updates to state. However,
+         this change may break existing code that depends on the
+         timing of side-effects from running
+         reactions. "[:code "flush"]" can be used to force outstanding
+         reactions to run at a given time."]
+
+         [:li "Reactions now only trigger updates of dependent
+         components and other reactions if they produce a new result,
+         compared with "[:code "="]".
+         Previously, "[:code "identical?"]" was used."]
+
+         [:li [:code "next-tick"]" is now guaranteed to execute its
+         argument before the next render (more on that below.)"]]]
+
+       [:h2 "track: Use any function as a reactive value"]
 
        [:p [:code "reagent.core/track"] " takes a function, and
        optional arguments for that function, and gives a
        derefable (i.e ”atom-like”) value, containing whatever is
        returned by that function. If the tracked function depends on a
-       Reagent atom, the function is called again whenever that atom
-       changes – just like a Reagent component function. If the value
-       returned by " [:code "track"] " is used in a component, the
-       component is re-rendered when the value returned by the
-       function changes. "]
+       Reagent atom, it is called again whenever that atom changes –
+       just like a Reagent component function. If the value returned
+       by " [:code "track"] " is used in a component, the component is
+       re-rendered when the value returned by the function changes. "]
 
        [:p "In other words, " [:code "@(r/track foo x)"] " gives the
        same result as " [:code "(foo x)"] " – but in the first case,
@@ -177,6 +212,12 @@
         will only result in one call to the " [:code "people"] "
         function (both initially, and when the state atom changes)."]]
 
+       [:p [:b "Note: "] "The first argument to "[:code "track"]"
+       should be a named function, i.e not an anonymous one. Also,
+       beware of lazy data sequences: don’t use deref (i.e ”@”) with
+       the "[:code "for"]" macro, unless wrapped
+       in "[:code "doall"]" (just like in Reagent components). "]
+
        [:h2 "track!"]
 
        [:p [:code "track!"]" is another new function. It works just
@@ -194,7 +235,7 @@
        continue to run until you stop it, using "[:code "(r/dispose!
        logger)"]"."]
 
-       [:h2 "Handling destruction"]
+       [:h2 "with-let: Handling destruction"]
 
        [:p "Reagent now has a new way of writing components that need
        to do something when they are no longer around:
@@ -235,6 +276,9 @@
          [:li "always returns nil"]
          [:li "allows recursive applications of "[:code "rswap!"]" on the same
          atom."]]
+
+        [:p "That makes "[:code "rswap!"]" especially suited for event
+        handling."]
 
         [:p "Here’s an example that uses event handling
         with "[:code "rswap!"]" to edit the data introduced in the
@@ -362,35 +406,7 @@
         like "[:code "next-tick"]", except that the function given is
         invoked immediately "[:b "after"]" the next rendering."]]
 
-       [:section.demo-text
-        [:h2 "Breaking changes"]
 
-        [:ul
-         [:li "Reagent now depends on "[:code "cljsjs/react-dom"]"
-         and "[:code "cljsjs/react-dom-server"]" (see above)."]
-
-         [:li "The javascript interop macros "[:code ".'"]"
-         and "[:code ".!"]", in the "[:code "reagent.interop"]"
-         namespace are now called "[:code "$"]" and "[:code "$!"]"
-         respectively (the old names clashed with bootstrapped
-         ClojureScript)."]
-
-         [:li "Reactions, i.e "[:code "cursor"]" called with a
-         function, "[:code "reagent.ratom/reaction"]", "[:code "reagent.ratom/run!"]"
-         and "[:code "reagent.ratom/make-reaction"]" are now lazy and
-         executed asynchronously. Previously, reactions used to
-         execute immediately whenever the atoms they depended on
-         changed. This could cause performance issues in code with
-         expensive reactions and frequent updates to state. However,
-         this change may break existing code that depends on the
-         timing of side-effects from running
-         reactions. "[:code "flush"]" can be used to force outstanding
-         reactions to run at a given time."]
-
-         [:li "Reactions now only trigger updates of dependent
-         components and other reactions if they produce a new result,
-         compared with "[:code "="]".
-         Previously, "[:code "identical?"]" was used."]]]
 
        ])]])
 
