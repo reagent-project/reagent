@@ -221,16 +221,31 @@ re-rendered."
   ([x & rest] (apply ratom/atom x rest)))
 
 (defn track
+  "Takes a function and optional arguments, and returns a derefable
+  containing the output of that function. If the function derefs
+  Reagent atoms (or track, etc), the value will be updated whenever
+  the atom changes.
+
+  In other words, @(track foo bar) will produce the same result
+  as (foo bar), but foo will only be called again when the atoms it
+  depends on changes, and will only trigger updates of components when
+  its result changes.
+
+  track is lazy, i.e the function is only evaluated on deref."
   [f & args]
   {:pre [(ifn? f)]}
   (ratom/make-track f args))
 
 (defn track!
+  "An eager version of track. The function passed is called
+  immediately, and continues to be called when needed, until stopped
+  with dispose!."
   [f & args]
   {:pre [(ifn? f)]}
   (ratom/make-track! f args))
 
 (defn dispose!
+  "Stop the result of track! from updating."
   [x]
   (ratom/dispose! x))
 
