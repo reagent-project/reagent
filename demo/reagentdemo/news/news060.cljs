@@ -160,6 +160,7 @@
          [:li [:code "next-tick"]" is now guaranteed to execute its
          argument before the next render (more on that below.)"]]]
 
+
        [:h2 "track: Use any function as a reactive value"]
 
        [:p [:code "reagent.core/track"] " takes a function, and
@@ -212,11 +213,19 @@
         will only result in one call to the " [:code "people"] "
         function (both initially, and when the state atom changes)."]]
 
+       [:p "If you've been using "[:code "reagent.ratom/reaction"]"
+       etc, "[:code "track"]" should be quite familiar. The main
+       difference is that "[:code "track"]" uses named functions and
+       variables, rather than depending on closures, and that you
+       don’t have to manage their creation manually (since tracks are
+       automatically cached and reused)."]
+
        [:p [:b "Note: "] "The first argument to "[:code "track"]"
        should be a named function, i.e not an anonymous one. Also,
        beware of lazy data sequences: don’t use deref (i.e ”@”) with
        the "[:code "for"]" macro, unless wrapped
        in "[:code "doall"]" (just like in Reagent components). "]
+
 
        [:h2 "track!"]
 
@@ -234,6 +243,7 @@
        to "[:code "app-state"]". "[:code "log-app-state"]" would
        continue to run until you stop it, using "[:code "(r/dispose!
        logger)"]"."]
+
 
        [:h2 "with-let: Handling destruction"]
 
@@ -264,6 +274,10 @@
        [:p "The " [:code "finally"] " clause will run
        when " [:code "mouse-pos"] " is no longer tracked anywhere, i.e
        in this case when " [:code "tracked-pos"] "is unmounted."]
+
+       [:p [:code "with-let"]" can also generally be used instead of
+       returning functions from components that keep local state, and
+       may be a bit easier to read."]
 
 
        [:section.demo-text
@@ -320,7 +334,12 @@
         trigger warnings due to unexpected return values, and may
         cause severe headaches if an event handler called by dispatch
         itself dispatches a new event (that would result in lost
-        events, and much confusion)."]]
+        events, and much confusion)."]
+
+        [:p "For a more structured version of this approach, see the
+        excellent "[:a
+        {:href "https://github.com/Day8/re-frame"} "re-frame"]"
+        framework."]]
 
        [:section.demo-text
         [:h2 "New React version and new namespaces"]
