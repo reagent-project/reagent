@@ -1,7 +1,21 @@
 
 # Changelog
 
+
 ## Upcoming
+
+### Breaking changes
+
+- Reagent now depends on `cljsjs/react-dom` and `cljsjs/react-dom-server`, rather than on `cljsjs/react` directly.
+
+- Reactions are now asynchronous, just like Reagent components. `flush` forces outstanding reactions to run.
+
+- Reactions now only trigger updates of dependent components if their value change, as reported by `=` (previously, `identical?` was used).
+
+- The macros `.'` and `.!` in `reagent.interop` have been renamed to `$` and `$!` respectively.
+
+
+### News
 
 - React updated to 0.14.3
 
@@ -29,16 +43,6 @@
 
 - Reagent now falls back to using `require` if global `React` is undefined, to simplify use with e.g webpack and node.js.
 
-
-### Breaking changes
-
-- Reagent now depends on `cljsjs/react-dom` and `cljsjs/react-dom-server`, rather than on `cljsjs/react` directly.
-
-- Reactions are now asynchronous, just like Reagent components. `flush` forces outstanding reactions to run.
-
-- Reactions now only trigger updates of dependent components if their value change, as reported by `=` (previously, `identical?` was used).
-
-- The macros `.'` and `.!` in `reagent.interop` have been renamed to `$` and `$!` respectively.
 
 
 ## 0.5.1
