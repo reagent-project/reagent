@@ -10,7 +10,7 @@
 
 (defn main []
   [:div
-   ;; [news060/main {:summary true}]
+   [news060/main {:summary true}]
    [news051/main {:summary true}]
    [news050/main {:summary true}]
    [clock/main {:summary true}]
