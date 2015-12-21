@@ -264,8 +264,9 @@
        [:p "The same thing could of course be achieved with React
        lifecycle methods, but that would be a lot more verbose."]
 
-       [:p [:code "with-let"] " can also be combined with " [:code "track"] ". For
-       example, the component above could also be written as: "]
+       [:p [:code "with-let"]" can also be combined
+       with "[:code "track"]" (and other reactive contexts). For
+       example, the component above could be written as: "]
 
        [demo-component {:comp tracked-pos
                         :src (s/src-of [:mouse-pos
@@ -313,7 +314,7 @@
         [:p "The actual event handling is done
         in "[:code "event-handler"]", which takes state and event as
         parameters, and returns a new state (events are represented by
-        vectors, with an event name in the first position)."]
+        vectors here, with an event name in the first position)."]
 
         [:p "All the UI components have to do is then just to return
         some markup, and set up routing of events through the dispatch
@@ -336,8 +337,8 @@
         itself dispatches a new event (that would result in lost
         events, and much confusion)."]
 
-        [:p "For a more structured version of this approach, see the
-        excellent "[:a
+        [:p "For a more structured version of a similar approach, see
+        the excellent "[:a
         {:href "https://github.com/Day8/re-frame"} "re-frame"]"
         framework."]]
 
