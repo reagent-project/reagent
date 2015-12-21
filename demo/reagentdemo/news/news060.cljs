@@ -49,6 +49,12 @@
 #_(r/dispose! logger)
 
 
+(when-not (exists? js/document)
+  ;; Add no-op methods for node.js
+  (set! js/global.document
+        #js{:addEventListener identity
+            :removeEventListener identity}))
+
 (defn mouse-pos-comp []
   (r/with-let [pointer (r/atom nil)
                handler #(swap! pointer assoc
