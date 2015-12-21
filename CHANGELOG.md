@@ -2,7 +2,7 @@
 # Changelog
 
 
-## Upcoming
+## 0.6.0-alpha
 
 ### Breaking changes
 
