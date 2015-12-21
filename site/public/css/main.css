@@ -116,11 +116,11 @@ ul.nav > li.brand > a {
 }
 
 .reagent-demo h2 {
-    font-size: 21px;
+    font-size: 24px;
     line-height: 26px;
     margin-top: 38px;
     margin-bottom: 12px;
-    color: rgba(0, 0, 0, 0.65);
+    color: rgba(0, 0, 0, 0.6);
 }
 
 .reagent-demo h2 + p {
