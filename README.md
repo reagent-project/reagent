@@ -13,7 +13,11 @@ Reagent provides a way to write efficient React components using (almost) nothin
 To create a new Reagent project simply run:
 
     lein new reagent myproject
-    
+
+If you wish to only create the assets for ClojureScript without a Clojure backend then do the following instead:
+
+    lein new reagent-frontend myproject
+
 This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template). 
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
