@@ -5,22 +5,36 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [$ $!]]))
 
-(defonce dom (or (and (exists? js/ReactDOM)
-                      js/ReactDOM)
-                 (and (exists? js/require)
-                      (js/require "react-dom"))))
+(def ^:private load-error nil)
 
-(assert dom "Could not find ReactDOM")
+(defn- fail [e]
+  (set! load-error e)
+  nil)
+
+(defonce dom (or (when (exists? js/ReactDOM)
+                   js/ReactDOM)
+                 (try
+                   (if (exists? js/require)
+                     (or (js/require "react-dom")
+                         (fail (js/Error. "require('react-dom') failed")))
+                     (fail (js/Error. "js/ReactDOM is missing")))
+                   (catch :default e
+                     (fail e)))))
+
+(defn- module []
+  (if (some? dom)
+    dom
+    (throw load-error)))
 
 (defonce ^:private roots (atom {}))
 
 (defn- unmount-comp [container]
   (swap! roots dissoc container)
-  ($ dom unmountComponentAtNode container))
+  ($ (module) unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
-    (->> ($ dom render (comp) container
+    (->> ($ (module) render (comp) container
             (fn []
               (binding [util/*always-update* false]
                 (swap! roots assoc container [comp container])
@@ -50,7 +64,7 @@
 (defn dom-node
   "Returns the root DOM node of a mounted component."
   [this]
-  ($ dom findDOMNode this))
+  ($ (module) findDOMNode this))
 
 (set! tmpl/find-dom-node dom-node)
 
