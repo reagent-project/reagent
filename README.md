@@ -10,6 +10,13 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
   * **[API Documentation](http://blog.ducky.io/reagent-docs/index.html)**
 
+### Prerequisites
+
+* [JDK](http://www.azul.com/downloads/zulu/)
+* [Leiningen](http://leiningen.org/)
+
+### Usage
+
 To create a new Reagent project simply run:
 
     lein new reagent myproject
