@@ -4,11 +4,11 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.145"]
+                 [org.clojure/clojurescript "1.8.51"]
                  [cljsjs/react-dom "15.0.1-1"]
                  [cljsjs/react-dom-server "15.0.1-1"]]
 
-  :plugins [[lein-cljsbuild "1.1.0"]
+  :plugins [[lein-cljsbuild "1.1.3"]
             [codox "0.9.0"]]
 
   :source-paths ["src"]
@@ -22,8 +22,8 @@
                                        {:main "reagenttest.runtests"}}}}}
 
              :dev [:test
-                   {:dependencies [[figwheel "0.4.0"]]
-                    :plugins [[lein-figwheel "0.4.0"]]
+                   {:dependencies [[figwheel "0.5.2"]]
+                    :plugins [[lein-figwheel "0.5.2"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
