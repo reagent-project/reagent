@@ -318,6 +318,8 @@
         (seq? x) (if (dev?)
                    (expand-seq-check x)
                    (expand-seq x))
+        (named? x) (name x)
+        (satisfies? IPrintWithWriter x) (pr-str x)
         :else x))
 
 (defn expand-seq [s]
