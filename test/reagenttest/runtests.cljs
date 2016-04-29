@@ -32,21 +32,22 @@
     (+ (:pass m) (:fail m) (:error m)) "assertions.")
   (println (:fail m) "failures," (:error m) "errors."))
 
+(defn run-tests []
+  (reset! test-results nil)
+  (if r/is-client
+    (js/setTimeout all-tests 100)
+    (all-tests)))
+
 (defn test-output-mini []
   (let [res @test-results]
-    [:div {:style test-box-style}
+    [:div {:style test-box-style
+           :on-click run-tests}
      (if res
        (if (zero? (+ (:fail res) (:error res)))
          "All tests ok"
          [:span "Test failure: "
           (:fail res) " failures, " (:error res) " errors."])
        "testing")]))
-
-(defn run-tests []
-  (reset! test-results nil)
-  (if r/is-client
-    (js/setTimeout all-tests 100)
-    (all-tests)))
 
 (defn init! []
   (when (some? (test/deftest empty-test))
