@@ -89,8 +89,9 @@
   (.flush-queues render-queue))
 
 (defn queue-render [c]
-  ($! c :cljsIsDirty true)
-  (.queue-render render-queue c))
+  (when-not ($ c :cljsIsDirty)
+    ($! c :cljsIsDirty true)
+    (.queue-render render-queue c)))
 
 (defn mark-rendered [c]
   ($! c :cljsIsDirty false))

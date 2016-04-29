@@ -374,9 +374,10 @@
   (_handle-change [this sender oldval newval]
     (when-not (or (identical? oldval newval)
                   dirty?)
-      (set! dirty? true)
       (if (nil? auto-run)
-        (rea-enqueue this)
+        (do
+          (set! dirty? true)
+          (rea-enqueue this))
         (if (true? auto-run)
           (._run this)
           (auto-run this)))))
@@ -395,8 +396,9 @@
       (try
         (._run this)
         (catch :default e
-          (set! state nil)
+          (set! state e)
           (set! caught e)
+          (set! dirty? false)
           (notify-w this e nil)))))
 
   (_run [this]

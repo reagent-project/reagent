@@ -330,3 +330,43 @@
     (is (= (:derived @state) 33))
     (dispose rxn)
     (is (= runs (running)))))
+
+(deftest exception-recover
+  (let [runs (running)
+        state (rv/atom 1)
+        count (rv/atom 0)
+        r (run!
+           (swap! count inc)
+           (when (> @state 1)
+             (throw (js/Error. "oops"))))]
+    (is (= @count 1))
+    (is (thrown? :default (do
+                            (swap! state inc)
+                            (rv/flush!))))
+    (is (= @count 2))
+    (swap! state dec)
+    (rv/flush!)
+    (is (= @count 3))
+    (dispose r)
+    (is (= runs (running)))))
+
+(deftest exception-recover-indirect
+  (let [runs (running)
+        state (rv/atom 1)
+        count (rv/atom 0)
+        ref (reaction
+             (when (= @state 2)
+               (throw (js/Error. "err"))))
+        r (run!
+           (swap! count inc)
+           @ref)]
+    (is (= @count 1))
+    (is (thrown? :default (do
+                            (swap! state inc)
+                            (rv/flush!))))
+    (is (= @count 2))
+    (swap! state inc)
+    (rv/flush!)
+    (is (= @count 3))
+    (dispose r)
+    (is (= runs (running)))))
