@@ -3,7 +3,7 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
                  [cljsjs/react-dom "15.0.1-1"]
                  [cljsjs/react-dom-server "15.0.1-1"]]
@@ -61,7 +61,8 @@
                                      :file-min "target/webpack/bundle.min.js"
                                      :provides ["cljsjs.react.dom"
                                                 "cljsjs.react.dom.server"
-                                                "cljsjs.react"]}]}}}}}
+                                                "cljsjs.react"]
+                                     :requires []}]}}}}}
 
              :prod-test [:prod :test]
              
