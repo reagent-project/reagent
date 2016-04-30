@@ -1,7 +1,7 @@
 (ns reagentdemo.core
   (:require [reagent.core :as r]
             [clojure.string :as string]
-            [sitetools.core :as tools :refer [dispatch link]]
+            [sitetools.core :as tools :refer [emit link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]

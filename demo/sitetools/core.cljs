@@ -48,7 +48,7 @@
                    state)
                  (recur state [:set-page x]))))
 
-(defn dispatch [event]
+(defn emit [event]
   ;; (dbg event)
   (r/rswap! config demo-handler event))
 
@@ -76,13 +76,13 @@
                                           (string/replace #"/*$" ""))))
                     (History.)))
         (evt/listen EventType.NAVIGATE #(when (.-isNavigation %)
-                                          (dispatch [:set-page (.-token %)])))
+                                          (emit [:set-page (.-token %)])))
         (.setEnabled true))
       (let [token (.getToken history)
             p (if (and page (not html5) (empty? token))
                 page
                 token)]
-        (dispatch [:set-page p])))))
+        (emit [:set-page p])))))
 
 (defn to-relative [f]
   (string/replace f #"^/" ""))
@@ -94,7 +94,7 @@
   [:a (assoc props
              :href (-> props :href to-relative)
              :on-click #(do (.preventDefault %)
-                            (dispatch [:goto-page (:href props)])))
+                            (emit [:goto-page (:href props)])))
    child])
 
 (defn main-content []
@@ -129,7 +129,7 @@
        [:script {:src main :type "text/javascript"}]]])))
 
 (defn gen-page [page-path conf]
-  (dispatch [:set-page page-path])
+  (emit [:set-page page-path])
   (let [conf (merge conf @config)
         b (:body conf)
         bhtml (r/render-component-to-string b)]

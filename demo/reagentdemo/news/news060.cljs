@@ -92,7 +92,7 @@
                             {:name ""}))
     state))
 
-(defn dispatch [e]
+(defn emit [e]
   ;; (js/console.log "Handling event" (str e))
   (r/rswap! app-state event-handler e))
 
@@ -100,16 +100,17 @@
   (let [p @(r/track person id)]
     [:div
      [:input {:value (:name p)
-              :on-change #(dispatch [:set-name id (.-target.value %)])}]]))
+              :on-change #(emit [:set-name id (.-target.value %)])}]]))
 
 (defn edit-fields []
   (let [ids @(r/track person-keys)]
     [:div
+     [name-list]
      (for [i ids]
        ^{:key i} [name-edit i])
      [:input {:type 'button
               :value "Add person"
-              :on-click #(dispatch [:add-person])}]]))
+              :on-click #(emit [:add-person])}]]))
 
 
 (defn cursor-example []
@@ -307,11 +308,11 @@
 
         [demo-component {:comp edit-fields
                          :src (s/src-of [:event-handler
-                                         :dispatch
+                                         :emit
                                          :name-edit
                                          :edit-fields])}]
 
-        [:p "All events are passed through the "[:code "dispatch"]"
+        [:p "All events are passed through the "[:code "emit"]"
         function, consisting of a trivial application
         of "[:code "rswap!"]" and some optional logging. This is the
         only place where application state actually changes – the rest
@@ -323,7 +324,7 @@
         vectors here, with an event name in the first position)."]
 
         [:p "All the UI components have to do is then just to return
-        some markup, and set up routing of events through the dispatch
+        some markup, and set up routing of events through the "[:code "emit"]"
         function. "]
 
         [:p "This architecture basically divides the application into
@@ -339,8 +340,8 @@
         the common "[:code "swap!"]" instead of "[:code "rswap!"]",
         but using "[:code "swap!"]" in React’s event handlers may
         trigger warnings due to unexpected return values, and may
-        cause severe headaches if an event handler called by dispatch
-        itself dispatches a new event (that would result in lost
+        cause severe headaches if an event handler called by "[:code "emit"]"
+        itself emits a new event (that would result in lost
         events, and much confusion)."]
 
         [:p "For a more structured version of a similar approach, see
