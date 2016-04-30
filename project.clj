@@ -34,6 +34,7 @@
                        :compiler {:source-map true
                                   :source-map-timestamp true
                                   :optimizations :none
+                                  ;; :recompile-dependents false
                                   :output-dir "outsite/public/js/out"
                                   :asset-path "js/out"}}}}}]
              
@@ -69,7 +70,8 @@
              :dev-notest [:dev
                           {:cljsbuild
                            {:builds {:client
-                                     {:compiler {:load-tests false}}}}}]}
+                                     {:compiler {:load-tests false}}}}
+                           :figwheel {:validate-config false}}]}
 
   :clean-targets ^{:protect false} [:target-path :compile-path
                                     "outsite/public/js"
@@ -85,7 +87,8 @@
                                        "examples/todomvc/src"
                                        "examples/simple/src"
                                        "examples/geometry/src"]
-                        :compiler {:output-to "outsite/public/js/main.js"}}}}
+                        :compiler {:parallel-build true
+                                   :output-to "outsite/public/js/main.js"}}}}
   
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
