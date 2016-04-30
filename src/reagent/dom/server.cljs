@@ -4,27 +4,18 @@
             [reagent.impl.template :as tmpl]
             [reagent.interop :refer-macros [$ $!]]))
 
-(def ^:private load-error nil)
+(defonce ^:private imported nil)
 
-(defn- fail [e]
-  (set! load-error e)
-  nil)
+(defn module []
+  (cond
+    (some? imported) imported
+    (exists? js/ReactDOMServer) (set! imported js/ReactDOMServer)
+    (exists? js/require) (or (set! imported (js/require "react-dom/server"))
+                             (throw (js/Error.
+                                     "require('react-dom/server') failed")))
+    :else
+    (throw (js/Error. "js/ReactDOMServer is missing"))))
 
-(defonce server (or (when (exists? js/ReactDOMServer)
-                      js/ReactDOMServer)
-                    (try
-                      (if (exists? js/require)
-                        (or (js/require "react-dom/server")
-                            (fail (js/Error.
-                                   "require('react-dom/server') failed")))
-                        (fail (js/Error. "js/ReactDOMServer is missing")))
-                      (catch :default e
-                        (fail e)))))
-
-(defn- module []
-  (if (some? server)
-    server
-    (throw load-error)))
 
 (defn render-to-string
   "Turns a component into an HTML string."

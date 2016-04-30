@@ -5,26 +5,17 @@
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [$ $!]]))
 
-(def ^:private load-error nil)
+(defonce ^:private imported nil)
 
-(defn- fail [e]
-  (set! load-error e)
-  nil)
+(defn module []
+  (cond
+    (some? imported) imported
+    (exists? js/ReactDOM) (set! imported js/ReactDOM)
+    (exists? js/require) (or (set! imported (js/require "react-dom"))
+                             (throw (js/Error. "require('react-dom') failed")))
+    :else
+    (throw (js/Error. "js/ReactDOM is missing"))))
 
-(defonce dom (or (when (exists? js/ReactDOM)
-                   js/ReactDOM)
-                 (try
-                   (if (exists? js/require)
-                     (or (js/require "react-dom")
-                         (fail (js/Error. "require('react-dom') failed")))
-                     (fail (js/Error. "js/ReactDOM is missing")))
-                   (catch :default e
-                     (fail e)))))
-
-(defn- module []
-  (if (some? dom)
-    dom
-    (throw load-error)))
 
 (defonce ^:private roots (atom {}))
 
