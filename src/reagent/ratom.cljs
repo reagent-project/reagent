@@ -391,9 +391,10 @@
       (doseq [w (s/difference old new)]
         (-remove-watch w this))))
 
-  (_try-run [this other]
+  (_try-run [this]
     (when (and dirty? (some? watching))
       (try
+        (set! caught nil)
         (._run this)
         (catch :default e
           (set! state e)
@@ -431,7 +432,6 @@
   IDeref
   (-deref [this]
     (when-some [e caught]
-      (set! caught nil)
       (throw e))
     (let [non-reactive (nil? *ratom-context*)]
       (when non-reactive

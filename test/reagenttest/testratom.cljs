@@ -365,6 +365,7 @@
                             (swap! state inc)
                             (rv/flush!))))
     (is (= @count 2))
+    (is (thrown? :default @ref))
     (swap! state inc)
     (rv/flush!)
     (is (= @count 3))
