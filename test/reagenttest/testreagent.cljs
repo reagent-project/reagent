@@ -573,7 +573,14 @@
         c2 (fn []
              (swap! comps assoc :c2 (r/current-component))
              [:div (swap! v update-in [:v2] inc)
-              [c1]])]
+              [c1]])
+        state (r/atom 0)
+        spy (r/atom 0)
+        t (fn [] @state)
+        t1 (fn [] @(r/track t))
+        c3 (fn []
+             (swap! comps assoc :c3 (r/current-component))
+             [:div (reset! spy @(r/track t1))])]
     (with-mounted-component [c2]
       (fn [c div]
         (is (= @v {:v1 1 :v2 1}))
@@ -585,7 +592,14 @@
         (is (= @v {:v1 2 :v2 2}))
 
         (r/force-update (:c2 @comps) true)
-        (is (= @v {:v1 3 :v2 3}))))))
+        (is (= @v {:v1 3 :v2 3}))))
+    (with-mounted-component [c3]
+      (fn [c]
+        (is (= @spy 0))
+        (swap! state inc)
+        (is (= @spy 0))
+        (r/force-update (:c3 @comps))
+        (is (= @spy 1))))))
 
 (deftest test-component-path
   (let [a (atom nil)

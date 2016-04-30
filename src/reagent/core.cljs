@@ -169,6 +169,7 @@ Equivalent to (swap! (state-atom this) merge new-state)"
   ([this]
    (force-update this false))
   ([this deep]
+   (ratom/flush!)
    (util/force-update this deep)))
 
 
