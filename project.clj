@@ -5,8 +5,8 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
-                 [cljsjs/react-dom "15.0.1-1"]
-                 [cljsjs/react-dom-server "15.0.1-1"]]
+                 [cljsjs/react-dom "15.0.2-0"]
+                 [cljsjs/react-dom-server "15.0.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [codox "0.9.0"]]
@@ -37,13 +37,13 @@
                                   ;; :recompile-dependents false
                                   :output-dir "outsite/public/js/out"
                                   :asset-path "js/out"}}}}}]
-             
+
              :site {:resource-paths ^:replace ["outsite"]
                     :figwheel {:css-dirs ^:replace ["outsite/public/css"]}
                     :cljsbuild
                     {:builds {:client
                               {:notify-command ["node" "bin/gen-site.js"]}}}}
-             
+
              :prod [:site
                     {:cljsbuild
                      {:builds {:client
@@ -66,7 +66,7 @@
                                      :requires []}]}}}}}
 
              :prod-test [:prod :test]
-             
+
              :dev-notest [:dev
                           {:cljsbuild
                            {:builds {:client
@@ -89,6 +89,6 @@
                                        "examples/geometry/src"]
                         :compiler {:parallel-build true
                                    :output-to "outsite/public/js/main.js"}}}}
-  
+
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
