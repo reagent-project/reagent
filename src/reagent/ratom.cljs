@@ -108,7 +108,7 @@
       (when-not (nil? q)
         (set! rea-queue nil)
         (dotimes [i (alength q)]
-          (._try-run (aget q i)))
+          (._queued-run (aget q i)))
         (recur)))))
 
 (set! batch/ratom-flush flush!)
@@ -379,7 +379,7 @@
           (set! dirty? true)
           (rea-enqueue this))
         (if (true? auto-run)
-          (._run this)
+          (._run this false)
           (auto-run this)))))
 
   (_update-watching [this derefed]
@@ -391,20 +391,24 @@
       (doseq [w (s/difference old new)]
         (-remove-watch w this))))
 
-  (_try-run [this]
+  (_queued-run [this]
     (when (and dirty? (some? watching))
-      (try
-        (set! caught nil)
-        (._run this)
-        (catch :default e
-          (set! state e)
-          (set! caught e)
-          (set! dirty? false)
-          (notify-w this e nil)))))
+      (._run this true)))
 
-  (_run [this]
+  (_try-capture [this f]
+    (try
+      (set! caught nil)
+      (deref-capture f this)
+      (catch :default e
+        (set! state e)
+        (set! caught e)
+        (set! dirty? false))))
+
+  (_run [this check]
     (let [oldstate state
-          res (deref-capture f this)]
+          res (if check
+                (._try-capture this f)
+                (deref-capture f this))]
       (when-not nocache?
         (set! state res)
         ;; Use = to determine equality from reactions, since
@@ -427,7 +431,7 @@
   IRunnable
   (run [this]
     (flush!)
-    (._run this))
+    (._run this false))
 
   IDeref
   (-deref [this]
@@ -445,7 +449,7 @@
         (do
           (notify-deref-watcher! this)
           (when dirty?
-            (._run this)))))
+            (._run this false)))))
     state)
 
   IDisposable

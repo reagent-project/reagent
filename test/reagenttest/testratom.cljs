@@ -371,3 +371,41 @@
     (is (= @count 3))
     (dispose r)
     (is (= runs (running)))))
+
+(deftest exception-side-effect
+  (let [runs (running)
+        state (r/atom {:val 1})
+        rstate (reaction @state)
+        spy (atom nil)
+        r1 (run! @rstate)
+        r2 (let [val (reaction (:val @rstate))]
+             (run!
+              (reset! spy @val)
+              (is (some? @val))))
+        r3 (run!
+            (when (:error? @rstate)
+              (throw (js/Error. "Error detected!"))))]
+    (swap! state assoc :val 2)
+    (r/flush)
+    (swap! state assoc :error? true)
+    (is (thrown? :default (r/flush)))
+    (r/flush)
+    (r/flush)
+    (dispose r1)
+    (dispose r2)
+    (dispose r3)
+    (is (= runs (running)))))
+
+(deftest exception-reporting
+  (let [runs (running)
+        state (r/atom {:val 1})
+        rstate (reaction (:val @state))
+        r1 (run!
+            (assert (not= @rstate 13) "fail"))]
+    (swap! state assoc :val 13)
+    (is (thrown? :default
+                 (r/flush)))
+    (swap! state assoc :val 2)
+    (r/flush)
+    (dispose r1)
+    (is (= runs (running)))))
