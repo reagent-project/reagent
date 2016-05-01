@@ -401,7 +401,8 @@
         state (r/atom {:val 1})
         rstate (reaction (:val @state))
         r1 (run!
-            (assert (not= @rstate 13) "fail"))]
+            (when (= @rstate 13)
+              (throw (ex-info "fail" nil))))]
     (swap! state assoc :val 13)
     (is (thrown? :default
                  (r/flush)))
