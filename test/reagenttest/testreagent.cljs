@@ -6,6 +6,8 @@
             [reagent.core :as r]
             [reagent.impl.util :as util]))
 
+(def tests-done (atom {}))
+
 (defn fixture [f]
   (set! rv/debug true)
   (f)
@@ -42,7 +44,10 @@
           false))))
 
 (deftest really-simple-test
-  (when isClient
+  (when (and isClient
+             (not (:really-simple-test @tests-done)))
+    (swap! tests-done assoc :really-simple-test true)
+    (js/console.log "really simple")
     (let [ran (r/atom 0)
           really-simple (fn []
                           (swap! ran inc)
@@ -196,7 +201,9 @@
       (is (= 2 @ran)))))
 
 (deftest shoud-update-test
-  (when isClient
+  (when (and isClient
+             (not (:should-update-test @tests-done)))
+    (swap! tests-done assoc :should-update-test true)
     (let [parent-ran (r/atom 0)
           child-ran (r/atom 0)
           child-props (r/atom nil)

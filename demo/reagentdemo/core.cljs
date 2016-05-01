@@ -41,4 +41,4 @@
                  :css-infiles ["site/public/css/examples.css"
                                "site/public/css/main.css"]}))
 
-(init!)
+(defonce inited (init!))
