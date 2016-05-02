@@ -43,8 +43,9 @@
     :goto-page (let [path x
                      _ (assert (string? path))]
                  (when-some [h history]
-                   (.setToken h x)
-                   (r/after-render #(set! js/document.body.scrollTop 0))
+                   (r/after-render (fn []
+                                     (.setToken h x)
+                                     (js/scrollTo 0 0)))
                    state)
                  (recur state [:set-page x]))))
 
@@ -76,7 +77,8 @@
                                           (string/replace #"/*$" ""))))
                     (History.)))
         (evt/listen EventType.NAVIGATE #(when (.-isNavigation %)
-                                          (emit [:set-page (.-token %)])))
+                                          (emit [:set-page (.-token %)])
+                                          (r/flush)))
         (.setEnabled true))
       (let [token (.getToken history)
             p (if (and page (not html5) (empty? token))
