@@ -2,6 +2,7 @@
   (:require [cljsjs.react.dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
+            [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [$ $!]]))
 
@@ -45,6 +46,7 @@
   ([comp container]
    (render comp container nil))
   ([comp container callback]
+   (ratom/flush!)
    (let [f (fn []
              (tmpl/as-element (if (fn? comp) (comp) comp)))]
      (render-comp f container callback))))
@@ -70,6 +72,7 @@
   ClojureScript). To get around this you'll have to introduce a layer
   of indirection, for example by using `(render [#'foo])` instead."
   []
+  (ratom/flush!)
   (doseq [v (vals @roots)]
     (apply re-render-component v))
   "Updated")
