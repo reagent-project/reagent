@@ -40,7 +40,7 @@
 
 
 ;; Set from ratom.cljs
-(defonce ratom-flush identity)
+(defonce ratom-flush (fn []))
 
 (deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
