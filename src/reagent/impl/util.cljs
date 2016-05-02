@@ -4,11 +4,11 @@
             [reagent.interop :refer-macros [$ $!]]
             [clojure.string :as string]))
 
-(defonce react (or (and (exists? js/React)
-                        js/React)
-                   (and (exists? js/require)
-                        (js/require "react"))))
-(assert react)
+(defonce react
+  (cond (exists? js/React) js/React
+        (exists? js/require) (or (js/require "react")
+                                 (throw (js/Error. "require('react') failed")))
+        :else (throw (js/Error. "js/React is missing"))))
 
 (def is-client (and (exists? js/window)
                     (-> js/window ($ :document) nil? not)))
