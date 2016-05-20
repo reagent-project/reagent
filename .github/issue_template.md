@@ -1,3 +1,3 @@
-Support questions
+No support questions in here please. This is a place for bug reports and feature requests only.
 
-The Github issues for Reagent are for bug reports and feature requests. Support requests and usage questions should go to the Clojure Slack channel, the ClojureScript mailing list, or the Reagent mailing list.
+Support requests and usage questions should go to the #reagent channel in [Clojure Slack](http://clojurians.net/) or the [ClojureScript mailing list](https://groups.google.com/forum/#!forum/clojurescript). 
