@@ -233,6 +233,55 @@
       (is (= @disposed-cns true))
       (is (= runs (running))))))
 
+(deftest test-add-dispose
+  (dotimes [x testite]
+    (let [runs (running)
+          a (rv/atom 0)
+          disposed (rv/atom nil)
+          disposed-c (rv/atom nil)
+          disposed-cns (rv/atom nil)
+          count-b (rv/atom 0)
+          b (rv/make-reaction (fn []
+                                (swap! count-b inc)
+                                (inc @a)))
+          c (rv/make-reaction #(if (< @a 1) (inc @b) (dec @a)))
+          res (rv/atom nil)
+          cns (rv/make-reaction #(reset! res @c)
+                                :auto-run true)]
+      (rv/add-on-dispose! b #(reset! disposed true))
+      (rv/add-on-dispose! c #(reset! disposed-c true))
+      (rv/add-on-dispose! cns #(reset! disposed-cns true))
+      @cns
+      (is (= @res 2))
+      (is (= (+ 4 runs) (running)))
+      (is (= @count-b 1))
+      (reset! a -1)
+      (r/flush)
+      (is (= @res 1))
+      (is (= @disposed nil))
+      (is (= @count-b 2))
+      (is (= (+ 4 runs) (running)) "still running")
+      (reset! a 2)
+      (r/flush)
+      (is (= @res 1))
+      (is (= @disposed true))
+      (is (= (+ 2 runs) (running)) "less running count")
+
+      (reset! disposed nil)
+      (reset! a -1)
+      (r/flush)
+      (is (= 1 @res) "should be one again")
+      (is (= @disposed nil))
+      (reset! a 2)
+      (r/flush)
+      (is (= @res 1))
+      (is (= @disposed true))
+      (dispose cns)
+      (is (= @disposed-c true))
+      (is (= @disposed-cns true))
+      (is (= runs (running))))))
+
+
 (deftest test-on-set
   (let [runs (running)
         a (rv/atom 0)
