@@ -77,9 +77,8 @@
       sa
       ($! this :cljsState (ratom/atom nil)))))
 
-;; ugly circular dependency
-(defn as-element [x]
-  (js/reagent.impl.template.as-element x))
+;; avoid circular dependency: this gets set from template.cljs
+(defonce as-element nil)
 
 
 ;;; Rendering

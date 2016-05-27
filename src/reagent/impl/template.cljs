@@ -99,7 +99,7 @@
 ;;; Specialization for input components
 
 ;; This gets set from dom.cljs
-(def find-dom-node nil)
+(defonce find-dom-node nil)
 
 (defn input-unmount [this]
   ($! this :cljsInputValue nil))
@@ -321,6 +321,8 @@
         (named? x) (name x)
         (satisfies? IPrintWithWriter x) (pr-str x)
         :else x))
+
+(set! comp/as-element as-element)
 
 (defn expand-seq [s]
   (let [a (into-array s)]
