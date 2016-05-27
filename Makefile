@@ -23,7 +23,7 @@ runpack: target/webpack/bundle.js
 
 # development build with figwheel, but no tests
 runnotest:
-	@$(MAKE) run PROF=+dev-notest,$(PROF)
+	@$(MAKE) run PROF=dev-notest,$(PROF)
 
 # production build with auto-rebuild
 runprod: clean

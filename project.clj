@@ -21,18 +21,16 @@
                                        :compiler
                                        {:main "reagenttest.runtests"}}}}}
 
-             :dev [:test
-                   {:dependencies [[figwheel "0.5.2"]]
-                    :plugins [[lein-figwheel "0.5.2"]]
+             :fig [{:dependencies [[figwheel "0.5.3-2"]]
+                    :plugins [[lein-figwheel "0.5.3-2"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
                     :cljsbuild
                     {:builds
                      {:client
-                      {:figwheel {:on-jsload "reagenttest.runtests/reload"}
+                      {:figwheel true
                        :compiler {:source-map true
-                                  :source-map-timestamp true
                                   :optimizations :none
                                   ;; :recompile-dependents false
                                   :output-dir "outsite/public/js/out"
@@ -50,7 +48,6 @@
                                {:compiler {:optimizations :advanced
                                            :elide-asserts true
                                            :pretty-print false
-                                           :main "reagentdemo.core"
                                            ;; :pseudo-names true
                                            :output-dir "target/client"}}}}}]
 
@@ -67,11 +64,9 @@
 
              :prod-test [:prod :test]
 
-             :dev-notest [:dev
-                          {:cljsbuild
-                           {:builds {:client
-                                     {:compiler {:load-tests false}}}}
-                           :figwheel {:validate-config false}}]}
+             :dev [:fig :test]
+
+             :dev-notest [:fig]}
 
   :clean-targets ^{:protect false} [:target-path :compile-path
                                     "outsite/public/js"
@@ -88,6 +83,7 @@
                                        "examples/simple/src"
                                        "examples/geometry/src"]
                         :compiler {:parallel-build true
+                                   :main "reagentdemo.core"
                                    :output-to "outsite/public/js/main.js"}}}}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
