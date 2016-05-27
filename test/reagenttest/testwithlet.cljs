@@ -235,3 +235,39 @@
       (is (= w {:error (list (str "Warning: The same with-let is being "
                                   "used more than once in the same reactive "
                                   "context."))})))))
+
+(deftest with-let-nested
+  (let [runs (running)
+        init (atom 0)
+        destroy (atom 0)
+        state (r/atom 0)
+        exec (atom 0)
+        f (fn []
+            (with-let [i (swap! init inc)]
+              (is (= i 1))
+              (with-let [j (swap! init inc)]
+                (is (= j 2))
+                @state
+                (swap! exec inc)
+                (finally
+                  (is (= @destroy 1))
+                  (swap! destroy inc)))
+              (finally
+                (is (= @destroy 0))
+                (swap! destroy inc))))
+        t (track! (fn []
+                    (when (< @state 2)
+                      @(track f))))]
+    (is (= @init 2))
+    (is (= @exec 1))
+    (swap! state inc)
+    (flush)
+    (is (= @exec 2))
+    (is (= @init 2))
+    (is (= @destroy 0))
+    (swap! state inc)
+    (flush)
+    (is (= @destroy 2))
+    (dispose! t)
+    (is (= @destroy 2))
+    (is (= runs (running)))))
