@@ -336,7 +336,8 @@ another cursor) these cursors are equivalent:
 (defn after-render
   "Run f using requestAnimationFrame or equivalent.
 
-  f will be called just after components are rendered."
+  f will be called just after any queued renders in the next animation
+  frame (and even if no renders actually occur)."
   [f]
   (batch/do-after-render f))
 
