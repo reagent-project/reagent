@@ -104,7 +104,9 @@ Returns the mounted component instance."
   ClojureScript). To get around this you'll have to introduce a layer
   of indirection, for example by using `(render [#'foo])` instead."
   []
-  (dom/force-update-all))
+  (ratom/flush!)
+  (dom/force-update-all)
+  (batch/flush-after-render))
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
@@ -170,8 +172,8 @@ Equivalent to (swap! (state-atom this) merge new-state)"
    (force-update this false))
   ([this deep]
    (ratom/flush!)
-   (util/force-update this deep)))
-
+   (util/force-update this deep)
+   (batch/flush-after-render)))
 
 (defn props
   "Returns the props passed to a component."

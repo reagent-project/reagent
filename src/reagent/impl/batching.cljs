@@ -75,18 +75,24 @@
     (set! scheduled? false)
     (.flush-queues this))
 
+  (flush-after-render [this]
+    (.run-funs this "afterRender"))
+
   (flush-queues [this]
     (.run-funs this "beforeFlush")
     (ratom-flush)
     (when-some [cs (aget this "componentQueue")]
       (aset this "componentQueue" nil)
       (run-queue cs))
-    (.run-funs this "afterRender")))
+    (.flush-after-render this)))
 
 (defonce render-queue (RenderQueue. false))
 
 (defn flush []
   (.flush-queues render-queue))
+
+(defn flush-after-render []
+  (.flush-after-render render-queue))
 
 (defn queue-render [c]
   (when-not ($ c :cljsIsDirty)

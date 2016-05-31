@@ -31,7 +31,8 @@
 (defn with-mounted-component [comp f]
   (when isClient
     (let [div (add-test-div "_testreagent")]
-      (let [comp (r/render-component comp div #(f comp div))]
+      (let [c (r/render-component comp div)]
+        (f c div)
         (r/unmount-component-at-node div)
         (r/flush)
         (.removeChild (.-body js/document) div)))))
@@ -982,3 +983,37 @@
          (rstr [:p 'foo " " :bar nil 1])))
   (is (= "<p>#&lt;Atom: 1&gt;</p>"
          (rstr [:p (r/atom 1)]))))
+
+(deftest test-after-render
+  (let [spy (atom 0)
+        val (atom 0)
+        exp (atom 0)
+        node (atom nil)
+        state (r/atom 0)
+        comp (fn []
+               (let [old @spy]
+                 (is (nil? (r/after-render
+                            (fn []
+                              (is (= "DIV" ($ @node :tagName)))
+                              (swap! spy inc)))))
+                 (is (= old @spy))
+                 (is (= @exp @val))
+                 [:div {:ref #(reset! node %)} @state]))]
+    (with-mounted-component [comp]
+      (fn [c div]
+        (is (= @spy 1))
+        (swap! state inc)
+        (is (= @spy 1))
+        (is (nil? (r/next-tick #(swap! val inc))))
+        (reset! exp 1)
+        (is (= @val 0))
+        (is (nil? (r/flush)))
+        (is (= @val 1))
+        (is (= @spy 2))
+        (is (nil? (r/force-update c)))
+        (is (= @spy 3))
+        (is (nil? (r/next-tick #(reset! spy 0))))
+        (is (= @spy 3))
+        (r/flush)
+        (is (= @spy 0))))
+    (is (= @node nil))))

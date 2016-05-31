@@ -2,6 +2,7 @@
   (:require [cljsjs.react.dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
+            [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dbg]]
             [reagent.interop :refer-macros [$ $!]]))
@@ -30,6 +31,7 @@
             (fn []
               (binding [util/*always-update* false]
                 (swap! roots assoc container [comp container])
+                (batch/flush-after-render)
                 (if (some? callback)
                   (callback))))))))
 
