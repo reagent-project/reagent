@@ -248,7 +248,9 @@
           res (rv/atom nil)
           cns (rv/make-reaction #(reset! res @c)
                                 :auto-run true)]
-      (rv/add-on-dispose! b #(reset! disposed true))
+      (rv/add-on-dispose! b (fn [r]
+                              (is (= r b))
+                              (reset! disposed true)))
       (rv/add-on-dispose! c #(reset! disposed-c true))
       (rv/add-on-dispose! cns #(reset! disposed-cns true))
       @cns
