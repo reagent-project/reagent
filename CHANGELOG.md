@@ -1,6 +1,16 @@
 
 # Changelog
 
+## Upcoming
+
+- React updated to 15.1.0
+
+- Symbols and keywords are now allowed in Hiccup content. They are converted using `name`.
+
+- Any object hat satisfies IPrintWithWriter is also allowed, and is converted using `pr-str`.
+
+- Bug fixes, improved error handling/reporting, and lots of testing.
+
 
 ## 0.6.0-alpha
 
