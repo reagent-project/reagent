@@ -300,7 +300,9 @@ value) when the cursor is modified.
 Given that set-get function, (and that state is a Reagent atom, or
 another cursor) these cursors are equivalent:
 (cursor state [:foo]) and (cursor set-get [:foo]).
-"
+
+Note that a cursor is lazy: its value will not change until it is
+used. This may be noticed with add-watch."
   ([src path]
    (ratom/cursor src path)))
 
