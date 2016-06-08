@@ -57,7 +57,7 @@
     `(aset ~object ~@names ~value)))
 
 (defmacro .' [& args]
-  ;; Deprecated since names starting with . cause problems with bootstraped cljs.
+  ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
   (let [ns (str cljs.analyzer/*cljs-ns*)
         line (:line (meta &form))]
     (binding [*out* *err*]
@@ -66,7 +66,7 @@
   `($ ~@args))
 
 (defmacro .! [& args]
-  ;; Deprecated since names starting with . cause problems with bootstraped cljs.
+  ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
   (let [ns (str cljs.analyzer/*cljs-ns*)
         line (:line (meta &form))]
     (binding [*out* *err*]
