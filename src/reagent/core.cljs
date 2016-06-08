@@ -18,17 +18,16 @@
 (defn create-element
   "Create a native React element, by calling React.createElement directly.
 
-That means the second argument must be a javascript object (or nil), and
-that any Reagent hiccup forms must be processed with as-element. For example
-like this:
+  That means the second argument must be a javascript object (or nil), and
+  that any Reagent hiccup forms must be processed with as-element. For example
+  like this:
 
-   (r/create-element \"div\" #js{:className \"foo\"}
-      \"Hi \" (r/as-element [:strong \"world!\"])
+    (r/create-element \"div\" #js{:className \"foo\"}
+       \"Hi \" (r/as-element [:strong \"world!\"])
 
-which is equivalent to
+  which is equivalent to
 
-   [:div.foo \"Hi\" [:strong \"world!\"]]
-"
+    [:div.foo \"Hi\" [:strong \"world!\"]]"
   ([type]
    (create-element type nil))
   ([type props]
@@ -42,13 +41,14 @@ which is equivalent to
    (apply ($ react :createElement) type props child children)))
 
 (defn as-element
-  "Turns a vector of Hiccup syntax into a React element. Returns form unchanged if it is not a vector."
+  "Turns a vector of Hiccup syntax into a React element. Returns form
+  unchanged if it is not a vector."
   [form]
   (tmpl/as-element form))
 
 (defn adapt-react-class
   "Returns an adapter for a native React class, that may be used
-just like a Reagent component function or class in Hiccup forms."
+  just like a Reagent component function or class in Hiccup forms."
   [c]
   (assert c)
   (tmpl/adapt-react-class c))
@@ -62,12 +62,13 @@ just like a Reagent component function or class in Hiccup forms."
   (comp/reactify-component c))
 
 (defn render
-  "Render a Reagent component into the DOM. The first argument may be 
-either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
+  "Render a Reagent component into the DOM. The first argument may be
+  either a vector (using Reagent's Hiccup syntax), or a React element.
+  The second argument should be a DOM node.
 
-Optionally takes a callback that is called when the component is in place.
+  Optionally takes a callback that is called when the component is in place.
 
-Returns the mounted component instance."
+  Returns the mounted component instance."
   ([comp container]
    (dom/render comp container))
   ([comp container callback]
@@ -110,20 +111,19 @@ Returns the mounted component instance."
 
 (defn create-class
   "Create a component, React style. Should be called with a map,
-looking like this:
-{:get-initial-state (fn [this])
-:component-will-receive-props (fn [this new-argv])
-:should-component-update (fn [this old-argv new-argv])
-:component-will-mount (fn [this])
-:component-did-mount (fn [this])
-:component-will-update (fn [this new-argv])
-:component-did-update (fn [this old-argv])
-:component-will-unmount (fn [this])
-:reagent-render (fn [args....])   ;; or :render (fn [this])
-}
+  looking like this:
 
-Everything is optional, except either :reagent-render or :render.
-"
+    {:get-initial-state (fn [this])
+     :component-will-receive-props (fn [this new-argv])
+     :should-component-update (fn [this old-argv new-argv])
+     :component-will-mount (fn [this])
+     :component-did-mount (fn [this])
+     :component-will-update (fn [this new-argv])
+     :component-did-update (fn [this old-argv])
+     :component-will-unmount (fn [this])
+     :reagent-render (fn [args....])}   ;; or :render (fn [this])
+
+  Everything is optional, except either :reagent-render or :render."
   [spec]
   (comp/create-class spec))
 
@@ -142,14 +142,14 @@ Everything is optional, except either :reagent-render or :render.
 
 (defn state
   "Returns the state of a component, as set with replace-state or set-state.
-Equivalent to (deref (r/state-atom this))"
+  Equivalent to (deref (r/state-atom this))"
   [this]
   (assert (comp/reagent-component? this))
   (deref (state-atom this)))
 
 (defn replace-state
   "Set state of a component.
-Equivalent to (reset! (state-atom this) new-state)"
+  Equivalent to (reset! (state-atom this) new-state)"
   [this new-state]
   (assert (comp/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
@@ -157,7 +157,7 @@ Equivalent to (reset! (state-atom this) new-state)"
 
 (defn set-state
   "Merge component state with new-state.
-Equivalent to (swap! (state-atom this) merge new-state)"
+  Equivalent to (swap! (state-atom this) merge new-state)"
   [this new-state]
   (assert (comp/reagent-component? this))
   (assert (or (nil? new-state) (map? new-state)))
@@ -200,15 +200,15 @@ Equivalent to (swap! (state-atom this) merge new-state)"
 
 (defn merge-props
   "Utility function that merges two maps, handling :class and :style
-specially, like React's transferPropsTo."
+  specially, like React's transferPropsTo."
   [defaults props]
   (util/merge-props defaults props))
 
 (defn flush
   "Render dirty components immediately to the DOM.
 
-Note that this may not work in event handlers, since React.js does
-batching of updates there."
+  Note that this may not work in event handlers, since React.js does
+  batching of updates there."
   []
   (batch/flush))
 
@@ -218,8 +218,8 @@ batching of updates there."
 
 (defn atom
   "Like clojure.core/atom, except that it keeps track of derefs.
-Reagent components that derefs one of these are automatically
-re-rendered."
+  Reagent components that derefs one of these are automatically
+  re-rendered."
   ([x] (ratom/atom x))
   ([x & rest] (apply ratom/atom x rest)))
 
@@ -278,31 +278,31 @@ re-rendered."
 (defn cursor
   "Provide a cursor into a Reagent atom.
 
-Behaves like a Reagent atom but focuses updates and derefs to
-the specified path within the wrapped Reagent atom. e.g.,
-  (let [c (cursor ra [:nested :content])]
-    ... @c ;; equivalent to (get-in @ra [:nested :content])
-    ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
-    ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
-    )
+  Behaves like a Reagent atom but focuses updates and derefs to
+  the specified path within the wrapped Reagent atom. e.g.,
+    (let [c (cursor ra [:nested :content])]
+      ... @c ;; equivalent to (get-in @ra [:nested :content])
+      ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
+      ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
+      )
 
-The first parameter can also be a function, that should look something
-like this:
+  The first parameter can also be a function, that should look
+  something like this:
 
-(defn set-get
-  ([k] (get-in @state k))
-  ([k v] (swap! state assoc-in k v)))
+    (defn set-get
+      ([k] (get-in @state k))
+      ([k v] (swap! state assoc-in k v)))
 
-The function will be called with one argument – the path passed to
-cursor – when the cursor is deref'ed, and two arguments (path and new
-value) when the cursor is modified.
+  The function will be called with one argument – the path passed to
+  cursor – when the cursor is deref'ed, and two arguments (path and
+  new value) when the cursor is modified.
 
-Given that set-get function, (and that state is a Reagent atom, or
-another cursor) these cursors are equivalent:
-(cursor state [:foo]) and (cursor set-get [:foo]).
+  Given that set-get function, (and that state is a Reagent atom, or
+  another cursor) these cursors are equivalent:
+  (cursor state [:foo]) and (cursor set-get [:foo]).
 
-Note that a cursor is lazy: its value will not change until it is
-used. This may be noticed with add-watch."
+  Note that a cursor is lazy: its value will not change until it is
+  used. This may be noticed with add-watch."
   ([src path]
    (ratom/cursor src path)))
 
@@ -347,13 +347,13 @@ used. This may be noticed with add-watch."
 
 (defn partial
   "Works just like clojure.core/partial, except that it is an IFn, and
-the result can be compared with ="
+  the result can be compared with ="
   [f & args]
   (util/partial-ifn. f args nil))
 
 (defn component-path
   ;; Try to return the path of component c as a string.
   ;; Maybe useful for debugging and error reporting, but may break
-  ;; with future versions of React (and return nil). 
+  ;; with future versions of React (and return nil).
   [c]
   (comp/component-path c))
