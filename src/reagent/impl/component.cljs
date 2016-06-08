@@ -69,6 +69,12 @@
   ($! c :cljsReactClass constructor))
 
 
+(defn map-to-js [m]
+  (reduce-kv (fn [o k v]
+               (doto o
+                 (aset (name k) v)))
+             #js{} m))
+
 ;;; State
 
 (defn state-atom [this]
@@ -143,12 +149,22 @@
 
 (defn custom-wrapper [key f]
   (case key
+    :childContextTypes
+    (when-not (nil? f)
+      (map-to-js f))
+
     :getDefaultProps
     (assert false "getDefaultProps not supported")
 
     :getInitialState
     (fn getInitialState []
       (this-as c (reset! (state-atom c) (.call f c c))))
+
+    :getChildContext
+    (fn []
+      (this-as c
+               (when-not (nil? f)
+                 (f c))))
 
     :componentWillReceiveProps
     (fn componentWillReceiveProps [nextprops]
@@ -246,12 +262,6 @@
            :cljsLegacyRender legacy-render
            :reagentRender render-fun
            :render (:render static-fns))))
-
-(defn map-to-js [m]
-  (reduce-kv (fn [o k v]
-               (doto o
-                 (aset (name k) v)))
-             #js{} m))
 
 (defn cljsify [body]
   (-> body
