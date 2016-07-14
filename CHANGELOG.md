@@ -1,6 +1,13 @@
 
 # Changelog
 
+## Upcoming
+
+- React updated to 15.2.1
+
+- Fix input on-change events in IE11
+
+
 ## 0.6.0-rc
 
 - React updated to 15.1.0
