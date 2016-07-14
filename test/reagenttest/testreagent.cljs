@@ -282,9 +282,10 @@
                (as-string [:div {:data-foo "x"}])))
   (is (re-find #"aria-foo"
                (as-string [:div {:aria-foo "x"}])))
-  (is (not (re-find #"enctype"
-                    (as-string [:div {"enc-type" "x"}])))
-      "Strings are passed through to React.")
+  ;; Skip test: produces warning in new React
+  ;; (is (not (re-find #"enctype"
+  ;;                   (as-string [:div {"enc-type" "x"}])))
+  ;;     "Strings are passed through to React.")
   (is (re-find #"enctype"
                (as-string [:div {"encType" "x"}]))
       "Strings are passed through to React, and have to be camelcase.")
@@ -576,10 +577,10 @@
         comps (atom {})
         c1 (fn []
              (swap! comps assoc :c1 (r/current-component))
-             [:p (swap! v update-in [:v1] inc)])
+             [:p "" (swap! v update-in [:v1] inc)])
         c2 (fn []
              (swap! comps assoc :c2 (r/current-component))
-             [:div (swap! v update-in [:v2] inc)
+             [:div "" (swap! v update-in [:v2] inc)
               [c1]])
         state (r/atom 0)
         spy (r/atom 0)
@@ -587,7 +588,7 @@
         t1 (fn [] @(r/track t))
         c3 (fn []
              (swap! comps assoc :c3 (r/current-component))
-             [:div (reset! spy @(r/track t1))])]
+             [:div "" (reset! spy @(r/track t1))])]
     (with-mounted-component [c2]
       (fn [c div]
         (is (= @v {:v1 1 :v2 1}))
@@ -705,10 +706,10 @@
         render (fn [& args]
                  (this-as c (is (= c (r/current-component))))
                  (add-args :render args)
-                 [:div (first args)])
+                 [:div "" (first args)])
         render2 (fn [& args]
                  (add-args :render args)
-                 [:div (first args)])
+                 [:div "" (first args)])
         ls {:get-initial-state
             (fn [& args]
               (reset! t (first args))
@@ -806,7 +807,7 @@
                   (is (= (first args) (r/props c)))
                   (add-args :render
                             {:children (r/children c)})
-                  [:div (first args)]))
+                  [:div "" (first args)]))
         ls {:get-initial-state
             (fn [& args]
               (reset! t (first args))

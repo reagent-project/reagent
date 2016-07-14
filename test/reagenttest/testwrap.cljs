@@ -181,7 +181,7 @@
        b-count (r/atom 0)
        derefer (fn derefer [cur count]
                  (swap! count inc)
-                 [:div @cur])
+                 [:div "" @cur])
        comp (fn test-cursor []
               [:div
                [derefer (r/cursor state [:a]) a-count]
@@ -215,7 +215,7 @@
        a-count (r/atom 0)
        b-count (r/atom 0)
        derefer (fn derefer [cur count]
-                 [:div @cur])
+                 [:div "" @cur])
        f (fn [[x y]] (swap! y inc) (get-in @statec x))
        ac (r/cursor f [[:a] a-count])
        bc (r/cursor f [[:b] b-count])
