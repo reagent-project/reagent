@@ -61,8 +61,6 @@
   [this]
   ($ (module) findDOMNode this))
 
-(set! tmpl/find-dom-node dom-node)
-
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
   probably only useful in a development environment, when you want to
