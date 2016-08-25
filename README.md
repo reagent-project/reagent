@@ -3,8 +3,6 @@
 
 A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](http://facebook.github.io/react/).
 
-#### [Try Reagent](http://cljsfiddle.com/)
-
 Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
