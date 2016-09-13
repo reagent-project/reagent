@@ -174,7 +174,8 @@
              (.hasOwnProperty jsprops "value"))
     (let [v ($ jsprops :value)
           value (if (nil? v) "" v)
-          on-change ($ jsprops :onChange)]
+          on-change ($ jsprops :onChange)
+          original-ref ($ jsprops :ref)]
       (when (nil? ($ this :cljsInputElement))
         ;; set initial value
         ($! this :cljsDOMValue value))
@@ -183,7 +184,9 @@
       (doto jsprops
         ($! :defaultValue value)
         ($! :onChange #(input-handle-change this on-change %))
-        ($! :ref #($! this :cljsInputElement %1))))))
+        ($! :ref (fn [el]
+                   (if original-ref (original-ref el))
+                   ($! this :cljsInputElement el)))))))
 
 (defn ^boolean input-component? [x]
   (case x
