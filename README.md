@@ -33,8 +33,8 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
 This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
-    [reagent "0.6.0-rc" :exclusions [cljsjs/react]]
-    [cljsjs/react-with-addons "15.1.0-0"]
+    [reagent "0.6.0" :exclusions [cljsjs/react]]
+    [cljsjs/react-with-addons "15.2.1-0"]
 
 If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
 
