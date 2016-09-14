@@ -1,7 +1,7 @@
 
 # Changelog
 
-## Upcoming
+## 0.6.0
 
 - React updated to 15.2.1
 
