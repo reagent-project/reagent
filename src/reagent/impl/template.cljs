@@ -109,7 +109,7 @@
   (contains? these-inputs-have-selection-api input-type))
 
 (defn input-set-value [this]
-  (when-some [node ($ this :cljsInputElement)]
+  (when-some [node ($ util/react-dom findDOMNode this)]
     ($! this :cljsInputDirty false)
     (let [rendered-value ($ this :cljsRenderedValue)
           dom-value ($ this :cljsDOMValue)]
@@ -175,15 +175,14 @@
     (let [v ($ jsprops :value)
           value (if (nil? v) "" v)
           on-change ($ jsprops :onChange)]
-      (when (nil? ($ this :cljsInputElement))
+      (when (nil? ($ this :cljsDOMValue))
         ;; set initial value
         ($! this :cljsDOMValue value))
       ($! this :cljsRenderedValue value)
       (js-delete jsprops "value")
       (doto jsprops
         ($! :defaultValue value)
-        ($! :onChange #(input-handle-change this on-change %))
-        ($! :ref #($! this :cljsInputElement %1))))))
+        ($! :onChange #(input-handle-change this on-change %))))))
 
 (defn ^boolean input-component? [x]
   (case x
