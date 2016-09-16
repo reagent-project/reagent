@@ -10,13 +10,6 @@
                                  (throw (js/Error. "require('react') failed")))
         :else (throw (js/Error. "js/React is missing"))))
 
-(defonce react-dom
-  (cond (exists? js/ReactDOM) js/ReactDOM
-        (exists? js/require) (or (js/require "react-dom")
-                                 (throw (js/Error. "require('react-dom') failed")))
-        :else
-        (throw (js/Error. "js/ReactDOM is missing"))))
-
 (def is-client (and (exists? js/window)
                     (-> js/window ($ :document) nil? not)))
 

@@ -1,6 +1,11 @@
 
 # Changelog
 
+## Upcoming
+
+- Fix :ref on inputs
+
+
 ## 0.6.0
 
 - React updated to 15.2.1
