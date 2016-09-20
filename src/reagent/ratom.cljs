@@ -493,6 +493,25 @@
     reaction))
 
 
+(defn make-reaction-notify [f & args]
+  (let [reaction (apply make-reaction f args)]
+    ;; override _run method of Reaction type so that it calls f with the `notify` function
+    (set! (.-_run reaction) (fn [check]
+                                 (let [oldstate (.-state reaction)
+                                       notify (fn [res] (when-not (.-nocache? reaction)
+                                                          (set! (.-state reaction) res)
+                                                          ;; Use = to determine equality from reactions, since
+                                                          ;; they are likely to produce new data structures.
+                                                          (when-not (or (nil? (.-watches reaction))
+                                                                        (= oldstate res))
+                                                            (notify-w reaction oldstate res))))
+                                       res (if check
+                                             (._try-capture reaction (partial f notify))
+                                             (deref-capture (partial f notify) reaction))]
+
+                                   res)))
+    reaction))
+
 
 (def ^:private temp-reaction (make-reaction nil))
 
