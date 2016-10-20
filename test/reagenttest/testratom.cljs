@@ -100,8 +100,8 @@
       (dispose co))
     (let [!x (rv/atom 0)
           !co (rv/make-reaction #(inc @!x) :auto-run true)]
-      (is (= 1 @!co) "CO has correct value on first deref") 
-      (swap! !x inc) 
+      (is (= 1 @!co) "CO has correct value on first deref")
+      (swap! !x inc)
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
@@ -126,27 +126,27 @@
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 2))
       (is (= @c-changed 0))
-             
+
       (reset! a 2)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a 3)
       (is (= @res (+ 10 @a)))
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
-             
+
       (reset! a -1)
       (is (= @res (+ 2 @a)))
       (dispose res)
@@ -461,3 +461,27 @@
     (r/flush)
     (dispose r1)
     (is (= runs (running)))))
+
+(deftest running-disposed-reactions
+  (let [ra (r/atom 0)
+        run-number (atom 0)
+        disposed? (atom false)
+        r1 (rv/make-reaction (fn []
+                               (swap! run-number inc)
+                               @ra)
+                             :on-dispose (fn [] (reset! disposed? true)))]
+    (is (= @run-number 0))
+    @r1
+    (is (= @run-number 1))
+    (swap! ra inc)
+    (is (= @run-number 1))
+    @r1
+    (is (= @run-number 2))
+    (rv/dispose! r1)
+    (is (true? @disposed?))
+
+    (is (= @run-number 2))
+    (swap! ra inc)
+    @r1
+    ;; An exception or error should be logged here as we are trying to deref a disposed reaction.
+    (is (= @run-number 2))))
