@@ -1,0 +1,5 @@
+test:
+  override:
+    - lein with-profile dev do clean, cljsbuild once
+    - node bin/gen-site.js
+    - lein with-profile prod-test do clean, cljsbuild once
