@@ -1,6 +1,5 @@
 (ns reagent.interop
-  (:require [clojure.string :as string :refer [join]]
-            [clojure.java.io :as io]))
+  (:require [clojure.string :as string :refer [join]]))
 
 (defn- js-call [f args]
   (let [argstr (->> (repeat (count args) "~{}")
