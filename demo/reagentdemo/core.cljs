@@ -30,7 +30,8 @@
     [:li.brand [link {:href index-page} "Reagent:"]]
     [:li [link {:href index-page} "Intro"]]
     [:li [link {:href news/url} "News"]]
-    [:li>a github "GitHub"]]
+    [:li>a github "GitHub"]
+    [:li [link {:href "http://blog.ducky.io/reagent-docs/index.html"} "API"]]]
    [:div @test-results]
    [tools/main-content]
    [github-badge]])
