@@ -4,6 +4,7 @@
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [$ $!]]
             [reagent.core :as r]
+            [reagent.dom.server :as server]
             [reagent.impl.util :as util]))
 
 (def tests-done (atom {}))
@@ -269,7 +270,7 @@
       (is (= 2 @ran)))))
 
 (defn as-string [comp]
-  (r/render-component-to-string comp))
+  (server/render-to-string comp))
 
 (deftest to-string-test []
   (let [comp (fn [props]
@@ -361,13 +362,13 @@
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div.bar {:dangerously-set-inner-HTML
                      {:__html "<p>foobar</p>"}} ]))))
 
@@ -432,7 +433,7 @@
           (is (= 4 @ran)))))))
 
 (defn rstr [react-elem]
-  (r/render-to-static-markup react-elem))
+  (server/render-to-static-markup react-elem))
 
 (deftest test-create-element
   (let [ae r/as-element
