@@ -8,8 +8,7 @@
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [dbg prn]]
             [reagent.interop :refer-macros [$ $!]]
-            [reagent.dom :as dom]
-            [reagent.dom.server :as server]))
+            [reagent.dom :as dom]))
 
 (def is-client util/is-client)
 
@@ -79,20 +78,9 @@
   [container]
   (dom/unmount-component-at-node container))
 
-(defn render-to-string
-  "Turns a component into an HTML string."
-  [component]
-  (server/render-to-string component))
-
 ;; For backward compatibility
 (def as-component as-element)
 (def render-component render)
-(def render-component-to-string render-to-string)
-
-(defn render-to-static-markup
-  "Turns a component into an HTML string, without data-react-id attributes, etc."
-  [component]
-  (server/render-to-static-markup component))
 
 (defn ^:export force-update-all
   "Force re-rendering of all mounted Reagent components. This is

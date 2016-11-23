@@ -276,7 +276,7 @@
 
    [:p "Incidentally, this page also uses another React trick: the
    entire page is pre-rendered using Node, and "
-   [:code "reagent.core/render-component-to-string"] ". When it is loaded
+   [:code "reagent.dom.server/render-to-string"] ". When it is loaded
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 
@@ -335,8 +335,3 @@
        ;; Show heavy examples on load, to make html file smaller
        (when @show-all [complete-simple-demo])
        (when @show-all [todomvc-demo])])))
-
-
-#_(dotimes [_ 30]
-  (time
-   (r/render-to-string [main])))

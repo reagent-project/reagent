@@ -2,6 +2,7 @@
   (:require [clojure.string :as string]
             [goog.events :as evt]
             [reagent.core :as r]
+            [reagent.dom.server :as server]
             [reagent.debug :refer-macros [dbg log dev?]]
             [reagent.interop :as i :refer-macros [$ $!]])
   (:import goog.History
@@ -115,7 +116,7 @@
 (defn html-template [{:keys [title body-html timestamp page-conf
                              js-file css-file main-div]}]
   (let [main (str js-file timestamp)]
-    (r/render-to-static-markup
+    (server/render-to-static-markup
      [:html
       [:head
        [:meta {:charset 'utf-8}]
@@ -134,7 +135,7 @@
   (emit [:set-page page-path])
   (let [conf (merge conf @config)
         b (:body conf)
-        bhtml (r/render-component-to-string b)]
+        bhtml (server/render-to-string b)]
     (str "<!doctype html>\n"
          (html-template (assoc conf
                                :page-conf {:page-path page-path}
