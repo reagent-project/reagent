@@ -55,7 +55,7 @@
     (assert field (str "Field name must start with - in " field))
     `(aset ~object ~@names ~value)))
 
-(defmacro .' [& args]
+#_(defmacro .' [& args]
   ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
   (let [ns (str cljs.analyzer/*cljs-ns*)
         line (:line (meta &form))]
@@ -64,7 +64,7 @@
                ". Use reagent.interop/$ instead.")))
   `($ ~@args))
 
-(defmacro .! [& args]
+#_(defmacro .! [& args]
   ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
   (let [ns (str cljs.analyzer/*cljs-ns*)
         line (:line (meta &form))]
