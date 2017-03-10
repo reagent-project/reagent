@@ -8,7 +8,7 @@
                  [cljsjs/react-dom "15.4.0-0"]
                  [cljsjs/react-dom-server "15.4.0-0"]]
 
-  :plugins [[lein-cljsbuild "1.1.3"]
+  :plugins [[lein-cljsbuild "1.1.5"]
             [codox "0.9.0"]]
 
   :source-paths ["src"]
@@ -21,8 +21,8 @@
                                        :compiler
                                        {:main "reagenttest.runtests"}}}}}
 
-             :fig [{:dependencies [[figwheel "0.5.3-2"]]
-                    :plugins [[lein-figwheel "0.5.3-2"]]
+             :fig [{:dependencies [[figwheel "0.5.9"]]
+                    :plugins [[lein-figwheel "0.5.9"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
