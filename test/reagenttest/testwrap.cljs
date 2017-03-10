@@ -105,6 +105,8 @@
     (is (= (swap! a update-in [:k] inc)
            (swap! b update-in [:k] inc)))
     (is (= @a @b {:k 2}))
+    (is (= (swap! a assoc :k 3 :l 4 :m 7 :n 8 :o)
+           (swap! b assoc :k 3 :l 4 :m 7 :n 8 :o)))
     (is (= (reset! a 23)
            (reset! b 23)))
     (is (= @a @b))
