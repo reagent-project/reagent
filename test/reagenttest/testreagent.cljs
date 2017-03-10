@@ -1019,3 +1019,8 @@
         (r/flush)
         (is (= @spy 0))))
     (is (= @node nil))))
+
+(deftest style-property-names-are-camel-cased
+  (is (= "<div style=\"text-align:center;\">foo</div>"
+         (server/render-to-static-markup
+           [:div {:style {:text-align "center"}} "foo"]))))
