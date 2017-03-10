@@ -3,10 +3,10 @@
 
 ## 0.6.1 (10.3.2017)
 
-**[compare](https://github.com/reagent-project/reagent/compare/0.6.0...0.6.1)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.0...v0.6.1)**
 
-- Fix :ref on inputs
-- React updated to 15.4.0
+- Fix :ref on inputs ([#259](https://github.com/reagent-project/reagent/issues/259))
+- React updated to 15.4.0 ([#275](https://github.com/reagent-project/reagent/issues/275))
 
 ## 0.6.0
 
