@@ -6,7 +6,10 @@
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.0...v0.6.1)**
 
 - Fix :ref on inputs ([#259](https://github.com/reagent-project/reagent/issues/259))
-- React updated to 15.4.0 ([#275](https://github.com/reagent-project/reagent/issues/275))
+- React updated to 15.4.0 ([#275](https://github.com/reagent-project/reagent/issues/275), [#276](https://github.com/reagent-project/reagent/issues/276))
+- **BREAKING:** `reagent.core` no longer provides `render-to-string` or `render-to-static-markup` functions
+    - `reagent.dom.server` includes the same functions
+    - This is due to change in React packaging, includoing React-dom-server would increase the filesize considerably, so not it is only included when `reagent.dom.server` is used
 
 ## 0.6.0
 
