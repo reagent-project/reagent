@@ -9,7 +9,7 @@
 - React updated to 15.4.0 ([#275](https://github.com/reagent-project/reagent/issues/275), [#276](https://github.com/reagent-project/reagent/issues/276))
 - **BREAKING:** `reagent.core` no longer provides `render-to-string` or `render-to-static-markup` functions
     - `reagent.dom.server` includes the same functions
-    - This is due to change in React packaging, includoing React-dom-server would increase the filesize considerably, so not it is only included when `reagent.dom.server` is used
+    - This is due to change in React packaging, including React-dom-server would increase the file size considerably, so now it is only included when `reagent.dom.server` is used
 
 ## 0.6.0
 
