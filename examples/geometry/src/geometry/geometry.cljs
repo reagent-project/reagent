@@ -1,6 +1,6 @@
 (ns geometry.geometry)
 
-(defprotocol IPoint 
+(defprotocol IPoint
   (x [p])
   (y [p]))
 
@@ -10,7 +10,7 @@
   (y [_] y-coord))
 
 (defn point [x y]
-  (Point. x y))
+  (->Point x y))
 
 (defn dist [p1 p2]
   (js/Math.sqrt (+ (js/Math.pow (- (x p2) (x p1)) 2)
