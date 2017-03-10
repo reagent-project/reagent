@@ -65,8 +65,8 @@
        "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
-  (r/render-component [simple-component]
-                      (.-body js/document)))
+  (r/render [simple-component]
+    (.-body js/document)))
 
 (def bmi-data (r/atom {:height 180 :weight 80}))
 
@@ -225,7 +225,7 @@
 
    [:p "Reagent supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
-    [:code "reagent.core/render-component"] "."]
+    [:code "reagent.core/render"] "."]
 
    [:p "It takes two arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would

@@ -32,7 +32,7 @@
 (defn with-mounted-component [comp f]
   (when isClient
     (let [div (add-test-div "_testreagent")]
-      (let [c (r/render-component comp div)]
+      (let [c (r/render comp div)]
         (f c div)
         (r/unmount-component-at-node div)
         (r/flush)

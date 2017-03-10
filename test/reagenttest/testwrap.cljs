@@ -13,7 +13,7 @@
 (defn with-mounted-component [comp f]
   (when r/is-client
     (let [div (add-test-div "_testreagent")]
-      (let [comp (r/render-component comp div #(f comp div))]
+      (let [comp (r/render comp div #(f comp div))]
         (r/unmount-component-at-node div)
         (r/flush)
         (.removeChild (.-body js/document) div)))))

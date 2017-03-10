@@ -109,14 +109,14 @@
 
 - Stop wrapping native components. This reduces the number of components created a lot, and can speed up some things substantially (especially render-to-string, that is not bound by browser performance). This is made possible by a new way of keeping track of which order to re-render dirty components.
 
-- Added `create-element` to make it easier to embed native React 
+- Added `create-element` to make it easier to embed native React
 components in Reagent ones.
 
 - Arguments to components are now compared using simple `=`, instead of the old, rather complicated heuristics. **NOTE**: This means all arguments to a component function must be comparable with `=` (which means that they cannot be for example infinite `seq`s).
 
 - Reagent now creates all React components using `React.createElement` (required for React 0.12).
 
-- `render-component` is now render, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
+- `render-component` is now `render`, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
 
 - Add `render-to-static-markup`. This works exactly like `render-to-string`, except that it doesn't produce `data-react-id` etc.
 

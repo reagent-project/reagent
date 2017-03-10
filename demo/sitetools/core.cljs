@@ -186,4 +186,4 @@
           conf (swap! config merge page-conf)
           {:keys [page-path body main-div]} conf]
       (init-history page-path)
-      (r/render-component body (js/document.getElementById main-div)))))
+      (r/render body (js/document.getElementById main-div)))))
