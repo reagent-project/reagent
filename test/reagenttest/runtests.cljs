@@ -10,7 +10,8 @@
             [cljs.test :as test :include-macros true]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log]]
-            [reagentdemo.core :as demo]))
+            [reagentdemo.core :as demo]
+            [sitetools.server]))
 
 (enable-console-print!)
 

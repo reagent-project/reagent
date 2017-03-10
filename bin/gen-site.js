@@ -2,7 +2,7 @@
 var cljsLoad = require("./cljs-load");
 
 var srcFile = "pre-render/main.js";
-var outputDirectory = "pre-render/out/";
+var outputDirectory = "outsite/public/js/out";
 var devFile = "reagenttest/runtests.js";
 
 var beep = "\u0007";
@@ -13,7 +13,7 @@ if (typeof location === "undefined") {
     global.location = {};
 }
 var gensite = function () {
-    console.log("Loading " + srcFile);
+    console.log("Pre-rendering or testing...");
     var optNone = cljsLoad.load(srcFile, outputDirectory, devFile);
     sitetools.server.genpages({"opt-none": optNone});
 }
