@@ -37,10 +37,7 @@
                                   :asset-path "js/out"}}}}}]
 
              :site {:resource-paths ^:replace ["outsite"]
-                    :figwheel {:css-dirs ^:replace ["outsite/public/css"]}
-                    :cljsbuild
-                    {:builds {:client
-                              {:notify-command ["node" "bin/gen-site.js"]}}}}
+                    :figwheel {:css-dirs ^:replace ["outsite/public/css"]}}
 
              :prod [:site
                     {:cljsbuild
@@ -50,6 +47,14 @@
                                            :pretty-print false
                                            ;; :pseudo-names true
                                            :output-dir "target/client"}}}}}]
+
+             :prerender [:prod
+                         {:cljsbuild
+                          {:builds {:client
+                                    {:compiler {:main "reagentdemo.server"
+                                                :output-to "pre-render/main.js"
+                                                :output-dir "pre-render/out"}
+                                     :notify-command ["node" "bin/gen-site.js"] }}}}]
 
              :webpack {:cljsbuild
                        {:builds {:client
@@ -74,7 +79,8 @@
                                     "outsite/public/news"
                                     "outsite/public/css"
                                     "outsite/public/index.html"
-                                    "out"]
+                                    "out"
+                                    "pre-render"]
 
   :cljsbuild {:builds {:client
                        {:source-paths ["src"

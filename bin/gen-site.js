@@ -1,8 +1,8 @@
 
 var cljsLoad = require("./cljs-load");
 
-var srcFile = "outsite/public/js/main.js";
-var outputDirectory = "outsite/public/js/out/";
+var srcFile = "pre-render/main.js";
+var outputDirectory = "pre-render/out/";
 var devFile = "reagenttest/runtests.js";
 
 var beep = "\u0007";
@@ -15,7 +15,7 @@ if (typeof location === "undefined") {
 var gensite = function () {
     console.log("Loading " + srcFile);
     var optNone = cljsLoad.load(srcFile, outputDirectory, devFile);
-    sitetools.core.genpages({"opt-none": optNone});
+    sitetools.server.genpages({"opt-none": optNone});
 }
 
 var compileFail = function () {
