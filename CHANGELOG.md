@@ -1,10 +1,12 @@
 
 # Changelog
 
-## Upcoming
+## 0.6.1 (10.3.2017)
+
+**[compare](https://github.com/reagent-project/reagent/compare/0.6.0...0.6.1)**
 
 - Fix :ref on inputs
-
+- React updated to 15.4.0
 
 ## 0.6.0
 
