@@ -18,6 +18,7 @@
 
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]
+                                       :notify-command ["node" "bin/gen-site.js"]
                                        :compiler
                                        {:main "reagenttest.runtests"}}}}}
 
