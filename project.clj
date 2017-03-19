@@ -5,8 +5,8 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
-                 [cljsjs/react-dom "15.4.0-0"]
-                 [cljsjs/react-dom-server "15.4.0-0"]]
+                 [cljsjs/react-dom "15.4.2-2"]
+                 [cljsjs/react-dom-server "15.4.2-2"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
             [codox "0.9.0"]]
