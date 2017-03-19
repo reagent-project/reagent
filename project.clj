@@ -9,12 +9,13 @@
                  [cljsjs/react-dom-server "15.4.2-2"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
-            [codox "0.9.0"]]
+            [lein-codox "0.10.3"]]
 
   :source-paths ["src"]
 
   :codox {:language :clojurescript
-          :exclude clojure.string}
+          :exclude clojure.string
+          :source-paths ["src"]}
 
   :profiles {:test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]

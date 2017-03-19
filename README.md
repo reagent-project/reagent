@@ -8,7 +8,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
   * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
-  * **[API Documentation](http://blog.ducky.io/reagent-docs/index.html)**
+  * **[API Documentation](http://reagent-project.github.io/docs/master/)**
 
 ### Prerequisites
 

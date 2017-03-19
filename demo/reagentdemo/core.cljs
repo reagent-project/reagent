@@ -31,7 +31,7 @@
     [:li [link {:href index-page} "Intro"]]
     [:li [link {:href news/url} "News"]]
     [:li>a github "GitHub"]
-    [:li [link {:href "http://blog.ducky.io/reagent-docs/index.html"} "API"]]]
+    [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
    [:div @test-results]
    [tools/main-content]
    [github-badge]])

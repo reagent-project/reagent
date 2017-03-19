@@ -70,7 +70,7 @@ push-gh-pages: build-gh-pages
 	git push origin gh-pages:gh-pages
 
 # build site and push to reagent-project's doc site
-push-project-docs: gen-site
+push-project-docs: gen-site gen-docs
         # sanity check
 	test -f $(SITEDIR)/index.html
 	test ! -e $(OUTPUTDIR)
@@ -78,6 +78,8 @@ push-project-docs: gen-site
 	git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
 	rm -fr tmp/*
 	cp -r $(SITEDIR)/* tmp/
+	mkdir -p tmp/docs/master/
+	cp -r target/doc/* tmp/docs/master/
 	cd tmp && \
 	git add . && git commit -m "Updated" && \
 	git push
@@ -89,6 +91,9 @@ build-gh-pages: gen-site gh-pages-add
 gen-site: clean
 	lein with-profile prod cljsbuild once
 	lein with-profile prerender cljsbuild once
+
+gen-docs: clean
+	lein codox
 
 # copy contents of $(SITEDIR) to branch gh-pages
 gh-pages-add:
