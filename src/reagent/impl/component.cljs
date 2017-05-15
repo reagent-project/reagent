@@ -1,5 +1,6 @@
 (ns reagent.impl.component
-  (:require [reagent.impl.util :as util]
+  (:require [goog.object :as gobj]
+            [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [$ $!]]
@@ -260,11 +261,18 @@
       wrap-funs
       map-to-js))
 
-(defn create-class [body]
+;;; https://gist.github.com/pesterhazy/39c84224972890665b6bec3addafdf5a
+(defn create-class
+  [body]
   {:pre [(map? body)]}
+  (let [MyComp  (fn [props context updater]
+                  (this-as this
+                           ($ util/react Component.call this props context updater)))]
   (->> body
        cljsify
-       ($ util/react createClass)))
+       (gobj/extend (.-prototype MyComp)
+                    (.-prototype ($ util/react :Component))))
+  MyComp))
 
 (defn component-path [c]
   (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
