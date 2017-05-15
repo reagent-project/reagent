@@ -7,8 +7,10 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
   * **[API Documentation](http://reagent-project.github.io/docs/master/)**
+  * **Community discussion and support channels**
+    * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
+    * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
 
 ### Prerequisites
 
