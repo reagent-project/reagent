@@ -1,8 +1,12 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...master)**
+
 ## 0.6.2 (19.5.2017)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...v0.6.2)**
 
 - React updated to 15.4.2
     - Fixes a problem with `number` inputs, ([#289](https://github.com/reagent-project/reagent/issues/289), [facebook/react#8717](https://github.com/facebook/react/issues/8717))
