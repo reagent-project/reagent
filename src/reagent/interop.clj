@@ -1,6 +1,5 @@
 (ns reagent.interop
-  (:require [clojure.string :as string :refer [join]]
-            [clojure.java.io :as io]))
+  (:require [clojure.string :as string :refer [join]]))
 
 (defn- js-call [f args]
   (let [argstr (->> (repeat (count args) "~{}")
@@ -55,21 +54,3 @@
   (let [[field names] (dot-args object field)]
     (assert field (str "Field name must start with - in " field))
     `(aset ~object ~@names ~value)))
-
-(defmacro .' [& args]
-  ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
-  (let [ns (str cljs.analyzer/*cljs-ns*)
-        line (:line (meta &form))]
-    (binding [*out* *err*]
-      (println "WARNING: reagent.interop/.' is deprecated in " ns " line " line
-               ". Use reagent.interop/$ instead.")))
-  `($ ~@args))
-
-(defmacro .! [& args]
-  ;; Deprecated since names starting with . cause problems with bootstrapped cljs.
-  (let [ns (str cljs.analyzer/*cljs-ns*)
-        line (:line (meta &form))]
-    (binding [*out* *err*]
-      (println "WARNING: reagent.interop/.! is deprecated in " ns " line " line
-               ". Use reagent.interop/$! instead.")))
-  `($! ~@args))
