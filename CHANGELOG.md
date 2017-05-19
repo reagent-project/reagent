@@ -4,6 +4,14 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...master)**
 
+- React updated to 15.5.4 ([#292](https://github.com/reagent-project/reagent/issues/292))
+    - Uses [create-react-class](https://www.npmjs.com/package/create-react-class) instead of
+    deprecated `React.createClass`
+    - Reagent has dependency on `cljsjs/create-react-class`, if you are using other
+    methods to provide React, you need to exclude this dependency and provide it yourself.
+- Self-host compatibility ([#283](https://github.com/reagent-project/reagent/pull/283))
+    - Removed deprecated `reagent.interop/.'` and `reagent.interop/.!` macros
+
 ## 0.6.2 (19.5.2017)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...v0.6.2)**
