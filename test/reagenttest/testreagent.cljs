@@ -459,16 +459,15 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ae [:div (ce "div" nil "foo")]))))))
 
-(def ndiv ($ util/react
-              createClass
-              #js{:displayName "ndiv"
-                  :render
-                  (fn []
-                    (this-as
+(def ndiv (util/create-class
+            #js {:displayName "ndiv"
+                 :render
+                 (fn []
+                   (this-as
                      this
                      (r/create-element
-                      "div" #js{:className ($ this :props.className)}
-                      ($ this :props.children))))}))
+                       "div" #js{:className ($ this :props.className)}
+                       ($ this :props.children))))}))
 
 (deftest test-adapt-class
   (let [d1 (r/adapt-react-class ndiv)
@@ -924,7 +923,7 @@
             comp4 (fn comp4 []
                     (for [i (range 0 1)]
                       [:p "foo"]))
-            nat ($ util/react createClass #js{:render (fn [])})
+            nat (util/create-class #js {:render (fn [])})
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
             stack2 (str "in " pkg "comp2 > " pkg "comp1")
