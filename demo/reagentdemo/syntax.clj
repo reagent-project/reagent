@@ -1,5 +1,6 @@
 (ns reagentdemo.syntax
-  (:require [clojure.string :as string]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]))
 
 
 ;;; Source splitting
