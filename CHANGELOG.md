@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.2 (19.5.2017)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...master)**
 
