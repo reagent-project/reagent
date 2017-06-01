@@ -354,7 +354,7 @@
 
   IReset
   (-reset! [a newval]
-    (assert (fn? (.-on-set a)) "Reaction is read only.")
+    (assert (fn? (.-on-set a)) "Reaction is read only; on-set is not allowed")
     (let [oldval state]
       (set! state newval)
       (.on-set a oldval newval)

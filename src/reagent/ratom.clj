@@ -15,7 +15,9 @@
      co#))
 
 (defmacro with-let [bindings & body]
-  (assert (vector? bindings))
+  (assert (vector? bindings)
+          (str "with-let bindings must be a vector, not "
+               (pr-str bindings)))
   (let [v (gensym "with-let")
         k (keyword v)
         init (gensym "init")

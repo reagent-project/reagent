@@ -96,7 +96,8 @@
   (if (nil? p1)
     p2
     (do
-      (assert (map? p1))
+      (assert (map? p1)
+              (str "Property must be a map, not " (pr-str p1)))
       (merge-style p1 (merge-class p1 (merge p1 p2))))))
 
 

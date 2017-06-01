@@ -9,7 +9,7 @@
 (defn- dot-args [object member]
   (assert (or (symbol? member)
               (keyword? member))
-          (str "Symbol or keyword expected, not " member))
+          (str "Symbol or keyword expected, not " (pr-str member)))
   (assert (or (not (symbol? object))
               (not (re-find #"\." (name object))))
           (str "Dot not allowed in " object))
