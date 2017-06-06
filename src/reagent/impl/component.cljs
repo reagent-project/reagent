@@ -1,5 +1,7 @@
 (ns reagent.impl.component
-  (:require [reagent.impl.util :as util]
+  (:require [create-react-class]
+            [react :as react]
+            [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [$ $!]]
@@ -48,7 +50,7 @@
     (if-some [v ($ p :argv)]
       (extract-children v)
       (->> ($ p :children)
-           ($ util/react Children.toArray)
+           (react/Children.toArray)
            (into [])))))
 
 (defn ^boolean reagent-class? [c]
@@ -264,7 +266,7 @@
   {:pre [(map? body)]}
   (->> body
        cljsify
-       util/create-class))
+       create-react-class))
 
 (defn component-path [c]
   (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
