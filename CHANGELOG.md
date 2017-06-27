@@ -11,6 +11,7 @@
     methods to provide React, you need to exclude this dependency and provide it yourself.
 - Self-host compatibility ([#283](https://github.com/reagent-project/reagent/pull/283))
     - Removed deprecated `reagent.interop/.'` and `reagent.interop/.!` macros
+- Improve assert messages all around
 
 ## 0.6.2 (19.5.2017)
 

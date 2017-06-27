@@ -6,7 +6,10 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.debug :as deb :refer-macros [dbg prn]]
+            [reagent.debug :as deb :refer-macros [dbg prn
+                                                  assert-some assert-component
+                                                  assert-js-object assert-new-state
+                                                  assert-callable]]
             [reagent.interop :refer-macros [$ $!]]
             [reagent.dom :as dom]))
 
@@ -30,13 +33,13 @@
   ([type]
    (create-element type nil))
   ([type props]
-   (assert (not (map? props)))
+   (assert-js-object props)
    ($ react createElement type props))
   ([type props child]
-   (assert (not (map? props)))
+   (assert-js-object props)
    ($ react createElement type props child))
   ([type props child & children]
-   (assert (not (map? props)))
+   (assert-js-object props)
    (apply ($ react :createElement) type props child children)))
 
 (defn as-element
@@ -49,7 +52,7 @@
   "Returns an adapter for a native React class, that may be used
   just like a Reagent component function or class in Hiccup forms."
   [c]
-  (assert c)
+  (assert-some c "Component")
   (tmpl/adapt-react-class c))
 
 (defn reactify-component
@@ -57,7 +60,7 @@
   React, for example in JSX. A single argument, props, is passed to
   the component, converted to a map."
   [c]
-  (assert c)
+  (assert-some c "Component")
   (comp/reactify-component c))
 
 (defn render
@@ -125,30 +128,30 @@
 (defn state-atom
   "Returns an atom containing a components state."
   [this]
-  (assert (comp/reagent-component? this))
+  (assert-component this)
   (comp/state-atom this))
 
 (defn state
   "Returns the state of a component, as set with replace-state or set-state.
   Equivalent to (deref (r/state-atom this))"
   [this]
-  (assert (comp/reagent-component? this))
+  (assert-component this)
   (deref (state-atom this)))
 
 (defn replace-state
   "Set state of a component.
   Equivalent to (reset! (state-atom this) new-state)"
   [this new-state]
-  (assert (comp/reagent-component? this))
-  (assert (or (nil? new-state) (map? new-state)))
+  (assert-component this)
+  (assert-new-state new-state)
   (reset! (state-atom this) new-state))
 
 (defn set-state
   "Merge component state with new-state.
   Equivalent to (swap! (state-atom this) merge new-state)"
   [this new-state]
-  (assert (comp/reagent-component? this))
-  (assert (or (nil? new-state) (map? new-state)))
+  (assert-component this)
+  (assert-new-state new-state)
   (swap! (state-atom this) merge new-state))
 
 (defn force-update
@@ -166,19 +169,19 @@
 (defn props
   "Returns the props passed to a component."
   [this]
-  (assert (comp/reagent-component? this))
+  (assert-component this)
   (comp/get-props this))
 
 (defn children
   "Returns the children passed to a component."
   [this]
-  (assert (comp/reagent-component? this))
+  (assert-component this)
   (comp/get-children this))
 
 (defn argv
   "Returns the entire Hiccup form passed to the component."
   [this]
-  (assert (comp/reagent-component? this))
+  (assert-component this)
   (comp/get-argv this))
 
 (defn dom-node
@@ -257,7 +260,7 @@
 
   Probably useful only for passing to child components."
   [value reset-fn & args]
-  (assert (ifn? reset-fn))
+  (assert-callable reset-fn)
   (ratom/make-wrapper value reset-fn args))
 
 
