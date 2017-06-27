@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 (27.6.2017)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...v0.7.0)**
 
 - Fixed a warning with recent ClojureScript (1.9.660+) versions about
 a variadic method signature in `reagent/impl/util.cljs`.
