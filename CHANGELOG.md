@@ -4,6 +4,9 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...master)**
 
+- **IMPORTANT**: Fixed compatibility with ClojureScript 1.9.665+
+    - `reagent.core/partial` and `wrap` used a bad deftype which worked previously
+    by luck. ([#303](https://github.com/reagent-project/reagent/pull/303))
 - React updated to 15.5.4 ([#292](https://github.com/reagent-project/reagent/issues/292))
     - Uses [create-react-class](https://www.npmjs.com/package/create-react-class) instead of
     deprecated `React.createClass`
