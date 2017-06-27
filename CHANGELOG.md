@@ -4,7 +4,8 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...master)**
 
-- **IMPORTANT**: Fixed compatibility with ClojureScript 1.9.665+
+- Fixed a warning with recent ClojureScript (1.9.660+) versions about
+a variadic method signature in `reagent/impl/util.cljs`.
     - `reagent.core/partial` and `wrap` used a bad deftype which worked previously
     by luck. ([#303](https://github.com/reagent-project/reagent/pull/303))
 - React updated to 15.5.4 ([#292](https://github.com/reagent-project/reagent/issues/292))
