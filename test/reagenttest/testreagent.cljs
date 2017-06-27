@@ -349,7 +349,8 @@
     (is (= p1 (r/partial vector 1 2)))
     (is (ifn? p1))
     (is (= (r/partial vector 1 2) p1))
-    (is (not= p1 (r/partial vector 1 3)))))
+    (is (not= p1 (r/partial vector 1 3)))
+    (is (= (hash p1) (hash (r/partial vector 1 2))))))
 
 (deftest test-null-component
   (let [null-comp (fn [do-show]

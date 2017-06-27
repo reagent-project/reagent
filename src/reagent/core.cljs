@@ -337,10 +337,9 @@
   (batch/do-after-render f))
 
 (defn partial
-  "Works just like clojure.core/partial, except that it is an IFn, and
-  the result can be compared with ="
+  "Works just like clojure.core/partial, but the result can be compared with ="
   [f & args]
-  (util/partial-ifn. f args nil))
+  (util/make-partial-fn f args))
 
 (defn component-path
   ;; Try to return the path of component c as a string.
