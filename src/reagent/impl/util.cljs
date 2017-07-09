@@ -1,5 +1,5 @@
 (ns reagent.impl.util
-  (:require [create-react-class :as create-react-class]
+  (:require "create-react-class"
             [reagent.debug :refer-macros [dbg log warn]]
             [reagent.interop :refer-macros [$ $!]]
             [clojure.string :as string]))

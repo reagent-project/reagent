@@ -1,6 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [create-react-class]
+            "create-react-class"
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [$ $!]]

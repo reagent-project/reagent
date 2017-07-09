@@ -1,5 +1,5 @@
 (ns reagent.dom.server
-  (:require [react-dom.server :as dom-server]
+  (:require ["react-dom/server" :as dom-server]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.ratom :as ratom]
