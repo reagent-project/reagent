@@ -1,10 +1,10 @@
-(defproject reagent "0.7.0-SNAPSHOT"
+(defproject reagent "0.7.0"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.562"]
+                 [org.clojure/clojurescript "1.9.655"]
                  ; [cljsjs/react-dom "15.5.4-0"]
                  ; [cljsjs/react-dom-server "15.5.4-0"]
                  ; [cljsjs/create-react-class "15.5.3-0"]

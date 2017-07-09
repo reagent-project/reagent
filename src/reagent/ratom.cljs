@@ -354,7 +354,7 @@
 
   IReset
   (-reset! [a newval]
-    (assert (fn? (.-on-set a)) "Reaction is read only.")
+    (assert (fn? (.-on-set a)) "Reaction is read only; on-set is not allowed")
     (let [oldval state]
       (set! state newval)
       (.on-set a oldval newval)
@@ -564,7 +564,7 @@
 
 (defn make-wrapper [value callback-fn args]
   (->Wrapper value
-             (util/->partial-ifn callback-fn args nil)
+             (util/make-partial-fn callback-fn args)
              false nil))
 
 
