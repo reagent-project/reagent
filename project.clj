@@ -4,10 +4,10 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.748"]
-                 ; [cljsjs/react-dom "15.5.4-0"]
-                 ; [cljsjs/react-dom-server "15.5.4-0"]
-                 ; [cljsjs/create-react-class "15.5.3-0"]
+                 [org.clojure/clojurescript "1.9.762"]
+                 ; [cljsjs/react-dom "15.6.1-1-SNAPSHOT"]
+                 ; [cljsjs/react-dom-server "15.6.1-1-SNAPSHOT"]
+                 ; [cljsjs/create-react-class "15.6.0-1-SNAPSHOT"]
                  ]
 
   :plugins [[lein-cljsbuild "1.1.6"]
@@ -51,7 +51,7 @@
                                            :pretty-print false
                                            ;; :pseudo-names true
                                            :output-dir "target/client"
-                                           ;; enables React production build
+                                           ;; enables React production build - for npm-deps
                                            :closure-defines {"process.env.NODE_ENV" "production"}}}}}}]
 
              :prerender [:prod
