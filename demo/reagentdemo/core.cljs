@@ -1,6 +1,5 @@
 (ns reagentdemo.core
-  (:require [process.env]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [clojure.string :as string]
             [sitetools.core :as tools :refer [emit link]]
             [reagentdemo.common :as common :refer [demo-component]]
