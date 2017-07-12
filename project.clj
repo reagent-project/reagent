@@ -5,10 +5,10 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.762"]
-                 ; [cljsjs/react-dom "15.6.1-1-SNAPSHOT"]
-                 ; [cljsjs/react-dom-server "15.6.1-1-SNAPSHOT"]
-                 ; [cljsjs/create-react-class "15.6.0-1-SNAPSHOT"]
-                 ]
+                 ;; If :npm-deps enabled, these are used only for externs
+                 [cljsjs/react-dom "15.6.1-1-SNAPSHOT"]
+                 [cljsjs/react-dom-server "15.6.1-1-SNAPSHOT"]
+                 [cljsjs/create-react-class "15.6.0-1-SNAPSHOT"]]
 
   :plugins [[lein-cljsbuild "1.1.6"]
             [lein-codox "0.10.3"]]
@@ -101,10 +101,6 @@
                                    :language-out :ecmascript3
                                    :closure-warnings {:non-standard-jsdoc :off}
                                    :preloads [process.env]
-                                   :externs ["src/react.ext.js"
-                                             "src/react-dom.ext.js"
-                                             "src/react-dom-server.ext.js"
-                                             "src/extra.js"]
                                    :npm-deps {:react "15.6.1"
                                               :react-dom "15.6.1"
                                               :create-react-class "15.5.3"}}}}}
