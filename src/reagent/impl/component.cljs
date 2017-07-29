@@ -1,6 +1,6 @@
 (ns reagent.impl.component
-  (:require "create-react-class"
-            ["react" :as react]
+  (:require [create-react-class :as create-react-class]
+            [react :as react]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]

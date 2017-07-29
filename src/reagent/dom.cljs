@@ -1,5 +1,5 @@
 (ns reagent.dom
-  (:require ["react-dom" :as react-dom]
+  (:require [react-dom :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]

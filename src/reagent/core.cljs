@@ -1,7 +1,7 @@
 (ns reagent.core
   (:require-macros [reagent.core])
   (:refer-clojure :exclude [partial atom flush])
-  (:require ["react" :as react]
+  (:require [react :as react]
             [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]

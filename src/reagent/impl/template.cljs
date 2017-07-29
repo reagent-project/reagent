@@ -1,5 +1,5 @@
 (ns reagent.impl.template
-  (:require ["react" :as react]
+  (:require [react :as react]
             [clojure.string :as string]
             [clojure.walk :refer [prewalk]]
             [reagent.impl.util :as util :refer [is-client]]
