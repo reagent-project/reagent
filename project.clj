@@ -4,7 +4,7 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.762"]
+                 [org.clojure/clojurescript "1.9.854"]
                  ;; If :npm-deps enabled, these are used only for externs
                  [cljsjs/react-dom "15.6.1-1-SNAPSHOT"]
                  [cljsjs/react-dom-server "15.6.1-1-SNAPSHOT"]
@@ -51,8 +51,7 @@
                                            :pretty-print false
                                            ;; :pseudo-names true
                                            :output-dir "target/client"
-                                           ;; enables React production build - for npm-deps
-                                           :closure-defines {"process.env.NODE_ENV" "production"}}}}}}]
+                                           :shim-process true}}}}}]
 
              :prerender [:prod
                          {:cljsbuild
@@ -99,8 +98,6 @@
                                    :output-to "outsite/public/js/main.js"
                                    :language-in :ecmascript6
                                    :language-out :ecmascript3
-                                   :closure-warnings {:non-standard-jsdoc :off}
-                                   :preloads [process.env]
                                    :npm-deps {:react "15.6.1"
                                               :react-dom "15.6.1"
                                               :create-react-class "15.5.3"}}}}}
