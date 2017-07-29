@@ -6,9 +6,9 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.854"]
                  ;; If :npm-deps enabled, these are used only for externs
-                 [cljsjs/react-dom "15.6.1-1-SNAPSHOT"]
-                 [cljsjs/react-dom-server "15.6.1-1-SNAPSHOT"]
-                 [cljsjs/create-react-class "15.6.0-1-SNAPSHOT"]]
+                 [cljsjs/react-dom "15.6.1-1"]
+                 [cljsjs/react-dom-server "15.6.1-1"]
+                 [cljsjs/create-react-class "15.6.0-1"]]
 
   :plugins [[lein-cljsbuild "1.1.6"]
             [lein-codox "0.10.3"]]
