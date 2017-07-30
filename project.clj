@@ -50,8 +50,7 @@
                                            :elide-asserts true
                                            :pretty-print false
                                            ;; :pseudo-names true
-                                           :output-dir "target/client"
-                                           :shim-process true}}}}}]
+                                           :output-dir "target/client"}}}}}]
 
              :prerender [:prod
                          {:cljsbuild
@@ -98,9 +97,11 @@
                                    :output-to "outsite/public/js/main.js"
                                    :language-in :ecmascript6
                                    :language-out :ecmascript3
+                                   ;; Add process.env.NODE_ENV preload
+                                   :shim-process true
                                    :npm-deps {:react "15.6.1"
                                               :react-dom "15.6.1"
-                                              :create-react-class "15.5.3"}}}}}
+                                              :create-react-class "15.6.0"}}}}}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
