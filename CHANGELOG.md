@@ -1,5 +1,64 @@
 # Changelog
 
+## 0.8.0-alpha1 (31.7.2017)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.7.0...v0.8.0-alpha1)**
+
+**BREAKING**: Requires ClojureScript version 1.9.854
+
+This version changes how Reagent depends on React. New ClojureScript
+improves support for [npm packages](https://clojurescript.org/news/2017-07-12-clojurescript-is-not-an-island-integrating-node-modules)
+and also improves the way code can refer to objects from foreign-libs,
+making the transition from foreign libs, like Cljsjs packages, to npm easy: [global exports](https://clojurescript.org/news/2017-07-30-global-exports)
+
+Previously Reagent required foreign-lib namespace `cljsjs.react` and a few others.
+This worked well when using Cljsjs React package, but in other environments,
+like Node, React-native and when using npm packages, users had to
+exclude Cljsjs packages and create empty files providing these `cljsjs.*` namespaces.
+
+With global-exports, foreign-libs can be used like they were real namespaces:
+
+```cljs
+(ns ... (:require [react-dom :as react-dom]))
+
+(react-dom/render ...)
+```
+
+The same code will in all the environments, and is compiled different based on
+compile target and on how the dependency is provided. When targeting
+browser and using foreign libs, ClojureScript compiler uses the `:global-exports`
+definition to resolve the function from global JS var:
+
+```js
+var a = window.ReactDOM;
+a.render(...)
+```
+
+When targeting browser but using node_modules with Closure module processing,
+the CommonJS (or ES6) module is converted to a Closure module, named
+by `module$` and the path of the file, and the generated code is same as
+if this was a Cljs or Closure module:
+
+```js
+module$foo$bar$react$react-dom.render(...)
+```
+
+Then targeting NodeJS the object is retrieved using `require` call:
+
+```js
+var a = require("react-dom");
+a.render(...)
+```
+
+This change requires use of ClojureScript 1.9.854, using the latest Cljsjs
+React packages (15.6.1-1), and it is not yet sure how well other React
+libraries work with these changes, or how this will work with React-native.
+Currently it looks like all the Cljsjs React libraries need to be updated
+to use require `react` instead of `cljsjs.react`, as the foreign-lib
+namespace was renamed to match the npm package.
+
+Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+
 ## 0.7.0 (27.6.2017)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...v0.7.0)**
