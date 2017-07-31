@@ -1,13 +1,14 @@
-(defproject reagent "0.7.0"
+(defproject reagent "0.8.0-SNAPSHOT"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.655"]
-                 [cljsjs/react-dom "15.5.4-0"]
-                 [cljsjs/react-dom-server "15.5.4-0"]
-                 [cljsjs/create-react-class "15.5.3-0"]]
+                 [org.clojure/clojurescript "1.9.854"]
+                 ;; If :npm-deps enabled, these are used only for externs
+                 [cljsjs/react-dom "15.6.1-1"]
+                 [cljsjs/react-dom-server "15.6.1-1"]
+                 [cljsjs/create-react-class "15.6.0-1"]]
 
   :plugins [[lein-cljsbuild "1.1.6"]
             [lein-codox "0.10.3"]]
@@ -24,8 +25,8 @@
                                        :compiler
                                        {:main "reagenttest.runtests"}}}}}
 
-             :fig [{:dependencies [[figwheel "0.5.10"]]
-                    :plugins [[lein-figwheel "0.5.10"]]
+             :fig [{:dependencies [[figwheel "0.5.11"]]
+                    :plugins [[lein-figwheel "0.5.11"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
@@ -93,7 +94,14 @@
                                        "examples/geometry/src"]
                         :compiler {:parallel-build true
                                    :main "reagentdemo.core"
-                                   :output-to "outsite/public/js/main.js"}}}}
+                                   :output-to "outsite/public/js/main.js"
+                                   :language-in :ecmascript6
+                                   :language-out :ecmascript3
+                                   ;; Add process.env.NODE_ENV preload
+                                   :shim-process true
+                                   :npm-deps {:react "15.6.1"
+                                              :react-dom "15.6.1"
+                                              :create-react-class "15.6.0"}}}}}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})

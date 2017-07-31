@@ -1,7 +1,8 @@
 (ns reagent.core
   (:require-macros [reagent.core])
   (:refer-clojure :exclude [partial atom flush])
-  (:require [reagent.impl.template :as tmpl]
+  (:require [react :as react]
+            [reagent.impl.template :as tmpl]
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -14,8 +15,6 @@
             [reagent.dom :as dom]))
 
 (def is-client util/is-client)
-
-(def react util/react)
 
 (defn create-element
   "Create a native React element, by calling React.createElement directly.
@@ -34,13 +33,13 @@
    (create-element type nil))
   ([type props]
    (assert-js-object props)
-   ($ react createElement type props))
+   (react/createElement type props))
   ([type props child]
    (assert-js-object props)
-   ($ react createElement type props child))
+   (react/createElement type props child))
   ([type props child & children]
    (assert-js-object props)
-   (apply ($ react :createElement) type props child children)))
+   (apply react/createElement type props child children)))
 
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form
