@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0-alpha1 (31.7.2017)
+## 0.8.0-alpha1 (2017-07-31)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.7.0...v0.8.0-alpha1)**
 
@@ -59,7 +59,7 @@ namespace was renamed to match the npm package.
 
 Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
 
-## 0.7.0 (27.6.2017)
+## 0.7.0 (2017-06-27)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...v0.7.0)**
 
@@ -75,14 +75,14 @@ a variadic method signature in `reagent/impl/util.cljs`.
     - Removed deprecated `reagent.interop/.'` and `reagent.interop/.!` macros
 - Improved assert messages all around ([#301](https://github.com/reagent-project/reagent/pull/301)).
 
-## 0.6.2 (19.5.2017)
+## 0.6.2 (2017-05-19)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...v0.6.2)**
 
 - React updated to 15.4.2
     - Fixes a problem with `number` inputs, ([#289](https://github.com/reagent-project/reagent/issues/289), [facebook/react#8717](https://github.com/facebook/react/issues/8717))
 
-## 0.6.1 (10.3.2017)
+## 0.6.1 (2017-03-10)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.6.0...v0.6.1)**
 
