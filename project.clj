@@ -5,7 +5,10 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.854"]
-                 ;; If :npm-deps enabled, these are used only for externs
+                 ;; If :npm-deps enabled, these are used only for externs.
+                 ;; Without direct react dependency, other packages,
+                 ;; like react-leaflet might have closer dependency to a other version.
+                 [cljsjs/react "15.6.1-1"]
                  [cljsjs/react-dom "15.6.1-1"]
                  [cljsjs/react-dom-server "15.6.1-1"]
                  [cljsjs/create-react-class "15.6.0-2"]]
