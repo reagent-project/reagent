@@ -57,6 +57,10 @@ Currently it looks like all the Cljsjs React libraries need to be updated
 to use require `react` instead of `cljsjs.react`, as the foreign-lib
 namespace was renamed to match the npm package.
 
+React-with-addons bundle [has been deprecated](https://facebook.github.io/react/docs/addons.html) and Cljsjs no longer provides new versions
+of that package. The latest React-with-addons version won't work with Reagent 0.8.
+For animation utils use [react-transition-group](https://github.com/cljsjs/packages/tree/master/react-transition-group) package instead (TODO: Update to use `:global-exports`). [React-dom/test-utils](https://facebook.github.io/react/docs/test-utils.html) and [react-addons-perf](https://facebook.github.io/react/docs/perf.html) are not currently packaged as browserified files, so their use would require Webpack, or they might work with Closure module processing (TODO: Provide example).
+
 Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
 
 ## 0.7.0 (2017-06-27)
