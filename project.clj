@@ -8,10 +8,10 @@
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "15.6.1-1"]
-                 [cljsjs/react-dom "15.6.1-1"]
-                 [cljsjs/react-dom-server "15.6.1-1"]
-                 [cljsjs/create-react-class "15.6.0-2"]]
+                 [cljsjs/react "15.6.1-2"]
+                 [cljsjs/react-dom "15.6.1-2"]
+                 [cljsjs/react-dom-server "15.6.1-2"]
+                 [cljsjs/create-react-class "15.6.0-3"]]
 
   :plugins [[lein-cljsbuild "1.1.6"]
             [lein-codox "0.10.3"]]
@@ -28,8 +28,8 @@
                                        :compiler
                                        {:main "reagenttest.runtests"}}}}}
 
-             :fig [{:dependencies [[figwheel "0.5.11"]]
-                    :plugins [[lein-figwheel "0.5.11"]]
+             :fig [{:dependencies [[figwheel "0.5.13"]]
+                    :plugins [[lein-figwheel "0.5.13"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
@@ -101,7 +101,7 @@
                                    :language-in :ecmascript6
                                    :language-out :ecmascript3
                                    ;; Add process.env.NODE_ENV preload
-                                   :shim-process true
+                                   :process-shim true
                                    :npm-deps {:react "15.6.1"
                                               :react-dom "15.6.1"
                                               :create-react-class "15.6.0"}}}}}
