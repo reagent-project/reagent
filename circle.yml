@@ -1,3 +1,6 @@
+machine:
+  node:
+    version: v8.2.0
 test:
   override:
     - lein with-profile dev do clean, cljsbuild once
