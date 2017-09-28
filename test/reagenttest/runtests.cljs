@@ -8,6 +8,7 @@
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
+            [doo.runner :refer-macros [doo-tests]]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log]]
             [reagentdemo.core :as demo]
@@ -55,4 +56,11 @@
     (reset! demo/test-results [#'test-output-mini])
     (run-tests)))
 
-(init!)
+(doo-tests 'reagenttest.testreagent
+           'reagenttest.testcursor
+           'reagenttest.testinterop
+           'reagenttest.testratom
+           'reagenttest.testratomasync
+           'reagenttest.testtrack
+           'reagenttest.testwithlet
+           'reagenttest.testwrap)

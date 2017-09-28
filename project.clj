@@ -14,6 +14,7 @@
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-doo "0.1.7"]
             [lein-codox "0.10.3"]]
 
   :source-paths ["src"]
@@ -22,11 +23,12 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:test {:cljsbuild
+  :profiles {:node-test [:test {:cljsbuild
+                                {:builds {:client {:compiler {:target :nodejs}}}}}]
+
+             :test {:cljsbuild
                     {:builds {:client {:source-paths ["test"]
-                                       :notify-command ["node" "bin/gen-site.js"]
-                                       :compiler
-                                       {:main "reagenttest.runtests"}}}}}
+                                       :compiler {:main "reagenttest.runtests"}}}}}
 
              :fig [{:dependencies [[figwheel "0.5.13"]]
                     :plugins [[lein-figwheel "0.5.13"]]
@@ -58,10 +60,11 @@
              :prerender [:prod
                          {:cljsbuild
                           {:builds {:client
-                                    {:compiler {:main "reagentdemo.server"
+                                    {:compiler {:main "sitetools.prerender"
+                                                :target :nodejs
+                                                ;; Undefine module and exports so React UMD modules work on Node
                                                 :output-to "pre-render/main.js"
-                                                :output-dir "pre-render/out"}
-                                     :notify-command ["node" "bin/gen-site.js"] }}}}]
+                                                :output-dir "pre-render/out"}}}}}]
 
              :webpack {:cljsbuild
                        {:builds {:client
@@ -101,10 +104,7 @@
                                    :language-in :ecmascript6
                                    :language-out :ecmascript3
                                    ;; Add process.env.NODE_ENV preload
-                                   :process-shim true
-                                   :npm-deps {:react "15.6.1"
-                                              :react-dom "15.6.1"
-                                              :create-react-class "15.6.2"}}}}}
+                                   :process-shim true}}}}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})

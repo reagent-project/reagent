@@ -88,9 +88,9 @@ push-project-docs: gen-site gen-docs
 # build site into a gh-pages branch
 build-gh-pages: gen-site gh-pages-add
 
-gen-site: clean
-	lein with-profile prod cljsbuild once
+gen-site: clean node_modules
 	lein with-profile prerender cljsbuild once
+	node pre-render/main.js
 
 gen-docs: clean
 	lein codox
