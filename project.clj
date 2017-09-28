@@ -4,16 +4,16 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.854"]
+                 [org.clojure/clojurescript "1.9.908"]
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "15.6.1-2"]
-                 [cljsjs/react-dom "15.6.1-2"]
-                 [cljsjs/react-dom-server "15.6.1-2"]
-                 [cljsjs/create-react-class "15.6.0-3"]]
+                 [cljsjs/react "15.6.2-0"]
+                 [cljsjs/react-dom "15.6.2-0"]
+                 [cljsjs/react-dom-server "15.6.2-0"]
+                 [cljsjs/create-react-class "15.6.2-0"]]
 
-  :plugins [[lein-cljsbuild "1.1.6"]
+  :plugins [[lein-cljsbuild "1.1.7"]
             [lein-codox "0.10.3"]]
 
   :source-paths ["src"]
@@ -104,7 +104,7 @@
                                    :process-shim true
                                    :npm-deps {:react "15.6.1"
                                               :react-dom "15.6.1"
-                                              :create-react-class "15.6.0"}}}}}
+                                              :create-react-class "15.6.2"}}}}}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :repl false})
