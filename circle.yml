@@ -3,6 +3,15 @@ machine:
     version: v8.2.0
 test:
   override:
+    # Run tests against Cljsjs
+    - mv node_modules node_modules_disabled
     - lein with-profile dev do clean, cljsbuild once
     - node bin/gen-site.js
+    - test -f outsite/public/js/out/cljsjs/react/development/react.inc.js
     - lein with-profile prod-test do clean, cljsbuild once
+    # Run tests against Node Modules
+    - mv node_modules_disabled
+    - lein clean
+    - lein with-profile dev do clean, cljsbuild once
+    - node bin/gen-site.js
+    - test -f outsite/public/js/out/node_modules/react/react.js
