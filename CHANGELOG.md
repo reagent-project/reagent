@@ -59,9 +59,18 @@ namespace was renamed to match the npm package.
 
 React-with-addons bundle [has been deprecated](https://facebook.github.io/react/docs/addons.html) and Cljsjs no longer provides new versions
 of that package. The latest React-with-addons version won't work with Reagent 0.8.
-For animation utils use [react-transition-group](https://github.com/cljsjs/packages/tree/master/react-transition-group) package instead (TODO: Update to use `:global-exports`). [React-dom/test-utils](https://facebook.github.io/react/docs/test-utils.html) and [react-addons-perf](https://facebook.github.io/react/docs/perf.html) are not currently packaged as browserified files, so their use would require Webpack, or they might work with Closure module processing (TODO: Provide example).
+For animation utils use [react-transition-group](https://github.com/cljsjs/packages/tree/master/react-transition-group) package instead. [React-dom/test-utils](https://facebook.github.io/react/docs/test-utils.html) and [react-addons-perf](https://facebook.github.io/react/docs/perf.html) are not currently packaged as browserified files, so their use would require Webpack, or they might work with Closure module processing (TODO: Provide example).
 
-Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+#### Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+
+#### Which libraries work together with Reagent 0.8:
+
+| JS library type | Foreign library (Cljsjs) | Node module |
+|---|---|---|
+| Library updated to require `react`, `react-dom` names | Yes | Yes |
+| Library requiring `cljsjs.react` and `cljsjs.react.dom` names | Yes | No |
+
+Examples of libraries not yet updated: Devcards, Sablono. These will for now only work when using Cljsjs React.
 
 ## 0.7.0 (2017-06-27)
 
