@@ -5,6 +5,7 @@ dependencies:
   override:
     - lein deps
     # Install only test dependencies for start
+    - npm install -g karma-cli
     - npm install --only=dev
 test:
   override:
