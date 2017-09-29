@@ -11,7 +11,6 @@
             [doo.runner :refer-macros [doo-tests]]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log]]
-            [reagentdemo.core :as demo]
             [sitetools.server]))
 
 (enable-console-print!)
@@ -50,10 +49,12 @@
           (:fail res) " failures, " (:error res) " errors."])
        "testing")]))
 
+(def test-results (r/atom nil))
+
 (defn init! []
   (when (some? (test/deftest empty-test))
     ;; Only run with :load-tests true
-    (reset! demo/test-results [#'test-output-mini])
+    (reset! test-results [#'test-output-mini])
     (run-tests)))
 
 (doo-tests 'reagenttest.testreagent
