@@ -288,10 +288,10 @@
   ;; (is (not (re-find #"enctype"
   ;;                   (as-string [:div {"enc-type" "x"}])))
   ;;     "Strings are passed through to React.")
-  (is (re-find #"enctype"
+  (is (re-find #"encType"
                (as-string [:div {"encType" "x"}]))
       "Strings are passed through to React, and have to be camelcase.")
-  (is (re-find #"enctype"
+  (is (re-find #"encType"
                (as-string [:div {:enc-type "x"}]))
       "Strings are passed through to React, and have to be camelcase."))
 
