@@ -21,8 +21,8 @@ test:
     # Node Modules - Browser
     - npm install
     - lein with-profile test do clean, doo chrome-headless client once
-    - test -f out/node_modules/react/react.js
+    - test -f out/node_modules/react/index.js
 
     # Node Modules - Node Target
     - lein with-profile node-test do clean, doo node client once
-    - test -f out/node_modules/react/react.js
+    - test -f out/node_modules/react/index.js
