@@ -4,7 +4,7 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.908"]
+                 [org.clojure/clojurescript "1.9.946"]
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
@@ -14,7 +14,7 @@
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.7"]
+            [lein-doo "0.1.8"]
             [lein-codox "0.10.3"]]
 
   :source-paths ["src"]
@@ -30,8 +30,8 @@
                     {:builds {:client {:source-paths ["test"]
                                        :compiler {:main "reagenttest.runtests"}}}}}
 
-             :fig [{:dependencies [[figwheel "0.5.13"]]
-                    :plugins [[lein-figwheel "0.5.13"]]
+             :fig [{:dependencies [[figwheel "0.5.14"]]
+                    :plugins [[lein-figwheel "0.5.14"]]
                     :source-paths ["demo"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
