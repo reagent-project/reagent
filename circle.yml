@@ -1,6 +1,8 @@
 machine:
   node:
     version: v8.2.0
+  environment:
+    JVM_OPTS: "-Xms512m -Xmx1024m"
 dependencies:
   override:
     - lein deps
