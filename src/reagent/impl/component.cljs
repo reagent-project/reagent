@@ -268,8 +268,7 @@
        create-react-class))
 
 (defn component-path [c]
-  (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
-                          c)
+  (let [elem (some-> c
                      ($ :_currentElement))
         name (some-> elem
                      ($ :type)
