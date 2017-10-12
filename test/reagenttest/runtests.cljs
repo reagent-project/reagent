@@ -49,8 +49,6 @@
           (:fail res) " failures, " (:error res) " errors."])
        "testing")]))
 
-(def test-results (r/atom nil))
-
 (defn init! []
   (when (some? (test/deftest empty-test))
     ;; Only run with :load-tests true
