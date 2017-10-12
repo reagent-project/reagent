@@ -8,6 +8,8 @@
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]))
 
+(def node? (exists? js/require))
+
 (def tests-done (atom {}))
 
 (defn fixture [f]
@@ -1022,6 +1024,8 @@
     (is (= @node nil))))
 
 (deftest style-property-names-are-camel-cased
-  (is (= "<div style=\"text-align:center;\">foo</div>"
+  (is (= (if node?
+           "<div style=\"text-align:center\">foo</div>"
+           "<div style=\"text-align:center;\">foo</div>")
          (server/render-to-static-markup
            [:div {:style {:text-align "center"}} "foo"]))))
