@@ -343,9 +343,7 @@
 
 (defn native-element [parsed argv first]
   (let [comp ($ parsed :name)
-        synthetic-input ($ parsed :syntheticInput)
-        synthetic-on-update ($ parsed :syntheticOnUpdate)
-        synthetic-on-change ($ parsed :syntheticOnChange)]
+        synthetic-input ($ parsed :syntheticInput)]
     (let [props (nth argv first nil)
           hasprops (or (nil? props) (map? props))
           jsprops (convert-props (if hasprops props) parsed)
@@ -353,7 +351,13 @@
       (if (or synthetic-input (input-component? comp))
         (-> (if synthetic-input
               ;; If we are dealing with a synthetic input, use the synthetic-input-spec form:
-              [(reagent-synthetic-input) synthetic-on-update synthetic-on-change argv comp jsprops first-child]
+              [(reagent-synthetic-input)
+               ($ parsed :syntheticOnUpdate)
+               ($ parsed :syntheticOnChange)
+               argv
+               comp
+               jsprops
+               first-child]
               ;; Else use the regular input-spec form:
               [(reagent-input) argv comp jsprops first-child])
             (with-meta (meta argv))
