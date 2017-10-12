@@ -282,8 +282,8 @@
 (deftest data-aria-test []
   (is (re-find #"data-foo"
                (as-string [:div {:data-foo "x"}])))
-  (is (re-find #"aria-foo"
-               (as-string [:div {:aria-foo "x"}])))
+  (is (re-find #"aria-labelledby"
+               (as-string [:div {:aria-labelledby "x"}])))
   ;; Skip test: produces warning in new React
   ;; (is (not (re-find #"enctype"
   ;;                   (as-string [:div {"enc-type" "x"}])))
