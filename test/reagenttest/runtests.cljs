@@ -49,10 +49,12 @@
           (:fail res) " failures, " (:error res) " errors."])
        "testing")]))
 
+(def test-results-component (r/atom nil))
+
 (defn init! []
   (when (some? (test/deftest empty-test))
     ;; Only run with :load-tests true
-    (reset! test-results [#'test-output-mini])
+    (reset! test-results-component [#'test-output-mini])
     (run-tests)))
 
 (doo-tests 'reagenttest.testreagent

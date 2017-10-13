@@ -6,7 +6,8 @@
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]
             [reagenttest.runtests :as tests]
-            [reagent.debug :refer-macros [dbg println]]))
+            [reagent.debug :refer-macros [dbg println]]
+            [doo.runner :as doo]))
 
 (def github {:href "https://github.com/reagent-project/reagent"})
 
@@ -31,11 +32,12 @@
     [:li [link {:href news/url} "News"]]
     [:li>a github "GitHub"]
     [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
-   [:div @tests/test-results]
+   [:div @tests/test-results-component]
    [tools/main-content]
    [github-badge]])
 
 (defn init! []
+  (doo/set-exit-point! (fn [success?] nil))
   (tests/init!)
   (tools/start! {:body [#'demo]
                  :title-prefix "Reagent: "
