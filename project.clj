@@ -34,9 +34,10 @@
                                        [cljsjs/react-dom "16.0.0-0"]
                                        [cljsjs/react-dom-server "16.0.0-0"]]}
 
-             :fig [{:dependencies [[figwheel "0.5.14"]]
+             :fig [{:dependencies [[figwheel "0.5.14"]
+                                   [doo "0.1.8"]]
                     :plugins [[lein-figwheel "0.5.14"]]
-                    :source-paths ["demo"] ;; for lighttable
+                    :source-paths ["demo" "test"] ;; for lighttable
                     :resource-paths ["site" "outsite"]
                     :figwheel {:css-dirs ["site/public/css"]}
                     :cljsbuild
