@@ -34,11 +34,13 @@
 (defn with-mounted-component [comp f]
   (when isClient
     (let [div (add-test-div "_testreagent")]
-      (let [c (r/render comp div)]
-        (f c div)
-        (r/unmount-component-at-node div)
-        (r/flush)
-        (.removeChild (.-body js/document) div)))))
+      (try
+        (let [c (r/render comp div)]
+          (f c div))
+        (finally
+          (r/unmount-component-at-node div)
+          (r/flush)
+          (.removeChild (.-body js/document) div))))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
