@@ -15,13 +15,17 @@ test:
     - lein with-profile test do clean, doo chrome-headless client once
     - test -f out/cljsjs/react/development/react.inc.js
 
+    # Cljsjs - browser - React 16
+    - lein with-profile react-16,test do clean, doo chrome-headless client once
+    - test -f out/cljsjs/react/development/react.inc.js
+
     # Cljsjs - Production build - Browser
     - lein with-profile prod-test do clean, doo chrome-headless client once
 
     # Node Modules - Browser
     - npm install
     - lein with-profile test do clean, doo chrome-headless client once
-    - test -f out/node_modules/react/index.js
+    - test -f out/node_modules/react/react.js
 
     # Node Modules - Node Target
     - lein with-profile node-test do clean, doo node client once
