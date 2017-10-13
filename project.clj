@@ -24,31 +24,15 @@
           :source-paths ["src"]}
 
   :profiles {:node-test [:test {:cljsbuild
-                                {:builds {:client {:compiler {:target :nodejs}}}}}]
+                                {:builds {:client {:compiler {:target :nodejs
+                                                              :process-shim false}}}}}]
 
              :test {:cljsbuild
-                    {:builds {:client {:source-paths ["test"]
-                                       :compiler {:main "reagenttest.runtests"}}}}}
+                    {:builds {:client {:compiler {:main "reagenttest.runtests"}}}}}
 
              :react-16 {:dependencies [[cljsjs/react "16.0.0-0"]
                                        [cljsjs/react-dom "16.0.0-0"]
                                        [cljsjs/react-dom-server "16.0.0-0"]]}
-
-             :fig [{:dependencies [[figwheel "0.5.14"]
-                                   [doo "0.1.8"]]
-                    :plugins [[lein-figwheel "0.5.14"]]
-                    :source-paths ["demo" "test"] ;; for lighttable
-                    :resource-paths ["site" "outsite"]
-                    :figwheel {:css-dirs ["site/public/css"]}
-                    :cljsbuild
-                    {:builds
-                     {:client
-                      {:figwheel true
-                       :compiler {:source-map true
-                                  :optimizations :none
-                                  ;; :recompile-dependents false
-                                  :output-dir "outsite/public/js/out"
-                                  :asset-path "js/out"}}}}}]
 
              :site {:resource-paths ^:replace ["outsite"]
                     :figwheel {:css-dirs ^:replace ["outsite/public/css"]}}
@@ -71,20 +55,23 @@
                                                 :output-to "pre-render/main.js"
                                                 :output-dir "pre-render/out"}}}}}]
 
-             :webpack {:cljsbuild
-                       {:builds {:client
-                                 {:compiler
-                                  {:foreign-libs
-                                   [{:file "target/webpack/bundle.js"
-                                     :file-min "target/webpack/bundle.min.js"
-                                     :provides ["cljsjs.react.dom"
-                                                "cljsjs.react.dom.server"
-                                                "cljsjs.react"]
-                                     :requires []}]}}}}}
-
              :prod-test [:prod :test]
 
-             :dev [:fig]}
+             :dev {:dependencies [[figwheel "0.5.14"]
+                                  [doo "0.1.8"]]
+                   :plugins [[lein-figwheel "0.5.14"]]
+                   :source-paths ["demo"] ;; for lighttable
+                   :resource-paths ["site" "outsite"]
+                   :figwheel {:css-dirs ["site/public/css"]}
+                   :cljsbuild
+                   {:builds
+                    {:client
+                     {:figwheel true
+                      :compiler {:source-map true
+                                 :optimizations :none
+                                 ;; :recompile-dependents false
+                                 :output-dir "outsite/public/js/out"
+                                 :asset-path "js/out"}}}}}}
 
   :clean-targets ^{:protect false} [:target-path :compile-path
                                     "outsite/public/js"
@@ -98,6 +85,7 @@
   :cljsbuild {:builds {:client
                        {:source-paths ["src"
                                        "demo"
+                                       "test"
                                        "examples/todomvc/src"
                                        "examples/simple/src"
                                        "examples/geometry/src"]

@@ -1,18 +1,7 @@
 {
-    "dependencies": {
-        "@cljs-oss/module-deps": "1.1.1",
-        "create-react-class": "^15.6.2",
-        "react": "^15.6.2",
-        "react-dom": "^15.6.2"
-    },
-    "scripts": {
-        "bundle": "webpack && NODE_ENV=production webpack -p"
-    },
     "devDependencies": {
-        "babel-core": "^5.8.25",
         "karma": "^1.7.1",
         "karma-chrome-launcher": "^2.2.0",
-        "karma-cljs-test": "^0.1.0",
-        "webpack": "^1.12.2"
+        "karma-cljs-test": "^0.1.0"
     }
 }

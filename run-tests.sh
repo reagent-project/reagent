@@ -13,7 +13,6 @@ EXIT=0
 SUMMARY="$blue##\n## SUMMARY\n##$reset\n\n"
 
 for env in test-environments/*; do
-    FAIL=0
     name=$(basename "$env")
     (
     cd "$env"
@@ -23,8 +22,7 @@ for env in test-environments/*; do
     echo
     ./test.sh
     )
-    [[ $? != "0" ]] && FAIL=1
-    if [[ $FAIL != "0" ]]; then
+    if [[ $? != "0" ]]; then
         echo
         echo -e "${red}FAIL $name$reset"
         SUMMARY="$SUMMARY${red}FAIL $name$reset\n"

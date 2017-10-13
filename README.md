@@ -14,7 +14,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
 ### Prerequisites
 
-* [JDK](http://www.azul.com/downloads/zulu/)
+* Java JDK
 * [Leiningen](http://leiningen.org/)
 
 ### Usage
@@ -36,7 +36,7 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
 This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
-    [reagent "0.6.0" :exclusions [cljsjs/react]]
+    [reagent "0.7.0" :exclusions [cljsjs/react]]
     [cljsjs/react-with-addons "15.4.2-2"]
 
 If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
