@@ -901,6 +901,29 @@
 (defn foo []
   [:div])
 
+(defn log-error [& f]
+  (debug/error (apply str f)))
+
+(defn wrap-capture-window-error [f]
+  (fn []
+    (let [org js/console.onerror]
+      (set! js/window.onerror (fn [e]
+                                (log-error e)
+                                true))
+      (try
+        (f)
+        (finally
+          (set! js/window.onerror org))))))
+
+(defn wrap-capture-console-error [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (try
+        (f)
+        (finally
+          (set! js/console.error org))))))
+
 (deftest test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -934,24 +957,27 @@
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
             stack2 (str "in " pkg "comp2 > " pkg "comp1")
-            lstr (fn [& s] (list (apply str s)))
             re (fn [& s]
                  (re-pattern (apply str s)))
             rend (fn [x]
                    (with-mounted-component x identity))]
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
-                       (rend [comp2 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack2 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
+                             (rend [comp2 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack2 ")"))))
 
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
-                       (rend [comp1 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack1 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                             (rend [comp1 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack1 ")"))))
 
         (let [e (debug/track-warnings #(r/as-element [nat]))]
           (is (re-find #"Using native React classes directly"
@@ -981,11 +1007,14 @@
           comp1 (fn comp1 []
                   ($ nil :foo)
                   [:div "foo"])]
-      (with-mounted-component [error-boundary [comp1]]
-        (fn [c div]
-          (r/flush)
-          (is (= "Cannot read property 'foo' of null" (.-message @error)))
-          (is (found-in #"Something went wrong\." div)))))))
+      (debug/track-warnings
+        (wrap-capture-window-error
+          (wrap-capture-console-error
+            #(with-mounted-component [error-boundary [comp1]]
+               (fn [c div]
+                 (r/flush)
+                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
+                 (is (found-in #"Something went wrong\." div))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
