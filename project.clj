@@ -84,9 +84,7 @@
 
              :prod-test [:prod :test]
 
-             :dev [:fig :test]
-
-             :dev-notest [:fig]}
+             :dev [:fig]}
 
   :clean-targets ^{:protect false} [:target-path :compile-path
                                     "outsite/public/js"
