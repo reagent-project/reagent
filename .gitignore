@@ -19,3 +19,5 @@ outsite/bundle.js
 outsite/bundle.min.js
 node_modules
 pre-render
+
+test-environments/*/outsite
