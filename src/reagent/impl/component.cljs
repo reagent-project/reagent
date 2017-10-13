@@ -271,21 +271,34 @@
        cljsify
        create-react-class))
 
-(defn component-path [c]
-  ;; Looks like in React 16, reactInternalFiber is the elem
-  (let [elem (or (some-> c ($ :_reactInternalFiber))
-                 (some-> (or (some-> c ($ :_reactInternalInstance))
-                             c)
-                         ($ :_currentElement)))
-        name (some-> elem
+(defn fiber-component-path [fiber]
+  (let [name (some-> fiber
                      ($ :type)
                      ($ :displayName))
-        path (some-> elem
-                     ($ :_owner)
-                     component-path
+        parent (some-> fiber
+                       ($ :return))
+        path (some-> parent
+                     fiber-component-path
                      (str " > "))
         res (str path name)]
     (when-not (empty? res) res)))
+
+(defn component-path [c]
+  ;; Alternative branch for React 16
+  (if-let [fiber (some-> c ($ :_reactInternalFiber))]
+    (fiber-component-path fiber)
+    (let [elem (or (some-> (or (some-> c ($ :_reactInternalInstance))
+                               c)
+                           ($ :_currentElement)))
+          name (some-> elem
+                       ($ :type)
+                       ($ :displayName))
+          path (some-> elem
+                       ($ :_owner)
+                       component-path
+                       (str " > "))
+          res (str path name)]
+      (when-not (empty? res) res))))
 
 (defn comp-name []
   (if (dev?)
