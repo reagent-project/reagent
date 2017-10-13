@@ -1,5 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
+            [react :as react]
             [create-react-class :as create-react-class]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
@@ -963,6 +964,26 @@
                  #(r/as-element (comp4)))]
           (is (re-find #"Every element in a seq should have a unique :key"
                        (-> e :warn first))))))))
+
+(deftest test-error-boundary
+  (when (>= (js/parseInt react/version) 16)
+    (let [error (r/atom nil)
+          error-boundary (fn error-boundary [comp]
+                           (r/create-class
+                             {:component-did-catch (fn [this e info]
+                                                     (reset! error e))
+                              :reagent-render (fn [comp]
+                                                (if @error
+                                                  [:div "Something went wrong."]
+                                                  comp))}))
+          comp1 (fn comp1 []
+                  ($ nil :foo)
+                  [:div "foo"])]
+      (with-mounted-component [error-boundary [comp1]]
+        (fn [c div]
+          (r/flush)
+          (is (= "Cannot read property 'foo' of null" (.-message @error)))
+          (is (found-in #"Something went wrong\." div)))))))
 
 (deftest test-dom-node
   (let [node (atom nil)

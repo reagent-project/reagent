@@ -199,6 +199,10 @@
                (when-not (nil? f)
                  (.call f c c))))
 
+    :componentDidCatch
+    (fn componentDidCatch [error info]
+      (this-as c (.call f c c error info)))
+
     nil))
 
 (defn get-wrapper [key f name]
@@ -268,9 +272,11 @@
        create-react-class))
 
 (defn component-path [c]
-  (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
-                          c)
-                     ($ :_currentElement))
+  ;; Looks like in React 16, reactInternalFiber is the elem
+  (let [elem (or (some-> c ($ :_reactInternalFiber))
+                 (some-> (or (some-> c ($ :_reactInternalInstance))
+                             c)
+                         ($ :_currentElement)))
         name (some-> elem
                      ($ :type)
                      ($ :displayName))
