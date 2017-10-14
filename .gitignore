@@ -21,3 +21,4 @@ node_modules
 pre-render
 
 test-environments/*/outsite
+test-environments/*/junit
