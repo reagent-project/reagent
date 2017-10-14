@@ -3,20 +3,15 @@
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.core :as r]))
 
-(defn add-test-div [name]
-  (let [doc js/document
-        body (.-body js/document)
-        div (.createElement doc "div")]
-    (.appendChild body div)
-    div))
-
 (defn with-mounted-component [comp f]
   (when r/is-client
-    (let [div (add-test-div "_testreagent")]
-      (let [comp (r/render comp div #(f comp div))]
-        (r/unmount-component-at-node div)
-        (r/flush)
-        (.removeChild (.-body js/document) div)))))
+    (let [div (.createElement js/document "div")]
+      (try
+        (let [c (r/render comp div)]
+          (f c div))
+        (finally
+          (r/unmount-component-at-node div)
+          (r/flush))))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]

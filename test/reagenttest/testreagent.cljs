@@ -24,23 +24,15 @@
 
 (def rflush r/flush)
 
-(defn add-test-div [name]
-  (let [doc js/document
-        body (.-body js/document)
-        div (.createElement doc "div")]
-    (.appendChild body div)
-    div))
-
 (defn with-mounted-component [comp f]
   (when isClient
-    (let [div (add-test-div "_testreagent")]
+    (let [div (.createElement js/document "div")]
       (try
         (let [c (r/render comp div)]
           (f c div))
         (finally
           (r/unmount-component-at-node div)
-          (r/flush)
-          (.removeChild (.-body js/document) div))))))
+          (r/flush))))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
