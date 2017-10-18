@@ -16,7 +16,6 @@ test:
     - ./run-tests.sh
 deployment:
   master:
-    # branch: master
-    branch: new-test-runner
+    branch: master
     commands:
       - ./build-example-site.sh
