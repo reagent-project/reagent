@@ -14,3 +14,9 @@ dependencies:
 test:
   override:
     - ./run-tests.sh
+deployment:
+  master:
+    # branch: master
+    branch: new-test-runner
+    commands:
+      - ./build-example-site.sh

@@ -1,4 +1,5 @@
 {
+    "private": true,
     "devDependencies": {
         "karma": "^1.7.1",
         "karma-chrome-launcher": "^2.2.0",

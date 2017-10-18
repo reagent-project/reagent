@@ -1,3 +1,4 @@
 #!/bin/bash
-set -ex
-lein with-profile prod-test do clean, doo chrome-headless client once
+set -x
+lein do clean, doo chrome-headless prod-test once
+test -f target/cljsbuild/prod-test/main.js

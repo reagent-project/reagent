@@ -1,3 +1,3 @@
 #!/bin/bash
 set -x
-lein with-profile dev,react-16 figwheel
+lein with-profile react-16 figwheel

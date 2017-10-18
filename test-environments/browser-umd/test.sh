@@ -1,4 +1,4 @@
 #!/bin/bash
 set -ex
-lein with-profile test do clean, doo chrome-headless client once
-test -f out/cljsjs/react/development/react.inc.js
+lein do clean, doo chrome-headless test once
+test -f target/cljsbuild/test/out/cljsjs/react/development/react.inc.js

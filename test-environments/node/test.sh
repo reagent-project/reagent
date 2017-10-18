@@ -1,5 +1,5 @@
 #!/bin/bash
 set -ex
-lein with-profile node-test do clean, doo node client once
-test ! -f out/node_modules/react/index.js
-grep "reagent.impl.template.node\$module\$react = require('react')" out/reagent/impl/template.js
+lein do clean, doo node node-test once
+test ! -f target/cljsbuild/node-test/out/node_modules/react/index.js
+grep "reagent.impl.template.node\$module\$react = require('react')" target/cljsbuild/node-test/out/reagent/impl/template.js

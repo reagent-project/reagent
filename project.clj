@@ -15,7 +15,8 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.8"]
-            [lein-codox "0.10.3"]]
+            [lein-codox "0.10.3"]
+            [lein-figwheel "0.5.14"]]
 
   :source-paths ["src"]
 
@@ -23,79 +24,86 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:node-test [:test {:cljsbuild
-                                {:builds {:client {:compiler {:target :nodejs
-                                                              :process-shim false}}}}}]
-
-             :test {:cljsbuild
-                    {:builds {:client {:compiler {:main "reagenttest.runtests"}}}}}
-
-             :react-16 {:dependencies [[cljsjs/react "16.0.0-0"]
+  :profiles {:react-16 {:dependencies [[cljsjs/react "16.0.0-0"]
                                        [cljsjs/react-dom "16.0.0-0"]
                                        [cljsjs/react-dom-server "16.0.0-0"]]}
 
-             :site {:resource-paths ^:replace ["outsite"]
-                    :figwheel {:css-dirs ^:replace ["outsite/public/css"]}}
-
-             :prod [:site
-                    {:cljsbuild
-                     {:builds {:client
-                               {:compiler {:optimizations :advanced
-                                           :elide-asserts true
-                                           :pretty-print false
-                                           ;; :pseudo-names true
-                                           :output-dir "target/client"}}}}}]
-
-             :prerender [:prod
-                         {:cljsbuild
-                          {:builds {:client
-                                    {:compiler {:main "sitetools.prerender"
-                                                :target :nodejs
-                                                ;; Undefine module and exports so React UMD modules work on Node
-                                                :output-to "pre-render/main.js"
-                                                :output-dir "pre-render/out"}}}}}]
-
-             :prod-test [:prod :test]
-
              :dev {:dependencies [[figwheel "0.5.14"]
                                   [doo "0.1.8"]]
-                   :plugins [[lein-figwheel "0.5.14"]]
-                   :source-paths ["demo"] ;; for lighttable
-                   :resource-paths ["site" "outsite"]
-                   :figwheel {:css-dirs ["site/public/css"]}
-                   :cljsbuild
-                   {:builds
-                    {:client
-                     {:figwheel true
-                      :compiler {:source-map true
-                                 :optimizations :none
-                                 ;; :recompile-dependents false
-                                 :output-dir "outsite/public/js/out"
-                                 :asset-path "js/out"}}}}}}
+                   :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
+                   :resource-paths ["site" "target/cljsbuild/client"]}}
 
-  :clean-targets ^{:protect false} [:target-path :compile-path
-                                    "outsite/public/js"
-                                    "outsite/public/site"
-                                    "outsite/public/news"
-                                    "outsite/public/css"
-                                    "outsite/public/index.html"
-                                    "out"
-                                    "pre-render"]
-
-  :cljsbuild {:builds {:client
-                       {:source-paths ["src"
-                                       "demo"
-                                       "test"
-                                       "examples/todomvc/src"
-                                       "examples/simple/src"
-                                       "examples/geometry/src"]
-                        :compiler {:parallel-build true
-                                   :main "reagentdemo.core"
-                                   :output-to "outsite/public/js/main.js"
-                                   :language-in :ecmascript6
-                                   :language-out :ecmascript3
-                                   ;; Add process.env.NODE_ENV preload
-                                   :process-shim true}}}}
+  :clean-targets ^{:protect false} [:target-path :compile-path "out"]
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
-             :repl false})
+             :css-dirs ["site/public/css"]
+             :repl false}
+
+  ;; No profiles and merging - just manual configuration for each build type
+  :cljsbuild
+  {:builds
+   {:client
+    {:source-paths ["demo" "test"]
+     :figwheel true
+     :compiler {:parallel-build true
+                :source-map true
+                :optimizations :none
+                ; :main "reagentdemo.core"
+                :main "reagentdemo.dev"
+                :output-dir "target/cljsbuild/client/public/js/out"
+                :output-to "target/cljsbuild/client/public/js/main.js"
+                :asset-path "js/out"
+                ;; add process.env.node_env preload
+                :process-shim true}}
+
+    :test
+    {:source-paths ["test"]
+     :compiler {:parallel-build true
+                :source-map true
+                :optimizations :none
+                :main "reagenttest.runtests"
+                :asset-path "js/out"
+                :output-dir "target/cljsbuild/test/out"
+                :output-to "target/cljsbuild/test/main.js"
+                ;; add process.env.node_env preload
+                :process-shim true}}
+
+    :prerender
+    {:source-paths ["demo"]
+     :compiler {:main "sitetools.prerender"
+                :target :nodejs
+                :process-shim false
+                :output-dir "target/cljsbuild/prerender/out"
+                :output-to "target/cljsbuild/prerender/main.js"}}
+
+    :node-test
+    {:source-paths ["test"]
+     :compiler {:main "reagenttest.runtests"
+                :target :nodejs
+                :parallel-build true
+                :source-map true
+                :optimizations :none
+                :output-dir "target/cljsbuild/node-test/out"
+                :output-to "target/cljsbuild/node-test/main.js"}}
+
+    :prod
+    {:source-paths ["demo"]
+     :compiler {:main "reagentdemo.core"
+                :optimizations :advanced
+                :elide-asserts true
+                :pretty-print false
+                ;; :pseudo-names true
+                :output-to "target/cljsbuild/prod/public/js/main.js"
+                :output-dir "target/cljsbuild/prod/out" ;; Outside of public, not published
+                :closure-warnings {:global-this :off}}}
+
+    :prod-test
+    {:source-paths ["demo"]
+     :compiler {:main "reagenttest.runtests"
+                :optimizations :advanced
+                :elide-asserts true
+                :pretty-print false
+                ;; :pseudo-names true
+                :output-to "target/cljsbuild/prod-test/main.js"
+                :output-dir "target/cljsbuild/prod-test/out"
+                :closure-warnings {:global-this :off}}}}})
