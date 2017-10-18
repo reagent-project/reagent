@@ -35,5 +35,5 @@ cd tmp
 git checkout -- README.md
 git add .
 git commit -m "Built site from $SHA"
-# git push
-# rm -rf tmp
+git push
+rm -rf tmp
