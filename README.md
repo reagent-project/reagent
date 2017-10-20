@@ -70,7 +70,7 @@ can be written as:
 [:div>p>b "Nested Element"]
 ```        
 
-The `:class` attribute accepts collections in addition to plain string.
+The `:class` attribute can accept either a collection or a string.
 
 ```clj
 [:div {:class ["a-class" (when active? "active") "b-class"]}]
