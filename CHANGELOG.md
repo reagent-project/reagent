@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.0-alpha2 (2017-10-20)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha1...v0.8.0-alpha2)**
+
+- Reagent still uses React 15 by default, but tests are now running and pass with React 16
+    - [Error boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html)
+      are [supported](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1003-L1004)
+      ([#272](https://github.com/reagent-project/reagent/issues/272))
+    - Update Cljsjs dependencies or Node packages to use React 16
+- `:class` property now supports collections of strings
+  ([#154](https://github.com/reagent-project/reagent/pull/154))
+- Support for marking React components as `synthetic-input`, which will fix
+  problems with cursor jumping around
+  ([#282](https://github.com/reagent-project/reagent/pull/282))
+    - Helps with e.g. Material-UI TextField
+
 ## 0.8.0-alpha1 (2017-07-31)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.7.0...v0.8.0-alpha1)**
