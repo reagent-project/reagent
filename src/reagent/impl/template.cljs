@@ -91,11 +91,19 @@
                               (str class " " old))))
       p)))
 
+(defn stringify-class [{:keys [class] :as props}]
+  (if (coll? class)
+    (->> class
+         (filter identity)
+         (string/join " ")
+         (assoc props :class))
+    props))
+
 (defn convert-props [props id-class]
   (-> props
+      stringify-class
       convert-prop-value
       (set-id-class id-class)))
-
 
 ;;; Specialization for input components
 

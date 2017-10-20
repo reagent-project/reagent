@@ -573,6 +573,16 @@
   (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
          (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
 
+(deftest test-class-from-collection
+  (is (= (rstr [:p {:class ["a" "b" "c" "d"]}])
+         (rstr [:p {:class "a b c d"}])))
+  (is (= (rstr [:p {:class ["a" nil "b" false "c" nil]}])
+         (rstr [:p {:class "a b c"}])))
+  (is (= (rstr [:p {:class '("a" "b" "c")}])
+         (rstr [:p {:class "a b c"}])))
+  (is (= (rstr [:p {:class #{"a" "b" "c"}}])
+         (rstr [:p {:class "a b c"}]))))
+
 (deftest test-force-update
   (let [v (atom {:v1 0
                  :v2 0})
