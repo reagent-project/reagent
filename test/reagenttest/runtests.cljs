@@ -8,9 +8,9 @@
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
             [cljs.test :as test :include-macros true]
+            [doo.runner :as doo :refer-macros [doo-tests]]
             [reagent.core :as r]
             [reagent.debug :refer-macros [dbg log]]
-            [reagentdemo.core :as demo]
             [sitetools.server]))
 
 (enable-console-print!)
@@ -50,9 +50,18 @@
        "testing")]))
 
 (defn init! []
+  ;; This function is only used when running tests from the demo app.
+  ;; Which is why exit-point is set manually.
   (when (some? (test/deftest empty-test))
-    ;; Only run with :load-tests true
-    (reset! demo/test-results [#'test-output-mini])
-    (run-tests)))
+    (doo/set-exit-point! (fn [success?] nil))
+    (run-tests)
+    [#'test-output-mini]))
 
-(init!)
+(doo-tests 'reagenttest.testreagent
+           'reagenttest.testcursor
+           'reagenttest.testinterop
+           'reagenttest.testratom
+           'reagenttest.testratomasync
+           'reagenttest.testtrack
+           'reagenttest.testwithlet
+           'reagenttest.testwrap)

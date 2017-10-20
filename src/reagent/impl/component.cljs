@@ -199,6 +199,10 @@
                (when-not (nil? f)
                  (.call f c c))))
 
+    :componentDidCatch
+    (fn componentDidCatch [error info]
+      (this-as c (.call f c c error info)))
+
     nil))
 
 (defn get-wrapper [key f name]
@@ -267,19 +271,34 @@
        cljsify
        create-react-class))
 
-(defn component-path [c]
-  (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
-                          c)
-                     ($ :_currentElement))
-        name (some-> elem
+(defn fiber-component-path [fiber]
+  (let [name (some-> fiber
                      ($ :type)
                      ($ :displayName))
-        path (some-> elem
-                     ($ :_owner)
-                     component-path
+        parent (some-> fiber
+                       ($ :return))
+        path (some-> parent
+                     fiber-component-path
                      (str " > "))
         res (str path name)]
     (when-not (empty? res) res)))
+
+(defn component-path [c]
+  ;; Alternative branch for React 16
+  (if-let [fiber (some-> c ($ :_reactInternalFiber))]
+    (fiber-component-path fiber)
+    (let [elem (or (some-> (or (some-> c ($ :_reactInternalInstance))
+                               c)
+                           ($ :_currentElement)))
+          name (some-> elem
+                       ($ :type)
+                       ($ :displayName))
+          path (some-> elem
+                       ($ :_owner)
+                       component-path
+                       (str " > "))
+          res (str path name)]
+      (when-not (empty? res) res))))
 
 (defn comp-name []
   (if (dev?)

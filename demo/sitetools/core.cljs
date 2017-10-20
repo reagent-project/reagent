@@ -16,7 +16,7 @@
 (defonce config (r/atom {:body [#'main-content]
                          :pages {"/index.html" {:content [:div]
                                                 :title ""}}
-                         :site-dir "outsite/public"
+                         :site-dir "target/prerender/public/"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"

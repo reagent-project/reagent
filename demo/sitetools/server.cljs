@@ -57,6 +57,7 @@
       ($ (fs) mkdirSync d))))
 
 (defn write-file [f content]
+  (log "Write" f)
   (mkdirs ($ (path) dirname f))
   ($ (fs) writeFileSync f content))
 
@@ -68,16 +69,3 @@
               (->> css-infiles
                    (map #($ (fs) readFileSync %))
                    (string/join "\n"))))
-
-;;; Main entry points
-
-(defn ^:export genpages [opts]
-  (log "Generating site")
-  (let [conf (swap! tools/config merge (js->clj opts :keywordize-keys true))
-        conf (assoc conf :timestamp (str "?" (js/Date.now)))
-        {:keys [site-dir pages]} conf]
-    (doseq [f (keys pages)]
-      (write-file (->> f tools/to-relative (path-join site-dir))
-                  (gen-page f conf)))
-    (write-resources site-dir conf))
-  (log "Wrote site"))

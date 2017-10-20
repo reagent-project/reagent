@@ -1,5 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
+            [react :as react]
             [create-react-class :as create-react-class]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
@@ -23,21 +24,15 @@
 
 (def rflush r/flush)
 
-(defn add-test-div [name]
-  (let [doc js/document
-        body (.-body js/document)
-        div (.createElement doc "div")]
-    (.appendChild body div)
-    div))
-
 (defn with-mounted-component [comp f]
   (when isClient
-    (let [div (add-test-div "_testreagent")]
-      (let [c (r/render comp div)]
-        (f c div)
-        (r/unmount-component-at-node div)
-        (r/flush)
-        (.removeChild (.-body js/document) div)))))
+    (let [div (.createElement js/document "div")]
+      (try
+        (let [c (r/render comp div)]
+          (f c div))
+        (finally
+          (r/unmount-component-at-node div)
+          (r/flush))))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
@@ -282,16 +277,18 @@
 (deftest data-aria-test []
   (is (re-find #"data-foo"
                (as-string [:div {:data-foo "x"}])))
-  (is (re-find #"aria-foo"
-               (as-string [:div {:aria-foo "x"}])))
+  (is (re-find #"aria-labelledby"
+               (as-string [:div {:aria-labelledby "x"}])))
   ;; Skip test: produces warning in new React
   ;; (is (not (re-find #"enctype"
   ;;                   (as-string [:div {"enc-type" "x"}])))
   ;;     "Strings are passed through to React.")
-  (is (re-find #"enctype"
+  ;; FIXME: For some reason UMD module returns everything in
+  ;; lowercase, and CommonJS with upper T
+  (is (re-find #"enc[tT]ype"
                (as-string [:div {"encType" "x"}]))
       "Strings are passed through to React, and have to be camelcase.")
-  (is (re-find #"enctype"
+  (is (re-find #"enc[tT]ype"
                (as-string [:div {:enc-type "x"}]))
       "Strings are passed through to React, and have to be camelcase."))
 
@@ -906,6 +903,29 @@
 (defn foo []
   [:div])
 
+(defn log-error [& f]
+  (debug/error (apply str f)))
+
+(defn wrap-capture-window-error [f]
+  (fn []
+    (let [org js/console.onerror]
+      (set! js/window.onerror (fn [e]
+                                (log-error e)
+                                true))
+      (try
+        (f)
+        (finally
+          (set! js/window.onerror org))))))
+
+(defn wrap-capture-console-error [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (try
+        (f)
+        (finally
+          (set! js/console.error org))))))
+
 (deftest test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -939,24 +959,27 @@
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
             stack2 (str "in " pkg "comp2 > " pkg "comp1")
-            lstr (fn [& s] (list (apply str s)))
             re (fn [& s]
                  (re-pattern (apply str s)))
             rend (fn [x]
                    (with-mounted-component x identity))]
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
-                       (rend [comp2 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack2 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
+                             (rend [comp2 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack2 ")"))))
 
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
-                       (rend [comp1 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack1 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                             (rend [comp1 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack1 ")"))))
 
         (let [e (debug/track-warnings #(r/as-element [nat]))]
           (is (re-find #"Using native React classes directly"
@@ -971,6 +994,29 @@
                  #(r/as-element (comp4)))]
           (is (re-find #"Every element in a seq should have a unique :key"
                        (-> e :warn first))))))))
+
+(deftest test-error-boundary
+  (when (>= (js/parseInt react/version) 16)
+    (let [error (r/atom nil)
+          error-boundary (fn error-boundary [comp]
+                           (r/create-class
+                             {:component-did-catch (fn [this e info]
+                                                     (reset! error e))
+                              :reagent-render (fn [comp]
+                                                (if @error
+                                                  [:div "Something went wrong."]
+                                                  comp))}))
+          comp1 (fn comp1 []
+                  ($ nil :foo)
+                  [:div "foo"])]
+      (debug/track-warnings
+        (wrap-capture-window-error
+          (wrap-capture-console-error
+            #(with-mounted-component [error-boundary [comp1]]
+               (fn [c div]
+                 (r/flush)
+                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
+                 (is (found-in #"Something went wrong\." div))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1032,6 +1078,6 @@
     (is (= @node nil))))
 
 (deftest style-property-names-are-camel-cased
-  (is (= "<div style=\"text-align:center;\">foo</div>"
-         (server/render-to-static-markup
-           [:div {:style {:text-align "center"}} "foo"]))))
+  (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
+               (server/render-to-static-markup
+                 [:div {:style {:text-align "center"}} "foo"]))))
