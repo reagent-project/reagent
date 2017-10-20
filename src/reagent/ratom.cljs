@@ -146,6 +146,9 @@
   (-swap! [a f x y]      (-reset! a (f state x y)))
   (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
+  IWithMeta
+  (-with-meta [_ new-meta] (RAtom. state new-meta validator watches))
+
   IMeta
   (-meta [_] meta)
 
