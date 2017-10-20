@@ -485,3 +485,10 @@
     @r1
     ;; An exception or error should be logged here as we are trying to deref a disposed reaction.
     (is (= @run-number 2))))
+
+(deftest ratom-with-meta
+  (let [value {:val 1}
+        meta-value {:meta-val 1}
+        state (with-meta (r/atom value) meta-value)]
+    (is (= (meta state) meta-value))
+    (is (= @state value))))
