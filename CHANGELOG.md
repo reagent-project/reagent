@@ -15,6 +15,7 @@
   problems with cursor jumping around
   ([#282](https://github.com/reagent-project/reagent/pull/282))
     - Helps with e.g. Material-UI TextField
+- Added `IWithMeta` to `RAtom` ([#314](https://github.com/reagent-project/reagent/pull/314))
 
 ## 0.8.0-alpha1 (2017-07-31)
 
