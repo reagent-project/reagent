@@ -7,12 +7,14 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
-  * **[API Documentation](http://blog.ducky.io/reagent-docs/index.html)**
+  * **[API Documentation](http://reagent-project.github.io/docs/master/)**
+  * **Community discussion and support channels**
+    * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
+    * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
 
 ### Prerequisites
 
-* [JDK](http://www.azul.com/downloads/zulu/)
+* Java JDK
 * [Leiningen](http://leiningen.org/)
 
 ### Usage
@@ -34,8 +36,8 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
 This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
 
-    [reagent "0.6.0" :exclusions [cljsjs/react]]
-    [cljsjs/react-with-addons "15.2.1-0"]
+    [reagent "0.7.0" :exclusions [cljsjs/react]]
+    [cljsjs/react-with-addons "15.4.2-2"]
 
 If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
 
@@ -68,6 +70,12 @@ can be written as:
 [:div>p>b "Nested Element"]
 ```        
 
+The `:class` attribute can accept either a collection or a string.
+
+```clj
+[:div {:class ["a-class" (when active? "active") "b-class"]}]
+```
+
 You can use one component inside another:
 
 ```clj
@@ -90,8 +98,8 @@ You mount the component into the DOM like this:
 
 ```clj
 (defn mountit []
-  (r/render-component [childcaller]
-                      (.-body js/document)))
+  (r/render [childcaller]
+            (.-body js/document)))
 ```
 
 assuming we have imported Reagent like this:

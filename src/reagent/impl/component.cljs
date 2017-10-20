@@ -1,9 +1,12 @@
 (ns reagent.impl.component
-  (:require [reagent.impl.util :as util]
+  (:require [create-react-class :as create-react-class]
+            [react :as react]
+            [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
             [reagent.interop :refer-macros [$ $!]]
-            [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless]]))
+            [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless
+                                          assert-callable]]))
 
 (declare ^:dynamic *current-component*)
 
@@ -48,7 +51,7 @@
     (if-some [v ($ p :argv)]
       (extract-children v)
       (->> ($ p :children)
-           ($ util/react Children.toArray)
+           (react/Children.toArray)
            (into [])))))
 
 (defn ^boolean reagent-class? [c]
@@ -85,7 +88,7 @@
 
 (defn wrap-render [c]
   (let [f ($ c :reagentRender)
-        _ (assert (ifn? f))
+        _ (assert-callable f)
         res (if (true? ($ c :cljsLegacyRender))
               (.call f c c)
               (let [v (get-argv c)
@@ -144,7 +147,7 @@
 (defn custom-wrapper [key f]
   (case key
     :getDefaultProps
-    (assert false "getDefaultProps not supported")
+    (throw (js/Error. "getDefaultProps not supported"))
 
     :getInitialState
     (fn getInitialState []
@@ -196,13 +199,16 @@
                (when-not (nil? f)
                  (.call f c c))))
 
+    :componentDidCatch
+    (fn componentDidCatch [error info]
+      (this-as c (.call f c c error info)))
+
     nil))
 
 (defn get-wrapper [key f name]
   (let [wrap (custom-wrapper key f)]
     (when (and wrap f)
-      (assert (ifn? f)
-              (str "Expected function in " name key " but got " f)))
+      (assert-callable f))
     (or wrap f)))
 
 (def obligatory {:shouldComponentUpdate nil
@@ -225,8 +231,7 @@
           render-fun (-> renders vals first)]
       (assert (pos? (count renders)) "Missing reagent-render")
       (assert (== 1 (count renders)) "Too many render functions supplied")
-      (assert (ifn? render-fun) (str "Render must be a function, not "
-                                     (pr-str render-fun)))))
+      (assert-callable render-fun)))
   (let [render-fun (or (:reagentRender fmap)
                        (:componentFunction fmap))
         legacy-render (nil? render-fun)
@@ -264,21 +269,36 @@
   {:pre [(map? body)]}
   (->> body
        cljsify
-       ($ util/react createClass)))
+       create-react-class))
 
-(defn component-path [c]
-  (let [elem (some-> (or (some-> c ($ :_reactInternalInstance))
-                          c)
-                     ($ :_currentElement))
-        name (some-> elem
+(defn fiber-component-path [fiber]
+  (let [name (some-> fiber
                      ($ :type)
                      ($ :displayName))
-        path (some-> elem
-                     ($ :_owner)
-                     component-path
+        parent (some-> fiber
+                       ($ :return))
+        path (some-> parent
+                     fiber-component-path
                      (str " > "))
         res (str path name)]
     (when-not (empty? res) res)))
+
+(defn component-path [c]
+  ;; Alternative branch for React 16
+  (if-let [fiber (some-> c ($ :_reactInternalFiber))]
+    (fiber-component-path fiber)
+    (let [elem (or (some-> (or (some-> c ($ :_reactInternalInstance))
+                               c)
+                           ($ :_currentElement)))
+          name (some-> elem
+                       ($ :type)
+                       ($ :displayName))
+          path (some-> elem
+                       ($ :_owner)
+                       component-path
+                       (str " > "))
+          res (str path name)]
+      (when-not (empty? res) res))))
 
 (defn comp-name []
   (if (dev?)
@@ -291,7 +311,7 @@
     ""))
 
 (defn fn-to-class [f]
-  (assert (ifn? f) (str "Expected a function, not " (pr-str f)))
+  (assert-callable f)
   (warn-unless (not (and (react-class? f)
                          (not (reagent-class? f))))
                "Using native React classes directly in Hiccup forms "

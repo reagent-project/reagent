@@ -71,3 +71,26 @@ as well as package name and line number. Returns x."
                   ~@forms)]
        (js/console.timeEnd label#)
        res#)))
+
+(defmacro assert-some [value tag]
+  `(assert ~value (str ~tag " must not be nil")))
+
+(defmacro assert-component [value]
+  `(assert (comp/reagent-component? ~value)
+           (str "Expected a reagent component, not "
+                (pr-str ~value))))
+
+(defmacro assert-js-object [value]
+  `(assert (not (map? ~value))
+           (str "Expected a JS object, not "
+                (pr-str ~value))))
+
+(defmacro assert-new-state [value]
+  `(assert (or (nil? ~value) (map? ~value))
+           (str "Expected a valid new state, not "
+                (pr-str ~value))))
+
+(defmacro assert-callable [value]
+  `(assert (ifn? ~value)
+           (str "Expected something callable, not "
+                (pr-str ~value))))

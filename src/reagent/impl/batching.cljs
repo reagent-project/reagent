@@ -1,6 +1,6 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
-  (:require [reagent.debug :refer-macros [dbg]]
+  (:require [reagent.debug :refer-macros [dbg assert-some]]
             [reagent.interop :refer-macros [$ $!]]
             [reagent.impl.util :refer [is-client]]
             [clojure.string :as string]))
@@ -45,7 +45,7 @@
 (deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
   (enqueue [this k f]
-    (assert (some? f))
+    (assert-some f "Enqueued function")
     (when (nil? (aget this k))
       (aset this k (array)))
     (.push (aget this k) f)
@@ -86,7 +86,7 @@
       (run-queue cs))
     (.flush-after-render this)))
 
-(defonce render-queue (RenderQueue. false))
+(defonce render-queue (->RenderQueue false))
 
 (defn flush []
   (.flush-queues render-queue))

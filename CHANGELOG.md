@@ -1,10 +1,109 @@
-
 # Changelog
 
-## Upcoming
+## 0.8.0-alpha1 (2017-07-31)
 
-- Fix :ref on inputs
+**[compare](https://github.com/reagent-project/reagent/compare/v0.7.0...v0.8.0-alpha1)**
 
+**BREAKING**: Requires ClojureScript version 1.9.854
+
+This version changes how Reagent depends on React. New ClojureScript
+improves support for [npm packages](https://clojurescript.org/news/2017-07-12-clojurescript-is-not-an-island-integrating-node-modules)
+and also improves the way code can refer to objects from foreign-libs,
+making the transition from foreign libs, like Cljsjs packages, to npm easy: [global exports](https://clojurescript.org/news/2017-07-30-global-exports)
+
+Previously Reagent required foreign-lib namespace `cljsjs.react` and a few others.
+This worked well when using Cljsjs React package, but in other environments,
+like Node, React-native and when using npm packages, users had to
+exclude Cljsjs packages and create empty files providing these `cljsjs.*` namespaces.
+
+With global-exports, foreign-libs can be used like they were real namespaces:
+
+```cljs
+(ns ... (:require [react-dom :as react-dom]))
+
+(react-dom/render ...)
+```
+
+The same code will in all the environments, and is compiled different based on
+compile target and on how the dependency is provided. When targeting
+browser and using foreign libs, ClojureScript compiler uses the `:global-exports`
+definition to resolve the function from global JS var:
+
+```js
+var a = window.ReactDOM;
+a.render(...)
+```
+
+When targeting browser but using node_modules with Closure module processing,
+the CommonJS (or ES6) module is converted to a Closure module, named
+by `module$` and the path of the file, and the generated code is same as
+if this was a Cljs or Closure module:
+
+```js
+module$foo$bar$react$react-dom.render(...)
+```
+
+Then targeting NodeJS the object is retrieved using `require` call:
+
+```js
+var a = require("react-dom");
+a.render(...)
+```
+
+This change requires use of ClojureScript 1.9.854, using the latest Cljsjs
+React packages (15.6.1-1), and it is not yet sure how well other React
+libraries work with these changes, or how this will work with React-native.
+Currently it looks like all the Cljsjs React libraries need to be updated
+to use require `react` instead of `cljsjs.react`, as the foreign-lib
+namespace was renamed to match the npm package.
+
+React-with-addons bundle [has been deprecated](https://facebook.github.io/react/docs/addons.html) and Cljsjs no longer provides new versions
+of that package. The latest React-with-addons version won't work with Reagent 0.8.
+For animation utils use [react-transition-group](https://github.com/cljsjs/packages/tree/master/react-transition-group) package instead. [React-dom/test-utils](https://facebook.github.io/react/docs/test-utils.html) and [react-addons-perf](https://facebook.github.io/react/docs/perf.html) are not currently packaged as browserified files, so their use would require Webpack, or they might work with Closure module processing (TODO: Provide example).
+
+#### Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+
+#### Which libraries work together with Reagent 0.8:
+
+| JS library type | Foreign library (Cljsjs) | Node module |
+|---|---|---|
+| Library updated to require `react`, `react-dom` names | Yes | Yes |
+| Library requiring `cljsjs.react` and `cljsjs.react.dom` names | Yes | No |
+
+Examples of libraries not yet updated: Devcards, Sablono. These will for now only work when using Cljsjs React.
+
+## 0.7.0 (2017-06-27)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.2...v0.7.0)**
+
+- Fixed a warning with recent ClojureScript (1.9.660+) versions about
+a variadic method signature in `reagent/impl/util.cljs`.
+    - `reagent.core/partial` and `wrap` used a bad deftype ([#303](https://github.com/reagent-project/reagent/pull/303))
+- React updated to 15.5.4 ([#292](https://github.com/reagent-project/reagent/issues/292))
+    - Uses [create-react-class](https://www.npmjs.com/package/create-react-class) instead of
+    deprecated `React.createClass`
+    - Reagent has now dependency on `cljsjs/create-react-class`, if you are using other
+    methods to provide React, you need to exclude this Cljsjs dependency and provide the library yourself.
+- Self-host compatibility ([#283](https://github.com/reagent-project/reagent/pull/283))
+    - Removed deprecated `reagent.interop/.'` and `reagent.interop/.!` macros
+- Improved assert messages all around ([#301](https://github.com/reagent-project/reagent/pull/301)).
+
+## 0.6.2 (2017-05-19)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.1...v0.6.2)**
+
+- React updated to 15.4.2
+    - Fixes a problem with `number` inputs, ([#289](https://github.com/reagent-project/reagent/issues/289), [facebook/react#8717](https://github.com/facebook/react/issues/8717))
+
+## 0.6.1 (2017-03-10)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.6.0...v0.6.1)**
+
+- Fix :ref on inputs ([#259](https://github.com/reagent-project/reagent/issues/259))
+- React updated to 15.4.0 ([#275](https://github.com/reagent-project/reagent/issues/275), [#276](https://github.com/reagent-project/reagent/issues/276))
+- **BREAKING:** `reagent.core` no longer provides `render-to-string` or `render-to-static-markup` functions
+    - `reagent.dom.server` includes the same functions
+    - This is due to change in React packaging, including React-dom-server would increase the file size considerably, so now it is only included when `reagent.dom.server` is used
 
 ## 0.6.0
 
@@ -104,14 +203,14 @@
 
 - Stop wrapping native components. This reduces the number of components created a lot, and can speed up some things substantially (especially render-to-string, that is not bound by browser performance). This is made possible by a new way of keeping track of which order to re-render dirty components.
 
-- Added `create-element` to make it easier to embed native React 
+- Added `create-element` to make it easier to embed native React
 components in Reagent ones.
 
 - Arguments to components are now compared using simple `=`, instead of the old, rather complicated heuristics. **NOTE**: This means all arguments to a component function must be comparable with `=` (which means that they cannot be for example infinite `seq`s).
 
 - Reagent now creates all React components using `React.createElement` (required for React 0.12).
 
-- `render-component` is now render, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
+- `render-component` is now `render`, and `render-component-to-string` is `render-to-string`, in order to match React 0.12 (but the old names still work).
 
 - Add `render-to-static-markup`. This works exactly like `render-to-string`, except that it doesn't produce `data-react-id` etc.
 

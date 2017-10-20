@@ -1,9 +1,12 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
+            [react :as react]
+            [create-react-class :as create-react-class]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.interop :refer-macros [$ $!]]
             [reagent.core :as r]
+            [reagent.dom.server :as server]
             [reagent.impl.util :as util]))
 
 (def tests-done (atom {}))
@@ -21,21 +24,15 @@
 
 (def rflush r/flush)
 
-(defn add-test-div [name]
-  (let [doc js/document
-        body (.-body js/document)
-        div (.createElement doc "div")]
-    (.appendChild body div)
-    div))
-
 (defn with-mounted-component [comp f]
   (when isClient
-    (let [div (add-test-div "_testreagent")]
-      (let [c (r/render-component comp div)]
-        (f c div)
-        (r/unmount-component-at-node div)
-        (r/flush)
-        (.removeChild (.-body js/document) div)))))
+    (let [div (.createElement js/document "div")]
+      (try
+        (let [c (r/render comp div)]
+          (f c div))
+        (finally
+          (r/unmount-component-at-node div)
+          (r/flush))))))
 
 (defn found-in [re div]
   (let [res (.-innerHTML div)]
@@ -269,7 +266,7 @@
       (is (= 2 @ran)))))
 
 (defn as-string [comp]
-  (r/render-component-to-string comp))
+  (server/render-to-string comp))
 
 (deftest to-string-test []
   (let [comp (fn [props]
@@ -280,16 +277,18 @@
 (deftest data-aria-test []
   (is (re-find #"data-foo"
                (as-string [:div {:data-foo "x"}])))
-  (is (re-find #"aria-foo"
-               (as-string [:div {:aria-foo "x"}])))
+  (is (re-find #"aria-labelledby"
+               (as-string [:div {:aria-labelledby "x"}])))
   ;; Skip test: produces warning in new React
   ;; (is (not (re-find #"enctype"
   ;;                   (as-string [:div {"enc-type" "x"}])))
   ;;     "Strings are passed through to React.")
-  (is (re-find #"enctype"
+  ;; FIXME: For some reason UMD module returns everything in
+  ;; lowercase, and CommonJS with upper T
+  (is (re-find #"enc[tT]ype"
                (as-string [:div {"encType" "x"}]))
       "Strings are passed through to React, and have to be camelcase.")
-  (is (re-find #"enctype"
+  (is (re-find #"enc[tT]ype"
                (as-string [:div {:enc-type "x"}]))
       "Strings are passed through to React, and have to be camelcase."))
 
@@ -348,7 +347,8 @@
     (is (= p1 (r/partial vector 1 2)))
     (is (ifn? p1))
     (is (= (r/partial vector 1 2) p1))
-    (is (not= p1 (r/partial vector 1 3)))))
+    (is (not= p1 (r/partial vector 1 3)))
+    (is (= (hash p1) (hash (r/partial vector 1 2))))))
 
 (deftest test-null-component
   (let [null-comp (fn [do-show]
@@ -361,13 +361,13 @@
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
-         (r/render-to-static-markup
+         (server/render-to-static-markup
           [:div.bar {:dangerously-set-inner-HTML
                      {:__html "<p>foobar</p>"}} ]))))
 
@@ -432,7 +432,7 @@
           (is (= 4 @ran)))))))
 
 (defn rstr [react-elem]
-  (r/render-to-static-markup react-elem))
+  (server/render-to-static-markup react-elem))
 
 (deftest test-create-element
   (let [ae r/as-element
@@ -458,16 +458,15 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ae [:div (ce "div" nil "foo")]))))))
 
-(def ndiv ($ util/react
-              createClass
-              #js{:displayName "ndiv"
-                  :render
-                  (fn []
-                    (this-as
+(def ndiv (create-react-class
+            #js {:displayName "ndiv"
+                 :render
+                 (fn []
+                   (this-as
                      this
                      (r/create-element
-                      "div" #js{:className ($ this :props.className)}
-                      ($ this :props.children))))}))
+                       "div" #js{:className ($ this :props.className)}
+                       ($ this :props.children))))}))
 
 (deftest test-adapt-class
   (let [d1 (r/adapt-react-class ndiv)
@@ -570,6 +569,16 @@
          (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
   (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
          (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
+
+(deftest test-class-from-collection
+  (is (= (rstr [:p {:class ["a" "b" "c" "d"]}])
+         (rstr [:p {:class "a b c d"}])))
+  (is (= (rstr [:p {:class ["a" nil "b" false "c" nil]}])
+         (rstr [:p {:class "a b c"}])))
+  (is (= (rstr [:p {:class '("a" "b" "c")}])
+         (rstr [:p {:class "a b c"}])))
+  (is (= (rstr [:p {:class #{"a" "b" "c"}}])
+         (rstr [:p {:class "a b c"}]))))
 
 (deftest test-force-update
   (let [v (atom {:v1 0
@@ -894,6 +903,29 @@
 (defn foo []
   [:div])
 
+(defn log-error [& f]
+  (debug/error (apply str f)))
+
+(defn wrap-capture-window-error [f]
+  (fn []
+    (let [org js/console.onerror]
+      (set! js/window.onerror (fn [e]
+                                (log-error e)
+                                true))
+      (try
+        (f)
+        (finally
+          (set! js/window.onerror org))))))
+
+(defn wrap-capture-console-error [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (try
+        (f)
+        (finally
+          (set! js/console.error org))))))
+
 (deftest test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -923,28 +955,31 @@
             comp4 (fn comp4 []
                     (for [i (range 0 1)]
                       [:p "foo"]))
-            nat ($ util/react createClass #js{:render (fn [])})
+            nat (create-react-class #js {:render (fn [])})
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
             stack2 (str "in " pkg "comp2 > " pkg "comp1")
-            lstr (fn [& s] (list (apply str s)))
             re (fn [& s]
                  (re-pattern (apply str s)))
             rend (fn [x]
                    (with-mounted-component x identity))]
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
-                       (rend [comp2 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack2 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
+                             (rend [comp2 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack2 ")"))))
 
         (let [e (debug/track-warnings
-                 #(is (thrown-with-msg?
-                       :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
-                       (rend [comp1 [:div. "foo"]]))))]
-          (is (= e
-                 {:error (lstr "Error rendering component (" stack1 ")")})))
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                             (rend [comp1 [:div. "foo"]]))))))]
+          (is (= (last (:error e))
+                 (str "Error rendering component (" stack1 ")"))))
 
         (let [e (debug/track-warnings #(r/as-element [nat]))]
           (is (re-find #"Using native React classes directly"
@@ -959,6 +994,29 @@
                  #(r/as-element (comp4)))]
           (is (re-find #"Every element in a seq should have a unique :key"
                        (-> e :warn first))))))))
+
+(deftest test-error-boundary
+  (when (>= (js/parseInt react/version) 16)
+    (let [error (r/atom nil)
+          error-boundary (fn error-boundary [comp]
+                           (r/create-class
+                             {:component-did-catch (fn [this e info]
+                                                     (reset! error e))
+                              :reagent-render (fn [comp]
+                                                (if @error
+                                                  [:div "Something went wrong."]
+                                                  comp))}))
+          comp1 (fn comp1 []
+                  ($ nil :foo)
+                  [:div "foo"])]
+      (debug/track-warnings
+        (wrap-capture-window-error
+          (wrap-capture-console-error
+            #(with-mounted-component [error-boundary [comp1]]
+               (fn [c div]
+                 (r/flush)
+                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
+                 (is (found-in #"Something went wrong\." div))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1018,3 +1076,8 @@
         (r/flush)
         (is (= @spy 0))))
     (is (= @node nil))))
+
+(deftest style-property-names-are-camel-cased
+  (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
+               (server/render-to-static-markup
+                 [:div {:style {:text-align "center"}} "foo"]))))

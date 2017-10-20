@@ -1,13 +1,9 @@
 {
-    "dependencies": {
-        "react": "^15.2.1",
-        "react-dom": "^15.2.1"
-    },
-    "scripts": {
-        "bundle": "webpack && NODE_ENV=production webpack -p"
-    },
+    "private": true,
     "devDependencies": {
-        "babel-core": "^5.8.25",
-        "webpack": "^1.12.2"
+        "karma": "^1.7.1",
+        "karma-chrome-launcher": "^2.2.0",
+        "karma-cljs-test": "^0.1.0",
+        "karma-junit-reporter": "^1.2.0"
     }
 }

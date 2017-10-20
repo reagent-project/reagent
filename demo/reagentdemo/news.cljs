@@ -6,12 +6,14 @@
             [reagentdemo.news.news050 :as news050]
             [reagentdemo.news.news051 :as news051]
             [reagentdemo.news.news060 :as news060]
+            [reagentdemo.news.news061 :as news061]
             [reagentdemo.news.news060rc :as news060rc]
             [reagentdemo.news.news060release :as news060r]
             [sitetools.core :as tools]))
 
 (defn main []
   [:div
+   [news061/main {:summary true}]
    [news060r/main {:summary true}]
    [news060rc/main {:summary true}]
    [news060/main {:summary true}]

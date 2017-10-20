@@ -16,7 +16,7 @@
 (defonce config (r/atom {:body [#'main-content]
                          :pages {"/index.html" {:content [:div]
                                                 :title ""}}
-                         :site-dir "outsite/public"
+                         :site-dir "target/prerender/public/"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"
@@ -102,80 +102,7 @@
 (defn main-content []
   (get-in @config [:current-page :content]))
 
-
-;;; Static site generation
-
-(defn base [page]
-  (let [depth (->> page to-relative (re-seq #"/") count)]
-    (->> "../" (repeat depth) (apply str))))
-
-(defn danger [t s]
-  [t {:dangerouslySetInnerHTML {:__html s}}])
-
-(defn html-template [{:keys [title body-html timestamp page-conf
-                             js-file css-file main-div]}]
-  (let [main (str js-file timestamp)]
-    (r/render-to-static-markup
-     [:html
-      [:head
-       [:meta {:charset 'utf-8}]
-       [:meta {:name 'viewport
-               :content "width=device-width, initial-scale=1.0"}]
-       [:base {:href (-> page-conf :page-path base)}]
-       [:link {:href (str css-file timestamp) :rel 'stylesheet}]
-       [:title title]]
-      [:body
-       [:div {:id main-div} (danger :div body-html)]
-       (danger :script (str "var pageConfig = "
-                            (-> page-conf clj->js js/JSON.stringify)))
-       [:script {:src main :type "text/javascript"}]]])))
-
-(defn gen-page [page-path conf]
-  (emit [:set-page page-path])
-  (let [conf (merge conf @config)
-        b (:body conf)
-        bhtml (r/render-component-to-string b)]
-    (str "<!doctype html>\n"
-         (html-template (assoc conf
-                               :page-conf {:page-path page-path}
-                               :body-html bhtml)))))
-
-(defn fs [] (js/require "fs"))
-(defn path [] (js/require "path"))
-
-(defn mkdirs [f]
-  (doseq [d (reductions #(str %1 "/" %2)
-                        (-> ($ (path) normalize f)
-                            (string/split #"/")))]
-    (when-not ($ (fs) existsSync d)
-      ($ (fs) mkdirSync d))))
-
-(defn write-file [f content]
-  (mkdirs ($ (path) dirname f))
-  ($ (fs) writeFileSync f content))
-
-(defn path-join [& paths]
-  (apply ($ (path) :join) paths))
-
-(defn write-resources [dir {:keys [css-file css-infiles]}]
-  (write-file (path-join dir css-file)
-              (->> css-infiles
-                   (map #($ (fs) readFileSync %))
-                   (string/join "\n"))))
-
-
 ;;; Main entry points
-
-(defn ^:export genpages [opts]
-  (log "Generating site")
-  (let [conf (swap! config merge (js->clj opts :keywordize-keys true))
-        conf (assoc conf :timestamp (str "?" (js/Date.now)))
-        {:keys [site-dir pages]} conf]
-    (doseq [f (keys pages)]
-      (write-file (->> f to-relative (path-join site-dir))
-                  (gen-page f conf)))
-    (write-resources site-dir conf))
-  (log "Wrote site"))
 
 (defn start! [site-config]
   (swap! config merge site-config)
@@ -185,4 +112,4 @@
           conf (swap! config merge page-conf)
           {:keys [page-path body main-div]} conf]
       (init-history page-path)
-      (r/render-component body (js/document.getElementById main-div)))))
+      (r/render body (js/document.getElementById main-div)))))
