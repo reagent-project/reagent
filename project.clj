@@ -43,12 +43,11 @@
   :cljsbuild
   {:builds
    {:client
-    {:source-paths ["demo" "test"]
+    {:source-paths ["src" "demo" "test"]
      :figwheel true
      :compiler {:parallel-build true
                 :source-map true
                 :optimizations :none
-                ; :main "reagentdemo.core"
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
@@ -57,7 +56,7 @@
                 :process-shim true}}
 
     :test
-    {:source-paths ["test"]
+    {:source-paths ["src" "test"]
      :compiler {:parallel-build true
                 :source-map true
                 :optimizations :none
@@ -69,7 +68,7 @@
                 :process-shim true}}
 
     :prerender
-    {:source-paths ["demo"]
+    {:source-paths ["src" "demo"]
      :compiler {:main "sitetools.prerender"
                 :target :nodejs
                 :process-shim false
@@ -77,7 +76,7 @@
                 :output-to "target/cljsbuild/prerender/main.js"}}
 
     :node-test
-    {:source-paths ["test"]
+    {:source-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
                 :parallel-build true
@@ -87,8 +86,8 @@
                 :output-to "target/cljsbuild/node-test/main.js"}}
 
     :prod
-    {:source-paths ["demo"]
-     :compiler {:main "reagentdemo.core"
+    {:source-paths ["src" "demo"]
+     :compiler {:main "reagentdemo.prod"
                 :optimizations :advanced
                 :elide-asserts true
                 :pretty-print false
@@ -98,7 +97,7 @@
                 :closure-warnings {:global-this :off}}}
 
     :prod-test
-    {:source-paths ["demo"]
+    {:source-paths ["src" "demo"]
      :compiler {:main "reagenttest.runtests"
                 :optimizations :advanced
                 :elide-asserts true
