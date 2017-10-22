@@ -29,3 +29,12 @@ lein figwheel
 # Open http://0.0.0.0:3449 on a browser
 # Check console for test output
 ```
+
+## Building package
+
+To build Reagent and use built version in your applications run `lein install`
+and update the dependency on your app to use the version that was installed.
+
+Note that if `project.clj` uses a version that is released on Clojars, this command
+will overwrite that version on your local Maven repository. To restore
+real version, remove directory corresponding to the version from `~/.m2/repository/reagent/reagent/`.
