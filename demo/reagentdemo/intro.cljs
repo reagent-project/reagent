@@ -81,7 +81,7 @@
   [:input {:type "range" :value value :min min :max max
            :style {:width "100%"}
            :on-change (fn [e]
-                        (swap! bmi-data assoc param (.-target.value e))
+                        (swap! bmi-data assoc param (.. e -target -value))
                         (when (not= param :bmi)
                           (swap! bmi-data assoc :bmi nil)))}])
 
