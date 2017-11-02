@@ -24,7 +24,7 @@ rm -fr tmp
 git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
 rm -fr tmp/*
 
-cp -r test-environments/browser-node-react-16/target/cljsbuild/prod/public/* tmp/
+cp -r test-environments/browser-umd-react-16/target/cljsbuild/prod/public/* tmp/
 cp -r test-environments/browser-node-react-16/target/prerender/public/* tmp/
 mkdir -p tmp/docs/master/
 cp -r target/doc/* tmp/docs/master/
