@@ -4,10 +4,14 @@ set -ex
 
 SHA=$(git rev-parse HEAD)
 
-# Prerendering seems to work best on React 16
-cd test-environments/browser-node-react-16
+cd test-environments/browser-umd-react-16
 
 lein do clean, cljsbuild once prod
+
+cd ../..
+
+# Prerendering seems to work best on React 16
+cd test-environments/browser-node-react-16
 
 lein cljsbuild once prerender
 node target/cljsbuild/prerender/main.js
