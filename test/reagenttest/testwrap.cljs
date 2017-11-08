@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg println log]]
             [reagent.core :as r]
-            [testreagent.utils :as u :refer [with-mounted-component found-in]]))
+            [reagenttest.utils :as u :refer [with-mounted-component found-in]]))
 
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
