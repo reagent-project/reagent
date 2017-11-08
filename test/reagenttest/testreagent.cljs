@@ -8,7 +8,7 @@
             [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]
-            [testreagent.utils :as u :refer [with-mounted-component found-in]]))
+            [reagenttest.utils :as u :refer [with-mounted-component found-in]]))
 
 (def tests-done (atom {}))
 

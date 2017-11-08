@@ -1,4 +1,4 @@
-(ns testreagent.utils
+(ns reagenttest.utils
   (:require [reagent.core :as r]))
 
 (defn with-mounted-component [comp f]
