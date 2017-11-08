@@ -1,41 +1,8 @@
 (ns reagenttest.testwrap
   (:require [cljs.test :as t :refer-macros [is deftest]]
             [reagent.debug :refer-macros [dbg println log]]
-            [reagent.core :as r]))
-
-(defn with-mounted-component [comp f]
-  (when r/is-client
-    (let [div (.createElement js/document "div")]
-      (try
-        (let [c (r/render comp div)]
-          (f c div))
-        (finally
-          (r/unmount-component-at-node div)
-          (r/flush))))))
-
-(defn with-mounted-component-async [comp done f]
-  (when r/is-client
-    (let [div (.createElement js/document "div")
-          c (r/render comp div)]
-      (f c div (fn []
-                 (r/unmount-component-at-node div)
-                 (r/flush)
-                 (done))))))
-
-(defn run-fns-after-render [& fs]
-  ((reduce (fn [cb f]
-             (fn []
-               (r/after-render (fn []
-                                 (f)
-                                 (cb)))))
-           (reverse fs))))
-
-(defn found-in [re div]
-  (let [res (.-innerHTML div)]
-    (if (re-find re res)
-      true
-      (do (println "Not found: " res)
-          false))))
+            [reagent.core :as r]
+            [testreagent.utils :as u :refer [with-mounted-component found-in]]))
 
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
@@ -142,9 +109,9 @@
                    [child (r/wrap (:foo @state)
                                 swap! state assoc :foo)])]
       (t/async done
-        (with-mounted-component-async [parent] done
+        (u/with-mounted-component-async [parent] done
           (fn [c div done]
-            (run-fns-after-render
+            (u/run-fns-after-render
               (fn []
                 (is (found-in #"value:1:" div))
                 (is (= @ran 1))
@@ -203,9 +170,9 @@
                 [derefer (r/cursor state [:a]) a-count]
                 [derefer (r/cursor state [:b]) b-count]])]
     (t/async done
-      (with-mounted-component-async [comp] done
+      (u/with-mounted-component-async [comp] done
         (fn [c div done]
-          (run-fns-after-render
+          (u/run-fns-after-render
             (fn []
               (is (= @a-count 1))
               (is (= @b-count 1))

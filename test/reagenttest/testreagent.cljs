@@ -7,39 +7,22 @@
             [reagent.interop :refer-macros [$ $!]]
             [reagent.core :as r]
             [reagent.dom.server :as server]
-            [reagent.impl.util :as util]))
+            [reagent.impl.util :as util]
+            [testreagent.utils :as u :refer [with-mounted-component found-in]]))
 
 (def tests-done (atom {}))
 
-(defn fixture [f]
-  (set! rv/debug true)
-  (f)
-  (set! rv/debug false))
-
-(t/use-fixtures :once fixture)
+(t/use-fixtures :once
+                {:before (fn []
+                           (set! rv/debug true))
+                 :after  (fn []
+                           (set! rv/debug false))})
 
 (defn running [] (rv/running))
 
 (def isClient r/is-client)
 
 (def rflush r/flush)
-
-(defn with-mounted-component [comp f]
-  (when isClient
-    (let [div (.createElement js/document "div")]
-      (try
-        (let [c (r/render comp div)]
-          (f c div))
-        (finally
-          (r/unmount-component-at-node div)
-          (r/flush))))))
-
-(defn found-in [re div]
-  (let [res (.-innerHTML div)]
-    (if (re-find re res)
-      true
-      (do (println "Not found: " res)
-          false))))
 
 (deftest really-simple-test
   (when (and isClient
