@@ -1020,6 +1020,44 @@
   (is (= "<div><input/></div>"
          (rstr [:div [:input]]))))
 
+#_
+(deftest test-input-value
+  (when r/is-client
+    (let [state (r/atom "")
+          ran (atom 0)
+          c (fn []
+              (swap! ran inc)
+              [:input {:value @state
+                       :on-change (fn [e]
+                                    (js/console.log e)
+                                    (reset! state (.. e -target -value)))}])]
+      (t/async done
+        (u/with-mounted-component-async [c] done
+          (fn [c div done]
+            (u/run-fns-after-render
+              (fn []
+                (is (= "" (.-value (aget (.-children div) 0))))
+                (is (= @ran 1))
+
+                (reset! state "foo"))
+              (fn []
+                (is (= "foo" (.-value (aget (.-children div) 0))))
+                (is (= @ran 2))
+
+                (set! (.-value (aget (.-children div) 0)) "bar")
+                (.dispatchEvent (aget (.-children div) 0)
+                                (doto (.createEvent js/document "HTMLEvents")
+                                  (.initEvent "input" true false))))
+              (fn []
+                (is (= "bar" (.-value (aget (.-children div) 0))))
+                (is (= "bar" @state))
+                (is (= @ran 2)))
+              (fn []
+                (is (= "bar" (.-value (aget (.-children div) 0))))
+                (is (= "bar" @state))
+                (is (= @ran 2)))
+              done)))))))
+
 (deftest test-object-children
   (is (= "<p>foo bar1</p>"
          (rstr [:p 'foo " " :bar nil 1])))
