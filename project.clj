@@ -24,9 +24,9 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:react-16 {:dependencies [[cljsjs/react "16.0.0-0"]
-                                       [cljsjs/react-dom "16.0.0-0"]
-                                       [cljsjs/react-dom-server "16.0.0-0"]]}
+  :profiles {:react-16 {:dependencies [[cljsjs/react "16.1.0-0"]
+                                       [cljsjs/react-dom "16.1.0-0"]
+                                       [cljsjs/react-dom-server "16.1.0-0"]]}
 
              :dev {:dependencies [[figwheel "0.5.14"]
                                   [doo "0.1.8"]]
