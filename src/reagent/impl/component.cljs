@@ -278,7 +278,7 @@
                      (.-type)
                      (.-displayName))
         parent (some-> fiber
-                       (.-:return))
+                       (.-return))
         path (some-> parent
                      fiber-component-path
                      (str " > "))
