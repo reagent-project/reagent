@@ -71,6 +71,33 @@
                    (apply x args))
         :else (clj->js x)))
 
+;; Previous few functions copied for custom elements,
+;; without mapping from class to className etc.
+
+(def custom-prop-name-cache #js{})
+
+(defn cached-custom-prop-name [k]
+  (if (named? k)
+    (if-some [k' (cache-get custom-prop-name-cache (name k))]
+      k'
+      (aset prop-name-cache (name k)
+            (util/dash-to-camel k)))
+    k))
+
+(defn custom-kv-conv [o k v]
+  (doto o
+    (aset (cached-custom-prop-name k)
+          (convert-prop-value v))))
+
+(defn convert-custom-prop-value [x]
+  (cond (js-val? x) x
+        (named? x) (name x)
+        (map? x) (reduce-kv custom-kv-conv #js{} x)
+        (coll? x) (clj->js x)
+        (ifn? x) (fn [& args]
+                   (apply x args))
+        :else (clj->js x)))
+
 (defn oset [o k v]
   (doto (if (nil? o) #js{} o)
     (aset k v)))
@@ -78,18 +105,22 @@
 (defn oget [o k]
   (if (nil? o) nil (aget o k)))
 
-(defn set-id-class [p id-class]
+(defn set-id-class
+  "Takes the id and class from tag keyword, and adds them to the
+  other props. Parsed tag is JS object with :id and :class properties."
+  [props id-class]
   (let [id ($ id-class :id)
-        p (if (and (some? id)
-                   (nil? (oget p "id")))
-            (oset p "id" id)
-            p)]
-    (if-some [class ($ id-class :className)]
-      (let [old (oget p "className")]
-        (oset p "className" (if (nil? old)
-                              class
-                              (str class " " old))))
-      p)))
+        class ($ id-class :class)]
+    (cond-> props
+      ;; Only use ID from tag keyword if no :id in props already
+      (and (some? id)
+           (nil? (:id props)))
+      (assoc :id id)
+
+      ;; Merge classes
+      class
+      (assoc :class (let [old-class (:class props)]
+                      (if (nil? old-class) class (str class " " old-class)))))))
 
 (defn stringify-class [{:keys [class] :as props}]
   (if (coll? class)
@@ -100,10 +131,12 @@
     props))
 
 (defn convert-props [props id-class]
-  (-> props
-      stringify-class
-      convert-prop-value
-      (set-id-class id-class)))
+  (let [props (-> props
+                  stringify-class
+                  (set-id-class id-class))]
+    (if ($ id-class :custom)
+      (convert-custom-prop-value props)
+      (convert-prop-value props))))
 
 ;;; Specialization for input components
 
@@ -134,7 +167,7 @@
       ($! node :value rendered-value)
       (when (fn? on-write)
         (on-write rendered-value)))
-    
+
     ;; Setting "value" (below) moves the cursor position to the
     ;; end which gives the user a jarring experience.
     ;;
@@ -280,9 +313,12 @@
                 (string/replace class #"\." " "))]
     (assert tag (str "Invalid tag: '" hiccup-tag "'"
                      (comp/comp-name)))
-    #js{:name tag
-        :id id
-        :className class}))
+    #js {:name tag
+         :id id
+         :class class
+         ;; Custom element names must contain hyphen
+         ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
+         :custom (not= -1 (.indexOf tag "-"))}))
 
 (defn try-get-key [x]
   ;; try catch to avoid clojurescript peculiarity with

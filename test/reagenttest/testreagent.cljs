@@ -1064,3 +1064,12 @@
   (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
                (server/render-to-static-markup
                  [:div {:style {:text-align "center"}} "foo"]))))
+
+(deftest custom-element-class-prop
+  (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
+               (server/render-to-static-markup
+                 [:custom-element {:class "foobar"} "foo"])))
+
+  (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
+               (server/render-to-static-markup
+                 [:custom-element.foobar "foo"]))) )
