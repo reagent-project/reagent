@@ -57,7 +57,8 @@
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :asset-path "js/out"
-                :npm-deps false}}
+                :npm-deps false
+                :checked-arrays :warn}}
 
     :client-npm
     {:source-paths ["demo"]
@@ -68,7 +69,8 @@
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client-npm/public/js/out"
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
-                :asset-path "js/out"}}
+                :asset-path "js/out"
+                :checked-arrays :warn}}
 
     :test
     {:source-paths ["test"]

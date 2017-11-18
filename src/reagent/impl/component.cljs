@@ -4,9 +4,9 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless
-                                          assert-callable]]))
+                                          assert-callable]]
+            [goog.object :as gobj]))
 
 (declare ^:dynamic *current-component*)
 
@@ -16,10 +16,12 @@
 (defn shallow-obj-to-map [o]
   (let [ks (js-keys o)
         len (alength ks)]
-    (loop [m {} i 0]
+    (loop [m {}
+           i 0]
       (if (< i len)
         (let [k (aget ks i)]
-          (recur (assoc m (keyword k) (aget o k)) (inc i)))
+          (recur (assoc m (keyword k) (gobj/get o k))
+                 (inc i)))
         m))))
 
 (defn extract-props [v]
@@ -33,52 +35,52 @@
       (subvec v first-child))))
 
 (defn props-argv [c p]
-  (if-some [a ($ p :argv)]
+  (if-some [a (.-argv p)]
     a
     [(.-constructor c) (shallow-obj-to-map p)]))
 
 (defn get-argv [c]
-  (props-argv c ($ c :props)))
+  (props-argv c (.-props c)))
 
 (defn get-props [c]
-  (let [p ($ c :props)]
-    (if-some [v ($ p :argv)]
+  (let [p (.-props c)]
+    (if-some [v (.-argv p)]
       (extract-props v)
       (shallow-obj-to-map p))))
 
 (defn get-children [c]
-  (let [p ($ c :props)]
-    (if-some [v ($ p :argv)]
+  (let [p (.-props c)]
+    (if-some [v (.-argv p)]
       (extract-children v)
-      (->> ($ p :children)
+      (->> (.-children p)
            (react/Children.toArray)
            (into [])))))
 
 (defn ^boolean reagent-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype ($ :reagentRender)))))
+       (some? (some-> c .-prototype (.-reagentRender)))))
 
 (defn ^boolean react-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype ($ :render)))))
+       (some? (some-> c .-prototype (.-render)))))
 
 (defn ^boolean reagent-component? [c]
-  (some? ($ c :reagentRender)))
+  (some? (.-reagentRender c)))
 
 (defn cached-react-class [c]
-  ($ c :cljsReactClass))
+  (.-cljsReactClass c))
 
 (defn cache-react-class [c constructor]
-  ($! c :cljsReactClass constructor))
+  (set! (.-cljsReactClass c) constructor))
 
 
 ;;; State
 
 (defn state-atom [this]
-  (let [sa ($ this :cljsState)]
+  (let [sa (.-cljsState this)]
     (if-not (nil? sa)
       sa
-      ($! this :cljsState (ratom/atom nil)))))
+      (set! (.-cljsState this) (ratom/atom nil)))))
 
 ;; avoid circular dependency: this gets set from template.cljs
 (defonce as-element nil)
@@ -87,9 +89,9 @@
 ;;; Rendering
 
 (defn wrap-render [c]
-  (let [f ($ c :reagentRender)
+  (let [f (.-reagentRender c)
         _ (assert-callable f)
-        res (if (true? ($ c :cljsLegacyRender))
+        res (if (true? (.-cljsLegacyRender c))
               (.call f c c)
               (let [v (get-argv c)
                     n (count v)]
@@ -106,7 +108,7 @@
                            (fn [& args]
                              (as-element (apply vector res args)))
                            res)]
-                   ($! c :reagentRender f)
+                   (set! (.-reagentRender c) f)
                    (recur c))
       :else res)))
 
@@ -137,7 +139,7 @@
    (fn render []
      (this-as c (if util/*non-reactive*
                   (do-render c)
-                  (let [rat ($ c :cljsRatom)]
+                  (let [rat (.-cljsRatom c)]
                     (batch/mark-rendered c)
                     (if (nil? rat)
                       (ratom/run-in-reaction #(do-render c) c "cljsRatom"
@@ -163,8 +165,8 @@
           (this-as c
                    ;; Don't care about nextstate here, we use forceUpdate
                    ;; when only when state has changed anyway.
-                   (let [old-argv ($ c :props.argv)
-                         new-argv ($ nextprops :argv)
+                   (let [old-argv (.. c -props -argv)
+                         new-argv (.-argv nextprops)
                          noargv (or (nil? old-argv) (nil? new-argv))]
                      (cond
                        (nil? f) (or noargv (not= old-argv new-argv))
@@ -182,7 +184,7 @@
     :componentWillMount
     (fn componentWillMount []
       (this-as c
-               ($! c :cljsMountOrder (batch/next-mount-count))
+               (set! (.-cljsMountOrder c) (batch/next-mount-count))
                (when-not (nil? f)
                  (.call f c c))))
 
@@ -193,7 +195,7 @@
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (some-> ($ c :cljsRatom)
+               (some-> (.-cljsRatom c)
                        ratom/dispose!)
                (batch/mark-rendered c)
                (when-not (nil? f)
@@ -255,7 +257,7 @@
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
                (doto o
-                 (aset (name k) v)))
+                 (gobj/set (name k) v)))
              #js{} m))
 
 (defn cljsify [body]
@@ -273,10 +275,10 @@
 
 (defn fiber-component-path [fiber]
   (let [name (some-> fiber
-                     ($ :type)
-                     ($ :displayName))
+                     (.-type)
+                     (.-displayName))
         parent (some-> fiber
-                       ($ :return))
+                       (.-:return))
         path (some-> parent
                      fiber-component-path
                      (str " > "))
@@ -286,18 +288,18 @@
 (defn component-path [c]
   ;; Alternative branch for React 16
   ;; Try both original name (for UMD foreign-lib) and manged name (property access, for Closure optimized React)
-  (if-let [fiber (or (some-> c ($ :_reactInternalFiber))
+  (if-let [fiber (or (some-> c (gobj/get "_reactInternalFiber"))
                      (some-> c (.-_reactInternalFiber)))]
     (fiber-component-path fiber)
-    (let [instance (or (some-> c ($ :_reactInternalInstance))
+    (let [instance (or (some-> c (gobj/get "_reactInternalInstance"))
                        (some-> c (.-_reactInternalInstance))
                        c)
-          elem (or (some-> instance ($ :_currentElement))
+          elem (or (some-> instance (gobj/get "_currentElement"))
                    (some-> instance (.-_currentElement)))
           name (some-> elem
-                       ($ :type)
-                       ($ :displayName))
-          owner (or (some-> elem ($ :_owner))
+                       (.-type)
+                       (.-displayName))
+          owner (or (some-> elem (gobj/get "_owner"))
                     (some-> elem (.-_owner)))
           path (some-> owner
                        component-path

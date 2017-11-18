@@ -11,7 +11,6 @@
                                                   assert-some assert-component
                                                   assert-js-object assert-new-state
                                                   assert-callable]]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.dom :as dom]))
 
 (def is-client util/is-client)

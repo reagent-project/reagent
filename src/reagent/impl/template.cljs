@@ -6,9 +6,9 @@
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.debug :refer-macros [dbg prn println log dev?
-                                          warn warn-unless]]))
+                                          warn warn-unless]]
+            [goog.object :as gobj]))
 
 (declare as-element)
 
@@ -44,14 +44,15 @@
 
 (defn cache-get [o k]
   (when ^boolean (.hasOwnProperty o k)
-    (aget o k)))
+    (gobj/get o k)))
 
 (defn cached-prop-name [k]
   (if (named? k)
     (if-some [k' (cache-get prop-name-cache (name k))]
       k'
-      (aset prop-name-cache (name k)
-            (util/dash-to-camel k)))
+      (let [v (util/dash-to-camel k)]
+        (gobj/set prop-name-cache (name k))
+        v))
     k))
 
 (defn ^boolean js-val? [x]
@@ -61,8 +62,7 @@
 
 (defn kv-conv [o k v]
   (doto o
-    (aset (cached-prop-name k)
-          (convert-prop-value v))))
+    (gobj/set (cached-prop-name k) (convert-prop-value v))))
 
 (defn convert-prop-value [x]
   (cond (js-val? x) x
@@ -82,8 +82,7 @@
   (if (named? k)
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
-      (aset prop-name-cache (name k)
-            (util/dash-to-camel k)))
+      (gobj/set prop-name-cache (name k) (util/dash-to-camel k)))
     k))
 
 (defn custom-kv-conv [o k v]
@@ -101,18 +100,18 @@
         :else (clj->js x)))
 
 (defn oset [o k v]
-  (doto (if (nil? o) #js{} o)
-    (aset k v)))
+  (doto (if (nil? o) #js {} o)
+    (gobj/set k v)))
 
 (defn oget [o k]
-  (if (nil? o) nil (aget o k)))
+  (if (nil? o) nil (gobj/get o k)))
 
 (defn set-id-class
   "Takes the id and class from tag keyword, and adds them to the
   other props. Parsed tag is JS object with :id and :class properties."
   [props id-class]
-  (let [id ($ id-class :id)
-        class ($ id-class :class)]
+  (let [id (.-id id-class)
+        class (.-className id-class)]
     (cond-> props
       ;; Only use ID from tag keyword if no :id in props already
       (and (some? id)
@@ -136,7 +135,7 @@
   (let [props (-> props
                   stringify-class
                   (set-id-class id-class))]
-    (if ($ id-class :custom)
+    (if (.-custom id-class)
       (convert-custom-prop-value props)
       (convert-prop-value props))))
 
@@ -159,14 +158,14 @@
 
 (defn input-node-set-value
   [node rendered-value dom-value component {:keys [on-write]}]
-  (if-not (and (identical? node ($ js/document :activeElement))
-            (has-selection-api? ($ node :type))
+  (if-not (and (identical? node (.-activeElement js/document))
+            (has-selection-api? (.-type node))
             (string? rendered-value)
             (string? dom-value))
     ;; just set the value, no need to worry about a cursor
     (do
-      ($! component :cljsDOMValue rendered-value)
-      ($! node :value rendered-value)
+      (set! (.-cljsDOMValue component) rendered-value)
+      (set! (.-value node) rendered-value)
       (when (fn? on-write)
         (on-write rendered-value)))
 
@@ -191,37 +190,37 @@
     ;; So this is just a warning. The code below is simple
     ;; enough, but if you are tempted to change it, be aware of
     ;; all the scenarios you have handle.
-    (let [node-value ($ node :value)]
+    (let [node-value (.-value node)]
       (if (not= node-value dom-value)
         ;; IE has not notified us of the change yet, so check again later
         (batch/do-after-render #(input-component-set-value component))
         (let [existing-offset-from-end (- (count node-value)
-                                         ($ node :selectionStart))
+                                         (.-selectionStart node))
               new-cursor-offset        (- (count rendered-value)
                                          existing-offset-from-end)]
-          ($! component :cljsDOMValue rendered-value)
-          ($! node :value rendered-value)
+          (set! (.-cljsDOMValue component) rendered-value)
+          (set! (.-value node) rendered-value)
           (when (fn? on-write)
             (on-write rendered-value))
-          ($! node :selectionStart new-cursor-offset)
-          ($! node :selectionEnd new-cursor-offset))))))
+          (set! (.-selectionStart node) new-cursor-offset)
+          (set! (.-selectionEnd node) new-cursor-offset))))))
 
 (defn input-component-set-value [this]
-  (when ($ this :cljsInputLive)
-    ($! this :cljsInputDirty false)
-    (let [rendered-value ($ this :cljsRenderedValue)
-          dom-value ($ this :cljsDOMValue)
+  (when (.-cljsInputLive this)
+    (set! (.-cljsInputDirty this) false)
+    (let [rendered-value (.-cljsRenderedValue this)
+          dom-value (.-cljsDOMValue this)
           ;; Default to the root node within this component
           node (find-dom-node this)]
       (when (not= rendered-value dom-value)
         (input-node-set-value node rendered-value dom-value this {})))))
 
 (defn input-handle-change [this on-change e]
-  ($! this :cljsDOMValue (-> e .-target .-value))
+  (set! (.-cljsDOMValue this) (-> e .-target .-value))
   ;; Make sure the input is re-rendered, in case on-change
   ;; wants to keep the value unchanged
-  (when-not ($ this :cljsInputDirty)
-    ($! this :cljsInputDirty true)
+  (when-not (.-cljsInputDirty this)
+    (set! (.-cljsInputDirty this) true)
     (batch/do-after-render #(input-component-set-value this)))
   (on-change e))
 
@@ -234,21 +233,20 @@
              (.hasOwnProperty jsprops "value"))
     (assert find-dom-node
             "reagent.dom needs to be loaded for controlled input to work")
-    (let [v ($ jsprops :value)
+    (let [v (.-value jsprops)
           value (if (nil? v) "" v)
-          on-change ($ jsprops :onChange)]
-      (when-not ($ this :cljsInputLive)
+          on-change (.-onChange jsprops)]
+      (when-not (.-cljsInputLive this)
         ;; set initial value
-        ($! this :cljsInputLive true)
-        ($! this :cljsDOMValue value))
-      ($! this :cljsRenderedValue value)
+        (set! (.-cljsInputLive this) true)
+        (set! (.-cljsDOMValue this) value))
+      (set! (.-cljsRenderedValue this) value)
       (js-delete jsprops "value")
-      (doto jsprops
-        ($! :defaultValue value)
-        ($! :onChange #(input-handle-change this on-change %))))))
+      (set! (.-defaultValue jsprops) value)
+      (set! (.-onChange jsprops) #(input-handle-change this on-change %)))))
 
 (defn input-unmount [this]
-  ($! this :cljsInputLive nil))
+  (set! (.-cljsInputLive this) nil))
 
 (defn ^boolean input-component? [x]
   (case x
@@ -308,9 +306,9 @@
 
 (defn reag-element [tag v]
   (let [c (comp/as-class tag)
-        jsprops #js{:argv v}]
+        jsprops #js {:argv v}]
     (when-some [key (key-from-vec v)]
-      ($! jsprops :key key))
+      (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
 
 (defn fragment-element [argv]
@@ -324,33 +322,36 @@
 
 (defn adapt-react-class
   [c]
-  (doto (->NativeWrapper)
-    ($! :name c)
-    ($! :id nil)
-    ($! :class nil)))
+  (let [x (->NativeWrapper)]
+    (set! (.-name x) c)
+    (set! (.-id x) nil)
+    (set! (.-class x) nil)
+    x))
 
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
   (if-some [s (cache-get tag-name-cache x)]
     s
-    (aset tag-name-cache x (parse-tag x))))
+    (let [v  (parse-tag x)]
+      (gobj/set tag-name-cache x v)
+      v)))
 
 (defn native-element [parsed argv first]
-  (let [comp ($ parsed :name)]
-    (let [props (nth argv first nil)
-          hasprops (or (nil? props) (map? props))
-          jsprops (convert-props (if hasprops props) parsed)
-          first-child (+ first (if hasprops 1 0))]
-      (if (input-component? comp)
-        (-> [(reagent-input) argv comp jsprops first-child]
-            (with-meta (meta argv))
-            as-element)
-        (let [key (-> (meta argv) get-key)
-              p (if (nil? key)
-                  jsprops
-                  (oset jsprops "key" key))]
-          (make-element argv comp p first-child))))))
+  (let [comp (.-name parsed)
+        props (nth argv first nil)
+        hasprops (or (nil? props) (map? props))
+        jsprops (convert-props (if hasprops props) parsed)
+        first-child (+ first (if hasprops 1 0))]
+    (if (input-component? comp)
+      (-> [(reagent-input) argv comp jsprops first-child]
+          (with-meta (meta argv))
+          as-element)
+      (let [key (-> (meta argv) get-key)
+            p (if (nil? key)
+                jsprops
+                (oset jsprops "key" key))]
+        (make-element argv comp p first-child)))))
 
 (defn str-coll [coll]
   (if (dev?)
@@ -423,7 +424,7 @@
       (let [val (aget a i)]
         (when (and (vector? val)
                    (nil? (key-from-vec val)))
-          ($! o :no-key true))
+          (set! (.-no-key o) true))
         (aset a i (as-element val))))
     a))
 
@@ -433,7 +434,7 @@
     (when derefed
       (warn (hiccup-err x "Reactive deref not supported in lazy seq, "
                         "it should be wrapped in doall")))
-    (when ($ ctx :no-key)
+    (when (.-no-key ctx)
       (warn (hiccup-err x "Every element in a seq should have a unique :key")))
     res))
 

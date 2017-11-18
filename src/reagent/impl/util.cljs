@@ -1,10 +1,9 @@
 (ns reagent.impl.util
   (:require [reagent.debug :refer-macros [dbg log warn]]
-            [reagent.interop :refer-macros [$ $!]]
             [clojure.string :as string]))
 
 (def is-client (and (exists? js/window)
-                    (-> js/window ($ :document) nil? not)))
+                    (-> (.-document js/window) nil? not)))
 
 (def ^:dynamic ^boolean *non-reactive* false)
 
@@ -40,8 +39,8 @@
 
 (defn fun-name [f]
   (let [n (or (and (fn? f)
-                   (or ($ f :displayName)
-                       ($ f :name)))
+                   (or (.-displayName f)
+                       (.-name f)))
               (and (implements? INamed f)
                    (name f))
               (let [m (meta f)]
@@ -137,5 +136,5 @@
 (defn force-update [comp deep]
   (if deep
     (binding [*always-update* true]
-      ($ comp forceUpdate))
-    ($ comp forceUpdate)))
+      (.forceUpdate comp))
+    (.forceUpdate comp)))

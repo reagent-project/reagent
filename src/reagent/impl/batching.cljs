@@ -1,9 +1,9 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
   (:require [reagent.debug :refer-macros [dbg assert-some]]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.impl.util :refer [is-client]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [goog.object :as gobj]))
 
 ;;; Update batching
 
@@ -19,15 +19,15 @@
   (if-not is-client
     fake-raf
     (let [w js/window]
-      (or ($ w :requestAnimationFrame)
-          ($ w :webkitRequestAnimationFrame)
-          ($ w :mozRequestAnimationFrame)
-          ($ w :msRequestAnimationFrame)
+      (or (.-requestAnimationFrame w)
+          (.-webkitRequestAnimationFrame w)
+          (.-mozRequestAnimationFrame w)
+          (.-msRequestAnimationFrame w)
           fake-raf))))
 
 (defn compare-mount-order [c1 c2]
-  (- ($ c1 :cljsMountOrder)
-     ($ c2 :cljsMountOrder)))
+  (- (.-cljsMountOrder c1)
+     (.-cljsMountOrder c2)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents
@@ -35,8 +35,8 @@
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (true? ($ c :cljsIsDirty))
-        ($ c forceUpdate)))))
+      (when (true? (.-cljsIsDirty c))
+        (.forceUpdate c)))))
 
 
 ;; Set from ratom.cljs
@@ -46,16 +46,16 @@
   Object
   (enqueue [this k f]
     (assert-some f "Enqueued function")
-    (when (nil? (aget this k))
-      (aset this k (array)))
-    (.push (aget this k) f)
+    (when (nil? (gobj/get this k))
+      (gobj/set this k (array)))
+    (.push (gobj/get this k) f)
     (.schedule this))
 
   (run-funs [this k]
-    (when-some [fs (aget this k)]
-      (aset this k nil)
+    (when-some [^array fs (gobj/get this k)]
+      (gobj/set this k nil)
       (dotimes [i (alength fs)]
-        ((aget fs i)))))
+        ((gobj/get fs i)))))
 
   (schedule [this]
     (when-not scheduled?
@@ -81,8 +81,8 @@
   (flush-queues [this]
     (.run-funs this "beforeFlush")
     (ratom-flush)
-    (when-some [cs (aget this "componentQueue")]
-      (aset this "componentQueue" nil)
+    (when-some [cs (.-componentQueue this)]
+      (set! (.-componentQueue this) nil)
       (run-queue cs))
     (.flush-after-render this)))
 
@@ -95,12 +95,12 @@
   (.flush-after-render render-queue))
 
 (defn queue-render [c]
-  (when-not ($ c :cljsIsDirty)
-    ($! c :cljsIsDirty true)
+  (when-not (.-cljsIsDirty c)
+    (set! (.-cljsIsDirty c) true)
     (.queue-render render-queue c)))
 
 (defn mark-rendered [c]
-  ($! c :cljsIsDirty false))
+  (set! (.-cljsIsDirty c) false))
 
 (defn do-before-flush [f]
   (.add-before-flush render-queue f))
