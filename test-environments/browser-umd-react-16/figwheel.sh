@@ -1,3 +1,3 @@
 #!/bin/bash
-set -x
+set -ex
 lein with-profile react-16 figwheel
