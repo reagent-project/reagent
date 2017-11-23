@@ -8,7 +8,8 @@
             [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]
-            [reagenttest.utils :as u :refer [with-mounted-component found-in]]))
+            [reagenttest.utils :as u :refer [with-mounted-component found-in]]
+            [goog.string :as gstr]))
 
 (def tests-done (atom {}))
 
@@ -1072,4 +1073,9 @@
 
   (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
                (server/render-to-static-markup
-                 [:custom-element.foobar "foo"]))) )
+                 [:custom-element.foobar "foo"]))))
+
+(deftest html-entities
+  (is (= "<i> </i>"
+         (server/render-to-static-markup
+           [:i (gstr/unescapeEntities "&nbsp;")]))))
