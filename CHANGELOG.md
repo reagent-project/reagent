@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Apply vector metadata to the outermost element when using nesting shorthard ([#262](https://github.com/reagent-project/reagent/issues/262))
+
 ## 0.8.0-alpha2 (2017-10-20)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha1...v0.8.0-alpha2)**

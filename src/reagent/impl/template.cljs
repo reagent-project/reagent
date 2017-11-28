@@ -441,8 +441,12 @@
                       (hiccup-err v "Expected React component in"))
               (native-element #js{:name comp} v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
-          (recur [(subs n 0 pos)
-                  (assoc v 0 (subs n (inc pos)))])))
+          ;; Apply metadata (e.g. :key) to the outermost element.
+          ;; Metadata is probably used only with sequeneces, and in that case
+          ;; only the key of the outermost element matters.
+          (recur (with-meta [(subs n 0 pos)
+                             (assoc (with-meta v nil) 0 (subs n (inc pos)))]
+                            (meta v)))))
 
       (instance? NativeWrapper tag)
       (native-element tag v 1)

@@ -556,6 +556,17 @@
   (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
          (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
 
+(deftest extended-syntax-metadata
+  (when r/is-client
+    (let [comp (fn []
+                 [:div
+                  (for [k [1 2]]
+                    ^{:key k} [:div>div "a"])])]
+      (with-mounted-component [comp]
+        (fn [c div]
+          ;; Just make sure this doesn't print a debug message
+          )))))
+
 (deftest test-class-from-collection
   (is (= (rstr [:p {:class ["a" "b" "c" "d"]}])
          (rstr [:p {:class "a b c d"}])))
