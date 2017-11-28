@@ -7,10 +7,10 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
-            [cljs.test :as test :include-macros true]
-            [doo.runner :as doo :refer-macros [doo-tests]]
+            [cljs.test :as test]
+            [doo.runner :as doo :include-macros true]
             [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg log]]
+            [reagent.debug :refer [dbg log]]
             [sitetools.server]))
 
 (enable-console-print!)
@@ -57,11 +57,4 @@
     (run-tests)
     [#'test-output-mini]))
 
-(doo-tests 'reagenttest.testreagent
-           'reagenttest.testcursor
-           'reagenttest.testinterop
-           'reagenttest.testratom
-           'reagenttest.testratomasync
-           'reagenttest.testtrack
-           'reagenttest.testwithlet
-           'reagenttest.testwrap)
+(doo/doo-all-tests #"reagenttest.test.*")

@@ -158,42 +158,45 @@
               done)))))))
 
 (deftest test-cursor
-  (let [state (r/atom {:a {:v 1}
-                       :b {:v 2}})
-        a-count (r/atom 0)
-        b-count (r/atom 0)
-        derefer (fn derefer [cur count]
-                  (swap! count inc)
-                  [:div "" @cur])
-        comp (fn test-cursor []
-               [:div
-                [derefer (r/cursor state [:a]) a-count]
-                [derefer (r/cursor state [:b]) b-count]])]
-    (t/async done
-      (u/with-mounted-component-async [comp] done
-        (fn [c div done]
-          (u/run-fns-after-render
-            (fn []
-              (is (= @a-count 1))
-              (is (= @b-count 1))
+  (when r/is-client
+    (let [state (r/atom {:a {:v 1}
+                         :b {:v 2}})
+          a-count (r/atom 0)
+          b-count (r/atom 0)
+          derefer (fn derefer [cur count]
+                    (swap! count inc)
+                    [:div "" @cur])
+          comp (fn test-cursor []
+                 [:div
+                  [derefer (r/cursor state [:a]) a-count]
+                  [derefer (r/cursor state [:b]) b-count]])]
+      (t/async done
+        (u/with-mounted-component-async [comp] done
+          (fn [c div done]
+            (u/run-fns-after-render
+              (fn []
+                (is (= @a-count 1))
+                (is (= @b-count 1))
 
 
-              (swap! state update-in [:a :v] inc)
-              (is (= @a-count 1)))
-            (fn []
-              (is (= @a-count 2))
-              (is (= @b-count 1))
+                (swap! state update-in [:a :v] inc)
+                (is (= @a-count 1)))
+              (fn []
+                (is (= @a-count 2))
+                (is (= @b-count 1))
 
-              (reset! state {:a {:v 2} :b {:v 2}}))
-            (fn []
-              (is (= @a-count 2))
-              (is (= @b-count 1))
+                (reset! state {:a {:v 2} :b {:v 2}}))
+              (fn []
+                (is (= @a-count 2))
+                (is (= @b-count 1))
 
-              (reset! state {:a {:v 3} :b {:v 2}}))
-            (fn []
-              (is (= @a-count 3))
-              (is (= @b-count 1)))
-            done))))))
+                (reset! state {:a {:v 3} :b {:v 2}}))
+              (fn []
+                (is (= @a-count 3))
+                (is (= @b-count 1)))
+              (fn []
+                (js/console.log "test-cursor done"))
+              done)))))))
 
 (deftest test-fn-cursor
  (let [state (r/atom {:a {:v 1}
