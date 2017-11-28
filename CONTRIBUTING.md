@@ -7,7 +7,7 @@ These are just guidelines, not rules. Use your best judgment and feel free to pr
 
 ## Support questions
 
-**The Github issues for Reagent are for bug reports and feature requests. Support requests and usage questions should go to the [Clojure Slack channel](http://clojurians.net), the [ClojureScript mailing list](https://groups.google.com/forum/#!forum/clojurescript), or the [Reagent mailing list](https://groups.google.com/forum/#!forum/reagent-project).**
+**The Github issues for Reagent are for bug reports and feature requests. Support requests and usage questions should go to the [Clojure Slack channel](http://clojurians.net), [Clojureverse discussion board](https://clojureverse.org/), the [ClojureScript mailing list](https://groups.google.com/forum/#!forum/clojurescript), or the [Reagent mailing list](https://groups.google.com/forum/#!forum/reagent-project).**
 
 ## Creating issues for bugs
 
