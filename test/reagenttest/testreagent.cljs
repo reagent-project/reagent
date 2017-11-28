@@ -9,7 +9,9 @@
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]
             [reagenttest.utils :as u :refer [with-mounted-component found-in]]
-            [goog.string :as gstr]))
+            [goog.string :as gstr]
+            [goog.object :as gobj]
+            [prop-types :as prop-types]))
 
 (def tests-done (atom {}))
 
@@ -1079,3 +1081,29 @@
   (is (= "<i> </i>"
          (server/render-to-static-markup
            [:i (gstr/unescapeEntities "&nbsp;")]))))
+
+(defn context-wrapper []
+  (r/create-class
+    {:get-child-context (fn []
+                          (this-as this
+                            #js {:foo "bar"}))
+     :child-context-types #js {:foo prop-types/string.isRequired}
+     :reagent-render (fn [child]
+                       [:div
+                        "parent,"
+                        child])}))
+
+(defn context-child []
+  (r/create-class
+    {:context-types #js {:foo prop-types/string.isRequired}
+     :reagent-render (fn []
+                       (let [this (r/current-component)]
+                         ;; Context property name is not mangled, so need to  use gobj/get to access property by string name
+                         ;; React extern handles context name.
+                         [:div "child," (gobj/get (.-context this) "foo")]))}))
+
+(deftest context-test
+  (with-mounted-component [context-wrapper [context-child]]
+    (fn [c div]
+      (is (= "parent,child,bar"
+             (.-innerText div))))))

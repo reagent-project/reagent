@@ -29,7 +29,8 @@
                                        [cljsjs/react-dom-server "16.1.0-0"]]}
 
              :dev {:dependencies [[figwheel "0.5.14"]
-                                  [doo "0.1.8"]]
+                                  [doo "0.1.8"]
+                                  [cljsjs/prop-types "15.6.0-0"]]
                    :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client"]}}
 
