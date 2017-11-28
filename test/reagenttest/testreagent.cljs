@@ -982,7 +982,7 @@
                        (-> e :warn first))))))))
 
 (deftest test-error-boundary
-  (when (>= (js/parseInt react/version) 16)
+  (when (and r/is-client (>= (js/parseInt react/version) 16))
     (let [error (r/atom nil)
           error-boundary (fn error-boundary [comp]
                            (r/create-class
