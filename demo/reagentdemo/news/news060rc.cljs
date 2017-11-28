@@ -25,6 +25,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2016-09-14"]
    [:div.demo-text
     [:p "Reagent 0.6.0-rc has been given a lot of testing, a new
     version of React (15.1.0), bug fixing and some small general

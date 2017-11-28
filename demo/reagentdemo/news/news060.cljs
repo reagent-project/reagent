@@ -121,6 +121,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2015-12-06"]
    [:div.demo-text
     [:p "Reagent 0.6.0-alpha contains new reactivity helpers, better
     integration with native React components, a new version of

@@ -24,6 +24,7 @@
   [:div.reagent-demo
    [:h1
     [link {:href url} title]]
+   [:span "2017-03-11"]
    [:div
     [abstract]]])
 

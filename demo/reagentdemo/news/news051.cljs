@@ -35,6 +35,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2015-09-09"]
    [:div.demo-text
     [:p "Reagent 0.5.1 contains a new convenient shortcut for nested
     elements, better error messages, new logic for maintaining cursor

@@ -106,6 +106,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2014-12-10"]
    [:div.demo-text
     [:p "Reagent 0.5.0 has automatic importing of React.js, two kinds
     of cursors, better integration of native React components, better

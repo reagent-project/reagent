@@ -13,6 +13,12 @@
 
 (defn main []
   [:div
+   [:div.reagent-demo
+    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#070-2017-06-27"} "Reagent 0.7.0"]]
+    [:span "2017-06-27"]]
+   [:div.reagent-demo
+    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#062-2017-05-19"} "Reagent 0.6.2"]]
+    [:span "2017-05-19"]]
    [news061/main {:summary true}]
    [news060r/main {:summary true}]
    [news060rc/main {:summary true}]
@@ -22,7 +28,13 @@
    [clock/main {:summary true}]
    [anyargs/main {:summary true}]
    [async/main {:summary true}]
-   [undodemo/main {:summary true}]])
+   [undodemo/main {:summary true}]
+   [:div.reagent-demo
+    [:h1 "Reagent 0.1.0"]
+    [:span "2014-01-10"]]
+   [:div.reagent-demo
+    [:h1 "Reagent 0.0.2"]
+    [:span "2013-12-17"]]])
 
 (def url "/news/index.html")
 (tools/register-page url [#'main] "News")

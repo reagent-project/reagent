@@ -37,6 +37,8 @@
         jonase {:href "https://github.com/jonase"}]
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-02-15"]
+
      [:div.demo-text
 
       [:h2 "If it looks like a function…"]

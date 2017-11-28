@@ -52,6 +52,9 @@
   (let [head title]
     [:div.reagent-demo
      [:h1 [link {:href url} head]]
+     ;; Undo demo originall added on 0a0dbdee7dfdaa545171d41fa1c3a18a1cae6e1b
+     [:span "2014-01-19"]
+
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
 
