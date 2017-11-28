@@ -1078,9 +1078,16 @@
                  [:custom-element.foobar "foo"]))))
 
 (deftest html-entities
-  (is (= "<i> </i>"
-         (server/render-to-static-markup
-           [:i (gstr/unescapeEntities "&nbsp;")]))))
+  (testing "entity numbers can be unescaped always"
+    (is (= "<i> </i>"
+           (server/render-to-static-markup
+             [:i (gstr/unescapeEntities "&#160;")]))))
+
+  (when r/is-client
+    (testing "When DOM is available, all named entities can be unescaped"
+      (is (= "<i> </i>"
+             (server/render-to-static-markup
+               [:i (gstr/unescapeEntities "&nbsp;")]))))))
 
 (defn context-wrapper []
   (r/create-class
