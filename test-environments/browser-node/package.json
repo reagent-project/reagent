@@ -4,8 +4,8 @@
     "@cljs-oss/module-deps": "1.1.1",
     "create-react-class": "15.6.2",
     "prop-types": "15.6.0",
-    "react": "15.6.2",
-    "react-dom": "15.6.2"
+    "react": "16.1.1",
+    "react-dom": "16.1.1"
   },
   "devDependencies": {
     "karma": "1.7.1",

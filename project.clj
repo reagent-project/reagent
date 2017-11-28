@@ -8,9 +8,9 @@
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "15.6.2-0"]
-                 [cljsjs/react-dom "15.6.2-0"]
-                 [cljsjs/react-dom-server "15.6.2-0"]
+                 [cljsjs/react "16.1.1-0"]
+                 [cljsjs/react-dom "16.1.1-0"]
+                 [cljsjs/react-dom-server "16.1.1-0"]
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
@@ -24,11 +24,7 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:react-16 {:dependencies [[cljsjs/react "16.1.1-0"]
-                                       [cljsjs/react-dom "16.1.1-0"]
-                                       [cljsjs/react-dom-server "16.1.1-0"]]}
-
-             :dev {:dependencies [[figwheel "0.5.14"]
+  :profiles {:dev {:dependencies [[figwheel "0.5.14"]
                                   [doo "0.1.8"]
                                   [cljsjs/prop-types "15.6.0-0"]]
                    :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]

@@ -10,7 +10,6 @@ dependencies:
     - ./prepare-tests.sh
   cache_directories:
     - test-environments/browser-node/node_modules
-    - test-environments/browser-node-react-16/node_modules
 test:
   override:
     - ./run-tests.sh
