@@ -70,11 +70,11 @@ can be written as:
 [:div>p>b "Nested Element"]
 ```        
 
-The `:class` attribute can accept either a collection or a string.
-
-```clj
-[:div {:class ["a-class" (when active? "active") "b-class"]}]
-```
+> **Since version 0.8:** The `:class` attribute also supports collections of classes, and nil values are removed:
+> 
+> ```clj
+> [:div {:class ["a-class" (when active? "active") "b-class"]}]
+> ```
 
 You can use one component inside another:
 
