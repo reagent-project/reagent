@@ -40,6 +40,8 @@
              :css-dirs ["site/public/css"]
              :repl false}
 
+  :doo {:paths {:karma "./node_modules/.bin/karma"}}
+
   ;; No profiles and merging - just manual configuration for each build type
   :cljsbuild
   {:builds
