@@ -2,6 +2,12 @@
 
 ## Running tests
 
+The tests use [Karma](https://karma-runner.github.io/2.0/index.html) to run tests on browsers. You need to install `karma` command to run the tests:
+
+```bash
+npm install -g karma-cli
+```
+
 To prepare different environments for tests run:
 
 ```bash
