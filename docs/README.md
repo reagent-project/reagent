@@ -8,5 +8,5 @@
 
 ## Other 
 
-[0.8-upgrade](/docs/0.8-upgrade.md)
-[development](/docs/development.md)
+ - [0.8-upgrade](/docs/0.8-upgrade.md)
+ - [development](/docs/development.md)
