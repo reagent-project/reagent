@@ -1,6 +1,7 @@
 ## Frequently Asked Questions
 
 1. [How can I use an entity like "nbsp"?](UsingAnEntity.md)
+2. [My attribute (like autoFocus) is missing](MyAttributesAreMissing.md)
 
 
 ##### Want To Add An FAQ?  
