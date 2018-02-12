@@ -1,9 +1,9 @@
 ## Frequently Asked Questions
 
 1. [How can I use an entity like "nbsp"?](UsingAnEntity.md)
-2. [My attribute (like autoFocus) is missing](MyAttributesAreMissing.md)
-3. [I want to force Component recreation](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY)
-4. [How Do I access "props" in lifecycle methods](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/)
+2. [Why is my attribute (like autoFocus) is missing?](MyAttributesAreMissing.md)
+3. [How do I force Component recreation?](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY)
+4. [How Do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/)
 
 
 ## Want To Add An FAQ?  
