@@ -24,7 +24,7 @@ Instead you should do this:
    [:div "hello"  (gstring/unescapeEntities "&nbsp;") "there"]
   ```
 
-**Note;** `unescapeEntities` relies on the DOM to produce a string with unescape entities;
+**Note:** `unescapeEntities` relies on the DOM to produce a string with unescape entities;
 in `nodejs` the DOM is unlikely to be available (unless you try using
 [`jsdom`](https://www.npmjs.com/package/jsdom-global)).
 
