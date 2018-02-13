@@ -22,6 +22,7 @@ Also:
 ## Also
 
   * [FAQs](/docs/FAQ)
+  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)
 
 
 #### Misc Docs
