@@ -1,7 +1,7 @@
 
 ## Basic Tutorials 
 
-1. [Creating Reagent Components.md](/docs/CreatingReagentComponents.md)
+1. [Creating Reagent Components](/docs/CreatingReagentComponents.md)
 2. [Using [square brackets] instead of (parentheses)](/docs/UsingSquareBracketsInsteadOfParens.md)
 3. [When do components update?](/docs/WhenDoComponentsUpdate.md)
 
