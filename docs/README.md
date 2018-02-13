@@ -5,8 +5,12 @@
 2. [Using [square brackets] instead of (parentheses)](/docs/UsingSquareBracketsInsteadOfParens.md)
 3. [When do components update?](/docs/WhenDoComponentsUpdate.md)
 
+## Other Resources
 
-## Other 
+[FAQs](/docs/FAQ)
+
+
+#### Misc Docs
 
  - [0.8-upgrade](/docs/0.8-upgrade.md)
  - [development](/docs/development.md)
