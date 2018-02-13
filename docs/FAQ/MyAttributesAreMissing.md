@@ -4,11 +4,13 @@ Why isn't my attribute `xyz` showing up on <some-element>?  (where is `xyz` is s
 
 ### Answer
 
-With Reagent, you use `auto-focus`, not `autoFocus`. As a rule, you take a camelCased HTML attribute 
-(recognised by React) and you put a dash before the Capital, and then don't have capital. So it becomes `camel-cased`. 
+You might be using the wrong attribute name.
 
-And then there are a couple of gotchas like `colspan`.  React recognises `colSpan`, so in Reagent 
-you must use the rule above and provide it as `col-span`. 
+React supports [camelCased HTML attributes](https://reactjs.org/docs/dom-elements.html#all-supported-html-attributes),
+but the equivalent in Reagent is dashed and lower cased. 
+
+For example, with Reagent, you use `auto-focus`, instead of `autoFocus`. And 
+you use `col-span` instead of React's `colSpan`. 
 
 ***
 
