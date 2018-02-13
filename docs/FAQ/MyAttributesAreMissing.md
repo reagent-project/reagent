@@ -4,7 +4,7 @@ Why isn't my attribute `xyz` showing up on <some-element>?  (where is `xyz` is s
 
 ### Answer
 
-You might be using the wrong attribute name.
+You might be spelling it incorrectly. 
 
 React supports [camelCased HTML attributes](https://reactjs.org/docs/dom-elements.html#all-supported-html-attributes),
 but the equivalent in Reagent is dashed and lower cased. 
