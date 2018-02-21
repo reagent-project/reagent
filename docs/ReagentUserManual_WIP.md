@@ -126,9 +126,10 @@ can be written as:
 
 The primary entrypoint to the reagent library is `reagent.core/render`.
 
-```
+```clojure
 (ns example
   (:require [reagent.core :as r]))
+
 (defn render-simple []
   (r/render [:div [:p "Hello world!"]]
     (.-body js/document)))
@@ -244,7 +245,7 @@ Remember, `outer` is called once _per component instance_. Each time, the parame
 
 When Reagent is turning your Hiccup into React components, (see below for a fuller discussion of the rendering process), it will first invoke the form-1 or form-2 function specified. For example:
 
-```
+```clojure
 (defn my-form1 [arg]
   [:div "Form 1 function " arg])
 (defn my-form2 [arg]
@@ -397,7 +398,7 @@ or
 
 All reagent programs have mount code that looks something like this:
 
-```
+```clojure
 (defn mount-root []
   (reagent/render [top-level-component]
   (.getElementById js/document "app")))
@@ -423,14 +424,16 @@ If it is symbol, then reagent will evaluate a function by that name. Reagent exp
 
 This render algorithm hopefully makes clear the difference between returning a component in parenthesis vs. square brackets. It also shows why calling a very simple reagent function as a function can generate correct HTML:
 
-```
+```clojure
 (defn simple-div []
   [:div "Hello"])
+
 (defn my-app []
   [:div
     (simple-div)]) ;; Calling simple-div as a function instead of returning
                    ;; a vector containing the single symbol simple-div.
                    ;; Don't do this.
+
 (defn mount-root []
   (reagent/render
   (.getElementById js/document "app")))
@@ -455,6 +458,7 @@ Reagent provides an implementation of atom that you can create with `reagent/ato
 ```clojure
 (ns example
   (:require [reagent.core :as r]))
+
 (def click-count (r/atom 0))
 
 (defn counting-component []
@@ -489,7 +493,7 @@ You access the atom using `deref` or the shorthand `@`.
 ### The effect of dereferencing a ratom
 
 * A dereference to the ratom during its render function will cause that component to re-render whenever any part of that ratom is updated. (See the section below on cursors to get finer control over update behavior.)
-* Dereferencing an ratom in a callback or event handler after the render function has run will not make the component react to any changes to the ratom (though of course any _changes_ to the ratom made in an event handler will make any watching components re-render).
+* Dereferencing a ratom in a callback or event handler after the render function has run will not make the component react to any changes to the ratom (though of course any _changes_ to the ratom made in an event handler will make any watching components re-render).
 
 ### rswap!
 
@@ -864,7 +868,7 @@ The `reagent.core/as-element` function creates a React element from a Hiccup for
 
 The function `reagent/adapt-react-class` will turn a React Component into something that can be placed into the first position of a Hiccup form, as if it were a Reagent function. Take, for example the react-flip-move library and assume that it has been properly imported as a React Component called `FlipMove`. By wrapping FlipMove with `adapt-react-class`, we can use it in a Hiccup form:
 
-```
+```clojure
 (defn top-articles [articles]
   [(reagent/adapt-react-class FlipMove)
    {:duration 750
@@ -874,7 +878,7 @@ The function `reagent/adapt-react-class` will turn a React Component into someth
 
 There is also a convenience mechanism `:>` (colon greater-than) that shortens this and avoid some parenthesis:
 
-```
+```clojure
 (defn top-articles [articles]
   [:> FlipMove
    {:duration 750
@@ -884,7 +888,7 @@ There is also a convenience mechanism `:>` (colon greater-than) that shortens th
 
 This is the equivalent JavaScript:
 
-```
+```clojure
 const TopArticles = ({ articles }) => (
   <FlipMove duration={750} easing="ease-out">
     {articles}
@@ -896,7 +900,7 @@ const TopArticles = ({ articles }) => (
 
 The `reagent/reactify-component` will take a Form-1, Form-2, or Form-3 reagent "component". For example:
 
-```
+```clojure
 (defn exported [props]
   [:div "Hi, " (:name props)])
 
@@ -915,7 +919,7 @@ A few points to note:
 
 Some React libraries use the decorator pattern: a React component which takes a component as an argument and returns a new component as its result. One example is the React DnD library. We will need to use both `adapt-react-class` and `reactify-component` to move back and forth between React and reagent:
 
-```
+```clojure
 (defn react-dnd-component
   []
   (let [decorator (DragDropContext HTML5Backend)]
@@ -925,7 +929,7 @@ Some React libraries use the decorator pattern: a React component which takes a 
 
 This is the equivalent javascript:
 
-```
+```clojure
 import HTML5Backend from 'react-dnd-html5-backend';
 import { DragDropContext } from 'react-dnd';
 
@@ -940,7 +944,7 @@ export default DragDropContext(HTML5Backend)(TopLevelComponent);
 
 Some React components expect a function as their only child. React autosizer is one such example.
 
-```
+```clojure
 [(reagent/adapt-react-class AutoSizer)
  {}
  (fn [dims]
@@ -961,6 +965,7 @@ Beware that `current-component` is only valid in component functions, and must b
 ```clojure
 (ns example
   (:require [reagent.core :as r]))
+
 (defn my-div []
   (let [this (r/current-component)]
     (into [:div.custom (r/props this)]
