@@ -158,7 +158,7 @@ React is pretty darn fast, and so is Reagent. It should even be faster than plai
 
 The ClojureScript overhead is kept down, thanks to lots of caching.
 
-Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 53K gzipped, using advanced compilation.
+Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 79K gzipped, using advanced compilation.
 
 
 ## About
