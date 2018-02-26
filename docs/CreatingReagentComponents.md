@@ -212,3 +212,46 @@ Here's some further notes about Reagent's mechanics:
      - Reagent will just interpret it. So this is what happens in the case of a `Form-1` function.  
      - If, however, this render function returns another function - ie. it is a `Form-2` outer function returning the inner function - then Reagent knows to replace the Component's render function with the newly returned inner function forever thereafter. So the outer will have been called once but, from that point forward, the inner function will be used for all further rendering. In fact,  Reagent will instantly call the inner function after the outer returns it, because Reagent wants a first rendering (hiccup) for the component. 
   5. So, in the case of `Form-2`, the outer function is called once and once only (with initial props/parameters), and the inner is called at least once (with initial props/parameters), but probably many, many times thereafter. Both will be called with the same arrangement of props/parameters - although the inner render function will see different values in those props/parameters, over time. 
+
+## Appendix B - with-let macro
+
+The `with-let` macro looks just like `let` – but the bindings **only execute once**, and it takes an optional `finally` clause, that runs when the component is no longer rendered. This can be particularly useful because it can prevent the need for a form-2 component in many instances (like creating a local reagent atom in your component).
+
+For example: here's a component that sets up an event listener for mouse moves, and stops listening when the component is removed.
+
+```clojure
+(defn mouse-pos-comp []
+  (r/with-let [pointer (r/atom nil)
+               handler #(swap! pointer assoc
+                               :x (.-pageX %)
+                               :y (.-pageY %))
+               _ (.addEventListener js/document "mousemove" handler)]
+    [:div
+     "Pointer moved to: "
+     (str @pointer)]
+    (finally
+      (.removeEventListener js/document "mousemove" handler))))
+```
+
+The same thing could of course be achieved with React lifecycle methods, but that would be a lot more verbose.
+
+`with-let` can also be combined with `track` (and other Reactive contexts). For example, the component above could be written as:
+
+```clojure
+(defn mouse-pos []
+  (r/with-let [pointer (r/atom nil)
+               handler #(swap! pointer assoc
+                               :x (.-pageX %)
+                               :y (.-pageY %))
+               _ (.addEventListener js/document "mousemove" handler)]
+    @pointer
+    (finally
+      (.removeEventListener js/document "mousemove" handler))))
+
+(defn tracked-pos []
+  [:div
+   "Pointer moved to: "
+   (str @(r/track mouse-pos))])
+```
+
+The `finally` clause will run when mouse-pos is no longer tracked anywhere, i.e in this case when tracked-pos is unmounted.
