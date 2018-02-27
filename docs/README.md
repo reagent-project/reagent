@@ -3,9 +3,13 @@
 
 The Basics:
 
-1. [Creating Reagent Components](/docs/CreatingReagentComponents.md)
-2. [Using [square brackets] instead of (parentheses)](/docs/UsingSquareBracketsInsteadOfParens.md)
-3. [When do components update?](/docs/WhenDoComponentsUpdate.md)
+1. [Using Hiccup to Describe HTML](/docs/UsingHiccupToDescribeHTML.md)
+2. [Creating Reagent Components](/docs/CreatingReagentComponents.md)
+3. [Using [square brackets] instead of (parentheses)](/docs/UsingSquareBracketsInsteadOfParens.md)
+4. [When do components update?](/docs/WhenDoComponentsUpdate.md)
+5. [[WIP] Managing State: atoms, cursors, Reactions, and tracking](/docs/ManagingState.md)
+6. [Batching and Timing: How Reagent Renders Changes to Application State](/docs/BatchingAndTiming.md)
+7. [Interop with React](/docs/InteropWithReact.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent written tutorial
