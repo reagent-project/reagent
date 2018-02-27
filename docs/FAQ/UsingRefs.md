@@ -11,20 +11,20 @@ We'll start with a code fragment, because it is worth a 1000 words:
 ```cljs
 (defn video-ui []
   (let [!video (clojure.core/atom nil)]    ;; stores the
-	(fn [{:keys [src]}]
-	  [:div
-	   [:div
-		[:video {:src src
-				 :style {:width 400}
-				 :ref (fn [el]
-						(reset! !video el))}]]
-	   [:div
-		[:button {:on-click (fn []
-							  (when-let [video @!video] ;; not nil?
-								(if (.-paused video)
-								  (.play video)
-								  (.pause video))))}
-		 "Toogle"]]])))
+    (fn [{:keys [src]}]
+      [:div
+       [:div
+        [:video {:src src
+                 :style {:width 400}
+                 :ref (fn [el]
+                        (reset! !video el))}]]
+       [:div
+        [:button {:on-click (fn []
+                              (when-let [video @!video] ;; not nil?
+                                (if (.-paused video)
+                                  (.play video)
+                                  (.pause video))))}
+         "Toogle"]]])))
 ```
 
 Notes:
