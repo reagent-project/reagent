@@ -17,6 +17,7 @@ Also:
   
 ## Frequently Asked Questions
 
+1. [How do I use React's "refs"](FAQ/UsingRefs.md)
 1. [How can I use an entity like "nbsp"?](FAQ/UsingAnEntity.md)
 2. [Why is my attribute (like autoFocus) missing?](FAQ/MyAttributesAreMissing.md)
 3. [How can I use React's dangerouslySetInnerHTML?](FAQ/dangerouslySetInnerHTML.md)
