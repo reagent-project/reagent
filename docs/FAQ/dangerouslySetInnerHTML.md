@@ -14,4 +14,4 @@ A minimal (contrived example):
 
 ***
 
-Up:  [FAQ Index](README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Up:  [FAQ Index](../README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

@@ -1,4 +1,3 @@
-
 ## Tutorials
 
 1. [Using Hiccup to Describe HTML](/docs/UsingHiccupToDescribeHTML.md)
@@ -14,7 +13,7 @@ Also:
   * [Reagent Deep Dive Series by Timothy Pratley](http://timothypratley.blogspot.com.au/p/p.html) - a four part series
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
   * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
-  
+
 ## Frequently Asked Questions
 
 1. [How do I use React's "refs"](FAQ/UsingRefs.md)
@@ -24,6 +23,13 @@ Also:
 5. [How do I force Component re-creation?](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY) (external link)
 6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 7. [My component is not rerendering, what should I do?](FAQ/ComponentNotRerendering.md)
+
+### Want To Add An FAQ?
+
+Many Thanks!! We'd like that:
+1. As a base, just use the structure from one of the existing FAQs files
+2. Give us a PR which includes your new file AND a change to this README so your entry is listed.
+
 
 ## Commercial Videos Series
 

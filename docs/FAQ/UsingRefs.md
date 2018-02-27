@@ -10,26 +10,26 @@ We'll start with a code fragment, because it is worth a 1000 words:
 
 ```cljs
 (defn video-ui []
-  (let [!video (clojure.core/atom nil)]    ;; stores the 
-    (fn [{:keys [src]}]
-      [:div
-       [:div
-        [:video {:src src
-                 :style {:width 400}
-                 :ref (fn [el]
-                        (reset! !video el))}]]
-       [:div
-        [:button {:on-click (fn []
-                              (when-let [video @!video] ;; not nil?
-                                (if (.-paused video)
-                                  (.play video)
-                                  (.pause video))))}
-         "Toogle"]]])))
+  (let [!video (clojure.core/atom nil)]    ;; stores the
+	(fn [{:keys [src]}]
+	  [:div
+	   [:div
+		[:video {:src src
+				 :style {:width 400}
+				 :ref (fn [el]
+						(reset! !video el))}]]
+	   [:div
+		[:button {:on-click (fn []
+							  (when-let [video @!video] ;; not nil?
+								(if (.-paused video)
+								  (.play video)
+								  (.pause video))))}
+		 "Toogle"]]])))
 ```
 
-Notes: 
+Notes:
    1. That's a Form-2 component. That allows us to retain state outside of the renderer `fn`.
-   2. We capture state in `!video`. The state we capture is a reference to a video component. 
+   2. We capture state in `!video`. The state we capture is a reference to a video component.
    2. `!video` is a `clojure.core/atom` and not a `reaagent.core/atom`
    4. On the `:video` component there's a `:ref` callback function which establishes the state in `!video`
    5. Thereafter, `@!video` is used with the `:button's` `:on-click` to manipulate the `video`

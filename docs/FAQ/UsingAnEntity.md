@@ -30,4 +30,4 @@ in `nodejs` the DOM is unlikely to be available (unless you try using
 
 ***
 
-Up:  [FAQ Index](README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Up:  [FAQ Index](../README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
