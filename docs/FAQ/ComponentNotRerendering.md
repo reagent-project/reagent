@@ -22,7 +22,7 @@ If a ratom changes but your Component doesn't update, then the gotchas to look o
 
 If the props to a Component change, but it doesn't appear to re-render, then the cause will be this rookie mistake: you forgot to repeat the parameters in the inner, anonymous render function.
 
-```
+```clj
 (defn outer 
   [a b c]            ;; <--- parameters
   ;;  ....
