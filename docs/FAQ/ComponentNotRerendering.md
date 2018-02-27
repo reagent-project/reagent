@@ -1,14 +1,14 @@
 ### Question
 
-My component is not rendering, what's wrong?
+My component is not re-rendering, what's wrong?
 
 ### Answer
 
-Ask yourself this question: why do you think the Component should have updated? There's two possible answers: 
+Ask yourself this question: why do you think the Component should have re-rendered? There's two possible answers: 
   - a ratom (used by the Component) changed 
   - the props for (arguments to) the Component changed
 
-We'll deal with each of these two cases seperately.
+We'll deal with these two cases seperately.
 
 ### A Ratom Changed
 
