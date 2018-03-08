@@ -1,21 +1,38 @@
-machine:
-  node:
-    version: v8.2.0
-  environment:
-    JVM_OPTS: "-Xms512m -Xmx1024m"
-dependencies:
-  override:
-    - lein deps
-    - npm install -g karma-cli
-    - ./prepare-tests.sh
-  cache_directories:
-    - test-environments/browser-node/node_modules
-    - test-environments/browser-node-react-16/node_modules
-test:
-  override:
-    - ./run-tests.sh
-deployment:
-  master:
-    branch: master
-    commands:
-      - ./build-example-site.sh
+version: 2
+jobs:
+  build:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.8.1-node-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
+      - restore_cache:
+          key: reagent-npm-{{ checksum "package.json" }}
+      - run: lein deps
+      - run: sudo npm install -g karma-cli
+      - run: ./prepare-tests.sh
+      - run: ./run-tests.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.lein
+          key: reagent-{{ checksum "project.clj" }}
+      - save_cache:
+          paths:
+            - node_modules
+          key: reagent-npm-{{ checksum "package.json" }}
+
+    environment:
+      NPM_CONFIG_LOGLEVEL: warn
+  deploy_master:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.7.2
+    steps:
+      - checkout
+      - add_ssh_keys
+      - deploy:
+          command: ./build-example-site.sh
+
