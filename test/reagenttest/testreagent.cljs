@@ -252,7 +252,7 @@
       (is (= 2 @ran)))))
 
 (defn as-string [comp]
-  (server/render-to-string comp))
+  (server/render-to-static-markup comp))
 
 (deftest to-string-test []
   (let [comp (fn [props]
@@ -1125,3 +1125,37 @@
     (fn [c div]
       (is (= "parent,child,bar"
              (.-innerText div))))))
+
+
+(deftest test-fragments
+  (when (>= (js/parseInt react/version) 16)
+    (testing "Fragment as array"
+      (let [comp (fn []
+                   #js [(r/as-element [:div "hello"])
+                        (r/as-element [:div "world"])])]
+        (is (= "<div>hello</div><div>world</div>"
+               (as-string [comp])))))
+
+    (testing "Fragment element, :<>"
+      (let [comp (fn []
+                   [:<>
+                    [:div "hello"]
+                    [:div "world"]
+                    [:div "foo"] ])]
+        (is (= "<div>hello</div><div>world</div><div>foo</div>"
+               (as-string [comp])))))
+
+    (testing "Fragment key"
+      ;; This would cause React warning if both fragements didn't have key set
+      (let [comp (fn []
+                   [:div
+                    (list
+                      [:<>
+                       {:key 1}
+                       [:div "hello"]
+                       [:div "world"]]
+                      ^{:key 2}
+                      [:<>
+                       [:div "foo"]])])]
+        (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
+               (as-string [comp])))))))
