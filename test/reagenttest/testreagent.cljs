@@ -1004,16 +1004,15 @@
                                                   [:div "Something went wrong."]
                                                   comp))}))
           comp1 (fn comp1 []
-                  ($ nil :foo)
-                  [:div "foo"])]
+                  (throw (js/Error. "Test error")))]
       (debug/track-warnings
         (wrap-capture-window-error
           (wrap-capture-console-error
             #(with-mounted-component [error-boundary [comp1]]
                (fn [c div]
                  (r/flush)
-                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
-                 (is (found-in #"Something went wrong\." div))))))))))
+                 (is (= "Test error" (.-message @error)))
+                 (is (re-find #"Something went wrong\." (.-innerHTML div)))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
