@@ -14,7 +14,7 @@
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.8"]
+            [lein-doo "0.1.9"]
             [lein-codox "0.10.3"]
             [lein-figwheel "0.5.14"]]
 
