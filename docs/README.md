@@ -21,6 +21,7 @@ Also:
 2. [How can I use an entity like "nbsp"?](FAQ/UsingAnEntity.md)
 3. [Why is my attribute (like autoFocus) missing?](FAQ/MyAttributesAreMissing.md)
 4. [How can I use React's dangerouslySetInnerHTML?](FAQ/dangerouslySetInnerHTML.md)
+5. [Reagent doesn't work after updating dependencies](FAQ/CljsjsReactProblems.md)
 5. [How do I force Component re-creation?](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY) (external link)
 6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 
