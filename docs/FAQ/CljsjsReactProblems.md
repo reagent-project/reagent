@@ -4,9 +4,7 @@ Reagent doesn't work after updating dependencies.
 
 # Answer
 
-If you see problems about accessing `React` or `ReactDOM` object or some React method after you have updated your dependencies,
-Reagent or some other dependency which uses React. Problem is probably that you have `cljsjs/react` or `cljsjs/react-dom`
-version which doesn't work with Reagent, or different version of React and ReactDOM, which don't work together.
+If you see errors about accessing `React` or `ReactDOM` object or some React method after you have updated your dependencies, the problem is probably conflicting `cljsjs/react` or `cljsjs/react-dom` versions. Other dependencies than Reagent might bring in versions which don't work with Reagent, or a library which only depends on one of the packages might cause React and ReactDOM versions to conflict.
 
 To fix this you should check `lein deps :tree` or `boot show -d`, and check which version of Cljsjs React packages you have.
 
