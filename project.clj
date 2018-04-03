@@ -58,8 +58,9 @@
                 :source-map true
                 :optimizations :none
                 :main "reagentdemo.dev"
-                :output-dir "target/cljsbuild/client-npm/public/js/out"
-                :output-to "target/cljsbuild/client-npm/public/js/main.js"
+                ;; Same output dir as :client build!
+                :output-dir "target/cljsbuild/client/public/js/out"
+                :output-to "target/cljsbuild/client/public/js/main.js"
                 :asset-path "js/out"
                 ;; add process.env.node_env preload
                 ; :npm-deps true

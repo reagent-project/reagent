@@ -194,8 +194,6 @@
               (fn []
                 (is (= @a-count 3))
                 (is (= @b-count 1)))
-              (fn []
-                (js/console.log "test-cursor done"))
               done)))))))
 
 (deftest test-fn-cursor
