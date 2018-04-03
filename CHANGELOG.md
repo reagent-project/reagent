@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha2...master)**
+
+- Reagent documentation is now maintained as part of the repository, in [docs](./docs) folder.
+- Default to React 16
 - Apply vector metadata to the outermost element when using nesting shorthard ([#262](https://github.com/reagent-project/reagent/issues/262))
+- Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
+- Fix `:class` property with custom elements ([#322](https://github.com/reagent-project/reagent/issues/322))
 
 ## 0.8.0-alpha2 (2017-10-20)
 
