@@ -27,6 +27,9 @@
 
 (def rflush r/flush)
 
+(defn rstr [react-elem]
+  (server/render-to-static-markup react-elem))
+
 (deftest really-simple-test
   (when (and isClient
              (not (:really-simple-test @tests-done)))
@@ -347,15 +350,12 @@
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
-         (server/render-to-static-markup
-          [:div "foo"])))
+         (rstr [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
-         (server/render-to-static-markup
-          [:div.bar [:p "foo"]])))
+         (rstr [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
-         (server/render-to-static-markup
-          [:div.bar {:dangerously-set-inner-HTML
-                     {:__html "<p>foobar</p>"}} ]))))
+         (rstr [:div.bar {:dangerously-set-inner-HTML
+                          {:__html "<p>foobar</p>"}} ]))))
 
 (deftest test-return-class
   (when isClient
@@ -416,9 +416,6 @@
           (is (found-in #"hi me" div))
           (is (= 1 @top-ran))
           (is (= 4 @ran)))))))
-
-(defn rstr [react-elem]
-  (server/render-to-static-markup react-elem))
 
 (deftest test-create-element
   (let [ae r/as-element
@@ -1004,16 +1001,15 @@
                                                   [:div "Something went wrong."]
                                                   comp))}))
           comp1 (fn comp1 []
-                  ($ nil :foo)
-                  [:div "foo"])]
+                  (throw (js/Error. "Test error")))]
       (debug/track-warnings
         (wrap-capture-window-error
           (wrap-capture-console-error
             #(with-mounted-component [error-boundary [comp1]]
                (fn [c div]
                  (r/flush)
-                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
-                 (is (found-in #"Something went wrong\." div))))))))))
+                 (is (= "Test error" (.-message @error)))
+                 (is (re-find #"Something went wrong\." (.-innerHTML div)))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1076,29 +1072,24 @@
 
 (deftest style-property-names-are-camel-cased
   (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
-               (server/render-to-static-markup
-                 [:div {:style {:text-align "center"}} "foo"]))))
+               (rstr [:div {:style {:text-align "center"}} "foo"]))))
 
 (deftest custom-element-class-prop
   (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (server/render-to-static-markup
-                 [:custom-element {:class "foobar"} "foo"])))
+               (rstr [:custom-element {:class "foobar"} "foo"])))
 
   (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (server/render-to-static-markup
-                 [:custom-element.foobar "foo"]))))
+               (rstr [:custom-element.foobar "foo"]))))
 
 (deftest html-entities
   (testing "entity numbers can be unescaped always"
     (is (= "<i> </i>"
-           (server/render-to-static-markup
-             [:i (gstr/unescapeEntities "&#160;")]))))
+           (rstr [:i (gstr/unescapeEntities "&#160;")]))))
 
   (when r/is-client
     (testing "When DOM is available, all named entities can be unescaped"
       (is (= "<i> </i>"
-             (server/render-to-static-markup
-               [:i (gstr/unescapeEntities "&nbsp;")]))))))
+             (rstr [:i (gstr/unescapeEntities "&nbsp;")]))))))
 
 (defn context-wrapper []
   (r/create-class
