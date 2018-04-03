@@ -18,6 +18,7 @@ jobs:
           paths:
             - ~/.m2
             - ~/.lein
+            - ~/.cljs/.aot_cache
           key: reagent-{{ checksum "project.clj" }}
       - save_cache:
           paths:
@@ -29,7 +30,7 @@ jobs:
   deploy_master:
     working_directory: ~/work
     docker:
-      - image: circleci/clojure:lein-2.7.2
+      - image: circleci/clojure:lein-2.8.1
     steps:
       - checkout
       - add_ssh_keys

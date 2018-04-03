@@ -27,6 +27,9 @@
 
 (def rflush r/flush)
 
+(defn rstr [react-elem]
+  (server/render-to-static-markup react-elem))
+
 (deftest really-simple-test
   (when (and isClient
              (not (:really-simple-test @tests-done)))
@@ -347,15 +350,12 @@
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
-         (server/render-to-static-markup
-          [:div "foo"])))
+         (rstr [:div "foo"])))
   (is (= "<div class=\"bar\"><p>foo</p></div>"
-         (server/render-to-static-markup
-          [:div.bar [:p "foo"]])))
+         (rstr [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
-         (server/render-to-static-markup
-          [:div.bar {:dangerously-set-inner-HTML
-                     {:__html "<p>foobar</p>"}} ]))))
+         (rstr [:div.bar {:dangerously-set-inner-HTML
+                          {:__html "<p>foobar</p>"}} ]))))
 
 (deftest test-return-class
   (when isClient
@@ -416,9 +416,6 @@
           (is (found-in #"hi me" div))
           (is (= 1 @top-ran))
           (is (= 4 @ran)))))))
-
-(defn rstr [react-elem]
-  (server/render-to-static-markup react-elem))
 
 (deftest test-create-element
   (let [ae r/as-element
@@ -904,15 +901,25 @@
   (debug/error (apply str f)))
 
 (defn wrap-capture-window-error [f]
-  (fn []
-    (let [org js/console.onerror]
-      (set! js/window.onerror (fn [e]
-                                (log-error e)
-                                true))
-      (try
-        (f)
-        (finally
-          (set! js/window.onerror org))))))
+  (if (exists? js/window)
+    (fn []
+      (let [org js/console.onerror]
+        (set! js/window.onerror (fn [e]
+                                  (log-error e)
+                                  true))
+        (try
+          (f)
+          (finally
+            (set! js/window.onerror org)))))
+    (fn []
+      (let [process (js/require "process")
+            l (fn [e]
+                (log-error e))]
+        (.on process "uncaughtException" l)
+        (try
+          (f)
+          (finally
+            (.removeListener process "uncaughtException" l)))))))
 
 (defn wrap-capture-console-error [f]
   (fn []
@@ -993,27 +1000,25 @@
                        (-> e :warn first))))))))
 
 (deftest test-error-boundary
-  (when (>= (js/parseInt react/version) 16)
-    (let [error (r/atom nil)
-          error-boundary (fn error-boundary [comp]
-                           (r/create-class
-                             {:component-did-catch (fn [this e info]
-                                                     (reset! error e))
-                              :reagent-render (fn [comp]
-                                                (if @error
-                                                  [:div "Something went wrong."]
-                                                  comp))}))
-          comp1 (fn comp1 []
-                  ($ nil :foo)
-                  [:div "foo"])]
-      (debug/track-warnings
-        (wrap-capture-window-error
-          (wrap-capture-console-error
-            #(with-mounted-component [error-boundary [comp1]]
-               (fn [c div]
-                 (r/flush)
-                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
-                 (is (found-in #"Something went wrong\." div))))))))))
+  (let [error (r/atom nil)
+        error-boundary (fn error-boundary [comp]
+                         (r/create-class
+                           {:component-did-catch (fn [this e info]
+                                                   (reset! error e))
+                            :reagent-render (fn [comp]
+                                              (if @error
+                                                [:div "Something went wrong."]
+                                                comp))}))
+        comp1 (fn comp1 []
+                  (throw (js/Error. "Test error")))]
+    (debug/track-warnings
+      (wrap-capture-window-error
+        (wrap-capture-console-error
+          #(with-mounted-component [error-boundary [comp1]]
+             (fn [c div]
+               (r/flush)
+               (is (= "Test error" (.-message @error)))
+               (is (re-find #"Something went wrong\." (.-innerHTML div))))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1076,29 +1081,24 @@
 
 (deftest style-property-names-are-camel-cased
   (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
-               (server/render-to-static-markup
-                 [:div {:style {:text-align "center"}} "foo"]))))
+               (rstr [:div {:style {:text-align "center"}} "foo"]))))
 
 (deftest custom-element-class-prop
   (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (server/render-to-static-markup
-                 [:custom-element {:class "foobar"} "foo"])))
+               (rstr [:custom-element {:class "foobar"} "foo"])))
 
   (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (server/render-to-static-markup
-                 [:custom-element.foobar "foo"]))))
+               (rstr [:custom-element.foobar "foo"]))))
 
 (deftest html-entities
   (testing "entity numbers can be unescaped always"
     (is (= "<i> </i>"
-           (server/render-to-static-markup
-             [:i (gstr/unescapeEntities "&#160;")]))))
+           (rstr [:i (gstr/unescapeEntities "&#160;")]))))
 
   (when r/is-client
     (testing "When DOM is available, all named entities can be unescaped"
       (is (= "<i> </i>"
-             (server/render-to-static-markup
-               [:i (gstr/unescapeEntities "&nbsp;")]))))))
+             (rstr [:i (gstr/unescapeEntities "&nbsp;")]))))))
 
 (defn context-wrapper []
   (r/create-class
@@ -1128,34 +1128,36 @@
 
 
 (deftest test-fragments
-  (when (>= (js/parseInt react/version) 16)
-    (testing "Fragment as array"
-      (let [comp (fn []
-                   #js [(r/as-element [:div "hello"])
-                        (r/as-element [:div "world"])])]
-        (is (= "<div>hello</div><div>world</div>"
-               (as-string [comp])))))
+  (testing "Fragment as array"
+    (let [comp (fn comp1 []
+                 #js [(r/as-element [:div "hello"])
+                      (r/as-element [:div "world"])])]
+      (is (= "<div>hello</div><div>world</div>"
+             (as-string [comp])))))
 
-    (testing "Fragment element, :<>"
-      (let [comp (fn []
-                   [:<>
-                    [:div "hello"]
-                    [:div "world"]
-                    [:div "foo"] ])]
-        (is (= "<div>hello</div><div>world</div><div>foo</div>"
-               (as-string [comp])))))
+  (testing "Fragment element, :<>"
+    (let [comp (fn comp2 []
+                 [:<>
+                  [:div "hello"]
+                  [:div "world"]
+                  [:div "foo"] ])]
+      (is (= "<div>hello</div><div>world</div><div>foo</div>"
+             (as-string [comp])))))
 
-    (testing "Fragment key"
-      ;; This would cause React warning if both fragements didn't have key set
-      (let [comp (fn []
-                   [:div
-                    (list
-                      [:<>
-                       {:key 1}
-                       [:div "hello"]
-                       [:div "world"]]
-                      ^{:key 2}
-                      [:<>
-                       [:div "foo"]])])]
-        (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
-               (as-string [comp])))))))
+  (testing "Fragment key"
+    ;; This would cause React warning if both fragements didn't have key set
+    ;; But wont fail the test
+    (let [children (fn comp4 []
+                     [:<>
+                      [:div "foo"]])
+          comp (fn comp3 []
+                 [:div
+                  (list
+                    [:<>
+                     {:key 1}
+                     [:div "hello"]
+                     [:div "world"]]
+                    ^{:key 2}
+                    [children])])]
+      (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
+             (as-string [comp]))))))

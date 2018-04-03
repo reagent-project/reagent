@@ -13,5 +13,4 @@ reagent.iml
 .lein-failures
 
 node_modules
-
-test-environments/*/junit
+junit

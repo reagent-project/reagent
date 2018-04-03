@@ -25,12 +25,8 @@ you might want to focus on one test environment, and use Figwheel to
 run tests on your browser:
 
 ```
-cd test-environments/browser-umd-react-16
-# If build requires e.g. Lein profiles or such,
-# the folder contains figwheel.sh script:
-./figwheel.sh
-# Else, just run figwheel normally:
-lein figwheel
+lein figwheel client # For Cljsjs
+lein figwheel client-npm # NPM
 
 # Open http://0.0.0.0:3449 on a browser
 # Check console for test output
