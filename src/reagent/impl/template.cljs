@@ -10,6 +10,8 @@
             [reagent.debug :refer-macros [dbg prn println log dev?
                                           warn warn-unless]]))
 
+(declare as-element)
+
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
@@ -342,6 +344,15 @@
       ($! jsprops :key key))
     (react/createElement c jsprops)))
 
+(defn fragment-element [argv]
+  (let [props (nth argv 1 nil)
+        hasprops (or (nil? props) (map? props))
+        jsprops (convert-prop-value (if hasprops props))
+        first-child (+ 1 (if hasprops 1 0))]
+    (when-some [key (key-from-vec argv)]
+      (oset jsprops "key" key))
+    (make-element argv react/Fragment jsprops first-child)))
+
 (defn adapt-react-class
   ([c {:keys [synthetic-input]}]
    (let [on-update (:on-update synthetic-input)
@@ -382,8 +393,6 @@
   (if-some [s (cache-get tag-name-cache x)]
     s
     (aset tag-name-cache x (parse-tag x))))
-
-(declare as-element)
 
 (defn native-element [parsed argv first]
   (let [comp ($ parsed :name)
@@ -429,6 +438,9 @@
   (let [tag (nth v 0 nil)]
     (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
     (cond
+      (keyword-identical? :<> tag)
+      (fragment-element v)
+
       (hiccup-tag? tag)
       (let [n (name tag)
             pos (.indexOf n ">")]
