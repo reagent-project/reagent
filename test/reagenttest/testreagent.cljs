@@ -1138,14 +1138,14 @@
 
 (deftest test-fragments
   (testing "Fragment as array"
-    (let [comp (fn []
+    (let [comp (fn comp1 []
                  #js [(r/as-element [:div "hello"])
                       (r/as-element [:div "world"])])]
       (is (= "<div>hello</div><div>world</div>"
              (as-string [comp])))))
 
   (testing "Fragment element, :<>"
-    (let [comp (fn []
+    (let [comp (fn comp2 []
                  [:<>
                   [:div "hello"]
                   [:div "world"]
@@ -1155,7 +1155,11 @@
 
   (testing "Fragment key"
     ;; This would cause React warning if both fragements didn't have key set
-    (let [comp (fn []
+    ;; But wont fail the test
+    (let [children (fn comp4 []
+                     [:<>
+                      [:div "foo"]])
+          comp (fn comp3 []
                  [:div
                   (list
                     [:<>
@@ -1163,7 +1167,6 @@
                      [:div "hello"]
                      [:div "world"]]
                     ^{:key 2}
-                    [:<>
-                     [:div "foo"]])])]
+                    [children])])]
       (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
              (as-string [comp]))))))
