@@ -8,9 +8,9 @@
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "16.3.0-0"]
-                 [cljsjs/react-dom "16.3.0-0"]
-                 [cljsjs/react-dom-server "16.3.0-0"]
+                 [cljsjs/react "16.3.0-1"]
+                 [cljsjs/react-dom "16.3.0-1"]
+                 [cljsjs/react-dom-server "16.3.0-1"]
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
@@ -28,7 +28,7 @@
                                   [doo "0.1.10"]
                                   [cljsjs/prop-types "15.6.0-0"]]
                    :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
-                   :resource-paths ["site" "target/cljsbuild/client"]}}
+                   :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]
 
@@ -58,9 +58,8 @@
                 :source-map true
                 :optimizations :none
                 :main "reagentdemo.dev"
-                ;; Same output dir as :client build!
-                :output-dir "target/cljsbuild/client/public/js/out"
-                :output-to "target/cljsbuild/client/public/js/main.js"
+                :output-dir "target/cljsbuild/client-npm/public/js/out"
+                :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :asset-path "js/out"
                 ;; add process.env.node_env preload
                 ; :npm-deps true
@@ -130,6 +129,18 @@
                 ;; :pseudo-names true
                 :output-to "target/cljsbuild/prod/public/js/main.js"
                 :output-dir "target/cljsbuild/prod/out" ;; Outside of public, not published
+                :npm-deps false}}
+
+    :prod-npm
+    {:source-paths ["src" "demo"]
+     :compiler {:main "reagentdemo.prod"
+                :optimizations :advanced
+                :elide-asserts true
+                :pretty-print false
+                :pseudo-names true
+                :output-to "target/cljsbuild/prod-npm/public/js/main.js"
+                :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
+                :process-shim true
                 :closure-warnings {:global-this :off}}}
 
     :prod-test
