@@ -8,9 +8,9 @@
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "15.6.2-4"]
-                 [cljsjs/react-dom "15.6.2-4"]
-                 [cljsjs/react-dom-server "15.6.2-4"]
+                 [cljsjs/react "16.3.0-0"]
+                 [cljsjs/react-dom "16.3.0-0"]
+                 [cljsjs/react-dom-server "16.3.0-0"]
                  [cljsjs/create-react-class "15.6.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
@@ -24,11 +24,7 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:react-16 {:dependencies [[cljsjs/react "16.3.0-0"]
-                                       [cljsjs/react-dom "16.3.0-0"]
-                                       [cljsjs/react-dom-server "16.3.0-0"]]}
-
-             :dev {:dependencies [[figwheel "0.5.15"]
+  :profiles {:dev {:dependencies [[figwheel "0.5.15"]
                                   [doo "0.1.10"]
                                   [cljsjs/prop-types "15.6.0-0"]]
                    :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
@@ -53,7 +49,20 @@
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :asset-path "js/out"
+                :npm-deps false}}
+
+    :client-npm
+    {:source-paths ["src" "demo" "test"]
+     :figwheel true
+     :compiler {:parallel-build true
+                :source-map true
+                :optimizations :none
+                :main "reagentdemo.dev"
+                :output-dir "target/cljsbuild/client-npm/public/js/out"
+                :output-to "target/cljsbuild/client-npm/public/js/main.js"
+                :asset-path "js/out"
                 ;; add process.env.node_env preload
+                ; :npm-deps true
                 :process-shim true}}
 
     :test
@@ -65,8 +74,22 @@
                 :asset-path "js/out"
                 :output-dir "target/cljsbuild/test/out"
                 :output-to "target/cljsbuild/test/main.js"
+                :npm-deps false
+                :aot-cache true}}
+
+    :test-npm
+    {:source-paths ["src" "test"]
+     :compiler {:parallel-build true
+                :source-map true
+                :optimizations :none
+                :main "reagenttest.runtests"
+                :asset-path "js/out"
+                :output-dir "target/cljsbuild/test-npm/out"
+                :output-to "target/cljsbuild/test-npm/main.js"
+                ; :npm-deps true
                 ;; add process.env.node_env preload
-                :process-shim true}}
+                :process-shim true
+                :aot-cache true}}
 
     :prerender
     {:source-paths ["src" "demo"]
@@ -84,7 +107,18 @@
                 :source-map true
                 :optimizations :none
                 :output-dir "target/cljsbuild/node-test/out"
-                :output-to "target/cljsbuild/node-test/main.js"}}
+                :output-to "target/cljsbuild/node-test/main.js"
+                :npm-deps false}}
+
+    :node-test-npm
+    {:source-paths ["src" "test"]
+     :compiler {:main "reagenttest.runtests"
+                :target :nodejs
+                :parallel-build true
+                :source-map true
+                :optimizations :none
+                :output-dir "target/cljsbuild/node-test-npm/out"
+                :output-to "target/cljsbuild/node-test-npm/main.js"}}
 
     :prod
     {:source-paths ["src" "demo"]
@@ -106,4 +140,19 @@
                 ;; :pseudo-names true
                 :output-to "target/cljsbuild/prod-test/main.js"
                 :output-dir "target/cljsbuild/prod-test/out"
-                :closure-warnings {:global-this :off}}}}})
+                :closure-warnings {:global-this :off}
+                :npm-deps false
+                :aot-cache true}}
+
+    :prod-test-npm
+    {:source-paths ["src" "demo"]
+     :compiler {:main "reagenttest.runtests"
+                :optimizations :advanced
+                :elide-asserts true
+                :pretty-print false
+                ;; :pseudo-names true
+                :output-to "target/cljsbuild/prod-test-npm/main.js"
+                :output-dir "target/cljsbuild/prod-test-npm/out"
+                :closure-warnings {:global-this :off}
+                :aot-cache true}}
+    }})

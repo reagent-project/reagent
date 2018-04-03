@@ -904,15 +904,25 @@
   (debug/error (apply str f)))
 
 (defn wrap-capture-window-error [f]
-  (fn []
-    (let [org js/console.onerror]
-      (set! js/window.onerror (fn [e]
-                                (log-error e)
-                                true))
-      (try
-        (f)
-        (finally
-          (set! js/window.onerror org))))))
+  (if (exists? js/window)
+    (fn []
+      (let [org js/console.onerror]
+        (set! js/window.onerror (fn [e]
+                                  (log-error e)
+                                  true))
+        (try
+          (f)
+          (finally
+            (set! js/window.onerror org)))))
+    (fn []
+      (let [process (js/require "process")
+            l (fn [e]
+                (log-error e))]
+        (.on process "uncaughtException" l)
+        (try
+          (f)
+          (finally
+            (.removeListener process "uncaughtException" l)))))))
 
 (defn wrap-capture-console-error [f]
   (fn []
@@ -993,27 +1003,26 @@
                        (-> e :warn first))))))))
 
 (deftest test-error-boundary
-  (when (>= (js/parseInt react/version) 16)
-    (let [error (r/atom nil)
-          error-boundary (fn error-boundary [comp]
-                           (r/create-class
-                             {:component-did-catch (fn [this e info]
-                                                     (reset! error e))
-                              :reagent-render (fn [comp]
-                                                (if @error
-                                                  [:div "Something went wrong."]
-                                                  comp))}))
-          comp1 (fn comp1 []
-                  ($ nil :foo)
-                  [:div "foo"])]
-      (debug/track-warnings
-        (wrap-capture-window-error
-          (wrap-capture-console-error
-            #(with-mounted-component [error-boundary [comp1]]
-               (fn [c div]
-                 (r/flush)
-                 (is (= "Cannot read property 'foo' of null" (.-message @error)))
-                 (is (found-in #"Something went wrong\." div))))))))))
+  (let [error (r/atom nil)
+        error-boundary (fn error-boundary [comp]
+                         (r/create-class
+                           {:component-did-catch (fn [this e info]
+                                                   (reset! error e))
+                            :reagent-render (fn [comp]
+                                              (if @error
+                                                [:div "Something went wrong."]
+                                                comp))}))
+        comp1 (fn comp1 []
+                ($ nil :foo)
+                [:div "foo"])]
+    (debug/track-warnings
+      (wrap-capture-window-error
+        (wrap-capture-console-error
+          #(with-mounted-component [error-boundary [comp1]]
+             (fn [c div]
+               (r/flush)
+               (is (= "Cannot read property 'foo' of null" (.-message @error)))
+               (is (found-in #"Something went wrong\." div)))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1128,34 +1137,33 @@
 
 
 (deftest test-fragments
-  (when (>= (js/parseInt react/version) 16)
-    (testing "Fragment as array"
-      (let [comp (fn []
-                   #js [(r/as-element [:div "hello"])
-                        (r/as-element [:div "world"])])]
-        (is (= "<div>hello</div><div>world</div>"
-               (as-string [comp])))))
+  (testing "Fragment as array"
+    (let [comp (fn []
+                 #js [(r/as-element [:div "hello"])
+                      (r/as-element [:div "world"])])]
+      (is (= "<div>hello</div><div>world</div>"
+             (as-string [comp])))))
 
-    (testing "Fragment element, :<>"
-      (let [comp (fn []
-                   [:<>
-                    [:div "hello"]
-                    [:div "world"]
-                    [:div "foo"] ])]
-        (is (= "<div>hello</div><div>world</div><div>foo</div>"
-               (as-string [comp])))))
+  (testing "Fragment element, :<>"
+    (let [comp (fn []
+                 [:<>
+                  [:div "hello"]
+                  [:div "world"]
+                  [:div "foo"] ])]
+      (is (= "<div>hello</div><div>world</div><div>foo</div>"
+             (as-string [comp])))))
 
-    (testing "Fragment key"
-      ;; This would cause React warning if both fragements didn't have key set
-      (let [comp (fn []
-                   [:div
-                    (list
-                      [:<>
-                       {:key 1}
-                       [:div "hello"]
-                       [:div "world"]]
-                      ^{:key 2}
-                      [:<>
-                       [:div "foo"]])])]
-        (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
-               (as-string [comp])))))))
+  (testing "Fragment key"
+    ;; This would cause React warning if both fragements didn't have key set
+    (let [comp (fn []
+                 [:div
+                  (list
+                    [:<>
+                     {:key 1}
+                     [:div "hello"]
+                     [:div "world"]]
+                    ^{:key 2}
+                    [:<>
+                     [:div "foo"]])])]
+      (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
+             (as-string [comp]))))))

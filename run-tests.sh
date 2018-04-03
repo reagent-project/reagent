@@ -14,14 +14,11 @@ SUMMARY="$blue##\n## SUMMARY\n##$reset\n\n"
 
 for env in test-environments/*; do
     name=$(basename "$env")
-    (
-    cd "$env"
     echo -e "$blue##"
     echo -e "## TESTING $name"
     echo -e "##$reset"
     echo
-    ./test.sh
-    )
+    $env/test.sh
     if [[ $? != "0" ]]; then
         echo
         echo -e "${red}FAIL $name$reset"
@@ -35,18 +32,5 @@ for env in test-environments/*; do
 done
 
 echo -e "$SUMMARY"
-
-echo
-
-for env in test-environments/*-prod; do
-    name=$(basename "$env")
-    path="test-environments/$name/target/cljsbuild/prod-test/main.js"
-    if [[ -f "$path" ]]; then
-        echo "$name	$(./node_modules/.bin/gzip-size "$path")"
-    fi
-done
-
-echo
-echo "NOTE: These sizes include Reagent test suite which also uses React-dom/server, so this doesn't demonstrate real use case."
 
 exit $EXIT
