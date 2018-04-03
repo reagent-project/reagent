@@ -285,16 +285,21 @@
 
 (defn component-path [c]
   ;; Alternative branch for React 16
-  (if-let [fiber (some-> c ($ :_reactInternalFiber))]
+  ;; Try both original name (for UMD foreign-lib) and manged name (property access, for Closure optimized React)
+  (if-let [fiber (or (some-> c ($ :_reactInternalFiber))
+                     (some-> c (.-_reactInternalFiber)))]
     (fiber-component-path fiber)
-    (let [elem (or (some-> (or (some-> c ($ :_reactInternalInstance))
-                               c)
-                           ($ :_currentElement)))
+    (let [instance (or (some-> c ($ :_reactInternalInstance))
+                       (some-> c (.-_reactInternalInstance))
+                       c)
+          elem (or (some-> instance ($ :_currentElement))
+                   (some-> instance (.-_currentElement)))
           name (some-> elem
                        ($ :type)
                        ($ :displayName))
-          path (some-> elem
-                       ($ :_owner)
+          owner (or (some-> elem ($ :_owner))
+                    (some-> elem (.-_owner)))
+          path (some-> owner
                        component-path
                        (str " > "))
           res (str path name)]
