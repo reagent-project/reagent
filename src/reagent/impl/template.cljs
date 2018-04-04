@@ -215,7 +215,7 @@
           synthetic-on-update ($ this :cljsSyntheticOnUpdate)]
       (when (not= rendered-value dom-value)
         (if (fn? synthetic-on-update)
-          (synthetic-on-update input-node-set-value node rendered-value dom-value this)
+          (synthetic-on-update input-node-set-value node ($ this :cljsRealInputComponent) rendered-value dom-value this)
           (input-node-set-value node rendered-value dom-value this {}))))))
 
 (defn input-handle-change [this on-change e]
@@ -245,6 +245,24 @@
            on-change (if synthetic-on-change
                        (partial synthetic-on-change on-change)
                        on-change)]
+
+       ;; Setup ref for synthetic inputs, to get reference to the real
+       ;; component instance, for on-update function.
+       ;; The ref function is initialized once (and saved to component object)
+       ;; and then recreated if user provides new original ref function.
+       ;; The created ref function calls the original ref function.
+       (when synthetic-on-update
+         (let [original-ref ($ jsprops :ref)]
+           (when (or (not ($ this :cljsInputRef))
+                     (not (= original-ref ($ this :cljsOriginalRef))))
+             ($! this :cljsInputRef (fn [c]
+                                      ($! this :cljsRealInputComponent c)
+                                      (if original-ref
+                                        (original-ref c)))))
+
+           ($! this :cljsOriginalRef original-ref)
+           ($! jsprops :ref ($ this :cljsInputRef))))
+
        (when-not ($ this :cljsInputLive)
          ;; set initial value
          ($! this :cljsInputLive true)
