@@ -26,6 +26,7 @@
 
   :profiles {:dev {:dependencies [[figwheel "0.5.15"]
                                   [doo "0.1.10"]
+                                  [com.google.javascript/closure-compiler-unshaded "v20180319"]
                                   [cljsjs/prop-types "15.6.0-0"]]
                    :source-paths ["demo" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
