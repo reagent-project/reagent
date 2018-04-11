@@ -9,6 +9,7 @@
 - Apply vector metadata to the outermost element when using nesting shorthard ([#262](https://github.com/reagent-project/reagent/issues/262))
 - Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
 - Fix `:class` property with custom elements ([#322](https://github.com/reagent-project/reagent/issues/322))
+- Remove synthetic input support (added in previous alpha) ([#351](https://github.com/reagent-project/reagent/pull/351))
 
 ## 0.8.0-alpha2 (2017-10-20)
 
@@ -21,10 +22,10 @@
     - Update Cljsjs dependencies or Node packages to use React 16
 - `:class` property now supports collections of strings
   ([#154](https://github.com/reagent-project/reagent/pull/154))
-- Support for marking React components as `synthetic-input`, which will fix
+- ~~Support for marking React components as `synthetic-input`, which will fix
   problems with cursor jumping around
-  ([#282](https://github.com/reagent-project/reagent/pull/282))
-    - Helps with e.g. Material-UI TextField
+  ([#282](https://github.com/reagent-project/reagent/pull/282))~~
+    - This was reverted due to not working for all use cases ([#351](https://github.com/reagent-project/reagent/pull/351))
 - Added `IWithMeta` to `RAtom` ([#314](https://github.com/reagent-project/reagent/pull/314))
 
 ## 0.8.0-alpha1 (2017-07-31)

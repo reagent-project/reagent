@@ -211,12 +211,10 @@
     ($! this :cljsInputDirty false)
     (let [rendered-value ($ this :cljsRenderedValue)
           dom-value ($ this :cljsDOMValue)
-          node (find-dom-node this) ;; Default to the root node within this component
-          synthetic-on-update ($ this :cljsSyntheticOnUpdate)]
+          ;; Default to the root node within this component
+          node (find-dom-node this)]
       (when (not= rendered-value dom-value)
-        (if (fn? synthetic-on-update)
-          (synthetic-on-update input-node-set-value node rendered-value dom-value this)
-          (input-node-set-value node rendered-value dom-value this {}))))))
+        (input-node-set-value node rendered-value dom-value this {})))))
 
 (defn input-handle-change [this on-change e]
   ($! this :cljsDOMValue (-> e .-target .-value))
@@ -228,34 +226,26 @@
   (on-change e))
 
 (defn input-render-setup
-  ([this jsprops {:keys [synthetic-on-update synthetic-on-change]}]
-   ;; Don't rely on React for updating "controlled inputs", since it
-   ;; doesn't play well with async rendering (misses keystrokes).
-   (when (and (some? jsprops)
-           (.hasOwnProperty jsprops "onChange")
-           (.hasOwnProperty jsprops "value"))
-     (assert find-dom-node
-       "reagent.dom needs to be loaded for controlled input to work")
-     (when synthetic-on-update
-       ;; Pass along any synthetic input setter given
-       ($! this :cljsSyntheticOnUpdate synthetic-on-update))
-     (let [v ($ jsprops :value)
-           value (if (nil? v) "" v)
-           on-change ($ jsprops :onChange)
-           on-change (if synthetic-on-change
-                       (partial synthetic-on-change on-change)
-                       on-change)]
-       (when-not ($ this :cljsInputLive)
-         ;; set initial value
-         ($! this :cljsInputLive true)
-         ($! this :cljsDOMValue value))
-       ($! this :cljsRenderedValue value)
-       (js-delete jsprops "value")
-       (doto jsprops
-         ($! :defaultValue value)
-         ($! :onChange #(input-handle-change this on-change %))))))
-  ([this jsprops]
-   (input-render-setup this jsprops {})))
+  [this jsprops]
+  ;; Don't rely on React for updating "controlled inputs", since it
+  ;; doesn't play well with async rendering (misses keystrokes).
+  (when (and (some? jsprops)
+             (.hasOwnProperty jsprops "onChange")
+             (.hasOwnProperty jsprops "value"))
+    (assert find-dom-node
+            "reagent.dom needs to be loaded for controlled input to work")
+    (let [v ($ jsprops :value)
+          value (if (nil? v) "" v)
+          on-change ($ jsprops :onChange)]
+      (when-not ($ this :cljsInputLive)
+        ;; set initial value
+        ($! this :cljsInputLive true)
+        ($! this :cljsDOMValue value))
+      ($! this :cljsRenderedValue value)
+      (js-delete jsprops "value")
+      (doto jsprops
+        ($! :defaultValue value)
+        ($! :onChange #(input-handle-change this on-change %))))))
 
 (defn input-unmount [this]
   ($! this :cljsInputLive nil))
@@ -266,8 +256,6 @@
     false))
 
 (def reagent-input-class nil)
-
-(def reagent-synthetic-input-class nil)
 
 (declare make-element)
 
@@ -281,30 +269,11 @@
        (input-render-setup this jsprops)
        (make-element argv comp jsprops first-child)))})
 
-(def synthetic-input-spec
-  ;; Same as `input-spec` except it takes another argument for `input-setter`
-  {:display-name "ReagentSyntheticInput"
-   :component-did-update input-component-set-value
-   :component-will-unmount input-unmount
-   :reagent-render
-   (fn [on-update on-change argv comp jsprops first-child]
-     (let [this comp/*current-component*]
-       (input-render-setup this jsprops {:synthetic-on-update on-update
-                                         :synthetic-on-change on-change})
-       (make-element argv comp jsprops first-child)))})
-
-
 (defn reagent-input
   []
   (when (nil? reagent-input-class)
     (set! reagent-input-class (comp/create-class input-spec)))
   reagent-input-class)
-
-(defn reagent-synthetic-input
-  []
-  (when (nil? reagent-synthetic-input-class)
-    (set! reagent-synthetic-input-class (comp/create-class synthetic-input-spec)))
-  reagent-synthetic-input-class)
 
 
 ;;; Conversion from Hiccup forms
@@ -354,38 +323,11 @@
     (make-element argv react/Fragment jsprops first-child)))
 
 (defn adapt-react-class
-  ([c {:keys [synthetic-input]}]
-   (let [on-update (:on-update synthetic-input)
-         on-change (:on-change synthetic-input)]
-     (when synthetic-input
-       (assert (fn? on-update))
-       (assert (fn? on-change)))
-     (let [wrapped (doto (->NativeWrapper)
-                     ($! :name c)
-                     ($! :id nil)
-                     ($! :class nil))
-           wrapped (if synthetic-input
-                     (doto wrapped
-                       ($! :syntheticInput true))
-                     wrapped)
-           wrapped (if synthetic-input
-                     (doto wrapped
-                       ($! :syntheticOnChange on-change))
-                     wrapped)
-           wrapped (if synthetic-input
-                     ;; This is a synthetic input component, i.e. it has a complex
-                     ;; nesting of elements such that the root node is not necessarily
-                     ;; the <input> tag we need to control, and/or it needs to execute
-                     ;; custom code when updated values are written so we provide an affordance
-                     ;; to configure a setter fn that can choose a different DOM node
-                     ;; than the root node if it wants, and can supply a function hooked
-                     ;; to value updates so it can maintain its own component state as needed.
-                     (doto wrapped
-                       ($! :syntheticOnUpdate on-update))
-                     wrapped)]
-       wrapped)))
-  ([c]
-   (adapt-react-class c {})))
+  [c]
+  (doto (->NativeWrapper)
+    ($! :name c)
+    ($! :id nil)
+    ($! :class nil)))
 
 (def tag-name-cache #js{})
 
@@ -395,24 +337,13 @@
     (aset tag-name-cache x (parse-tag x))))
 
 (defn native-element [parsed argv first]
-  (let [comp ($ parsed :name)
-        synthetic-input ($ parsed :syntheticInput)]
+  (let [comp ($ parsed :name)]
     (let [props (nth argv first nil)
           hasprops (or (nil? props) (map? props))
           jsprops (convert-props (if hasprops props) parsed)
           first-child (+ first (if hasprops 1 0))]
-      (if (or synthetic-input (input-component? comp))
-        (-> (if synthetic-input
-              ;; If we are dealing with a synthetic input, use the synthetic-input-spec form:
-              [(reagent-synthetic-input)
-               ($ parsed :syntheticOnUpdate)
-               ($ parsed :syntheticOnChange)
-               argv
-               comp
-               jsprops
-               first-child]
-              ;; Else use the regular input-spec form:
-              [(reagent-input) argv comp jsprops first-child])
+      (if (input-component? comp)
+        (-> [(reagent-input) argv comp jsprops first-child]
             (with-meta (meta argv))
             as-element)
         (let [key (-> (meta argv) get-key)
