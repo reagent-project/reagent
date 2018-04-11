@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.8.0-rc1 (2018-04-11)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha2...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha2...v0.8.0-rc1)**
+
+Unless defaulting to React 16 causes problems, final release should follow soon.
 
 - Reagent documentation is now maintained as part of the repository, in [docs](./docs) folder.
 - Default to React 16
-- Apply vector metadata to the outermost element when using nesting shorthard ([#262](https://github.com/reagent-project/reagent/issues/262))
+- Apply vector metadata to the outermost element when using nesting shorthand ([#262](https://github.com/reagent-project/reagent/issues/262))
 - Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
 - Fix `:class` property with custom elements ([#322](https://github.com/reagent-project/reagent/issues/322))
 - Remove synthetic input support (added in previous alpha) ([#351](https://github.com/reagent-project/reagent/pull/351))
