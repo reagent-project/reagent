@@ -15,6 +15,11 @@ Also:
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
   * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
 
+## Commercial Videos Series
+
+  * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
+  * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
+  
 ## Frequently Asked Questions
 
 1. [Why isn't my Component re-rendering?](FAQ/ComponentNotRerendering.md)
@@ -32,12 +37,6 @@ Also:
 Many Thanks!! We'd like that:
 1. As a base, just use the structure from one of the existing FAQs files
 2. Give us a PR which includes your new file AND a change to this README so your entry is listed.
-
-
-## Commercial Videos Series
-
-  * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
-  * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
 #### Misc Docs
 
