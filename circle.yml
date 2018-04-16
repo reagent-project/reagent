@@ -10,9 +10,8 @@ jobs:
           key: reagent-{{ checksum "project.clj" }}
       - restore_cache:
           key: reagent-npm-{{ checksum "package.json" }}
-      - run: lein deps
       - run: sudo npm install -g karma-cli
-      - run: ./prepare-tests.sh
+      - run: npm install
       - run: ./run-tests.sh
       - save_cache:
           paths:
@@ -30,10 +29,15 @@ jobs:
   update-site:
     working_directory: ~/work
     docker:
-      - image: circleci/clojure:lein-2.8.1
+      - image: circleci/clojure:lein-2.8.1-node
     steps:
       - checkout
       - add_ssh_keys
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
+      - restore_cache:
+          key: reagent-npm-{{ checksum "package.json" }}
+      - run: npm install
       - deploy:
           command: ./build-example-site.sh
   update-tagged-docs:
@@ -43,6 +47,8 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
       - deploy:
           command: ./build-docs.sh
 workflows:
