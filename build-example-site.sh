@@ -6,7 +6,7 @@ SHA=$(git rev-parse HEAD)
 
 lein 'do' clean, cljsbuild once prod-npm, cljsbuild once prerender
 
-node target/cljsbuild/prerender/main.js target/prod-npm/public/
+node target/cljsbuild/prerender/main.js target/cljsbuild/prod-npm/public/
 
 lein codox
 
