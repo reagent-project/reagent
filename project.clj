@@ -96,7 +96,6 @@
     {:source-paths ["src" "demo"]
      :compiler {:main "sitetools.prerender"
                 :target :nodejs
-                :process-shim false
                 :output-dir "target/cljsbuild/prerender/out"
                 :output-to "target/cljsbuild/prerender/main.js"}}
 
@@ -128,6 +127,7 @@
                 :elide-asserts true
                 :pretty-print false
                 ;; :pseudo-names true
+                :stable-names true
                 :output-to "target/cljsbuild/prod/public/js/main.js"
                 :output-dir "target/cljsbuild/prod/out" ;; Outside of public, not published
                 :npm-deps false}}
@@ -138,7 +138,8 @@
                 :optimizations :advanced
                 :elide-asserts true
                 :pretty-print false
-                :pseudo-names true
+                ;; :pseudo-names true
+                :stable-names true
                 :output-to "target/cljsbuild/prod-npm/public/js/main.js"
                 :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
                 :process-shim true

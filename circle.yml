@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     working_directory: ~/work
     docker:
       - image: circleci/clojure:lein-2.8.1-node-browsers
@@ -27,7 +27,7 @@ jobs:
 
     environment:
       NPM_CONFIG_LOGLEVEL: warn
-  deploy_master:
+  update-site:
     working_directory: ~/work
     docker:
       - image: circleci/clojure:lein-2.8.1
@@ -36,4 +36,28 @@ jobs:
       - add_ssh_keys
       - deploy:
           command: ./build-example-site.sh
-
+  update-tagged-docs:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - add_ssh_keys
+      - deploy:
+          command: ./build-docs.sh
+workflows:
+  version: 2
+  test-and-update-site:
+    jobs:
+      - test
+      - update-site:
+          requires: test
+          filters:
+            braches:
+              only:
+                - master
+      - update-tagged-docs:
+          requires: test
+          filters:
+            tags:
+              only: /.*/
