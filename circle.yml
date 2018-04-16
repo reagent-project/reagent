@@ -51,13 +51,15 @@ workflows:
     jobs:
       - test
       - update-site:
-          requires: test
+          requires:
+            - test
           filters:
-            braches:
+            branches:
               only:
                 - master
       - update-tagged-docs:
-          requires: test
+          requires:
+            - test
           filters:
             tags:
               only: /.*/
