@@ -10,8 +10,7 @@
             [cljs.test :as test]
             [doo.runner :as doo :include-macros true]
             [reagent.core :as r]
-            [reagent.debug :refer [dbg log]]
-            [sitetools.server]))
+            [reagent.debug :refer [dbg log]]))
 
 (enable-console-print!)
 
