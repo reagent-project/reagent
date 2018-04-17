@@ -4,7 +4,6 @@
   :description "A simple ClojureScript interface to React"
 
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.238"]
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
@@ -24,7 +23,8 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[figwheel "0.5.15"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.238"]
+                                  [figwheel "0.5.15"]
                                   [doo "0.1.10"]
                                   [com.google.javascript/closure-compiler-unshaded "v20180319"]
                                   [cljsjs/prop-types "15.6.0-0"]]
