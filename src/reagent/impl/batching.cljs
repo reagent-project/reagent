@@ -42,6 +42,7 @@
 ;; Set from ratom.cljs
 (defonce ratom-flush (fn []))
 
+;; TODO: Use interop properties instead of gobj
 (deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
   (enqueue [this k f]
@@ -81,8 +82,8 @@
   (flush-queues [this]
     (.run-funs this "beforeFlush")
     (ratom-flush)
-    (when-some [cs (.-componentQueue this)]
-      (set! (.-componentQueue this) nil)
+    (when-some [cs (gobj/get this "componentQueue")]
+      (gobj/set this "componentQueue" nil)
       (run-queue cs))
     (.flush-after-render this)))
 
