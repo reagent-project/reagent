@@ -137,9 +137,10 @@
 (def static-fns
   {:render
    (fn render []
+     ;; TODO: Use static property for cljsRatom
      (this-as c (if util/*non-reactive*
                   (do-render c)
-                  (let [rat (.-cljsRatom c)]
+                  (let [rat (gobj/get c "cljsRatom")]
                     (batch/mark-rendered c)
                     (if (nil? rat)
                       (ratom/run-in-reaction #(do-render c) c "cljsRatom"
@@ -195,8 +196,7 @@
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (some-> (.-cljsRatom c)
-                       ratom/dispose!)
+               (some-> (gobj/get c "cljsRatom") ratom/dispose!)
                (batch/mark-rendered c)
                (when-not (nil? f)
                  (.call f c c))))
