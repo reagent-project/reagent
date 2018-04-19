@@ -413,20 +413,15 @@
 (set! comp/as-element as-element)
 
 (defn expand-seq [s]
-  (let [a (into-array s)]
-    (dotimes [i (alength a)]
-      (aset a i (as-element (aget a i))))
-    a))
+  (into-array (map as-element s)))
 
 (defn expand-seq-dev [s o]
-  (let [a (into-array s)]
-    (dotimes [i (alength a)]
-      (let [val (aget a i)]
-        (when (and (vector? val)
-                   (nil? (key-from-vec val)))
-          (set! (.-no-key o) true))
-        (aset a i (as-element val))))
-    a))
+  (into-array (map (fn [val]
+                     (when (and (vector? val)
+                                (nil? (key-from-vec val)))
+                       (set! (.-no-key o) true))
+                     (as-element val))
+                   s)))
 
 (defn expand-seq-check [x]
   (let [ctx #js{}
