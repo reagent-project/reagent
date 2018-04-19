@@ -174,10 +174,8 @@
 
 (declare make-reaction)
 
-(def ^{:private true :const true} cache-key "reagReactionCache")
-
 (defn- cached-reaction [f o k obj destroy]
-  (let [m (obj/get o cache-key)
+  (let [m (.-reagReactionCache o)
         m (if (nil? m) {} m)
         r (m k nil)]
     (cond
@@ -186,15 +184,15 @@
       :else (let [r (make-reaction
                      f :on-dispose (fn [x]
                                      (when debug (swap! -running dec))
-                                     (as-> (obj/get o cache-key) _
+                                     (as-> (.-reagReactionCache o) _
                                        (dissoc _ k)
-                                       (obj/set o cache-key _))
+                                       (set! (.-reagReactionCache o) _))
                                      (when (some? obj)
                                        (set! (.-reaction obj) nil))
                                      (when (some? destroy)
                                        (destroy x))))
                   v (-deref r)]
-              (obj/set o cache-key (assoc m k r))
+              (set! (.-reagReactionCache o) (assoc m k r))
               (when debug (swap! -running inc))
               (when (some? obj)
                 (set! (.-reaction obj) r))
