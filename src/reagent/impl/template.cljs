@@ -17,7 +17,7 @@
              from a tag name."}
   re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
-(deftype NativeWrapper [])
+(deftype NativeWrapper [tag id className])
 
 
 ;;; Common utilities
@@ -99,13 +99,6 @@
         (ifn? x) (fn [& args]
                    (apply x args))
         :else (clj->js x)))
-
-(defn oset [o k v]
-  (doto (if (nil? o) #js {} o)
-    (gobj/set k v)))
-
-(defn oget [o k]
-  (if (nil? o) nil (gobj/get o k)))
 
 (defn set-id-class
   "Takes the id and class from tag keyword, and adds them to the
@@ -263,10 +256,10 @@
    :component-did-update input-component-set-value
    :component-will-unmount input-unmount
    :reagent-render
-   (fn [argv comp jsprops first-child]
+   (fn [argv component jsprops first-child]
      (let [this comp/*current-component*]
        (input-render-setup this jsprops)
-       (make-element argv comp jsprops first-child)))})
+       (make-element argv component jsprops first-child)))})
 
 (defn reagent-input
   []
@@ -277,18 +270,19 @@
 
 ;;; Conversion from Hiccup forms
 
+(deftype HiccupTag [tag id className custom])
+
 (defn parse-tag [hiccup-tag]
-  (let [[tag id class] (->> hiccup-tag name (re-matches re-tag) next)
-        class (when-not (nil? class)
-                (string/replace class #"\." " "))]
-    (assert tag (str "Invalid tag: '" hiccup-tag "'"
-                     (comp/comp-name)))
-    #js {:name tag
-         :id id
-         :class class
-         ;; Custom element names must contain hyphen
-         ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
-         :custom (not= -1 (.indexOf tag "-"))}))
+  (let [[tag id className] (->> hiccup-tag name (re-matches re-tag) next)
+        className (when-not (nil? className)
+                    (string/replace className #"\." " "))]
+    (assert tag (str "Invalid tag: '" hiccup-tag "'" (comp/comp-name)))
+    (->HiccupTag tag
+                 id
+                 className
+                 ;; Custom element names must contain hyphen
+                 ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
+                 (not= -1 (.indexOf tag "-")))))
 
 (defn try-get-key [x]
   ;; try catch to avoid clojurescript peculiarity with
@@ -307,7 +301,8 @@
 
 (defn reag-element [tag v]
   (let [c (comp/as-class tag)
-        jsprops #js {:argv v}]
+        jsprops #js {}]
+    (set! (.-argv jsprops) v)
     (when-some [key (key-from-vec v)]
       (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
@@ -315,44 +310,41 @@
 (defn fragment-element [argv]
   (let [props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
-        jsprops (convert-prop-value (if hasprops props))
+        jsprops (or (convert-prop-value (if hasprops props))
+                    #js {})
         first-child (+ 1 (if hasprops 1 0))]
     (when-some [key (key-from-vec argv)]
-      (oset jsprops "key" key))
+      (set! (.-key jsprops) key))
     (make-element argv react/Fragment jsprops first-child)))
 
 (defn adapt-react-class
   [c]
-  (let [x (->NativeWrapper)]
-    (set! (.-name x) c)
-    (set! (.-id x) nil)
-    (set! (.-class x) nil)
-    x))
+  (->NativeWrapper c nil nil))
 
 (def tag-name-cache #js{})
 
 (defn cached-parse [x]
   (if-some [s (cache-get tag-name-cache x)]
     s
-    (let [v  (parse-tag x)]
+    (let [v (parse-tag x)]
       (gobj/set tag-name-cache x v)
       v)))
 
 (defn native-element [parsed argv first]
-  (let [comp (.-name parsed)
+  (let [component (.-tag parsed)
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))
-        jsprops (convert-props (if hasprops props) parsed)
+        jsprops (or (convert-props (if hasprops props) parsed)
+                    #js {})
         first-child (+ first (if hasprops 1 0))]
-    (if (input-component? comp)
-      (-> [(reagent-input) argv comp jsprops first-child]
+    (if (input-component? component)
+      (-> [(reagent-input) argv component jsprops first-child]
           (with-meta (meta argv))
           as-element)
-      (let [key (-> (meta argv) get-key)
-            p (if (nil? key)
-                jsprops
-                (oset jsprops "key" key))]
-        (make-element argv comp p first-child)))))
+      (do
+        (when-some [key (-> (meta argv) get-key)]
+          (set! (.-key jsprops) key))
+        (make-element argv component jsprops first-child)))))
 
 (defn str-coll [coll]
   (if (dev?)
@@ -379,12 +371,12 @@
             pos (.indexOf n ">")]
         (case pos
           -1 (native-element (cached-parse n) v 1)
-          0 (let [comp (nth v 1 nil)]
-              ;; Support [:> comp ...]
+          0 (let [component (nth v 1 nil)]
+              ;; Support [:> component ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (assert (or (string? comp) (fn? comp))
+              (assert (or (string? component) (fn? component))
                       (hiccup-err v "Expected React component in"))
-              (native-element #js{:name comp} v 2))
+              (native-element (->HiccupTag component nil nil nil) v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           ;; Apply metadata (e.g. :key) to the outermost element.
           ;; Metadata is probably used only with sequeneces, and in that case
@@ -461,12 +453,12 @@
 ;;             ;; "_store" (js-obj)
 ;;             )))
 
-(defn make-element [argv comp jsprops first-child]
+(defn make-element [argv component jsprops first-child]
   (case (- (count argv) first-child)
     ;; Optimize cases of zero or one child
-    0 (react/createElement comp jsprops)
+    0 (react/createElement component jsprops)
 
-    1 (react/createElement comp jsprops
+    1 (react/createElement component jsprops
           (as-element (nth argv first-child nil)))
 
     (.apply react/createElement nil
@@ -474,4 +466,4 @@
                          (when (>= k first-child)
                            (.push a (as-element v)))
                          a)
-                       #js[comp jsprops] argv))))
+                       #js[component jsprops] argv))))
