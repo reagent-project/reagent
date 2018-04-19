@@ -82,13 +82,14 @@
   (if (named? k)
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
-      (gobj/set prop-name-cache (name k) (util/dash-to-camel k)))
+      (let [v (util/dash-to-camel k)]
+        (gobj/set prop-name-cache (name k) v)
+        v))
     k))
 
 (defn custom-kv-conv [o k v]
   (doto o
-    (aset (cached-custom-prop-name k)
-          (convert-prop-value v))))
+    (gobj/set (cached-custom-prop-name k) (convert-prop-value v))))
 
 (defn convert-custom-prop-value [x]
   (cond (js-val? x) x
