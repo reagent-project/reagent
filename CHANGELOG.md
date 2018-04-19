@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.0 (2018-04-19)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-rc1...v0.8.0)**
+
+- Reagent documentation is now maintained as part of the repository, in [docs](./docs) folder.
+- Default to React 16
+- Apply vector metadata to the outermost element when using nesting shorthand ([#262](https://github.com/reagent-project/reagent/issues/262))
+- Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
+- Fix `:class` property with custom elements ([#322](https://github.com/reagent-project/reagent/issues/322))
+- `:class` property now supports collections of strings ([#154](https://github.com/reagent-project/reagent/pull/154))
+- Added `IWithMeta` to `RAtom` ([#314](https://github.com/reagent-project/reagent/pull/314))
+- Support for using Reagent together with React from npm
+
+#### Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+
 ## 0.8.0-rc1 (2018-04-11)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-alpha2...v0.8.0-rc1)**
