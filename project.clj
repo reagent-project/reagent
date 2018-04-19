@@ -81,7 +81,8 @@
                 :output-dir "target/cljsbuild/test/out"
                 :output-to "target/cljsbuild/test/main.js"
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     :test-npm
     {:source-paths ["test"]
@@ -91,7 +92,8 @@
                 :asset-path "js/out"
                 :output-dir "target/cljsbuild/test-npm/out"
                 :output-to "target/cljsbuild/test-npm/main.js"
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     ;; Separate source-path as this namespace uses Node built-in modules which
     ;; aren't available for other targets, and would break other builds.
@@ -113,7 +115,8 @@
                 :output-dir "target/cljsbuild/node-test/out"
                 :output-to "target/cljsbuild/node-test/main.js"
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     :node-test-npm
     {:source-paths ["test/reagenttest/runtests.cljs"]
@@ -124,7 +127,8 @@
                 :optimizations :none
                 :output-dir "target/cljsbuild/node-test-npm/out"
                 :output-to "target/cljsbuild/node-test-npm/main.js"
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.
@@ -163,7 +167,8 @@
                 :output-dir "target/cljsbuild/prod-test/out"
                 :closure-warnings {:global-this :off}
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     :prod-test-npm
     {:source-paths ["test"]
@@ -175,4 +180,5 @@
                 :output-to "target/cljsbuild/prod-test-npm/main.js"
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
-                :aot-cache true}}}})
+                :aot-cache true
+                :checked-arrays :warn}}}})
