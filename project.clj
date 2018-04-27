@@ -47,8 +47,8 @@
   ;; In future :main alone should be enough to find entry file.
   :cljsbuild
   {:builds
-   {:client
-    {:source-paths ["demo"]
+   [{:id "client"
+     :source-paths ["demo"]
      :watch-paths ["src" "demo" "test"]
      :figwheel true
      :compiler {:parallel-build true
@@ -59,8 +59,8 @@
                 :asset-path "js/out"
                 :npm-deps false}}
 
-    :client-npm
-    {:source-paths ["demo"]
+    {:id "client-npm"
+     :source-paths ["demo"]
      :watch-paths ["src" "demo" "test"]
      :figwheel true
      :compiler {:parallel-build true
@@ -70,8 +70,8 @@
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :asset-path "js/out"}}
 
-    :test
-    {:source-paths ["test"]
+    {:id "test"
+     :source-paths ["test"]
      :compiler {:parallel-build true
                 :optimizations :none
                 :main "reagenttest.runtests"
@@ -81,8 +81,8 @@
                 :npm-deps false
                 :aot-cache true}}
 
-    :test-npm
-    {:source-paths ["test"]
+    {:id "test-npm"
+     :source-paths ["test"]
      :compiler {:parallel-build true
                 :optimizations :none
                 :main "reagenttest.runtests"
@@ -93,16 +93,16 @@
 
     ;; Separate source-path as this namespace uses Node built-in modules which
     ;; aren't available for other targets, and would break other builds.
-    :prerender
-    {:source-paths ["prerender"]
+    {:id "prerender"
+     :source-paths ["prerender"]
      :compiler {:main "sitetools.prerender"
                 :target :nodejs
                 :output-dir "target/cljsbuild/prerender/out"
                 :output-to "target/cljsbuild/prerender/main.js"
                 :aot-cache true}}
 
-    :node-test
-    {:source-paths ["test/reagenttest/runtests.cljs"]
+    {:id "node-test"
+     :source-paths ["test/reagenttest/runtests.cljs"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -113,8 +113,8 @@
                 :npm-deps false
                 :aot-cache true}}
 
-    :node-test-npm
-    {:source-paths ["test/reagenttest/runtests.cljs"]
+    {:id "node-test-npm"
+     :source-paths ["test/reagenttest/runtests.cljs"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -126,8 +126,8 @@
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.
-    :prod
-    {:source-paths ["demo"]
+    {:id "prod"
+     :source-paths ["demo"]
      :compiler {:main "reagentdemo.prod"
                 :optimizations :advanced
                 :elide-asserts true
@@ -139,8 +139,8 @@
                 :npm-deps false
                 :aot-cache true}}
 
-    :prod-npm
-    {:source-paths ["demo"]
+    {:id "prod-npm"
+     :source-paths ["demo"]
      :compiler {:main "reagentdemo.prod"
                 :optimizations :advanced
                 :elide-asserts true
@@ -151,8 +151,8 @@
                 :closure-warnings {:global-this :off}
                 :aot-cache true}}
 
-    :prod-test
-    {:source-paths ["test"]
+    {:id "prod-test"
+     :source-paths ["test"]
      :compiler {:main "reagenttest.runtests"
                 :optimizations :advanced
                 :elide-asserts true
@@ -163,8 +163,8 @@
                 :npm-deps false
                 :aot-cache true}}
 
-    :prod-test-npm
-    {:source-paths ["test"]
+    {:id "prod-test-npm"
+     :source-paths ["test"]
      :compiler {:main "reagenttest.runtests"
                 :optimizations :advanced
                 :elide-asserts true
@@ -173,4 +173,4 @@
                 :output-to "target/cljsbuild/prod-test-npm/main.js"
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
-                :aot-cache true}}}})
+                :aot-cache true}}]})
