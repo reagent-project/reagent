@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0...master)**
+
+- Fix problem which caused using e.g. `:class` property with custom HTML element to break normal elements
+- Fix problem using keyword or symbol as `:class` together with element tag class shorthand, e.g. `[:p.a {:class :b}]` ([#367](https://github.com/reagent-project/reagent/issues/367))
+- Added support for using keywords and symbols in `:class` collection
+
 ## 0.8.0 (2018-04-19)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-rc1...v0.8.0)**
