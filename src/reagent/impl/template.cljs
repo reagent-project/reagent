@@ -82,7 +82,7 @@
   (if (named? k)
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
-      (aset prop-name-cache (name k)
+      (aset custom-prop-name-cache (name k)
             (util/dash-to-camel k)))
     k))
 
