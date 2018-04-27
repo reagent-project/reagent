@@ -574,6 +574,22 @@
   (is (= (rstr [:p {:class #{"a" "b" "c"}}])
          (rstr [:p {:class "a b c"}]))))
 
+(deftest class-named-values
+  (is (= (rstr [:p {:class :a}])
+         (rstr [:p {:class "a"}])))
+  (is (= (rstr [:p.a {:class :b}])
+         (rstr [:p {:class "a b"}])))
+  (is (= (rstr [:p.a {:class 'b}])
+         (rstr [:p {:class "a b"}])))
+  (is (= (rstr [:p {:class [:a :b]}])
+         (rstr [:p {:class "a b"}])))
+  (is (= (rstr [:p {:class ['a :b]}])
+         (rstr [:p {:class "a b"}])))
+
+  (testing "class collection can contain false value"
+    (is (= (rstr [:p {:class [:a :b false nil]}])
+           (rstr [:p {:class "a b"}])))) )
+
 (deftest test-force-update
   (let [v (atom {:v1 0
                  :v2 0})
