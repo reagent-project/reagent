@@ -383,6 +383,7 @@
             pos (.indexOf n ">")]
         (case pos
           -1 (native-element (cached-parse n) v 1)
+          ;; TODO: Doesn't this match :>foo or any keyword starting with >
           0 (let [comp (nth v 1 nil)]
               ;; Support [:> comp ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))

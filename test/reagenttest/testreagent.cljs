@@ -1182,3 +1182,46 @@
                     [children])])]
       (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
              (as-string [comp]))))))
+
+(defonce my-context (react/createContext "default"))
+
+(def Provider (.-Provider my-context))
+(def Consumer (.-Consumer my-context))
+
+(deftest new-context-test
+  (is (= "<div>Context: foo</div>"
+         (rstr (r/create-element
+                 Provider #js {:value "foo"}
+                 (r/create-element
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
+
+  ;; FIXME: Why doesn't this work
+  #_
+  (testing "context default value works"
+    (is (= "<div>Context: default</div>"
+           (rstr (r/create-element
+                   Provider #js {}
+                   (r/create-element
+                     Consumer #js {}
+                     (fn [v]
+                       (r/as-element [:div "Context: " v]))))))))
+
+  (testing "context works with adapt-react-class"
+    (let [provider (r/adapt-react-class Provider)
+          consumer (r/adapt-react-class Consumer)]
+      (is (= "<div>Context: bar</div>"
+             (rstr [provider {:value "bar"}
+                    [consumer {}
+                     (fn [v]
+                       (r/as-element [:div "Context: " v]))]])))))
+
+  ;; FIXME: :> assertion broken
+  #_
+  (testing "context works with :>"
+    (is (= "<div>Context: bar</div>"
+           (rstr [:> Provider {:value "bar"}
+                  [:> Consumer {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v]))]])))))
