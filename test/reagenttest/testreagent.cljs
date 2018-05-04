@@ -574,6 +574,27 @@
   (is (= (rstr [:p {:class #{"a" "b" "c"}}])
          (rstr [:p {:class "a b c"}]))))
 
+(deftest class-different-types
+  (testing "named values are supported"
+    (is (= (rstr [:p {:class :a}])
+           (rstr [:p {:class "a"}])))
+    (is (= (rstr [:p.a {:class :b}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p.a {:class 'b}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p {:class [:a :b]}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p {:class ['a :b]}])
+           (rstr [:p {:class "a b"}]))))
+
+  (testing "non-named values like numbers"
+    (is (= (rstr [:p {:class [1 :b]}])
+           (rstr [:p {:class "1 b"}]))))
+
+  (testing "falsey values are filtered from collections"
+    (is (= (rstr [:p {:class [:a :b false nil]}])
+           (rstr [:p {:class "a b"}])))) )
+
 (deftest test-force-update
   (let [v (atom {:v1 0
                  :v2 0})

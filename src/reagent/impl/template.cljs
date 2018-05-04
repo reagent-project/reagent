@@ -82,7 +82,7 @@
   (if (named? k)
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
-      (aset prop-name-cache (name k)
+      (aset custom-prop-name-cache (name k)
             (util/dash-to-camel k)))
     k))
 
@@ -122,12 +122,18 @@
       ;; Merge classes
       class
       (assoc :class (let [old-class (:class props)]
-                      (if (nil? old-class) class (str class " " old-class)))))))
+                      (if (nil? old-class) class (str class " " (if (named? old-class)
+                                                                  (name old-class)
+                                                                  old-class))))))))
 
 (defn stringify-class [{:keys [class] :as props}]
   (if (coll? class)
     (->> class
-         (filter identity)
+         (keep (fn [c]
+                 (if c
+                   (if (named? c)
+                     (name c)
+                     c))))
          (string/join " ")
          (assoc props :class))
     props))
