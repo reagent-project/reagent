@@ -968,10 +968,12 @@
     ;      :default #"Expected React component in: \[:> \[:div]]"
     ;      (rstr [:> [:div]])))
     ;; This is from React.createElement
+    ;; NOTE: browser-npm uses production cjs bundle for now which only shows
+    ;; the minified error
     (debug/track-warnings
       (wrap-capture-console-error
         #(is (thrown-with-msg?
-               :default #"Element type is invalid:"
+               :default #"(Element type is invalid:|Minified React error)"
                (rstr [:> [:div]])))))
     (is (thrown-with-msg?
          :default #"Invalid tag: 'p.'"
