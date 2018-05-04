@@ -1197,16 +1197,12 @@
                    (fn [v]
                      (r/as-element [:div "Context: " v])))))))
 
-  ;; FIXME: Why doesn't this work
-  #_
   (testing "context default value works"
     (is (= "<div>Context: default</div>"
            (rstr (r/create-element
-                   Provider #js {}
-                   (r/create-element
-                     Consumer #js {}
-                     (fn [v]
-                       (r/as-element [:div "Context: " v]))))))))
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
 
   (testing "context works with adapt-react-class"
     (let [provider (r/adapt-react-class Provider)
