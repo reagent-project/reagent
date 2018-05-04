@@ -7,6 +7,9 @@
 - Fix problem which caused using e.g. `:class` property with custom HTML element to break normal elements
 - Fix problem using keyword or symbol as `:class` together with element tag class shorthand, e.g. `[:p.a {:class :b}]` ([#367](https://github.com/reagent-project/reagent/issues/367))
 - Added support for using keywords and symbols in `:class` collection
+- Removed component type assertion for `:>` (#[369](https://github.com/reagent-project/reagent/issues/369), [#372](https://github.com/reagent-project/reagent/pull/372)))
+  - This caused problems with React Context where component is Plain JS object with special properties
+  - `React/createElement` will still provide error if `:>` is used with invalid values
 
 ## 0.8.0 (2018-04-19)
 

@@ -962,9 +962,19 @@
     (is (thrown-with-msg?
          :default #"Invalid Hiccup form: \[23]"
          (rstr [23])))
-    (is (thrown-with-msg?
-         :default #"Expected React component in: \[:> \[:div]]"
-         (rstr [:> [:div]])))
+    ;; This used to be asserted by Reagent, but because it is hard to validate
+    ;; components, now we just trust React will validate elements.
+    ; (is (thrown-with-msg?
+    ;      :default #"Expected React component in: \[:> \[:div]]"
+    ;      (rstr [:> [:div]])))
+    ;; This is from React.createElement
+    ;; NOTE: browser-npm uses production cjs bundle for now which only shows
+    ;; the minified error
+    (debug/track-warnings
+      (wrap-capture-console-error
+        #(is (thrown-with-msg?
+               :default #"(Element type is invalid:|Minified React error)"
+               (rstr [:> [:div]])))))
     (is (thrown-with-msg?
          :default #"Invalid tag: 'p.'"
          (rstr [:p.])))
@@ -1182,3 +1192,40 @@
                     [children])])]
       (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
              (as-string [comp]))))))
+
+(defonce my-context (react/createContext "default"))
+
+(def Provider (.-Provider my-context))
+(def Consumer (.-Consumer my-context))
+
+(deftest new-context-test
+  (is (= "<div>Context: foo</div>"
+         (rstr (r/create-element
+                 Provider #js {:value "foo"}
+                 (r/create-element
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
+
+  (testing "context default value works"
+    (is (= "<div>Context: default</div>"
+           (rstr (r/create-element
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
+
+  (testing "context works with adapt-react-class"
+    (let [provider (r/adapt-react-class Provider)
+          consumer (r/adapt-react-class Consumer)]
+      (is (= "<div>Context: bar</div>"
+             (rstr [provider {:value "bar"}
+                    [consumer {}
+                     (fn [v]
+                       (r/as-element [:div "Context: " v]))]])))))
+
+  (testing "context works with :>"
+    (is (= "<div>Context: bar</div>"
+           (rstr [:> Provider {:value "bar"}
+                  [:> Consumer {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v]))]])))))

@@ -383,11 +383,10 @@
             pos (.indexOf n ">")]
         (case pos
           -1 (native-element (cached-parse n) v 1)
+          ;; TODO: Doesn't this match :>foo or any keyword starting with >
           0 (let [comp (nth v 1 nil)]
               ;; Support [:> comp ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (assert (or (string? comp) (fn? comp))
-                      (hiccup-err v "Expected React component in"))
               (native-element #js{:name comp} v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           ;; Apply metadata (e.g. :key) to the outermost element.
