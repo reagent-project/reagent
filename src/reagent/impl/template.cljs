@@ -122,14 +122,18 @@
       ;; Merge classes
       class
       (assoc :class (let [old-class (:class props)]
-                      (if (nil? old-class) class (str class " " (name old-class))))))))
+                      (if (nil? old-class) class (str class " " (if (named? old-class)
+                                                                  (name old-class)
+                                                                  old-class))))))))
 
 (defn stringify-class [{:keys [class] :as props}]
-  ;; (keep name) doesn't work because class vector could contain false, which is not Named
   (if (coll? class)
     (->> class
-         (filter identity)
-         (map name)
+         (keep (fn [c]
+                 (if c
+                   (if (named? c)
+                     (name c)
+                     c))))
          (string/join " ")
          (assoc props :class))
     props))
