@@ -1241,7 +1241,7 @@
         component (fn []
                     [component-class @prop])]
 
-    (when isClient
+    (when (and isClient (dev?))
       (let [e (debug/track-warnings
                 #(with-mounted-component [component]
                    (fn [c div]
