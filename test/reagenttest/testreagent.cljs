@@ -962,9 +962,17 @@
     (is (thrown-with-msg?
          :default #"Invalid Hiccup form: \[23]"
          (rstr [23])))
-    (is (thrown-with-msg?
-         :default #"Expected React component in: \[:> \[:div]]"
-         (rstr [:> [:div]])))
+    ;; This used to be asserted by Reagent, but because it is hard to validate
+    ;; components, now we just trust React will validate elements.
+    ; (is (thrown-with-msg?
+    ;      :default #"Expected React component in: \[:> \[:div]]"
+    ;      (rstr [:> [:div]])))
+    ;; This is from React.createElement
+    (debug/track-warnings
+      (wrap-capture-console-error
+        #(is (thrown-with-msg?
+               :default #"Element type is invalid:"
+               (rstr [:> [:div]])))))
     (is (thrown-with-msg?
          :default #"Invalid tag: 'p.'"
          (rstr [:p.])))
@@ -1213,8 +1221,6 @@
                      (fn [v]
                        (r/as-element [:div "Context: " v]))]])))))
 
-  ;; FIXME: :> assertion broken
-  #_
   (testing "context works with :>"
     (is (= "<div>Context: bar</div>"
            (rstr [:> Provider {:value "bar"}
