@@ -10,6 +10,7 @@
 - Removed component type assertion for `:>` (#[369](https://github.com/reagent-project/reagent/issues/369), [#372](https://github.com/reagent-project/reagent/pull/372)))
   - This caused problems with React Context where component is Plain JS object with special properties
   - `React/createElement` will still provide error if `:>` is used with invalid values
+- Handle exceptions from `not=` in Reagent `component-did-update` method ([#350](https://github.com/reagent-project/reagent/pull/350), [#344](https://github.com/reagent-project/reagent/pull/344))
 
 ## 0.8.0 (2018-04-19)
 

@@ -1229,3 +1229,29 @@
                   [:> Consumer {}
                    (fn [v]
                      (r/as-element [:div "Context: " v]))]])))))
+
+(deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
+  (let [prop (r/atom {:todos 1})
+        component-was-updated (atom false)
+        error-thrown-after-updating-props (atom false)
+        component-class (r/create-class {:reagent-render (fn [& args]
+                                                           [:div (str (first args))])
+                                         :component-did-update (fn [& args]
+                                                                 (reset! component-was-updated true))})
+        component (fn []
+                    [component-class @prop])]
+
+    (when (and isClient (dev?))
+      (let [e (debug/track-warnings
+                #(with-mounted-component [component]
+                   (fn [c div]
+                     (reset! prop (sorted-map 1 2))
+                     (try
+                       (r/flush)
+                       (catch :default e
+                         (reset! error-thrown-after-updating-props true)))
+
+                     (is (not @component-was-updated))
+                     (is (not @error-thrown-after-updating-props)))))]
+        (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
+                     (first (:warn e))))))))

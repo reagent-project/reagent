@@ -167,7 +167,10 @@
                          new-argv ($ nextprops :argv)
                          noargv (or (nil? old-argv) (nil? new-argv))]
                      (cond
-                       (nil? f) (or noargv (not= old-argv new-argv))
+                       (nil? f) (or noargv (try (not= old-argv new-argv)
+                                                (catch :default e
+                                                  (warn "Exception thrown while comparing argv's in shouldComponentUpdate: " old-argv " " new-argv " " e)
+                                                  false)))
                        noargv (.call f c c (get-argv c) (props-argv c nextprops))
                        :else  (.call f c c old-argv new-argv))))))
 
