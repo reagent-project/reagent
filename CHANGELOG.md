@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.8.1 (2018-05-15)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0...v0.8.1)**
 
 - Fix problem which caused using e.g. `:class` property with custom HTML element to break normal elements
 - Fix problem using keyword or symbol as `:class` together with element tag class shorthand, e.g. `[:p.a {:class :b}]` ([#367](https://github.com/reagent-project/reagent/issues/367))
