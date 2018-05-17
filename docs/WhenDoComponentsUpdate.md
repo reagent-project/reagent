@@ -186,7 +186,7 @@ The `=` version is more accurate, more intuitive, but potentially more expensive
 
 ### Efficient Re-renders
 
-Its only via rerenders that a UI will change.  So re-rendering is pretty essential.  
+It's only via rerenders that a UI will change.  So re-rendering is pretty essential.  
 
 On the other hand, unnecessary re-rendering should be avoided.  In the worst case, it could lead to performance problems.  By unnecessary rendering, I mean rerenders which result in unchanged HTML. That's a whole lot of work for no reason.
 
