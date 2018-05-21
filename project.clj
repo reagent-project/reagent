@@ -15,7 +15,7 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.10"]
             [lein-codox "0.10.3"]
-            [lein-figwheel "0.5.15"]]
+            [lein-figwheel "0.5.16"]]
 
   :source-paths ["src"]
 
@@ -24,7 +24,7 @@
           :source-paths ["src"]}
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.238"]
-                                  [figwheel "0.5.15"]
+                                  [figwheel "0.5.16"]
                                   [doo "0.1.10"]
                                   [com.google.javascript/closure-compiler-unshaded "v20180319"]
                                   [cljsjs/prop-types "15.6.1-0"]]
@@ -35,9 +35,7 @@
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
-             :repl false
-             ;; :npm-deps and :stable-names
-             :validate-config false}
+             :repl false}
 
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all
