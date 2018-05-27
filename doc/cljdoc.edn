@@ -1,4 +1,5 @@
-{:cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
+{:cljdoc.api/platforms #{"cljs"}
+ :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
                    ["Tutorials" {}
                     ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
                     ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
