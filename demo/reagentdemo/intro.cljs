@@ -5,6 +5,7 @@
             [reagentdemo.syntax :as s]
             [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
+            [reagentdemo.solutions :as solutions]
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))
 
@@ -110,18 +111,18 @@
 
 
 (defn intro []
-  (let [github {:href "https://github.com/reagent-project/reagent"}
-        clojurescript {:href "https://github.com/clojure/clojurescript"}
-        react {:href "http://facebook.github.io/react/"}
-        hiccup {:href "https://github.com/weavejester/hiccup"}
+  (let [github           {:href "https://github.com/reagent-project/reagent"}
+        clojurescript    {:href "https://github.com/clojure/clojurescript"}
+        react            {:href "http://facebook.github.io/react/"}
+        hiccup           {:href "https://github.com/weavejester/hiccup"}
         dynamic-children {:href "http://facebook.github.io/react/docs/multiple-components.html#dynamic-children"}]
     [:div.demo-text
 
      [:h2 "Introduction to Reagent"]
 
      [:p [:a github "Reagent"] " provides a minimalistic interface
-     between " [:a clojurescript "ClojureScript"] " and " [:a
-     react "React"] ". It allows you to define efficient React
+     between " [:a clojurescript "ClojureScript"] " and "
+      [:a react "React"] ". It allows you to define efficient React
      components using nothing but plain ClojureScript functions and
      data, that describe your UI using a " [:a hiccup "Hiccup"] "-like
      syntax."]
@@ -132,19 +133,20 @@
      about performance."]
 
      [:p "A very basic Reagent component may look something like this: "]
-     [demo-component {:comp simple-component
-                      :src (s/src-of [:simple-component])}]
+     [demo-component {:expected simple-component
+                      :comp     solutions/simple-component
+                      :src      (s/src-of [:simple-component])}]
 
      [:p "You can build new components using other components as
      building blocks. Like this:"]
      [demo-component {:comp simple-parent
-                      :src (s/src-of [:simple-parent])}]
+                      :src  (s/src-of [:simple-parent])}]
 
      [:p "Data is passed to child components using plain old Clojure
      data types. Like this:"]
 
      [demo-component {:comp say-hello
-                      :src (s/src-of [:hello-component :say-hello])}]
+                      :src  (s/src-of [:hello-component :say-hello])}]
 
      [:p [:strong "Note: "]
       "In the example above, " [:code "hello-component"] " might just
@@ -156,18 +158,18 @@
       be called with square brackets."]
 
      [:p "Here is another example that shows items in a "
-     [:code "seq"] ":" ]
+      [:code "seq"] ":" ]
 
      [demo-component {:comp lister-user
-                      :src (s/src-of [:lister :lister-user])}]
+                      :src  (s/src-of [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
-     "The " [:code "^{:key item}"] " part above isn’t really necessary
+      "The " [:code "^{:key item}"] " part above isn’t really necessary
      in this simple example, but attaching a unique key to every item
      in a dynamically generated list of components is good practice,
      and helps React to improve performance for large lists. The key
      can be given either (as in this example) as meta-data, or as a "
-     [:code ":key"] " item in the first argument to a component (if it
+      [:code ":key"] " item in the first argument to a component (if it
      is a map). See React’s " [:a dynamic-children "documentation"] "
      for more info."]]))
 
