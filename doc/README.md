@@ -13,7 +13,7 @@ Also:
   * [Reagent Deep Dive Series by Timothy Pratley](http://timothypratley.blogspot.com.au/p/p.html) - a four part series
   * [Reagent Mysteries series by Paulus Esterhazy](https://presumably.de/) - a four part series
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
-  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/masterUsing-Stateful-JS-Components.md)  (external link)
+  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
 
 ## Commercial Videos Series
 
