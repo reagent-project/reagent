@@ -23,10 +23,9 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.238"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.312"]
                                   [figwheel "0.5.16"]
                                   [doo "0.1.10"]
-                                  [com.google.javascript/closure-compiler-unshaded "v20180319"]
                                   [cljsjs/prop-types "15.6.1-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
