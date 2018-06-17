@@ -266,15 +266,15 @@
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))
         jsprops (convert-props (if hasprops props) parsed)
-        first-child (+ first (if hasprops 1 0))]
+        first-child (+ first (if hasprops 1 0))
+        key (-> (meta argv) get-key)
+        jsprops (if (nil? key)
+                  jsprops
+                  (oset jsprops "key" key)) ]
     (case comp
       "input" (react/createElement reagent-input jsprops)
       "textarea" (react/createElement reagent-textarea jsprops)
-      (let [key (-> (meta argv) get-key)
-            p (if (nil? key)
-                jsprops
-                (oset jsprops "key" key))]
-        (make-element argv comp p first-child)))))
+      (make-element argv comp jsprops first-child))))
 
 (defn str-coll [coll]
   (if (dev?)
