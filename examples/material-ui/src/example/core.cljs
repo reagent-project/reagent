@@ -36,7 +36,7 @@
                                                             nil
 
                                                             ;; Select doesn't require cursor fix so default can be used.
-                                                            (not (:select props))
+                                                            (:select props)
                                                             nil
 
                                                             :else
@@ -65,8 +65,7 @@
     "reset"]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Text input"
      :placeholder "Placeholder"
      :helper-text "Helper text"
@@ -75,8 +74,7 @@
      :inputRef #(js/console.log "input-ref" %)}]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Textarea"
      :placeholder "Placeholder"
      :helper-text "Helper text"
@@ -87,8 +85,7 @@
      :rows 10}]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Select"
      :placeholder "Placeholder"
      :helper-text "Helper text"
