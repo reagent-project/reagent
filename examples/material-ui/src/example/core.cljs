@@ -31,10 +31,11 @@
                                                             (and (:multiline props) (:rows props) (not (:maxRows props)))
                                                             textarea-component
 
-                                                            ;; FIXME: Autosize multiline input is broken.
+                                                            ;; FIXME: Autosize multiline field is broken.
                                                             (:multiline props)
                                                             nil
 
+                                                            ;; Select doesn't require cursor fix so default can be used.
                                                             (not (:select props))
                                                             nil
 

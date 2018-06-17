@@ -3,7 +3,7 @@
 [Example project](../../examples/material-ui/)
 
 Material-UI [TextField](https://material-ui.com/api/text-field/) has for long
-time caused from for Reagent users. The problem is that `TextField` wraps the
+time caused problems for Reagent users. The problem is that `TextField` wraps the
 `input` element inside a component so that Reagent is not able to enable
 input cursor fixes, which are required due to [async rendering](http://reagent-project.github.io/news/reagent-is-async.html).
 
