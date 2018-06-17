@@ -22,11 +22,12 @@
        (fn [props & children]
          (this-as this
            (let [props (-> props
-                           (assoc :on-change (fn [e]
-                                               (.setState this #js {:value (.. e -target -value)})
-                                               (if-let [f (:on-change props)]
-                                                 (f e)))
-                                  :value (.-value (.-state this)))
+                           (cond-> (:on-change props)
+                             (assoc :on-change (fn [e]
+                                                 (.setState this #js {:value (.. e -target -value)})
+                                                 ((:on-change props) e))))
+                           (cond-> (:value props)
+                             (assoc :value (.-value (.-state this))))
                            rtpl/convert-prop-value)]
              (apply r/create-element component props (map r/as-element children)))))}) ))
 
