@@ -343,20 +343,20 @@
     (aset tag-name-cache x (parse-tag x))))
 
 (defn native-element [parsed argv first]
-  (let [comp ($ parsed :name)]
-    (let [props (nth argv first nil)
-          hasprops (or (nil? props) (map? props))
-          jsprops (convert-props (if hasprops props) parsed)
-          first-child (+ first (if hasprops 1 0))]
-      (if (input-component? comp)
-        (-> [(reagent-input) argv comp jsprops first-child]
-            (with-meta (meta argv))
-            as-element)
-        (let [key (-> (meta argv) get-key)
-              p (if (nil? key)
-                  jsprops
-                  (oset jsprops "key" key))]
-          (make-element argv comp p first-child))))))
+  (let [comp ($ parsed :name)
+        props (nth argv first nil)
+        hasprops (or (nil? props) (map? props))
+        jsprops (convert-props (if hasprops props) parsed)
+        first-child (+ first (if hasprops 1 0))]
+    (if (input-component? comp)
+      (-> [(reagent-input) argv comp jsprops first-child]
+          (with-meta (meta argv))
+          as-element)
+      (let [key (-> (meta argv) get-key)
+            p (if (nil? key)
+                jsprops
+                (oset jsprops "key" key))]
+        (make-element argv comp p first-child)))))
 
 (defn str-coll [coll]
   (if (dev?)
