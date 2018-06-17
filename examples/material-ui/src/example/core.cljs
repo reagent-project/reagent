@@ -55,11 +55,13 @@
     [:strong @text-state]]
 
    [:button
-    {:on-click #(swap! text-state str " foo")}
+    {:type "button"
+     :on-click #(swap! text-state str " foo")}
     "update value property"]
 
    [:button
-    {:on-click #(reset! text-state "")}
+    {:type "button"
+     :on-click #(reset! text-state "")}
     "reset"]
 
    [text-field
