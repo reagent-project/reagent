@@ -25,7 +25,7 @@
                 (complete-all true)))
 
 (defn todo-input [{:keys [title on-save on-stop]}]
-  (let [val (r/atom title)
+  (let [val (r/atom (or title ""))
         stop #(do (reset! val "")
                   (if on-stop (on-stop)))
         save #(let [v (-> @val str clojure.string/trim)]

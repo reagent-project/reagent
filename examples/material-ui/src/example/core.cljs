@@ -7,31 +7,7 @@
 (def mui-theme-provider (r/adapt-react-class mui/MuiThemeProvider))
 (def menu-item (r/adapt-react-class mui/MenuItem))
 
-(defn adapt-input-component [component]
-  (fn [props & _]
-    (r/create-class
-      {:getInitialState (fn [] #js {:value (:value props)})
-       :component-will-receive-props
-       (fn [this [_ next-props]]
-         (when (not= (:value next-props) (.-value (.-state this)))
-           (.setState this #js {:value (:value next-props)})))
-       :should-component-update
-       (fn [this old-argv new-argv]
-         true)
-       :reagent-render
-       (fn [props & children]
-         (this-as this
-           (let [props (-> props
-                           (cond-> (:on-change props)
-                             (assoc :on-change (fn [e]
-                                                 (.setState this #js {:value (.. e -target -value)})
-                                                 ((:on-change props) e))))
-                           (cond-> (:value props)
-                             (assoc :value (.-value (.-state this))))
-                           rtpl/convert-prop-value)]
-             (apply r/create-element component props (map r/as-element children)))))}) ))
-
-(def text-field (adapt-input-component mui/TextField))
+(def text-field (rtpl/adapt-input-component mui/TextField))
 
 (defonce text-state (r/atom "foobar"))
 
@@ -54,8 +30,7 @@
     "reset"]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Text input"
      :placeholder "Placeholder"
      :helper-text "Helper text"
@@ -64,8 +39,7 @@
      :inputRef #(js/console.log "input-ref" %)}]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Textarea"
      :placeholder "Placeholder"
      :helper-text "Helper text"
@@ -74,8 +48,7 @@
      :multiline true}]
 
    [text-field
-    {:id "example"
-     :value @text-state
+    {:value @text-state
      :label "Select"
      :placeholder "Placeholder"
      :helper-text "Helper text"
