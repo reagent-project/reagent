@@ -15,13 +15,15 @@
        (fn [this [_ next-props]]
          (when (not= (:value next-props) (.-value (.-state this)))
            (.setState this #js {:value (:value next-props)})))
+       :should-component-update
+       (fn [this old-argv new-argv]
+         true)
        :reagent-render
        (fn [props & children]
          (this-as this
            (let [props (-> props
                            (assoc :on-change (fn [e]
                                                (.setState this #js {:value (.. e -target -value)})
-                                               (.forceUpdate this)
                                                (if-let [f (:on-change props)]
                                                  (f e)))
                                   :value (.-value (.-state this)))
