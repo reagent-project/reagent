@@ -161,126 +161,45 @@
   [input-type]
   (contains? these-inputs-have-selection-api input-type))
 
-(declare input-component-set-value)
-
-(defn input-node-set-value
-  [node rendered-value dom-value component {:keys [on-write]}]
-  (if-not (and (identical? node ($ js/document :activeElement))
-            (has-selection-api? ($ node :type))
-            (string? rendered-value)
-            (string? dom-value))
-    ;; just set the value, no need to worry about a cursor
-    (do
-      ($! component :cljsDOMValue rendered-value)
-      ($! node :value rendered-value)
-      (when (fn? on-write)
-        (on-write rendered-value)))
-
-    ;; Setting "value" (below) moves the cursor position to the
-    ;; end which gives the user a jarring experience.
-    ;;
-    ;; But repositioning the cursor within the text, turns out to
-    ;; be quite a challenge because changes in the text can be
-    ;; triggered by various events like:
-    ;; - a validation function rejecting a user inputted char
-    ;; - the user enters a lower case char, but is transformed to
-    ;;   upper.
-    ;; - the user selects multiple chars and deletes text
-    ;; - the user pastes in multiple chars, and some of them are
-    ;;   rejected by a validator.
-    ;; - the user selects multiple chars and then types in a
-    ;;   single new char to repalce them all.
-    ;; Coming up with a sane cursor repositioning strategy hasn't
-    ;; been easy ALTHOUGH in the end, it kinda fell out nicely,
-    ;; and it appears to sanely handle all the cases we could
-    ;; think of.
-    ;; So this is just a warning. The code below is simple
-    ;; enough, but if you are tempted to change it, be aware of
-    ;; all the scenarios you have handle.
-    (let [node-value ($ node :value)]
-      (if (not= node-value dom-value)
-        ;; IE has not notified us of the change yet, so check again later
-        (batch/do-after-render #(input-component-set-value component))
-        (let [existing-offset-from-end (- (count node-value)
-                                         ($ node :selectionStart))
-              new-cursor-offset        (- (count rendered-value)
-                                         existing-offset-from-end)]
-          ($! component :cljsDOMValue rendered-value)
-          ($! node :value rendered-value)
-          (when (fn? on-write)
-            (on-write rendered-value))
-          ($! node :selectionStart new-cursor-offset)
-          ($! node :selectionEnd new-cursor-offset))))))
-
-(defn input-component-set-value [this]
-  (when ($ this :cljsInputLive)
-    ($! this :cljsInputDirty false)
-    (let [rendered-value ($ this :cljsRenderedValue)
-          dom-value ($ this :cljsDOMValue)
-          ;; Default to the root node within this component
-          node (find-dom-node this)]
-      (when (not= rendered-value dom-value)
-        (input-node-set-value node rendered-value dom-value this {})))))
-
-(defn input-handle-change [this on-change e]
-  ($! this :cljsDOMValue (-> e .-target .-value))
-  ;; Make sure the input is re-rendered, in case on-change
-  ;; wants to keep the value unchanged
-  (when-not ($ this :cljsInputDirty)
-    ($! this :cljsInputDirty true)
-    (batch/do-after-render #(input-component-set-value this)))
-  (on-change e))
-
-(defn input-render-setup
-  [this jsprops]
-  ;; Don't rely on React for updating "controlled inputs", since it
-  ;; doesn't play well with async rendering (misses keystrokes).
-  (when (and (some? jsprops)
-             (.hasOwnProperty jsprops "onChange")
-             (.hasOwnProperty jsprops "value"))
-    (assert find-dom-node
-            "reagent.dom needs to be loaded for controlled input to work")
-    (let [v ($ jsprops :value)
-          value (if (nil? v) "" v)
-          on-change ($ jsprops :onChange)]
-      (when-not ($ this :cljsInputLive)
-        ;; set initial value
-        ($! this :cljsInputLive true)
-        ($! this :cljsDOMValue value))
-      ($! this :cljsRenderedValue value)
-      (js-delete jsprops "value")
-      (doto jsprops
-        ($! :defaultValue value)
-        ($! :onChange #(input-handle-change this on-change %))))))
-
-(defn input-unmount [this]
-  ($! this :cljsInputLive nil))
-
-(defn ^boolean input-component? [x]
-  (case x
-    ("input" "textarea") true
-    false))
-
-(def reagent-input-class nil)
+(defn adapt-input-component [component]
+  (fn [props & _]
+    (comp/create-class
+      {:display-name "InputWrapper"
+       :get-initial-state
+       (fn []
+         #js {:value (:value props)})
+       :should-component-update
+       (fn [this old-argv new-args]
+         true)
+       :component-will-receive-props
+       (fn [this [_ props]]
+         (when (not= (:value props) (.. this -state -value))
+           (.setState this #js {:value (:value props)})))
+       :reagent-render
+       (fn [props & children]
+         (this-as this
+           (let [props (if (or (not= "input" component)
+                               (has-selection-api? (:type props)))
+                         (-> props
+                             (cond-> (:on-change props)
+                               (assoc :on-change (fn [e]
+                                                   (.setState this #js {:value (.. e -target -value)})
+                                                   ((:on-change props) e))))
+                             (cond-> (.. this -state -value)
+                               (assoc :value (.. this -state -value)))
+                             convert-prop-value)
+                         (convert-prop-value props))]
+             (apply react/createElement component props (map as-element children)))))})))
 
 (declare make-element)
 
-(def input-spec
-  {:display-name "ReagentInput"
-   :component-did-update input-component-set-value
-   :component-will-unmount input-unmount
-   :reagent-render
-   (fn [argv comp jsprops first-child]
-     (let [this comp/*current-component*]
-       (input-render-setup this jsprops)
-       (make-element argv comp jsprops first-child)))})
+(def reagent-input
+  (comp/reactify-component
+    (adapt-input-component "input")))
 
-(defn reagent-input
-  []
-  (when (nil? reagent-input-class)
-    (set! reagent-input-class (comp/create-class input-spec)))
-  reagent-input-class)
-
+(def reagent-textarea
+  (comp/reactify-component
+    (adapt-input-component "textarea")))
 
 ;;; Conversion from Hiccup forms
 
@@ -347,16 +266,15 @@
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))
         jsprops (convert-props (if hasprops props) parsed)
-        first-child (+ first (if hasprops 1 0))]
-    (if (input-component? comp)
-      (-> [(reagent-input) argv comp jsprops first-child]
-          (with-meta (meta argv))
-          as-element)
-      (let [key (-> (meta argv) get-key)
-            p (if (nil? key)
-                jsprops
-                (oset jsprops "key" key))]
-        (make-element argv comp p first-child)))))
+        first-child (+ first (if hasprops 1 0))
+        key (-> (meta argv) get-key)
+        jsprops (if (nil? key)
+                  jsprops
+                  (oset jsprops "key" key)) ]
+    (case comp
+      "input" (react/createElement reagent-input jsprops)
+      "textarea" (react/createElement reagent-textarea jsprops)
+      (make-element argv comp jsprops first-child))))
 
 (defn str-coll [coll]
   (if (dev?)
