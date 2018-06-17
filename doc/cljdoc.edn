@@ -15,6 +15,8 @@
                     ["Why is my attribute (like autoFocus) missing?" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
                     ["How can I use React's dangerouslySetInnerHTML?" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
                     ["Reagent doesn't work after updating dependencies" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
+                   ["Examples" {}
+                    ["Material-UI v1" {:file "doc/examples/material-ui.md"}]]
                    ["Other" {}
                     ["0.8 Upgrade guide" {:file "doc/0.8-upgrade.md"}]
                     ["Development guide" {:file "doc/development.md"}]]]}

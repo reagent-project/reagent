@@ -154,6 +154,8 @@ Beware that `current-component` is only valid in component functions, and must b
 
 ## React Interop Macros
 
+**Please do not use these macros. They will be removed at some point. Either use extern inference, externs or proper `goog.object/get`.**
+
 Reagent provides two utility macros `$` and `$!` for getting and setting javascript properties in a way that is safe for advanced compilation.
 
 `($ o :foo)` is equivalent to `(.-foo o)`

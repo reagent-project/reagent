@@ -6,7 +6,7 @@
 
 (def mui-theme-provider (r/adapt-react-class mui/MuiThemeProvider))
 
-(def ^:private input-wrapper
+(def ^:private input-component
   (r/reactify-component
     (fn [props]
       [:input (-> props
@@ -19,7 +19,7 @@
 ;; Create-element + convert-props-value is the same as what adapt-react-class does.
 (defn text-field [props & children]
   (let [props (-> props
-                  (assoc-in [:InputProps :inputComponent] input-wrapper)
+                  (assoc-in [:InputProps :inputComponent] input-component)
                   rtpl/convert-prop-value)]
     (apply r/create-element mui/TextField props children)))
 
