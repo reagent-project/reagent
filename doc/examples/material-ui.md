@@ -50,8 +50,16 @@ it is useful to wrap the `TextField` component in a way that the option is added
   (let [props (-> props
                   (assoc-in [:InputProps :inputComponent] input-component)
                   rtpl/convert-prop-value)]
-    (apply r/create-element mui/TextField props children)))
+    (apply r/create-element mui/TextField props (map r/as-element children))))
 ```
 
 Here `r/create-element` and `reagent.impl.template/covert-prop-values` achieve
 the same as what `adapt-react-class` does, but allows modifying the props.
+
+**Check the example project for complete code.** Some additional logic is
+required to ensure option like `:multiline` and `:select` work correctly,
+as they affect how the `inputComponent` should work.
+
+TODO: `:multiline` `TextField` without `:rows` (i.e. automatic height) doesn't
+work, because that requires Material-UI `Input/Textarea`, which doesn't work
+with Reagent cursor fix.
