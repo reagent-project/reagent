@@ -194,10 +194,12 @@
 (declare make-element)
 
 (def reagent-input
-  (adapt-input-component "input"))
+  (comp/reactify-component
+    (adapt-input-component "input")))
 
 (def reagent-textarea
-  (adapt-input-component "textarea"))
+  (comp/reactify-component
+    (adapt-input-component "textarea")))
 
 ;;; Conversion from Hiccup forms
 
@@ -260,15 +262,15 @@
     (aset tag-name-cache x (parse-tag x))))
 
 (defn native-element [parsed argv first]
-  (let [comp ($ parsed :name)]
+  (let [comp ($ parsed :name)
+        props (nth argv first nil)
+        hasprops (or (nil? props) (map? props))
+        jsprops (convert-props (if hasprops props) parsed)
+        first-child (+ first (if hasprops 1 0))]
     (case comp
-      "input" (reag-element reagent-input argv)
-      "textarea" (reag-element reagent-textarea argv)
-      (let [props (nth argv first nil)
-            hasprops (or (nil? props) (map? props))
-            jsprops (convert-props (if hasprops props) parsed)
-            first-child (+ first (if hasprops 1 0))
-            key (-> (meta argv) get-key)
+      "input" (react/createElement reagent-input jsprops)
+      "textarea" (react/createElement reagent-textarea jsprops)
+      (let [key (-> (meta argv) get-key)
             p (if (nil? key)
                 jsprops
                 (oset jsprops "key" key))]
