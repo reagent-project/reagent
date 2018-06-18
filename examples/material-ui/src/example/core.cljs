@@ -7,42 +7,42 @@
 (def mui-theme-provider (r/adapt-react-class mui/MuiThemeProvider))
 (def menu-item (r/adapt-react-class mui/MenuItem))
 
-(def ^:private input-component
-  (r/reactify-component
-    (fn [props]
-      [:input (-> props
-                  (assoc :ref (:inputRef props))
-                  (dissoc :inputRef))])))
+(defn adapt-input-component
+  "Adapts the given custom React input component
+  (i.e. it uses :value and :on-change properties)
+  for fully controlled use with Reagent.
 
-(def ^:private textarea-component
-  (r/reactify-component
-    (fn [props]
-      [:textarea (-> props
-                     (assoc :ref (:inputRef props))
-                     (dissoc :inputRef))])))
+  Note that this doesn't fix cursor in case where the
+  value is transformed, which is handled by Reagent
+  for basic :input."
+  [component]
+  (fn [props & _]
+    (r/create-class
+      {:display-name "InputWrapper"
+       :get-initial-state
+       (fn []
+         #js {:value (:value props)})
+       :should-component-update
+       (fn [this old-argv new-args]
+         true)
+       :component-will-receive-props
+       (fn [this [_ props]]
+         (when (not= (:value props) (.. this -state -value))
+           (.setState this #js {:value (:value props)})))
+       :reagent-render
+       (fn [props & children]
+         (this-as this
+           (let [props (-> props
+                           (cond-> (:on-change props)
+                             (assoc :on-change (fn [e]
+                                                 (.setState this #js {:value (.. e -target -value)})
+                                                 ((:on-change props) e))))
+                           (cond-> (.. this -state -value)
+                             (assoc :value (.. this -state -value)))
+                           rtpl/convert-prop-value)]
+             (apply r/create-element component props (map r/as-element children)))))})))
 
-;; To fix cursor jumping when controlled input value is changed,
-;; use wrapper input element created by Reagent instead of
-;; letting Material-UI to create input element directly using React.
-;; Create-element + convert-props-value is the same as what adapt-react-class does.
-(defn text-field [props & children]
-  (let [props (-> props
-                  (assoc-in [:InputProps :inputComponent] (cond
-                                                            (and (:multiline props) (:rows props) (not (:maxRows props)))
-                                                            textarea-component
-
-                                                            ;; FIXME: Autosize multiline field is broken.
-                                                            (:multiline props)
-                                                            nil
-
-                                                            ;; Select doesn't require cursor fix so default can be used.
-                                                            (:select props)
-                                                            nil
-
-                                                            :else
-                                                            input-component))
-                  rtpl/convert-prop-value)]
-    (apply r/create-element mui/TextField props (map r/as-element children))))
+(def text-field (adapt-input-component mui/TextField))
 
 (defonce text-state (r/atom "foobar"))
 
@@ -80,9 +80,7 @@
      :helper-text "Helper text"
      :on-change (fn [e]
                   (reset! text-state (.. e -target -value)))
-     :multiline true
-     ;; TODO: Autosize textarea is broken.
-     :rows 10}]
+     :multiline true}]
 
    [text-field
     {:value @text-state
