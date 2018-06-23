@@ -128,7 +128,7 @@
 
      [:p "The goal of Reagent is to make it possible to define
      arbitrarily complex UIs using just a couple of basic concepts,
-     and to be fast enough by default that you rarely have to care
+     and to be fast enough by default that you rarely have to think
      about performance."]
 
      [:p "A very basic Reagent component may look something like this: "]
