@@ -12,6 +12,10 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **Community discussion and support channels**
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
     * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
+  * **Commercial video material**
+    * [Learn Reagent](https://www.jacekschae.com/learn-reagent-pro/tycit??coupon=REAGENT)
+    * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
+    * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
 ### Prerequisites
 
@@ -28,7 +32,7 @@ If you wish to only create the assets for ClojureScript without a Clojure backen
 
     lein new reagent-frontend myproject
 
-This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template). 
+This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template).
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
@@ -51,7 +55,7 @@ Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead
 (defn some-component []
   [:div
    [:h3 "I am a component!"]
-   [:p.someclass 
+   [:p.someclass
     "I have " [:strong "bold"]
     [:span {:style {:color "red"}} " and red"]
     " text."]])
@@ -64,15 +68,15 @@ Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements
   [:p
     [:b "Nested Element"]]]
 ```
-      
+
 can be written as:
-      
+
 ```clj
 [:div>p>b "Nested Element"]
-```        
+```
 
 > **Since version 0.8:** The `:class` attribute also supports collections of classes, and nil values are removed:
-> 
+>
 > ```clj
 > [:div {:class ["a-class" (when active? "active") "b-class"]}]
 > ```

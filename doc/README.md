@@ -17,6 +17,7 @@ Also:
 
 ## Commercial Videos Series
 
+  * [Learn Reagent](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT)
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
   * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
