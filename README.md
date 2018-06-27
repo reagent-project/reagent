@@ -13,7 +13,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
     * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
   * **Commercial video material**
-    * [Learn Reagent](https://www.jacekschae.com/learn-reagent-pro/tycit??coupon=REAGENT)
+    * [Learn Reagent](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT)
     * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
     * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
