@@ -93,9 +93,12 @@
                   (reset! text-state (.. e -target -value)))
      :select true}
     [menu-item
-     {:value 1} "Item 1"]
-    [menu-item
-     {:value 2} "Item 2"]]])
+     {:value 1}
+     "Item 1"]
+    ;; Same as previous, alternative to adapt-react-class
+    [:> mui/MenuItem
+     {:value 2}
+     "Item 2"]]])
 
 (defn start []
   (r/render [main] (js/document.getElementById "app")))
