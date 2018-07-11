@@ -1,9 +1,10 @@
 (defproject material-ui-reagent "0.6.0"
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.312"]
+                 [org.clojure/clojurescript "1.10.339"]
                  [reagent "0.8.1"]
                  [figwheel "0.5.16"]
-                 [cljsjs/material-ui "1.2.1-0"]]
+                 [cljsjs/material-ui "1.2.1-1"]
+                 [cljsjs/material-ui-icons "1.1.0-1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-figwheel "0.5.16"]]
@@ -39,8 +40,9 @@
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :asset-path "js/out"
                 :install-deps true
-                :npm-deps {react "16.3.0"
-                           react-dom "16.3.0"
-                           create-react-class "16.3.2"
-                           "@material-ui/core" "1.2.1"}
+                :npm-deps {react "16.4.0"
+                           react-dom "16.4.0"
+                           create-react-class "15.6.3"
+                           "@material-ui/core" "1.2.1"
+                           "@material-ui/icons" "1.1.0"}
                 :process-shim true}}}})

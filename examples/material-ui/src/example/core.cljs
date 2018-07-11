@@ -1,11 +1,17 @@
 (ns example.core
   (:require [reagent.core :as r]
-            [material-ui :as mui]
+            ;; FIXME: Needs some ClojureScript compiler fixes
+            ; ["@material-ui/core" :as mui]
+            ; ["@material-ui/core/styles" :refer [createMuiTheme]]
+            ; ["@material-ui/icons" :as mui-icons]
+            ["material-ui" :as mui]
+            ["material-ui/styles" :refer [createMuiTheme withStyles]]
+            ["material-ui/colors" :as mui-colors]
+            ["material-ui-icons" :as mui-icons]
             [goog.object :as gobj]
             [reagent.impl.template :as rtpl]))
 
-(def mui-theme-provider (r/adapt-react-class mui/MuiThemeProvider))
-(def menu-item (r/adapt-react-class mui/MenuItem))
+;; TextField cursor fix:
 
 (def ^:private input-component
   (r/reactify-component
@@ -44,31 +50,52 @@
                   rtpl/convert-prop-value)]
     (apply r/create-element mui/TextField props (map r/as-element children))))
 
+;; Example
+
+(def custom-theme
+  (createMuiTheme
+    #js {:palette #js {:primary #js {:main (gobj/get (.-red mui-colors) 100)}}}))
+
+(defn custom-styles [theme]
+  #js {:button #js {:margin (.. theme -spacing -unit)}
+       :textField #js {:width 200
+                       :marginLeft (.. theme -spacing -unit)
+                       :marginRight (.. theme -spacing -unit)}})
+
+(def with-custom-styles (withStyles custom-styles))
+
 (defonce text-state (r/atom "foobar"))
 
-(defn main []
-  [:form
-   {:style {:display "flex"
-            :flex-direction "column"
-            :flex-wrap "wrap"}}
-   [:div
-    [:strong @text-state]]
+;; Props in cljs but classes in JS object
+(defn form [{:keys [classes] :as props}]
+  [:> mui/Grid
+   {:container true
+    :direction "column"}
 
-   [:button
-    {:type "button"
-     :on-click #(swap! text-state str " foo")}
-    "update value property"]
+   [:> mui/Toolbar
+    {:disable-gutters true}
+    [:> mui/Button
+     {:variant "contained"
+      :color "primary"
+      :class (.-button classes)
+      :on-click #(swap! text-state str " foo")}
+     "Update value property"
+     [:> mui-icons/AddBox]]
 
-   [:button
-    {:type "button"
-     :on-click #(reset! text-state "")}
-    "reset"]
+    [:> mui/Button
+     {:variant "outlined"
+      :color "secondary"
+      :class (.-button classes)
+      :on-click #(reset! text-state "")}
+     "Reset"
+     [:> mui-icons/Clear]]]
 
    [text-field
     {:value @text-state
      :label "Text input"
      :placeholder "Placeholder"
      :helper-text "Helper text"
+     :class (.-textField classes)
      :on-change (fn [e]
                   (reset! text-state (.. e -target -value)))
      :inputRef #(js/console.log "input-ref" %)}]
@@ -78,6 +105,7 @@
      :label "Textarea"
      :placeholder "Placeholder"
      :helper-text "Helper text"
+     :class (.-textField classes)
      :on-change (fn [e]
                   (reset! text-state (.. e -target -value)))
      :multiline true
@@ -89,16 +117,32 @@
      :label "Select"
      :placeholder "Placeholder"
      :helper-text "Helper text"
+     :class (.-textField classes)
      :on-change (fn [e]
                   (reset! text-state (.. e -target -value)))
      :select true}
-    [menu-item
+    [:> mui/MenuItem
      {:value 1}
      "Item 1"]
     ;; Same as previous, alternative to adapt-react-class
     [:> mui/MenuItem
      {:value 2}
      "Item 2"]]])
+
+(defn main []
+  ;; fragment
+  [:<>
+   [:> mui/CssBaseline]
+   [:> mui/MuiThemeProvider
+    {:theme custom-theme}
+    [:> mui/Grid
+     {:container true
+      :direction "row"
+      :justify "center"}
+     [:> mui/Grid
+      {:item true
+       :xs 6}
+      [:> (with-custom-styles (r/reactify-component form))]]]]])
 
 (defn start []
   (r/render [main] (js/document.getElementById "app")))
