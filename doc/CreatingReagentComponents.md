@@ -143,7 +143,9 @@ In my experience, you'll probably use `Form-3` `components` less than 1% of the 
 
 While the critical part of a component is its render function, sometimes we need to perform actions at various critical moments in a component's lifetime, like when it is first created, or when its about to be destroyed (removed from the DOM), or when its about to be updated, etc.
 
-With `Form-3` components, you can nominate `lifecycle methods`. reagent provides a very thin layer over React's own `lifecycle methods`. So, before going on, [read all about React's lifecycle methods.](http://facebook.github.io/react/docs/component-specs.html#lifecycle-methods)
+With `Form-3` components, you can nominate `lifecycle methods`. reagent provides a very thin layer over React's own `lifecycle methods`. So, before going on, [read all about React's lifecycle methods.](http://facebook.github.io/react/docs/component-specs.html#lifecycle-methods).  
+
+Because React's lifecycle methods are object-oriented, they presume the ability to access `this` to obtain the current state of the component.  Accordingly, the signatures of the corresponding Reagent lifecycle methods all take a reference to the reagent component as the first argument.  This reference can be used with `r/props`, `r/children`, and `r/argv` to obtain the current props/arguments.  There are some unexpected details with these functions described below.  You may also find `r/dom-node` helpful, as a common use of form-3 components is to draw into a `canvas` element, and you will need access to the underlying DOM element to do so.
 
 A `Form-3` component definition looks like this:
 ```cljs
@@ -152,15 +154,19 @@ A `Form-3` component definition looks like this:
   (let [some (local but shared state)      ;; <-- closed over by lifecycle fns
         can  (go here)]   
      (reagent/create-class                 ;; <-- expects a map of functions 
-       {:component-did-mount               ;; the name of a lifecycle function
-        #(println "component-did-mount")   ;; your implementation
+       {:display-name  "my-component"      ;; for more helpful warnings & errors
+
+        :component-did-mount               ;; the name of a lifecycle function
+        (fn [this] 
+          (println "component-did-mount")) ;; your implementation
          
-        :component-will-mount              ;; the name of a lifecycle function
-        #(println "component-will-mount")  ;; your implementation
+        :component-did-update              ;; the name of a lifecycle function
+        (fn [this old-argv]                ;; reagent provides you the entire "argv", not just the "props"
+          (let [new-argv (rest (reagent/argv this))]
+            (do-something new-argv old-argv)))
       
         ;; other lifecycle funcs can go in here
-      
-        :display-name  "my-component"  ;; for more helpful warnings & errors
+     
 
         :reagent-render        ;; Note:  is not :render
          (fn [x y z]           ;; remember to repeat parameters
@@ -178,7 +184,13 @@ A `Form-3` component definition looks like this:
    [my-component 1 2 3]]) ;; Be sure to put the Reagent class in square brackets to force it to render!
 ```
 
-At the time of writing, the official reagent tutorial doesn't show how to do `Form-3` `components` in the way shown above, and instead suggests that you use `with-meta`, which is clumsy and inferior.  So I won't show that method here, but be aware that an alternative way exists to achieve the same outcome.
+Note the `old-argv` above in the signature for `component-did-mount`.  Many of these Reagent lifecycle method analogs take `prev-argv` or `old-argv` (see the docstring for `reagent/create-class` for a full listing).  These `argv` arguments include the component constructor as the first argument, which should generally be ignored.  This is the same format returned by `(reagent/argv this)`.
+
+Alternately, you can use `(reagent/props this)` and `(reagent/props children)`, but, conceptually, these don't map as clearly to the `argv` concept.  Specifically, the arguments to your render function are actually passed as children (not props) to the underlying React component, **unless the first argument is a map.**   If the first argument is a map, then that map is passed as props, and the rest of the arguments are passed as children.  Using `props` and `children` may read a bit cleaner, but you do need to pay attention to whether you're passing a props map or not.
+
+Finally, note that some react lifecycle methods take `prevState` and `nextState`.  Because state management provides its own state management system, there is no access to these parameters in the lifecycle methods.
+
+It is possible to create `Form-3` `components` using `with-meta`.  However, `with-meta` is a bit clumsy and has no advantages over the above method, but be aware that an alternative way exists to achieve the same outcome.
 
 **Rookie mistake**
 
@@ -195,6 +207,8 @@ While you can override `component-should-update` to achieve some performance imp
 **Rookie mistake**
 
 Leaving out the `:display-name` entry.  If you leave it out, Reagent and React have no way of knowing the name of the component causing a problem. As a result, the warnings and errors they generate won't be as informative. 
+
+*****************
 
 ## Final Note
 
