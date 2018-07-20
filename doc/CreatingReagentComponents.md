@@ -188,7 +188,7 @@ Note the `old-argv` above in the signature for `component-did-mount`.  Many of t
 
 Alternately, you can use `(reagent/props this)` and `(reagent/props children)`, but, conceptually, these don't map as clearly to the `argv` concept.  Specifically, the arguments to your render function are actually passed as children (not props) to the underlying React component, **unless the first argument is a map.**   If the first argument is a map, then that map is passed as props, and the rest of the arguments are passed as children.  Using `props` and `children` may read a bit cleaner, but you do need to pay attention to whether you're passing a props map or not.
 
-Finally, note that some react lifecycle methods take `prevState` and `nextState`.  Because state management provides its own state management system, there is no access to these parameters in the lifecycle methods.
+Finally, note that some react lifecycle methods take `prevState` and `nextState`.  Because Reagent provides its own state management system, there is no access to these parameters in the lifecycle methods.
 
 It is possible to create `Form-3` `components` using `with-meta`.  However, `with-meta` is a bit clumsy and has no advantages over the above method, but be aware that an alternative way exists to achieve the same outcome.
 
