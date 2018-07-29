@@ -175,7 +175,23 @@ Reactions are what give `r/atom`, `r/cursor`, and function `r/cursor` and `r/wra
 * `on-set` and `on-dispose` are run when the reaction is set and unset from the DOM
 * `derefed` **TODO unclear**
 
-**TODO EXAMPLE**
+Here's an example:
+```
+ (def app-state (reagent.ratom/atom {:state-var-1 {:var-a 2
+                                                   :var-b 3}
+                                     :state-var-2 {:var-a 7
+                                                   :var-b 9}}))
+ 
+ (def app-var2-reaction (reagent.ratom/make-reaction 
+                          #(get-in @app-state [:state-var-2 :var-a])))
+ 
+
+ (defn component-using-make-reaction []
+   [:div#component-using-make-reaction
+    [:div>h3 "component-using-make-reaction"]
+    [:div "Sate 2 - var a : " @app-var2-reaction]])
+
+ ```
 
 Reactions are executed asynchronously, so be sure to call `flush` if you depend on reaction side effects.
 
