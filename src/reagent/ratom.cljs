@@ -337,7 +337,15 @@
 (defn- handle-reaction-change [this sender old new]
   (._handle-change this sender old new))
 
-
+;; Fields of a Reaction javascript object
+;; - auto_run
+;; - captured
+;; - caught
+;; - f
+;; - ratomGeneration
+;; - state
+;; - watches
+;; - watching
 (deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty? ^boolean nocache?
                    ^:mutable watching ^:mutable watches ^:mutable auto-run
                    ^:mutable caught]
@@ -498,8 +506,11 @@
 
 
 (def ^:private temp-reaction (make-reaction nil))
+(js/console.log "temp-reaction" temp-reaction)
+
 
 (defn run-in-reaction [f obj key run opts]
+  (js/console.log "run-in-reaction" temp-reaction)
   (let [r temp-reaction
         res (deref-capture f r)]
     (when-not (nil? (.-watching r))
