@@ -33,10 +33,18 @@
                  false))))))
 
 (defn- in-context [obj f]
+  "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'"
   (binding [*ratom-context* obj]
     (f)))
 
-(defn- deref-capture [f r]
+(defn- deref-capture
+  "
+  1. Sets the '-captured' to nil
+  2. Gets the response by executing the function in context of component
+  3.
+  "
+
+  [f r]
   (set! (.-captured r) nil)
   (when (dev?)
     (set! (.-ratomGeneration r) (set! generation (inc generation))))
@@ -48,7 +56,14 @@
       (._update-watching r c))
     res))
 
-(defn- notify-deref-watcher! [derefed]
+(defn- notify-deref-watcher!
+  "When a component is rendered, the value of *ratom-context* is set as component,
+   Now when we deref anything inside the component, the derefed is added to
+   'component.captured' array.
+
+  Looks like component.captured keeps list of all the ratoms used inside it.
+  "
+  [derefed]
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
