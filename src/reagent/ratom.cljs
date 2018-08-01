@@ -33,14 +33,16 @@
                  false))))))
 
 (defn- in-context [obj f]
-  "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'"
+  "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'
+
+   When f is executed, if f derefs any atoms, they are then added to '-captured' in *ratom-context* i.e. obj - see function notify-deref-watcher!   "
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture
   "
   1. Sets the '-captured' to nil
-  2. Gets the response by executing the function in context of component
+  2. Gets the response by executing the function in context of
   3.
   "
 
@@ -525,7 +527,7 @@
 
 
 (defn run-in-reaction [f obj key run opts]
-  (js/console.log "run-in-reaction" temp-reaction)
+  (js/console.log "run-in-reaction" temp-reaction (.-watching temp-reaction))
   (let [r temp-reaction
         res (deref-capture f r)]
     (when-not (nil? (.-watching r))
