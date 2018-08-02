@@ -35,17 +35,19 @@
 (defn- in-context [obj f]
   "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'
 
-   When f is executed, if (f) derefs any ratoms, they are then added to '-captured' in
-   *ratom-context* i.e. obj - see function notify-deref-watcher!"
+   When f is executed, if (f) derefs any ratoms, they are then added to 'obj.captured'(*ratom-context*).
+
+   See function notify-deref-watcher! to know how *ratom-context* is updated"
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture
-  " Captures the ratoms used by f as an array in r (in  -captured field)
-    if r.watching is not equal to r.captured, it then updates the 'watching'
+  " Captures the ratoms used by f as an array in r (in r.captured field).
+
+    If r.watching is not equal to r.captured, it then updates the 'watching'
     by calling  (._update-watching r c)
 
-    Inside '_update-watching' along with setting the ratoms as watching on reaction,
+    Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
     the reaction is also added to the list of watches on each ratoms f derefs."
   [f r]
   (set! (.-captured r) nil)
@@ -60,7 +62,7 @@
     res))
 
 (defn- notify-deref-watcher!
-  "Add the ratom being derefed to the .capture field of the reaction *ratom-context*.
+  "Add the ratom being derefed to the 'capture' field of *ratom-context* reaction.
 
   *ratom-context* is available in the context. See in-context function which sets *ratom-context*"
   [derefed]
