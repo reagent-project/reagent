@@ -13,13 +13,15 @@ Also:
   * [Reagent Deep Dive Series by Timothy Pratley](http://timothypratley.blogspot.com.au/p/p.html) - a four part series
   * [Reagent Mysteries series by Paulus Esterhazy](https://presumably.de/) - a four part series
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
-  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/masterUsing-Stateful-JS-Components.md)  (external link)
+  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
 
 ## Commercial Videos Series
 
+  * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT)
+  * [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
   * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
-  
+
 ## Frequently Asked Questions
 
 1. [Why isn't my Component re-rendering?](FAQ/ComponentNotRerendering.md)
@@ -31,6 +33,9 @@ Also:
 5. [How do I force Component re-creation?](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY) (external link)
 6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 
+## Examples
+
+- [MaterialUI v1 with working TextField](examples/material-ui.md)
 
 ### Want To Add An FAQ?
 
