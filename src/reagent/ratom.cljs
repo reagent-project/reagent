@@ -35,17 +35,18 @@
 (defn- in-context [obj f]
   "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'
 
-   When f is executed, if f derefs any atoms, they are then added to '-captured' in *ratom-context* i.e. obj - see function notify-deref-watcher!   "
+   When f is executed, if (f) derefs any ratoms, they are then added to '-captured' in
+   *ratom-context* i.e. obj - see function notify-deref-watcher!"
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture
-  "
-  1. Sets the '-captured' to nil
-  2. Gets the response by executing the function in context of
-  3.
-  "
+  " Captures the ratoms used by f as an array in r (in  -captured field)
+    if r.watching is not equal to r.captured, it then updates the 'watching'
+    by calling  (._update-watching r c)
 
+    Inside '_update-watching' along with setting the ratoms as watching on reaction,
+    the reaction is also added to the list of watches on each ratoms f derefs."
   [f r]
   (set! (.-captured r) nil)
   (when (dev?)
@@ -59,12 +60,9 @@
     res))
 
 (defn- notify-deref-watcher!
-  "When a component is rendered, the value of *ratom-context* is set as component,
-   Now when we deref anything inside the component, the derefed is added to
-   'component.captured' array.
+  "Add the ratom being derefed to the .capture field of the reaction *ratom-context*.
 
-  Looks like component.captured keeps list of all the ratoms used inside it.
-  "
+  *ratom-context* is available in the context. See in-context function which sets *ratom-context*"
   [derefed]
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
@@ -523,11 +521,15 @@
 
 
 (def ^:private temp-reaction (make-reaction nil))
-(js/console.log "temp-reaction" temp-reaction)
 
 
-(defn run-in-reaction [f obj key run opts]
-  (js/console.log "run-in-reaction" temp-reaction (.-watching temp-reaction))
+(defn run-in-reaction
+  "Runs the function and returns the result.
+
+   If function referring to any ratoms, they are added in the 'watching' list of the
+   newly created reaction. Also, the new reaction is added to list of 'watches' of each
+   of the ratoms"
+  [f obj key run opts]
   (let [r temp-reaction
         res (deref-capture f r)]
     (when-not (nil? (.-watching r))

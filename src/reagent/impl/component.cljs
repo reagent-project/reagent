@@ -90,7 +90,7 @@
   "Calls the render function of the component. If the result of render function is
   1) Vector (type one component) - Create a react element of the result and return
   2) Function (type two component) - Recursively execute the function until we get a vector, and then create a react element of the result and return
-  3) else - XXX"
+  3) else - return the result from f"
   [c]
   (let [f ($ c :reagentRender)
         _ (assert-callable f)
