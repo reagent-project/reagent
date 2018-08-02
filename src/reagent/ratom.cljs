@@ -33,22 +33,19 @@
                  false))))))
 
 (defn- in-context [obj f]
-  "If 'f' uses '*ratom-context*' anywhere, it will be given 'obj'
-
-   When f is executed, if (f) derefs any ratoms, they are then added to 'obj.captured'(*ratom-context*).
+  "When f is executed, if (f) derefs any ratoms, they are then added to 'obj.captured'(*ratom-context*).
 
    See function notify-deref-watcher! to know how *ratom-context* is updated"
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture
-  " Captures the ratoms used by f as an array in r (in r.captured field).
+  "Returns `(in-context f r)`.  Calls `_update-watching` on r with any
+   `deref`ed atoms captured during `in-context`, if any differ from the
+   `watching` field of r.  Clears the `dirty?` flag on r.
 
-    If r.watching is not equal to r.captured, it then updates the 'watching'
-    by calling  (._update-watching r c)
-
-    Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
-    the reaction is also added to the list of watches on each ratoms f derefs."
+   Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
+   the reaction is also added to the list of watches on each ratoms f derefs."
   [f r]
   (set! (.-captured r) nil)
   (when (dev?)
