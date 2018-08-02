@@ -87,10 +87,12 @@
 ;;; Rendering
 
 (defn wrap-render
-  "Calls the render function of the component. If the result of render function is
-  1) Vector (type one component) - Create a react element of the result and returned
-  2) Function (type two component) - Recursively execute the function until we get a vector, and then create a react element of the result and returned
-  3) else - result of render is returned"
+  "Calls the render function of the component `c`.  If result `res` evaluates to a:
+     1) Vector (form-1 component) - Treats the vector as hiccup and returns
+        a react element with a render function based on that hiccup
+     2) Function (form-2 component) - updates the render function to `res` i.e. the internal function
+        and calls wrap-render again (`recur`), until the render result doesn't evaluate to a function.
+     3) Anything else - Returns the result of evaluating `c`"
   [c]
   (let [f ($ c :reagentRender)
         _ (assert-callable f)
