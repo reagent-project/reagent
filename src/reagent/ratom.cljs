@@ -59,9 +59,9 @@
     res))
 
 (defn- notify-deref-watcher!
-  "Add the ratom being derefed to the 'capture' field of *ratom-context* reaction.
+  "Add `derefed` to the `captured` field of `*ratom-context*`.
 
-  *ratom-context* is available in the context. See in-context function which sets *ratom-context*"
+  See also `in-context`"
   [derefed]
   (when-some [r *ratom-context*]
     (let [c (.-captured r)]
@@ -523,11 +523,13 @@
 
 
 (defn run-in-reaction
-  "Runs the function and returns the result.
-
-   If function referring to any ratoms, they are added in the 'watching' list of the
-   newly created reaction. Also, the new reaction is added to list of 'watches' of each
-   of the ratoms"
+  "Evaluates `f` and returns the result.  If `f` calls `deref` on any ratoms,
+   creates a new Reaction that watches those atoms and calls `run` whenever
+   any of those watched ratoms change.  Also, the new reaction is added to
+   list of 'watches' of each of the ratoms. The `run` parameter is a function
+   that should expect one argument.  It is passed `obj` when run.  The `opts`
+   are any options accepted by a Reaction and will be set on the newly created
+   Reaction. Sets the newly created Reaction to the `key` on `obj`."
   [f obj key run opts]
   (let [r temp-reaction
         res (deref-capture f r)]
