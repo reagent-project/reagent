@@ -53,7 +53,7 @@ it is useful to wrap the `TextField` component in a way that the option is added
     (apply r/create-element mui/TextField props (map r/as-element children))))
 ```
 
-Here `r/create-element` and `reagent.impl.template/covert-prop-values` achieve
+Here `r/create-element` and `reagent.impl.template/convert-prop-value` achieve
 the same as what `adapt-react-class` does, but allows modifying the props.
 
 **Check the example project for complete code.** Some additional logic is
