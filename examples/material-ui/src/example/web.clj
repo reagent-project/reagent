@@ -1,4 +1,4 @@
-(ns myapp.web
+(ns example.web
   (:require [compojure.core :refer [defroutes GET ANY]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]

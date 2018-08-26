@@ -1,4 +1,5 @@
 (defproject material-ui-reagent "0.6.0"
+  :min-lein-version "2.5.3"
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.339"]
                  [reagent "0.8.1"]
