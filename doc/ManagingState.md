@@ -176,8 +176,9 @@ Reactions are what give `r/atom`, `r/cursor`, and function `r/cursor` and `r/wra
 * `derefed` **TODO unclear**
 
 Reactions are very useful when
+
 * You need a way in which components only updates based on part of the ratom state. (reagent/cursor can also be used for this scenario)
-* When you want to combine two `ratoms` and produce a result  
+* When you want to combine two `ratoms` and produce a result
 * You want the component to use some transformed value of `ratom`
 
 Here's an example:
@@ -186,19 +187,19 @@ Here's an example:
                                                    :var-b 3}
                                      :state-var-2 {:var-a 7
                                                    :var-b 9}}))
- 
- (def app-var2-reaction (reagent.ratom/make-reaction 
+
+ (def app-var2-reaction (reagent.ratom/make-reaction
                           #(get-in @app-state [:state-var-2 :var-a])))
- 
+
 
  (defn component-using-make-reaction []
    [:div
     [:div "component-using-make-reaction"]
     [:div "Sate 2 - var a : " @app-var2-reaction]])
 
- ```
+```
 
-The below example uses `reagent.ratom/reaction` macro, which provides syntactic sugar around creating reaction using `make-reaction`  
+The below example uses `reagent.ratom/reaction` macro, which provides syntactic sugar around creating reaction using `make-reaction`
 
 ```
 (let [username (reagent/atom "")
