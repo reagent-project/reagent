@@ -3,8 +3,8 @@
                  [org.clojure/clojurescript "1.10.339"]
                  [reagent "0.8.1"]
                  [figwheel "0.5.16"]
-                 [cljsjs/material-ui "1.2.1-1"]
-                 [cljsjs/material-ui-icons "1.1.0-1"]]
+                 [cljsjs/material-ui "3.1.1-0"]
+                 [cljsjs/material-ui-icons "3.0.1-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-figwheel "0.5.16"]]
@@ -43,6 +43,6 @@
                 :npm-deps {react "16.4.0"
                            react-dom "16.4.0"
                            create-react-class "15.6.3"
-                           "@material-ui/core" "1.2.1"
-                           "@material-ui/icons" "1.1.0"}
+                           "@material-ui/core" "3.1.1"
+                           "@material-ui/icons" "3.0.1"}
                 :process-shim true}}}})
