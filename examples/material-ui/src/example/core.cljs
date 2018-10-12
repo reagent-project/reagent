@@ -70,82 +70,88 @@
 (defn form [{:keys [classes] :as props}]
   [:> mui/Grid
    {:container true
-    :direction "column"}
+    :direction "column"
+    :spacing 16}
 
-   [:> mui/Toolbar
-    {:disable-gutters true}
-    [:> mui/Button
-     {:variant "contained"
-      :color "primary"
-      :class (.-button classes)
-      :on-click #(swap! text-state str " foo")}
-     "Update value property"
-     [:> mui-icons/AddBox]]
+   [:> mui/Grid {:item true}
+    [:> mui/Toolbar
+     {:disable-gutters true}
+     [:> mui/Button
+      {:variant "contained"
+       :color "primary"
+       :class (.-button classes)
+       :on-click #(swap! text-state str " foo")}
+      "Update value property"
+      [:> mui-icons/AddBox]]
 
-    [:> mui/Button
-     {:variant "outlined"
-      :color "secondary"
-      :class (.-button classes)
-      :on-click #(reset! text-state "")}
-     "Reset"
-     [:> mui-icons/Clear]]]
+     [:> mui/Button
+      {:variant "outlined"
+       :color "secondary"
+       :class (.-button classes)
+       :on-click #(reset! text-state "")}
+      "Reset"
+      [:> mui-icons/Clear]]]]
 
-   [text-field
-    {:value @text-state
-     :label "Text input"
-     :placeholder "Placeholder"
-     :helper-text "Helper text"
-     :class (.-textField classes)
-     :on-change (fn [e]
-                  (reset! text-state (.. e -target -value)))
-     :inputRef #(js/console.log "input-ref" %)}]
+   [:> mui/Grid {:item true}
+    [text-field
+     {:value @text-state
+      :label "Text input"
+      :placeholder "Placeholder"
+      :helper-text "Helper text"
+      :class (.-textField classes)
+      :on-change (fn [e]
+                   (reset! text-state (.. e -target -value)))
+      :inputRef #(js/console.log "input-ref" %)}]]
 
-   [text-field
-    {:value @text-state
-     :label "Textarea"
-     :placeholder "Placeholder"
-     :helper-text "Helper text"
-     :class (.-textField classes)
-     :on-change (fn [e]
-                  (reset! text-state (.. e -target -value)))
-     :multiline true
-     ;; TODO: Autosize textarea is broken.
-     :rows 10}]
+   [:> mui/Grid {:item true}
+    [text-field
+     {:value @text-state
+      :label "Textarea"
+      :placeholder "Placeholder"
+      :helper-text "Helper text"
+      :class (.-textField classes)
+      :on-change (fn [e]
+                   (reset! text-state (.. e -target -value)))
+      :multiline true
+      ;; TODO: Autosize textarea is broken.
+      :rows 10}]]
 
-   [text-field
-    {:value @text-state
-     :label "Select"
-     :placeholder "Placeholder"
-     :helper-text "Helper text"
-     :class (.-textField classes)
-     :on-change (fn [e]
-                  (reset! text-state (.. e -target -value)))
-     :select true}
-    [:> mui/MenuItem
-     {:value 1}
-     "Item 1"]
-    ;; Same as previous, alternative to adapt-react-class
-    [:> mui/MenuItem
-     {:value 2}
-     "Item 2"]]
+   [:> mui/Grid {:item true}
+    [text-field
+     {:value @text-state
+      :label "Select"
+      :placeholder "Placeholder"
+      :helper-text "Helper text"
+      :class (.-textField classes)
+      :on-change (fn [e]
+                   (reset! text-state (.. e -target -value)))
+      :select true}
+     [:> mui/MenuItem
+      {:value 1}
+      "Item 1"]
+     ;; Same as previous, alternative to adapt-react-class
+     [:> mui/MenuItem
+      {:value 2}
+      "Item 2"]]]
 
-   [:> mui/Grid
-    {:container true
-     :direction "row"
-     :spacing 8}
+   [:> mui/Grid {:item true}
+    [:> mui/Grid
+     {:container true
+      :direction "row"
+      :spacing 8}
 
-    ;; For properties that require React Node as parameter,
-    ;; either use r/as-element to convert Reagent hiccup forms into React elements,
-    ;; or use r/create-element to directly instantiate element from React class (i.e. non-adapted React component).
-    [:> mui/Grid {:item true}
-     [:> mui/Chip
-      {:icon (r/as-element [:> mui-icons/Face])
-       :label "Icon element example, r/as-element"}]]
+     ;; For properties that require React Node as parameter,
+     ;; either use r/as-element to convert Reagent hiccup forms into React elements,
+     ;; or use r/create-element to directly instantiate element from React class (i.e. non-adapted React component).
+     [:> mui/Grid {:item true}
+      [:> mui/Chip
+       {:icon (r/as-element [:> mui-icons/Face])
+        :label "Icon element example, r/as-element"}]]
 
-    [:> mui/Grid {:item true}
-     [:> mui/Chip
-      {:icon (r/create-element mui-icons/Face)
-       :label "Icon element example, r/create-element"}]]]])
+     [:> mui/Grid {:item true}
+      [:> mui/Chip
+       {:icon (r/create-element mui-icons/Face)
+        :label "Icon element example, r/create-element"}]]]]])
 
 (defn main []
   ;; fragment
