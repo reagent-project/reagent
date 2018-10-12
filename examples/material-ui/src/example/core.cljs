@@ -127,7 +127,25 @@
     ;; Same as previous, alternative to adapt-react-class
     [:> mui/MenuItem
      {:value 2}
-     "Item 2"]]])
+     "Item 2"]]
+
+   [:> mui/Grid
+    {:container true
+     :direction "row"
+     :spacing 8}
+
+    ;; For properties that require React Node as parameter,
+    ;; either use r/as-element to convert Reagent hiccup forms into React elements,
+    ;; or use r/create-element to directly instantiate element from React class (i.e. non-adapted React component).
+    [:> mui/Grid {:item true}
+     [:> mui/Chip
+      {:icon (r/as-element [:> mui-icons/Face])
+       :label "Icon element example, r/as-element"}]]
+
+    [:> mui/Grid {:item true}
+     [:> mui/Chip
+      {:icon (r/create-element mui-icons/Face)
+       :label "Icon element example, r/create-element"}]]]])
 
 (defn main []
   ;; fragment
