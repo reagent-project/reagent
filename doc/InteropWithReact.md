@@ -166,3 +166,8 @@ Similarly,
 `($! o :foo 1)` is equivalent to `(set! (.-foo o) 1)`
 
 Note, these are not necessary if your JavaScript library has an externs file or if externs inference is on and working.
+
+## Examples
+
+- [Material-UI](../examples/material-ui/src/example/core.cljs)
+- [React-sortable-hoc](../examples/react-sortable-hoc/src/example/core.cljs)
