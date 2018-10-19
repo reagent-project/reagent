@@ -8,8 +8,11 @@
 
 (def DragHandle
   (js/SortableHOC.SortableHandle.
-    (r/reactify-component
-      (fn [] [:span "::"]))))
+    ;; Alternative to r/reactify-component, which doens't convert props and hiccup,
+    ;; is to just provide fn as component and use as-element or create-element
+    ;; to return React elements from the component.
+    (fn []
+      (r/as-element [:span "::"]))))
 
 (def SortableItem
   (js/SortableHOC.SortableElement.
@@ -18,6 +21,17 @@
         [:li
          [:> DragHandle]
          value]))))
+
+;; Alternative without reactify-component
+;; props is JS object here
+#_
+(def SortableItem
+  (js/SortableHOC.SortableElement.
+    (fn [props]
+      (r/as-element
+        [:li
+         [:> DragHandle]
+         (.-value props)]))))
 
 (def SortableList
   (js/SortableHOC.SortableContainer.
