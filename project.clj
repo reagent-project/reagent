@@ -15,7 +15,7 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.10"]
             [lein-codox "0.10.3"]
-            [lein-figwheel "0.5.16"]]
+            [lein-figwheel "0.5.17"]]
 
   :source-paths ["src"]
 
@@ -23,8 +23,8 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.312"]
-                                  [figwheel "0.5.16"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.339"]
+                                  [figwheel "0.5.17"]
                                   [doo "0.1.10"]
                                   [cljsjs/prop-types "15.6.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
