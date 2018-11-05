@@ -194,9 +194,9 @@ So this notion of "changed" is pretty important.  It controls if we are doing un
 
 ### Lifecycle Functions
 
-When `props` change, the entire underlying React machinery is engaged. React Components can have lifecycle methods like `component-did-update` and these functions will get called, just as they would if you were dealing with a React Component. 
+When `props` change, the entire underlying React machinery is engaged. Reagent Components can have lifecycle methods like `component-did-update` and these functions will get called, just as they would if you were dealing with a React Component. 
 
-But ... when the rerender is re-run because an input ratom changed, **Lifecycle functions are not run**.  So, for example, `component-did-update` will not be called on the Component. 
+But ... when the re-render occurs because an input ratom changed, **Lifecycle functions are not run**.  So, for example, `component-did-update` will not be called on the Component. 
 
 Careful of this one. It trips people up.
 
