@@ -1,7 +1,7 @@
 
 # Reagent
 
-![Reagent-Project](logo-rounded.jpg)
+![Reagent-Project](logo.png)
 
 A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](http://facebook.github.io/react/).
 
