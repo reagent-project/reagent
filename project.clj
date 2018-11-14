@@ -23,7 +23,7 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.339"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.439"]
                                   [figwheel "0.5.17"]
                                   [doo "0.1.10"]
                                   [cljsjs/prop-types "15.6.2-0"]]
@@ -53,8 +53,8 @@
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
-                :asset-path "js/out"
-                :npm-deps false}}
+                :npm-deps false
+                :asset-path "js/out"}}
 
     {:id "client-npm"
      :source-paths ["demo"]
@@ -65,6 +65,7 @@
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client-npm/public/js/out"
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
+                :npm-deps true
                 :asset-path "js/out"}}
 
     {:id "test"
@@ -86,6 +87,7 @@
                 :asset-path "js/out"
                 :output-dir "target/cljsbuild/test-npm/out"
                 :output-to "target/cljsbuild/test-npm/main.js"
+                :npm-deps true
                 :aot-cache true}}
 
     ;; Separate source-path as this namespace uses Node built-in modules which
@@ -96,6 +98,7 @@
                 :target :nodejs
                 :output-dir "target/cljsbuild/prerender/out"
                 :output-to "target/cljsbuild/prerender/main.js"
+                :npm-deps true
                 :aot-cache true}}
 
     {:id "node-test"
@@ -119,6 +122,7 @@
                 :optimizations :none
                 :output-dir "target/cljsbuild/node-test-npm/out"
                 :output-to "target/cljsbuild/node-test-npm/main.js"
+                :npm-deps true
                 :aot-cache true}}
 
     ;; With :advanched source-paths doesn't matter that much as
@@ -146,6 +150,7 @@
                 :output-to "target/cljsbuild/prod-npm/public/js/main.js"
                 :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
                 :closure-warnings {:global-this :off}
+                :npm-deps true
                 :aot-cache true}}
 
     {:id "prod-test"
@@ -170,4 +175,5 @@
                 :output-to "target/cljsbuild/prod-test-npm/main.js"
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
+                :npm-deps true
                 :aot-cache true}}]})
