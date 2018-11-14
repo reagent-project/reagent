@@ -1,13 +1,10 @@
 (ns example.core
   (:require [reagent.core :as r]
-            ;; FIXME: Needs some ClojureScript compiler fixes
-            ; ["@material-ui/core" :as mui]
-            ; ["@material-ui/core/styles" :refer [createMuiTheme]]
-            ; ["@material-ui/icons" :as mui-icons]
-            ["material-ui" :as mui]
-            ["material-ui/styles" :refer [createMuiTheme withStyles]]
-            ["material-ui/colors" :as mui-colors]
-            ["material-ui-icons" :as mui-icons]
+            ;; Scoped names require Cljs 1.10.439
+            ["@material-ui/core" :as mui]
+            ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
+            ["@material-ui/core/colors" :as mui-colors]
+            ["@material-ui/icons" :as mui-icons]
             [goog.object :as gobj]
             [reagent.impl.template :as rtpl]))
 
