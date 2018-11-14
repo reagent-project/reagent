@@ -323,9 +323,10 @@
   (let [props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsprops (convert-prop-value (if hasprops props))
+        jsprops (if-some [key (key-from-vec argv)]
+                  (oset jsprops "key" key)
+                  jsprops)
         first-child (+ 1 (if hasprops 1 0))]
-    (when-some [key (key-from-vec argv)]
-      (oset jsprops "key" key))
     (make-element argv react/Fragment jsprops first-child)))
 
 (defn adapt-react-class

@@ -1189,8 +1189,12 @@
                      [:div "hello"]
                      [:div "world"]]
                     ^{:key 2}
-                    [children])])]
-      (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
+                    [children]
+                    ^{:key 3}
+                    [:<>
+                     [:div "1"]
+                     [:div "2"]])])]
+      (is (= "<div><div>hello</div><div>world</div><div>foo</div><div>1</div><div>2</div></div>"
              (as-string [comp]))))))
 
 (defonce my-context (react/createContext "default"))
