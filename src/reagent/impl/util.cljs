@@ -123,14 +123,18 @@
       p2
       (assoc p2 :style style))))
 
-(defn merge-props [p1 p2]
-  (if (nil? p1)
-    p2
-    (do
-      (assert (map? p1)
-              (str "Property must be a map, not " (pr-str p1)))
-      (merge-style p1 (merge-class p1 (merge p1 p2))))))
-
+(defn merge-props
+  ([] nil)
+  ([p] p)
+  ([p1 p2]
+   (if (nil? p1)
+     p2
+     (do
+       (assert (map? p1)
+               (str "Property must be a map, not " (pr-str p1)))
+       (merge p1 (merge-style p1 (merge-class p1 p2))))))
+  ([p1 p2 & ps]
+   (apply merge-props (cons (merge-props p1 p2) ps))))
 
 (def ^:dynamic *always-update* false)
 

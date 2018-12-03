@@ -8,6 +8,7 @@
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
             [reagent.impl.template-test]
+            [reagent.impl.util-test]
             [cljs.test :as test]
             [doo.runner :as doo :include-macros true]
             [reagent.core :as r]
