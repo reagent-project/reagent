@@ -134,7 +134,7 @@
                (str "Property must be a map, not " (pr-str p1)))
        (merge p1 (merge-style p1 (merge-class p1 p2))))))
   ([p1 p2 & ps]
-   (apply merge-props (cons (merge-props p1 p2) ps))))
+   (apply merge-props (merge-props p1 p2) ps)))
 
 (def ^:dynamic *always-update* false)
 
