@@ -200,7 +200,7 @@
   ([] (util/merge-props))
   ([defaults] (util/merge-props defaults))
   ([defaults props] (util/merge-props defaults props))
-  ([defaults props & others] (apply util/merge-props (concat [defaults props] others))))
+  ([defaults props & others] (apply util/merge-props defaults props others)))
 
 (defn flush
   "Render dirty components immediately to the DOM.
