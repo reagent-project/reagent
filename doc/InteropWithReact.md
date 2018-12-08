@@ -94,11 +94,10 @@ Note:
 Some React libraries use the decorator pattern: a React component which takes a component as an argument and returns a new component as its result. One example is the React DnD library. We will need to use both `adapt-react-class` and `reactify-component` to move back and forth between React and reagent:
 
 ```clojure
-(defn react-dnd-component
-  []
+(def react-dnd-component
   (let [decorator (DragDropContext HTML5Backend)]
-    [(reagent/adapt-react-class
-       (decorator (reagent/reactify-component top-level-component)))]))
+    (reagent/adapt-react-class
+      (decorator (reagent/reactify-component top-level-component)))))
 ```
 
 This is the equivalent javascript:
