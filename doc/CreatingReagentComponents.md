@@ -87,6 +87,25 @@ That isn't valid Hiccup and you'll get a slightly baffling error. You'll have to
      [:div name]])     ;; [:div] containing two nested [:divs]
 ```
 
+Alternatively, you could return a [React Fragment](https://reactjs.org/docs/fragments.html). In reagent, a React Fragment is created using the `:<>` Hiccup form.
+
+```cljs
+(defn right-component
+   [name]
+   [:<>
+     [:div "Hello"]
+     [:div name]])
+```
+
+Referring to the example in [React's documentation](https://reactjs.org/docs/fragments.html), the `Columns` component could be defined in reagent as:
+
+```cljs
+(defn columns
+  [:<>
+    [:td "Hello"]
+    [:td "World"]]
+```
+
 ## Form-2:  A Function Returning A Function
 
 Now, let's take one step up in complexity.  Sometimes, a component requires:
