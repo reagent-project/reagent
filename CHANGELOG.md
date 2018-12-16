@@ -5,6 +5,7 @@
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...master)**
 
 - Fix using metadata to set React key with Fragment shortcut (`:<>`) ([#401](https://github.com/reagent-project/reagent/issues/401))
+- Create React Component without `create-react-class`
 
 ## 0.8.1 (2018-05-15)
 
