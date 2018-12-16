@@ -1,5 +1,5 @@
 (ns reagent.impl.component
-  (:require [create-react-class :as create-react-class]
+  (:require [goog.object :as gobj]
             [react :as react]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -149,9 +149,10 @@
     :getDefaultProps
     (throw (js/Error. "getDefaultProps not supported"))
 
+    ;; In ES6 React, this is now part of the constructor
     :getInitialState
-    (fn getInitialState []
-      (this-as c (reset! (state-atom c) (.call f c c))))
+    (fn getInitialState [c]
+      (reset! (state-atom c) (.call f c c)))
 
     :componentWillReceiveProps
     (fn componentWillReceiveProps [nextprops]
@@ -250,7 +251,6 @@
                         {} fmap)]
     (assoc fmap
            :displayName name
-           :autobind false
            :cljsLegacyRender legacy-render
            :reagentRender render-fun
            :render (:render static-fns))))
@@ -265,14 +265,44 @@
   (-> body
       camelify-map-keys
       add-obligatory
-      wrap-funs
-      map-to-js))
+      wrap-funs))
+
+;; Credits to Paulus Esterhazy, Thomas Heller
+;; https://gist.github.com/pesterhazy/2a25c82db0519a28e415b40481f84554
+;; https://gist.github.com/thheller/7f530b34de1c44589f4e0671e1ef7533#file-es6-class-cljs-L18
+(defn make-component
+  "Creates a React Component class
+  `m` is a js-obj of class methods
+  `s` is a js-obj of static methods"
+  ([display-name m s] (make-component display-name nil m s))
+  ([display-name construct m s]
+   (let [cmp (fn [props context updater]
+               (cljs.core/this-as this
+                 (.call react/Component this props context updater)
+                 (when construct
+                   (construct this))
+                 this))]
+     (gobj/extend (.-prototype cmp) (.-prototype react/Component) m)
+     (gobj/extend cmp react/Component s)
+
+     (when display-name
+       (set! (.-displayName cmp) display-name)
+       (set! (.-cljs$lang$ctorStr cmp) display-name)
+       (set! (.-cljs$lang$ctorPrWriter cmp)
+             (fn [this writer opt]
+               (cljs.core/-write writer display-name))))
+     (set! (.-cljs$lang$type cmp) true)
+     (set! (.. cmp -prototype -constructor) cmp))))
 
 (defn create-class [body]
   {:pre [(map? body)]}
-  (->> body
-       cljsify
-       create-react-class))
+  (let [body (cljsify body)
+        m (dissoc body :displayName :getInitialState :contextTypes :childContextTypes)
+        s (select-keys body [:childContextTypes :contextTypes])]
+    (make-component (:displayName body)
+                    (:getInitialState body)
+                    (map-to-js m)
+                    (map-to-js s))))
 
 (defn fiber-component-path [fiber]
   (let [name (some-> fiber
