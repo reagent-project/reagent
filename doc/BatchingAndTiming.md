@@ -9,7 +9,7 @@ This is good for all sorts of reasons:
 * The new code does proper batching of renderings even when changes to atoms are done outside of event handlers (which is great for e.g core.async users).
 * Repaints can be synced by the browser with for example CSS transitions, since Reagent uses requestAnimationFrame to do the batching. That makes for example animations smoother.
 
-In short, Reagent renders less often, but at the right times. For a much better description of why async rendering is good, see David Nolen’s [excellent explanation here.](http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/)
+In short, Reagent renders less often, but at the right times. For a much better description of why async rendering is good, see David Nolen’s [excellent explanation here.](http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs)
 
 ## The bad news
 

@@ -94,11 +94,10 @@ Note:
 Some React libraries use the decorator pattern: a React component which takes a component as an argument and returns a new component as its result. One example is the React DnD library. We will need to use both `adapt-react-class` and `reactify-component` to move back and forth between React and reagent:
 
 ```clojure
-(defn react-dnd-component
-  []
+(def react-dnd-component
   (let [decorator (DragDropContext HTML5Backend)]
-    [(reagent/adapt-react-class
-       (decorator (reagent/reactify-component top-level-component)))]))
+    (reagent/adapt-react-class
+      (decorator (reagent/reactify-component top-level-component)))))
 ```
 
 This is the equivalent javascript:
@@ -128,13 +127,13 @@ Some React components expect a function as their only child. React autosizer is 
 
 ## Getting props and children of current component
 
-Because you just pass argument to reagent functions, you typically don't need to think about "props" and "children" as distinct things. But reagent does make a distinction and it is helpful to understand this particularly when interoperating with native elements and React libraries.
+Because you just pass arguments to reagent functions, you typically don't need to think about "props" and "children" as distinct things. But Reagent does make a distinction and it is helpful to understand this, particularly when interoperating with native elements and React libraries.
 
-Specifically, if the first argument to your reagent function is a map, that is assigned to `this.props` of the underlying reagent component. All other arguments are assigned as children to `this.props.children`.
+Specifically, if the first argument to your Reagent function is a map, that is assigned to `this.props` of the underlying Reagent component. All other arguments are assigned as children to `this.props.children`.
 
 When interacting with native React components, it may be helpful to access props and children, which you can do with `reagent.core/current-component`. This function returns an object that allows you retrieve the props and children passed to the current component.
 
-Beware that `current-component` is only valid in component functions, and must be called outside of e.g event handlers and for expressions, so it’s safest to always put the call at the top, as in `my-div` here:
+Beware that `current-component` is only valid in component functions, and must be called outside of e.g event handlers and `for` expressions, so it’s safest to always put the call at the top, as in `my-div` here:
 
 ```clojure
 (ns example
@@ -154,6 +153,8 @@ Beware that `current-component` is only valid in component functions, and must b
 
 ## React Interop Macros
 
+**Please do not use these macros. They will be removed at some point. Either use extern inference, externs or proper `goog.object/get`.**
+
 Reagent provides two utility macros `$` and `$!` for getting and setting javascript properties in a way that is safe for advanced compilation.
 
 `($ o :foo)` is equivalent to `(.-foo o)`
@@ -164,3 +165,8 @@ Similarly,
 `($! o :foo 1)` is equivalent to `(set! (.-foo o) 1)`
 
 Note, these are not necessary if your JavaScript library has an externs file or if externs inference is on and working.
+
+## Examples
+
+- [Material-UI](../examples/material-ui/src/example/core.cljs)
+- [React-sortable-hoc](../examples/react-sortable-hoc/src/example/core.cljs)

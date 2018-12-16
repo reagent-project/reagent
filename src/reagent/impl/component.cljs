@@ -86,7 +86,14 @@
 
 ;;; Rendering
 
-(defn wrap-render [c]
+(defn wrap-render
+  "Calls the render function of the component `c`.  If result `res` evaluates to a:
+     1) Vector (form-1 component) - Treats the vector as hiccup and returns
+        a react element with a render function based on that hiccup
+     2) Function (form-2 component) - updates the render function to `res` i.e. the internal function
+        and calls wrap-render again (`recur`), until the render result doesn't evaluate to a function.
+     3) Anything else - Returns the result of evaluating `c`"
+  [c]
   (let [f ($ c :reagentRender)
         _ (assert-callable f)
         res (if (true? ($ c :cljsLegacyRender))
