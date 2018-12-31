@@ -5,7 +5,6 @@
             [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.debug :refer-macros [dbg log dev?]]
-            [reagent.interop :as i :refer-macros [$ $!]]
             [sitetools.core :as tools]
 
             ;; Node libs
