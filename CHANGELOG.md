@@ -15,7 +15,8 @@ to normalize and combine `:class` values (similar to `classnames` JS library)
 uses correct Object interop forms, allowing use of ClojureScript `:checked-arrays :warn` option.
 - **Removed `reagent.interop` namespace**
     - These macros where bad practice and don't work properly if
-    React code is optimized by Closure
+    React code is optimized by Closure. Proper object interop forms or `goog.object` functions
+    should be used instead.
 
 ## 0.8.1 (2018-05-15)
 
