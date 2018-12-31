@@ -9,13 +9,12 @@
                  ;; like react-leaflet might have closer dependency to a other version.
                  [cljsjs/react "16.6.0-0"]
                  [cljsjs/react-dom "16.6.0-0"]
-                 [cljsjs/react-dom-server "16.6.0-0"]
-                 [cljsjs/create-react-class "15.6.3-1"]]
+                 [cljsjs/react-dom-server "16.6.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.10"]
             [lein-codox "0.10.3"]
-            [lein-figwheel "0.5.17"]]
+            [lein-figwheel "0.5.18"]]
 
   :source-paths ["src"]
 
@@ -24,7 +23,7 @@
           :source-paths ["src"]}
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.439"]
-                                  [figwheel "0.5.17"]
+                                  [figwheel "0.5.18"]
                                   [doo "0.1.10"]
                                   [cljsjs/prop-types "15.6.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]

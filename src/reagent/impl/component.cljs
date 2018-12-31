@@ -1,5 +1,5 @@
 (ns reagent.impl.component
-  (:require [create-react-class :as create-react-class]
+  (:require [goog.object :as gobj]
             [react :as react]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
@@ -156,9 +156,10 @@
     :getDefaultProps
     (throw (js/Error. "getDefaultProps not supported"))
 
+    ;; In ES6 React, this is now part of the constructor
     :getInitialState
-    (fn getInitialState []
-      (this-as c (reset! (state-atom c) (.call f c c))))
+    (fn getInitialState [c]
+      (reset! (state-atom c) (.call f c c)))
 
     :componentWillReceiveProps
     (fn componentWillReceiveProps [nextprops]
@@ -257,7 +258,6 @@
                         {} fmap)]
     (assoc fmap
            :displayName name
-           :autobind false
            :cljsLegacyRender legacy-render
            :reagentRender render-fun
            :render (:render static-fns))))
@@ -272,14 +272,50 @@
   (-> body
       camelify-map-keys
       add-obligatory
-      wrap-funs
-      map-to-js))
+      wrap-funs))
 
-(defn create-class [body]
+;; Idea from:
+;; https://gist.github.com/pesterhazy/2a25c82db0519a28e415b40481f84554
+;; https://gist.github.com/thheller/7f530b34de1c44589f4e0671e1ef7533#file-es6-class-cljs-L18
+
+(def built-in-static-method-names
+  [:childContextTypes :contextTypes
+   :getDerivedStateFromProps :getDerivedStateFromError])
+
+(defn create-class
+  "Creates JS class based on provided Clojure map.
+
+  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html).
+  Constructor function is defined using key `:getInitialState`.
+
+  React built-in static methods or properties are automatically defined as statics."
+  [body]
   {:pre [(map? body)]}
-  (->> body
-       cljsify
-       create-react-class))
+  (let [body (cljsify body)
+        methods (map-to-js (apply dissoc body :displayName :getInitialState built-in-static-method-names))
+        static-methods (map-to-js (select-keys body built-in-static-method-names))
+        display-name (:displayName body)
+        construct (:getInitialState body)
+        cmp (fn [props context updater]
+              (this-as this
+                (.call react/Component this props context updater)
+                (when construct
+                  (construct this))
+                this))]
+    (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
+    (gobj/extend cmp react/Component static-methods)
+
+    (when display-name
+      (set! (.-displayName cmp) display-name)
+      (set! (.-cljs$lang$ctorStr cmp) display-name)
+      (set! (.-cljs$lang$ctorPrWriter cmp)
+            (fn [this writer opt]
+              (cljs.core/-write writer display-name))))
+
+    (set! (.-cljs$lang$type cmp) true)
+    (set! (.. cmp -prototype -constructor) cmp)
+
+    cmp))
 
 (defn fiber-component-path [fiber]
   (let [name (some-> fiber
