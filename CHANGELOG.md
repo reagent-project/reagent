@@ -10,6 +10,7 @@
 ensure `:class` is merged correctly when it is defined as collection. ([#412](https://github.com/reagent-project/reagent/issues/412))
 - Add `reagent.core/class-names` utility functions which can be used
 to normalize and combine `:class` values (similar to `classnames` JS library)
+- Fix comparing Reagent `PartialFn` to `nil` ([#385](https://github.com/reagent-project/reagent/issues/385))
 
 ## 0.8.1 (2018-05-15)
 

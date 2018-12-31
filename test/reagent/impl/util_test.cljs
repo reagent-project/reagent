@@ -69,3 +69,10 @@
                              {:class ["baz" "quux"]})
            (util/merge-props nil {:class ["foo" "bar" "baz" "quux"]})
            (util/merge-props {:class ["foo" "bar" "baz" "quux"]})))))
+
+(deftest partial-fn-test
+  (is (= (util/make-partial-fn println ["a"])
+         (util/make-partial-fn println ["a"])))
+
+  (is (not (= (util/make-partial-fn println ["a"])
+              nil))))

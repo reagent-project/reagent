@@ -100,7 +100,9 @@
     (apply pfn a b c d e f g h i j k l m n o p q r s t rest))
   IEquiv
   (-equiv [_ other]
-    (and (= f (.-f other)) (= args (.-args other))))
+    (and (instance? PartialFn other)
+         (= f (.-f other))
+         (= args (.-args other))))
   IHash
   (-hash [_] (hash [f args])))
 
