@@ -107,13 +107,38 @@
 (defn make-partial-fn [f args]
   (->PartialFn (apply partial f args) f args))
 
+(defn ^boolean named? [x]
+  (or (keyword? x)
+      (symbol? x)))
+
+(defn class-names
+  ([])
+  ([class]
+   (if (coll? class)
+     (let [classes (keep (fn [c]
+                           (if c
+                             (if (named? c)
+                               (name c)
+                               c)))
+                         class)]
+       (if (seq classes)
+         (string/join " " classes)))
+     (if (named? class)
+       (name class)
+       class)))
+  ([a b]
+   (if a
+     (if b
+       (str (class-names a) " " (class-names b))
+       (class-names a))
+     (class-names b)))
+  ([a b & rst]
+   (reduce class-names
+           (class-names a b)
+           rst)))
+
 (defn- merge-class [p1 p2]
-  (let [class (when-let [c1 (:class p1)]
-                (when-let [c2 (:class p2)]
-                  (str c1 " " c2)))]
-    (if (nil? class)
-      p2
-      (assoc p2 :class class))))
+  (assoc p2 :class (class-names (:class p1) (:class p2))))
 
 (defn- merge-style [p1 p2]
   (let [style (when-let [s1 (:style p1)]
@@ -123,14 +148,24 @@
       p2
       (assoc p2 :style style))))
 
-(defn merge-props [p1 p2]
-  (if (nil? p1)
-    p2
-    (do
-      (assert (map? p1)
-              (str "Property must be a map, not " (pr-str p1)))
-      (merge-style p1 (merge-class p1 (merge p1 p2))))))
-
+(defn merge-props
+  ([] nil)
+  ;; Normalize :class even if there are no merging
+  ([p]
+   (if-let [c (:class p)]
+     (assoc p :class (class-names c))
+     p))
+  ([p1 p2]
+   (if (nil? p1)
+     (if-let [c (:class p2)]
+       (assoc p2 :class (class-names c))
+       p2)
+     (do
+       (assert (map? p1)
+               (str "Property must be a map, not " (pr-str p1)))
+       (merge p1 (merge-style p1 (merge-class p1 p2))))))
+  ([p1 p2 & ps]
+   (reduce merge-props (merge-props p1 p2) ps)))
 
 (def ^:dynamic *always-update* false)
 
