@@ -227,6 +227,8 @@
       (assert-callable f))
     (or wrap f)))
 
+;; Though the value is nil here, the wrapper function will be
+;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillMount nil
                  :componentWillUnmount nil})
