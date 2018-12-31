@@ -250,32 +250,24 @@
         legacy-render (nil? render-fun)
         render-fun (or render-fun
                        (:render fmap))
-        display-name (str (or (:displayName fmap)
-                              (util/fun-name render-fun)))
-        display-name (case display-name
-                       "" (str (gensym "reagent"))
-                       display-name)
-        obj #js {}]
-    ;; React lifecycle properties are added to object using
-    ;; gobj/set so the names are never mangled. This will
-    ;; probably require externs with npm to work.
-    (reduce-kv (fn [obj k v]
-                 (doto obj
-                   (gobj/set (name k) (get-wrapper k v))))
-               obj
-               (dissoc fmap :render :reagentRender :displayName :componentFunction))
-    ;; These can be manged, if property is not mentioned in the extern.
-    (set! (.-displayName obj) display-name)
-    (set! (.-autobind obj) false)
-    (set! (.-cljsLegacyRender obj) legacy-render)
-    (set! (.-reagentRender obj) render-fun)
-    (set! (.-render obj) (:render static-fns))
-    obj))
+        name (str (or (:displayName fmap)
+                      (util/fun-name render-fun)))
+        name (case name
+               "" (str (gensym "reagent"))
+               name)
+        fmap (reduce-kv (fn [m k v]
+                          (assoc m k (get-wrapper k v)))
+                        {} fmap)]
+    (assoc fmap
+           :displayName name
+           :cljsLegacyRender legacy-render
+           :reagentRender render-fun
+           :render (:render static-fns))))
 
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
                (doto o
-                 (aset (name k) v)))
+                 (gobj/set (name k) v)))
              #js{} m))
 
 (defn cljsify [body]

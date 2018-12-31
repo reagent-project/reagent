@@ -17,4 +17,4 @@
   (is (gobj/equals #js {:class "a"}
                    (tmpl/convert-props {:class "a"} #js {:id nil :custom true})))
   (is (gobj/equals #js {:className "a b" :id "a"}
-                   (tmpl/convert-props {:class "b"} #js {:id "a" :class "a" :custom false}))))
+                   (tmpl/convert-props {:class "b"} #js {:id "a" :className "a" :custom false}))))

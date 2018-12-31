@@ -447,8 +447,8 @@
                              (this-as
                                this
                                (r/create-element
-                                 "div" #js {:className ($ this :props.className)}
-                                 ($ this :props.children))))})
+                                 "div" #js {:className (.. this -props -className)}
+                                 (.. this -props -children))))})
             (gobj/extend cmp react/Component)
             cmp))
 
