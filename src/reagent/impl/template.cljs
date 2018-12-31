@@ -2,7 +2,7 @@
   (:require [react :as react]
             [clojure.string :as string]
             [clojure.walk :refer [prewalk]]
-            [reagent.impl.util :as util :refer [is-client]]
+            [reagent.impl.util :as util :refer [is-client named?]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
@@ -21,10 +21,6 @@
 
 
 ;;; Common utilities
-
-(defn ^boolean named? [x]
-  (or (keyword? x)
-      (symbol? x)))
 
 (defn ^boolean hiccup-tag? [x]
   (or (named? x)
@@ -128,19 +124,12 @@
 
 (defn stringify-class [{:keys [class] :as props}]
   (if (coll? class)
-    (->> class
-         (keep (fn [c]
-                 (if c
-                   (if (named? c)
-                     (name c)
-                     c))))
-         (string/join " ")
-         (assoc props :class))
+    (assoc props :class (util/stringify-class class))
     props))
 
 (defn convert-props [props id-class]
   (let [props (-> props
-                  stringify-class
+                  util/stringify-class
                   (set-id-class id-class))]
     (if ($ id-class :custom)
       (convert-custom-prop-value props)

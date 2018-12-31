@@ -3,16 +3,19 @@
             [reagent.impl.util :as util]))
 
 (deftest merge-props-test
-  (testing "It handles no arguments"
+  (testing "no arguments"
     (is (nil? (util/merge-props))))
-  (testing "It handles one argument"
+
+  (testing "one argument"
     (is (nil? (util/merge-props nil)))
     (is (= {:foo :bar} (util/merge-props {:foo :bar}))))
-  (testing "It handles two arguments"
+
+  (testing "two arguments"
     (is (= {:disabled false :style {:flex 1 :flex-direction "row"} :class "foo bar"}
            (util/merge-props {:disabled true :style {:flex 1} :class "foo"}
                              {:disabled false :style {:flex-direction "row"} :class "bar"}))))
-  (testing "It handles n arguments"
+
+  (testing "n arguments"
     (is (= {:disabled false
             :checked true
             :style {:align-items "flex-end"
@@ -31,4 +34,11 @@
                              {:disabled false
                               :checked true
                               :class "quux"}
-                             nil)))))
+                             nil))))
+
+  (testing ":class collection"
+    (is (= {:class "foo bar baz quux"}
+           (util/merge-props {:class "foo bar"}
+                             {:class ["baz" "quux"]})
+           (util/merge-props {} {:class ["foo" "bar" "baz" "quux"]})
+           (util/merge-props {:class ["foo" "bar" "baz" "quux"]})))))

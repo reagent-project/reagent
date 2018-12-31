@@ -195,8 +195,7 @@
   (dom/dom-node this))
 
 (defn merge-props
-  "Utility function that merges some maps, handling :class and :style
-  specially, like React's transferPropsTo."
+  "Utility function that merges some maps, handling :class and :style"
   ([] (util/merge-props))
   ([defaults] (util/merge-props defaults))
   ([defaults props] (util/merge-props defaults props))
@@ -209,8 +208,6 @@
   batching of updates there."
   []
   (batch/flush))
-
-
 
 ;; Ratom
 

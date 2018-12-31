@@ -107,8 +107,27 @@
 (defn make-partial-fn [f args]
   (->PartialFn (apply partial f args) f args))
 
+(defn ^boolean named? [x]
+  (or (keyword? x)
+      (symbol? x)))
+
+(defn stringify-class [props]
+  (let [class (:class props)]
+    (if (coll? class)
+      (->> class
+           (keep (fn [c]
+                   (if c
+                     (if (named? c)
+                       (name c)
+                       c))))
+           (string/join " ")
+           (assoc props :class))
+      props)))
+
 (defn- merge-class [p1 p2]
-  (let [class (when-let [c1 (:class p1)]
+  (let [p1 (stringify-class p1)
+        p2 (stringify-class p2)
+        class (when-let [c1 (:class p1)]
                 (when-let [c2 (:class p2)]
                   (str c1 " " c2)))]
     (if (nil? class)
@@ -125,16 +144,16 @@
 
 (defn merge-props
   ([] nil)
-  ([p] p)
+  ([p] (stringify-class p))
   ([p1 p2]
    (if (nil? p1)
-     p2
+     (stringify-class p2)
      (do
        (assert (map? p1)
                (str "Property must be a map, not " (pr-str p1)))
        (merge p1 (merge-style p1 (merge-class p1 p2))))))
   ([p1 p2 & ps]
-   (apply merge-props (merge-props p1 p2) ps)))
+   (reduce merge-props (merge-props p1 p2) ps)))
 
 (def ^:dynamic *always-update* false)
 
