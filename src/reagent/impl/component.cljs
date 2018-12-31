@@ -294,7 +294,9 @@
   [body]
   {:pre [(map? body)]}
   (let [body (cljsify body)
-        methods (map-to-js (apply dissoc body :displayName :getInitialState built-in-static-method-names))
+        methods (map-to-js (apply dissoc body :displayName :getInitialState
+                                  :render :reagentRender :cljsLegacyRender
+                                  built-in-static-method-names))
         static-methods (map-to-js (select-keys body built-in-static-method-names))
         display-name (:displayName body)
         construct (:getInitialState body)
@@ -304,7 +306,20 @@
                 (when construct
                   (construct this))
                 this))]
+
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
+
+    ;; These names SHOULD be mangled by Closure so we can't use goog/extend
+
+    (when (:render body)
+      (set! (.-render (.-prototype cmp)) (:render body)))
+
+    (when (:reagentRender body)
+      (set! (.-reagentRender (.-prototype cmp)) (:reagentRender body)))
+
+    (when (:cljsLegacyRender body)
+      (set! (.-cljsLegacyRender (.-prototype cmp)) (:cljsLegacyRender body)))
+
     (gobj/extend cmp react/Component static-methods)
 
     (when display-name
