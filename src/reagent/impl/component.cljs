@@ -98,6 +98,9 @@
   [c]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
+        ;; cljsLegacyRender tells if this calls was defined
+        ;; using :render instead of :reagent-render
+        ;; in that case, the :render fn is called with just `this` as argument.
         res (if (true? (.-cljsLegacyRender c))
               (.call f c c)
               (let [v (get-argv c)
@@ -284,7 +287,8 @@
 (defn create-class
   "Creates JS class based on provided Clojure map.
 
-  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html).
+  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
+  and can be provided in snake-case or camelCase.
   Constructor function is defined using key `:getInitialState`.
 
   React built-in static methods or properties are automatically defined as statics."
