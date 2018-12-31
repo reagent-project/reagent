@@ -12,7 +12,7 @@
                  [cljsjs/react-dom-server "16.6.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.10"]
+            [lein-doo "0.1.11"]
             [lein-codox "0.10.3"]
             [lein-figwheel "0.5.18"]]
 
@@ -24,7 +24,7 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.439"]
                                   [figwheel "0.5.18"]
-                                  [doo "0.1.10"]
+                                  [doo "0.1.11"]
                                   [cljsjs/prop-types "15.6.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
@@ -53,7 +53,8 @@
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :npm-deps false
-                :asset-path "js/out"}}
+                :asset-path "js/out"
+                :checked-arrays :warn}}
 
     {:id "client-npm"
      :source-paths ["demo"]
@@ -65,7 +66,8 @@
                 :output-dir "target/cljsbuild/client-npm/public/js/out"
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :npm-deps true
-                :asset-path "js/out"}}
+                :asset-path "js/out"
+                :checked-arrays :warn}}
 
     {:id "test"
      :source-paths ["test"]
@@ -76,7 +78,8 @@
                 :output-dir "target/cljsbuild/test/out"
                 :output-to "target/cljsbuild/test/main.js"
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     {:id "test-npm"
      :source-paths ["test"]
@@ -87,7 +90,8 @@
                 :output-dir "target/cljsbuild/test-npm/out"
                 :output-to "target/cljsbuild/test-npm/main.js"
                 :npm-deps true
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     ;; Separate source-path as this namespace uses Node built-in modules which
     ;; aren't available for other targets, and would break other builds.
@@ -110,7 +114,8 @@
                 :output-dir "target/cljsbuild/node-test/out"
                 :output-to "target/cljsbuild/node-test/main.js"
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     {:id "node-test-npm"
      :source-paths ["test/reagenttest/runtests.cljs"]
@@ -122,7 +127,8 @@
                 :output-dir "target/cljsbuild/node-test-npm/out"
                 :output-to "target/cljsbuild/node-test-npm/main.js"
                 :npm-deps true
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.
@@ -162,7 +168,8 @@
                 :output-dir "target/cljsbuild/prod-test/out"
                 :closure-warnings {:global-this :off}
                 :npm-deps false
-                :aot-cache true}}
+                :aot-cache true
+                :checked-arrays :warn}}
 
     {:id "prod-test-npm"
      :source-paths ["test"]
@@ -175,4 +182,5 @@
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
                 :npm-deps true
-                :aot-cache true}}]})
+                :aot-cache true
+                :checked-arrays :warn}}]})

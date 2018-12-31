@@ -1,10 +1,9 @@
 (ns reagent.impl.util
   (:require [reagent.debug :refer-macros [dbg log warn]]
-            [reagent.interop :refer-macros [$ $!]]
             [clojure.string :as string]))
 
 (def is-client (and (exists? js/window)
-                    (-> js/window ($ :document) nil? not)))
+                    (-> (.-document js/window) nil? not)))
 
 (def ^:dynamic ^boolean *non-reactive* false)
 
@@ -40,16 +39,17 @@
 
 (defn fun-name [f]
   (let [n (or (and (fn? f)
-                   (or ($ f :displayName)
-                       ($ f :name)))
+                   (or (.-displayName f)
+                       (let [n (.-name f)]
+                         (if (and (string? n) (seq n))
+                           n))))
               (and (implements? INamed f)
                    (name f))
               (let [m (meta f)]
                 (if (map? m)
                   (:name m))))]
-    (-> n
-        str
-        (clojure.string/replace "$" "."))))
+    (if n
+      (string/replace (str n) "$" "."))))
 
 (deftype PartialFn [pfn f args]
   Fn
@@ -174,5 +174,5 @@
 (defn force-update [comp deep]
   (if deep
     (binding [*always-update* true]
-      ($ comp forceUpdate))
-    ($ comp forceUpdate)))
+      (.forceUpdate comp))
+    (.forceUpdate comp)))

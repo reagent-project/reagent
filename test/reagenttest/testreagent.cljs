@@ -3,7 +3,6 @@
             [react :as react]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]
@@ -396,7 +395,7 @@
                  (swap! top-ran inc)
                  (r/create-class
                   {:component-did-mount #(swap! ran inc)
-                   :component-function
+                   :reagent-render
                    (fn [p a]
                      (is (= 1 a))
                      (swap! ran inc)
@@ -448,8 +447,8 @@
                              (this-as
                                this
                                (r/create-element
-                                 "div" #js {:className ($ this :props.className)}
-                                 ($ this :props.children))))})
+                                 "div" #js {:className (.. this -props -className)}
+                                 (.. this -props -children))))})
             (gobj/extend cmp react/Component)
             cmp))
 
@@ -1094,7 +1093,7 @@
                (let [old @spy]
                  (is (nil? (r/after-render
                             (fn []
-                              (is (= "DIV" ($ @node :tagName)))
+                              (is (= "DIV" (.-tagName @node)))
                               (swap! spy inc)))))
                  (is (= old @spy))
                  (is (= @exp @val))

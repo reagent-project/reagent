@@ -4,9 +4,9 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless
-                                          assert-callable]]))
+                                          assert-callable]]
+            [goog.object :as gobj]))
 
 (declare ^:dynamic *current-component*)
 
@@ -16,10 +16,12 @@
 (defn shallow-obj-to-map [o]
   (let [ks (js-keys o)
         len (alength ks)]
-    (loop [m {} i 0]
+    (loop [m {}
+           i 0]
       (if (< i len)
         (let [k (aget ks i)]
-          (recur (assoc m (keyword k) (aget o k)) (inc i)))
+          (recur (assoc m (keyword k) (gobj/get o k))
+                 (inc i)))
         m))))
 
 (defn extract-props [v]
@@ -33,52 +35,52 @@
       (subvec v first-child))))
 
 (defn props-argv [c p]
-  (if-some [a ($ p :argv)]
+  (if-some [a (.-argv p)]
     a
     [(.-constructor c) (shallow-obj-to-map p)]))
 
 (defn get-argv [c]
-  (props-argv c ($ c :props)))
+  (props-argv c (.-props c)))
 
 (defn get-props [c]
-  (let [p ($ c :props)]
-    (if-some [v ($ p :argv)]
+  (let [p (.-props c)]
+    (if-some [v (.-argv p)]
       (extract-props v)
       (shallow-obj-to-map p))))
 
 (defn get-children [c]
-  (let [p ($ c :props)]
-    (if-some [v ($ p :argv)]
+  (let [p (.-props c)]
+    (if-some [v (.-argv p)]
       (extract-children v)
-      (->> ($ p :children)
+      (->> (.-children p)
            (react/Children.toArray)
            (into [])))))
 
 (defn ^boolean reagent-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype ($ :reagentRender)))))
+       (some? (some-> c (.-prototype) (.-reagentRender)))))
 
 (defn ^boolean react-class? [c]
   (and (fn? c)
-       (some? (some-> c .-prototype ($ :render)))))
+       (some? (some-> c (.-prototype) (.-render)))))
 
 (defn ^boolean reagent-component? [c]
-  (some? ($ c :reagentRender)))
+  (some? (.-reagentRender c)))
 
 (defn cached-react-class [c]
-  ($ c :cljsReactClass))
+  (.-cljsReactClass c))
 
 (defn cache-react-class [c constructor]
-  ($! c :cljsReactClass constructor))
+  (set! (.-cljsReactClass c) constructor))
 
 
 ;;; State
 
 (defn state-atom [this]
-  (let [sa ($ this :cljsState)]
+  (let [sa (.-cljsState this)]
     (if-not (nil? sa)
       sa
-      ($! this :cljsState (ratom/atom nil)))))
+      (set! (.-cljsState this) (ratom/atom nil)))))
 
 ;; avoid circular dependency: this gets set from template.cljs
 (defonce as-element nil)
@@ -94,9 +96,12 @@
         and calls wrap-render again (`recur`), until the render result doesn't evaluate to a function.
      3) Anything else - Returns the result of evaluating `c`"
   [c]
-  (let [f ($ c :reagentRender)
+  (let [f (.-reagentRender c)
         _ (assert-callable f)
-        res (if (true? ($ c :cljsLegacyRender))
+        ;; cljsLegacyRender tells if this calls was defined
+        ;; using :render instead of :reagent-render
+        ;; in that case, the :render fn is called with just `this` as argument.
+        res (if (true? (.-cljsLegacyRender c))
               (.call f c c)
               (let [v (get-argv c)
                     n (count v)]
@@ -113,7 +118,7 @@
                            (fn [& args]
                              (as-element (apply vector res args)))
                            res)]
-                   ($! c :reagentRender f)
+                   (set! (.-reagentRender c) f)
                    (recur c))
       :else res)))
 
@@ -142,9 +147,10 @@
 (def static-fns
   {:render
    (fn render []
+     ;; TODO: Use static property for cljsRatom
      (this-as c (if util/*non-reactive*
                   (do-render c)
-                  (let [rat ($ c :cljsRatom)]
+                  (let [rat (gobj/get c "cljsRatom")]
                     (batch/mark-rendered c)
                     (if (nil? rat)
                       (ratom/run-in-reaction #(do-render c) c "cljsRatom"
@@ -171,8 +177,8 @@
           (this-as c
                    ;; Don't care about nextstate here, we use forceUpdate
                    ;; when only when state has changed anyway.
-                   (let [old-argv ($ c :props.argv)
-                         new-argv ($ nextprops :argv)
+                   (let [old-argv (.. c -props -argv)
+                         new-argv (.-argv nextprops)
                          noargv (or (nil? old-argv) (nil? new-argv))]
                      (cond
                        (nil? f) (or noargv (try (not= old-argv new-argv)
@@ -193,7 +199,7 @@
     :componentWillMount
     (fn componentWillMount []
       (this-as c
-               ($! c :cljsMountOrder (batch/next-mount-count))
+               (set! (.-cljsMountOrder c) (batch/next-mount-count))
                (when-not (nil? f)
                  (.call f c c))))
 
@@ -204,8 +210,7 @@
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (some-> ($ c :cljsRatom)
-                       ratom/dispose!)
+               (some-> (gobj/get c "cljsRatom") ratom/dispose!)
                (batch/mark-rendered c)
                (when-not (nil? f)
                  (.call f c c))))
@@ -216,12 +221,14 @@
 
     nil))
 
-(defn get-wrapper [key f name]
+(defn get-wrapper [key f]
   (let [wrap (custom-wrapper key f)]
     (when (and wrap f)
       (assert-callable f))
     (or wrap f)))
 
+;; Though the value is nil here, the wrapper function will be
+;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
                  :componentWillMount nil
                  :componentWillUnmount nil})
@@ -238,23 +245,20 @@
 
 (defn wrap-funs [fmap]
   (when (dev?)
-    (let [renders (select-keys fmap [:render :reagentRender :componentFunction])
+    (let [renders (select-keys fmap [:render :reagentRender])
           render-fun (-> renders vals first)]
+      (assert (not (:componentFunction fmap)) ":component-function is no longer supported, use :reagent-render instead.")
       (assert (pos? (count renders)) "Missing reagent-render")
       (assert (== 1 (count renders)) "Too many render functions supplied")
       (assert-callable render-fun)))
   (let [render-fun (or (:reagentRender fmap)
-                       (:componentFunction fmap))
-        legacy-render (nil? render-fun)
-        render-fun (or render-fun
                        (:render fmap))
-        name (str (or (:displayName fmap)
-                      (util/fun-name render-fun)))
-        name (case name
-               "" (str (gensym "reagent"))
-               name)
+        legacy-render (nil? (:reagentRender fmap))
+        name (or (:displayName fmap)
+                 (util/fun-name render-fun)
+                 (str (gensym "reagent")))
         fmap (reduce-kv (fn [m k v]
-                          (assoc m k (get-wrapper k v name)))
+                          (assoc m k (get-wrapper k v)))
                         {} fmap)]
     (assoc fmap
            :displayName name
@@ -265,7 +269,7 @@
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
                (doto o
-                 (aset (name k) v)))
+                 (gobj/set (name k) v)))
              #js{} m))
 
 (defn cljsify [body]
@@ -285,14 +289,17 @@
 (defn create-class
   "Creates JS class based on provided Clojure map.
 
-  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html).
+  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
+  and can be provided in snake-case or camelCase.
   Constructor function is defined using key `:getInitialState`.
 
   React built-in static methods or properties are automatically defined as statics."
   [body]
   {:pre [(map? body)]}
   (let [body (cljsify body)
-        methods (map-to-js (apply dissoc body :displayName :getInitialState built-in-static-method-names))
+        methods (map-to-js (apply dissoc body :displayName :getInitialState
+                                  :render :reagentRender
+                                  built-in-static-method-names))
         static-methods (map-to-js (select-keys body built-in-static-method-names))
         display-name (:displayName body)
         construct (:getInitialState body)
@@ -302,7 +309,20 @@
                 (when construct
                   (construct this))
                 this))]
+
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
+
+    ;; These names SHOULD be mangled by Closure so we can't use goog/extend
+
+    (when (:render body)
+      (set! (.-render (.-prototype cmp)) (:render body)))
+
+    (when (:reagentRender body)
+      (set! (.-reagentRender (.-prototype cmp)) (:reagentRender body)))
+
+    (when (:cljsLegacyRender body)
+      (set! (.-cljsLegacyRender (.-prototype cmp)) (:cljsLegacyRender body)))
+
     (gobj/extend cmp react/Component static-methods)
 
     (when display-name
@@ -319,10 +339,10 @@
 
 (defn fiber-component-path [fiber]
   (let [name (some-> fiber
-                     ($ :type)
-                     ($ :displayName))
+                     (.-type)
+                     (.-displayName))
         parent (some-> fiber
-                       ($ :return))
+                       (.-return))
         path (some-> parent
                      fiber-component-path
                      (str " > "))
@@ -332,18 +352,18 @@
 (defn component-path [c]
   ;; Alternative branch for React 16
   ;; Try both original name (for UMD foreign-lib) and manged name (property access, for Closure optimized React)
-  (if-let [fiber (or (some-> c ($ :_reactInternalFiber))
+  (if-let [fiber (or (some-> c (gobj/get "_reactInternalFiber"))
                      (some-> c (.-_reactInternalFiber)))]
     (fiber-component-path fiber)
-    (let [instance (or (some-> c ($ :_reactInternalInstance))
+    (let [instance (or (some-> c (gobj/get "_reactInternalInstance"))
                        (some-> c (.-_reactInternalInstance))
                        c)
-          elem (or (some-> instance ($ :_currentElement))
+          elem (or (some-> instance (gobj/get "_currentElement"))
                    (some-> instance (.-_currentElement)))
           name (some-> elem
-                       ($ :type)
-                       ($ :displayName))
-          owner (or (some-> elem ($ :_owner))
+                       (.-type)
+                       (.-displayName))
+          owner (or (some-> elem (gobj/get "_owner"))
                     (some-> elem (.-_owner)))
           path (some-> owner
                        component-path
@@ -367,8 +387,8 @@
                          (not (reagent-class? f))))
                "Using native React classes directly in Hiccup forms "
                "is not supported. Use create-element or "
-               "adapt-react-class instead: " (let [n (util/fun-name f)]
-                                               (if (empty? n) f n))
+               "adapt-react-class instead: " (or (util/fun-name f)
+                                                 f)
                (comp-name))
   (if (reagent-class? f)
     (cache-react-class f f)

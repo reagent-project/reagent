@@ -4,7 +4,8 @@
   (:require [reagent.impl.util :as util]
             [reagent.debug :refer-macros [dbg log warn error dev? time]]
             [reagent.impl.batching :as batch]
-            [clojure.set :as s]))
+            [clojure.set :as s]
+            [goog.object :as obj]))
 
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
@@ -187,10 +188,8 @@
 
 (declare make-reaction)
 
-(def ^{:private true :const true} cache-key "reagReactionCache")
-
 (defn- cached-reaction [f o k obj destroy]
-  (let [m (aget o cache-key)
+  (let [m (.-reagReactionCache o)
         m (if (nil? m) {} m)
         r (m k nil)]
     (cond
@@ -199,15 +198,15 @@
       :else (let [r (make-reaction
                      f :on-dispose (fn [x]
                                      (when debug (swap! -running dec))
-                                     (as-> (aget o cache-key) _
+                                     (as-> (.-reagReactionCache o) _
                                        (dissoc _ k)
-                                       (aset o cache-key _))
+                                       (set! (.-reagReactionCache o) _))
                                      (when (some? obj)
                                        (set! (.-reaction obj) nil))
                                      (when (some? destroy)
                                        (destroy x))))
                   v (-deref r)]
-              (aset o cache-key (assoc m k r))
+              (set! (.-reagReactionCache o) (assoc m k r))
               (when debug (swap! -running inc))
               (when (some? obj)
                 (set! (.-reaction obj) r))
@@ -538,7 +537,7 @@
       (._set-opts r opts)
       (set! (.-f r) f)
       (set! (.-auto-run r) #(run obj))
-      (aset obj key r))
+      (obj/set obj key r))
     res))
 
 (defn check-derefs [f]

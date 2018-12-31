@@ -11,7 +11,6 @@
                                                   assert-some assert-component
                                                   assert-js-object assert-new-state
                                                   assert-callable]]
-            [reagent.interop :refer-macros [$ $!]]
             [reagent.dom :as dom]))
 
 (def is-client util/is-client)
@@ -104,8 +103,7 @@
   (batch/flush-after-render))
 
 (defn create-class
-  "Create a component, React style. Should be called with a map,
-  looking like this:
+  "Creates JS class based on provided Clojure map, for example:
 
   ```cljs
   {:get-initial-state (fn [this])
@@ -119,7 +117,13 @@
    :reagent-render (fn [args....])}   ;; or :render (fn [this])
   ```
 
-  Everything is optional, except either :reagent-render or :render."
+  Everything is optional, except either :reagent-render or :render.
+
+  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
+  and can be provided in snake-case or camelCase.
+  Constructor function is defined using key `:get-initial-state`.
+
+  React built-in static methods or properties are automatically defined as statics."
   [spec]
   (comp/create-class spec))
 

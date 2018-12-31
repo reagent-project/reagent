@@ -2,8 +2,7 @@
   (:require [clojure.string :as string]
             [goog.events :as evt]
             [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg log dev?]]
-            [reagent.interop :as i :refer-macros [$ $!]])
+            [reagent.debug :refer-macros [dbg log dev?]])
   (:import goog.History
            [goog.history Html5History EventType]))
 

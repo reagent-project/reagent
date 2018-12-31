@@ -11,10 +11,14 @@
   (is (= "class"
          (tmpl/cached-custom-prop-name :class))))
 
+;; Cljs.test prints better error if check is Cljs function
+(defn js-equal? [a b]
+  (gobj/equals a b))
+
 (deftest convert-props-test
-  (is (gobj/equals #js {:className "a"}
-                   (tmpl/convert-props {:class "a"} #js {:id nil :custom false})))
-  (is (gobj/equals #js {:class "a"}
-                   (tmpl/convert-props {:class "a"} #js {:id nil :custom true})))
-  (is (gobj/equals #js {:className "a b" :id "a"}
-                   (tmpl/convert-props {:class "b"} #js {:id "a" :class "a" :custom false}))))
+  (is (js-equal? #js {:className "a"}
+                 (tmpl/convert-props {:class "a"} (tmpl/HiccupTag. nil nil nil false))))
+  (is (js-equal? #js {:class "a"}
+                 (tmpl/convert-props {:class "a"} (tmpl/HiccupTag. nil nil nil true))))
+  (is (js-equal? #js {:className "a b" :id "a"}
+                 (tmpl/convert-props {:class "b"} (tmpl/HiccupTag. nil "a" "a" false)))))

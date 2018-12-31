@@ -2,8 +2,7 @@
   (:require ["react-dom/server" :as dom-server]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
-            [reagent.ratom :as ratom]
-            [reagent.interop :refer-macros [$ $!]]))
+            [reagent.ratom :as ratom]))
 
 (defonce ^:private imported nil)
 
