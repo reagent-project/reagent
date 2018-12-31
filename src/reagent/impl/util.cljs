@@ -111,28 +111,34 @@
   (or (keyword? x)
       (symbol? x)))
 
-(defn stringify-class [props]
-  (let [class (:class props)]
-    (if (coll? class)
-      (->> class
-           (keep (fn [c]
-                   (if c
-                     (if (named? c)
-                       (name c)
-                       c))))
-           (string/join " ")
-           (assoc props :class))
-      props)))
+(defn class-names
+  ([])
+  ([class]
+   (if (coll? class)
+     (let [classes (keep (fn [c]
+                           (if c
+                             (if (named? c)
+                               (name c)
+                               c)))
+                         class)]
+       (if (seq classes)
+         (string/join " " classes)))
+     (if (named? class)
+       (name class)
+       class)))
+  ([a b]
+   (if a
+     (if b
+       (str (class-names a) " " (class-names b))
+       (class-names a))
+     (class-names b)))
+  ([a b & rst]
+   (reduce class-names
+           (class-names a b)
+           rst)))
 
 (defn- merge-class [p1 p2]
-  (let [p1 (stringify-class p1)
-        p2 (stringify-class p2)
-        class (when-let [c1 (:class p1)]
-                (when-let [c2 (:class p2)]
-                  (str c1 " " c2)))]
-    (if (nil? class)
-      p2
-      (assoc p2 :class class))))
+  (assoc p2 :class (class-names (:class p1) (:class p2))))
 
 (defn- merge-style [p1 p2]
   (let [style (when-let [s1 (:style p1)]
@@ -144,10 +150,16 @@
 
 (defn merge-props
   ([] nil)
-  ([p] (stringify-class p))
+  ;; Normalize :class even if there are no merging
+  ([p]
+   (if-let [c (:class p)]
+     (assoc p :class (class-names c))
+     p))
   ([p1 p2]
    (if (nil? p1)
-     (stringify-class p2)
+     (if-let [c (:class p2)]
+       (assoc p2 :class (class-names c))
+       p2)
      (do
        (assert (map? p1)
                (str "Property must be a map, not " (pr-str p1)))

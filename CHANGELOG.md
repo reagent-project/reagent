@@ -8,6 +8,8 @@
 - Create React Component without `create-react-class` ([#416](https://github.com/reagent-project/reagent/issues/416))
 - Allow any number of arguments for `reagent.core/merge-props` and
 ensure `:class` is merged correctly when it is defined as collection. ([#412](https://github.com/reagent-project/reagent/issues/412))
+- Add `reagent.core/class-names` utility functions which can be used
+to normalize and combine `:class` values (similar to `classnames` JS library)
 
 ## 0.8.1 (2018-05-15)
 

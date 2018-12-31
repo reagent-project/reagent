@@ -117,19 +117,12 @@
 
       ;; Merge classes
       class
-      (assoc :class (let [old-class (:class props)]
-                      (if (nil? old-class) class (str class " " (if (named? old-class)
-                                                                  (name old-class)
-                                                                  old-class))))))))
-
-(defn stringify-class [{:keys [class] :as props}]
-  (if (coll? class)
-    (assoc props :class (util/stringify-class class))
-    props))
+      (assoc :class (util/class-names class (:class props))))))
 
 (defn convert-props [props id-class]
-  (let [props (-> props
-                  util/stringify-class
+  (let [class (:class props)
+        props (-> props
+                  (cond-> class (assoc :class (util/class-names class)))
                   (set-id-class id-class))]
     (if ($ id-class :custom)
       (convert-custom-prop-value props)

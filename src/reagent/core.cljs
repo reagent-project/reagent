@@ -194,8 +194,23 @@
   [this]
   (dom/dom-node this))
 
+(defn class-names
+  "Function which normalizes and combines class values to a string
+
+  Reagent allows classes to be defined as:
+  - Strings
+  - Named objects (Symbols or Keywords)
+  - Collections of previous types"
+  ([])
+  ([class] (util/class-names class))
+  ([class1 class2] (util/class-names class1 class2))
+  ([class1 class2 & others] (apply util/class-names class1 class2 others)))
+
 (defn merge-props
-  "Utility function that merges some maps, handling :class and :style"
+  "Utility function that merges some maps, handling `:class` and `:style`.
+
+  The :class value is always normalized (using `class-names`) even if no
+  merging is done."
   ([] (util/merge-props))
   ([defaults] (util/merge-props defaults))
   ([defaults props] (util/merge-props defaults props))
