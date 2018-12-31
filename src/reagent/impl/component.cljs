@@ -240,21 +240,18 @@
 
 (defn wrap-funs [fmap]
   (when (dev?)
-    (let [renders (select-keys fmap [:render :reagentRender :componentFunction])
+    (let [renders (select-keys fmap [:render :reagentRender])
           render-fun (-> renders vals first)]
+      (assert (not (:componentFunction fmap)) ":component-function is no longer supported, use :reagent-render instead.")
       (assert (pos? (count renders)) "Missing reagent-render")
       (assert (== 1 (count renders)) "Too many render functions supplied")
       (assert-callable render-fun)))
   (let [render-fun (or (:reagentRender fmap)
-                       (:componentFunction fmap))
-        legacy-render (nil? render-fun)
-        render-fun (or render-fun
                        (:render fmap))
-        name (str (or (:displayName fmap)
-                      (util/fun-name render-fun)))
-        name (case name
-               "" (str (gensym "reagent"))
-               name)
+        legacy-render (nil? (:reagentRender fmap))
+        name (or (:displayName fmap)
+                 (util/fun-name render-fun)
+                 (str (gensym "reagent")))
         fmap (reduce-kv (fn [m k v]
                           (assoc m k (get-wrapper k v)))
                         {} fmap)]
@@ -295,7 +292,7 @@
   {:pre [(map? body)]}
   (let [body (cljsify body)
         methods (map-to-js (apply dissoc body :displayName :getInitialState
-                                  :render :reagentRender :cljsLegacyRender
+                                  :render :reagentRender
                                   built-in-static-method-names))
         static-methods (map-to-js (select-keys body built-in-static-method-names))
         display-name (:displayName body)
@@ -384,8 +381,8 @@
                          (not (reagent-class? f))))
                "Using native React classes directly in Hiccup forms "
                "is not supported. Use create-element or "
-               "adapt-react-class instead: " (let [n (util/fun-name f)]
-                                               (if (empty? n) f n))
+               "adapt-react-class instead: " (or (util/fun-name f)
+                                                 f)
                (comp-name))
   (if (reagent-class? f)
     (cache-react-class f f)

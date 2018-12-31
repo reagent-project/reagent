@@ -395,7 +395,7 @@
                  (swap! top-ran inc)
                  (r/create-class
                   {:component-did-mount #(swap! ran inc)
-                   :component-function
+                   :reagent-render
                    (fn [p a]
                      (is (= 1 a))
                      (swap! ran inc)

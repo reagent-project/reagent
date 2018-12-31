@@ -217,8 +217,6 @@ In the code sample above, notice that the renderer function is identified via an
 
 Its a trap to mistakenly use `:render` because you won't get any errors, **except** the function you supply will only ever be called with one parameter, and it won't be the one you expect. [Some details here](https://github.com/reagent-project/reagent/issues/47#issuecomment-61056999).
 
-**Note:** prior to version 0.5.0 you had to use the key `:component-function` instead of `:reagent-render`.
-
 **Rookie mistake**
 
 While you can override `component-should-update` to achieve some performance improvements, you probably shouldn't unless you really, really know what you are doing. Resist the urge. Your current performance is just fine. :-)

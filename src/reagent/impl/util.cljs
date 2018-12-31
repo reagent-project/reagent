@@ -40,15 +40,16 @@
 (defn fun-name [f]
   (let [n (or (and (fn? f)
                    (or (.-displayName f)
-                       (.-name f)))
+                       (let [n (.-name f)]
+                         (if (and (string? n) (seq n))
+                           n))))
               (and (implements? INamed f)
                    (name f))
               (let [m (meta f)]
                 (if (map? m)
                   (:name m))))]
-    (-> n
-        str
-        (clojure.string/replace "$" "."))))
+    (if n
+      (string/replace (str n) "$" "."))))
 
 (deftype PartialFn [pfn f args]
   Fn
