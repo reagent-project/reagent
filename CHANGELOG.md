@@ -1,10 +1,34 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...master)**
+
+- Fix using metadata to set React key with Fragment shortcut (`:<>`) ([#401](https://github.com/reagent-project/reagent/issues/401))
+- Create React Component without `create-react-class` ([#416](https://github.com/reagent-project/reagent/issues/416))
+- Allow any number of arguments for `reagent.core/merge-props` and
+ensure `:class` is merged correctly when it is defined as collection. ([#412](https://github.com/reagent-project/reagent/issues/412))
+- Add `reagent.core/class-names` utility functions which can be used
+to normalize and combine `:class` values (similar to `classnames` JS library)
+- Fix comparing Reagent `PartialFn` to `nil` ([#385](https://github.com/reagent-project/reagent/issues/385))
+
+## 0.8.1 (2018-05-15)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.0...v0.8.1)**
+
+- Fix problem which caused using e.g. `:class` property with custom HTML element to break normal elements
+- Fix problem using keyword or symbol as `:class` together with element tag class shorthand, e.g. `[:p.a {:class :b}]` ([#367](https://github.com/reagent-project/reagent/issues/367))
+- Added support for using keywords and symbols in `:class` collection
+- Removed component type assertion for `:>` ([#369](https://github.com/reagent-project/reagent/issues/369), [#372](https://github.com/reagent-project/reagent/pull/372))
+  - This caused problems with React Context where component is Plain JS object with special properties
+  - `React/createElement` will still provide error if `:>` is used with invalid values
+- Handle exceptions from `not=` in Reagent `component-did-update` method ([#350](https://github.com/reagent-project/reagent/pull/350), [#344](https://github.com/reagent-project/reagent/pull/344))
+
 ## 0.8.0 (2018-04-19)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.0-rc1...v0.8.0)**
 
-- Reagent documentation is now maintained as part of the repository, in [docs](./docs) folder.
+- Reagent documentation is now maintained as part of the repository, in [doc](./doc) folder.
 - Default to React 16
 - Apply vector metadata to the outermost element when using nesting shorthand ([#262](https://github.com/reagent-project/reagent/issues/262))
 - Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
@@ -13,7 +37,7 @@
 - Added `IWithMeta` to `RAtom` ([#314](https://github.com/reagent-project/reagent/pull/314))
 - Support for using Reagent together with React from npm
 
-#### Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+#### Read [0.8 upgrade guide](./doc/0.8-upgrade.md) for more information.
 
 ## 0.8.0-rc1 (2018-04-11)
 
@@ -21,7 +45,7 @@
 
 Unless defaulting to React 16 causes problems, final release should follow soon.
 
-- Reagent documentation is now maintained as part of the repository, in [docs](./docs) folder.
+- Reagent documentation is now maintained as part of the repository, in [doc](./doc) folder.
 - Default to React 16
 - Apply vector metadata to the outermost element when using nesting shorthand ([#262](https://github.com/reagent-project/reagent/issues/262))
 - Add `:<>` shorthand for [React Fragments](https://reactjs.org/docs/fragments.html) ([#352](https://github.com/reagent-project/reagent/pull/352)])
@@ -106,7 +130,7 @@ React-with-addons bundle [has been deprecated](https://facebook.github.io/react/
 of that package. The latest React-with-addons version won't work with Reagent 0.8.
 For animation utils use [react-transition-group](https://github.com/cljsjs/packages/tree/master/react-transition-group) package instead. [React-dom/test-utils](https://facebook.github.io/react/docs/test-utils.html) and [react-addons-perf](https://facebook.github.io/react/docs/perf.html) are not currently packaged as browserified files, so their use would require Webpack, or they might work with Closure module processing (TODO: Provide example).
 
-#### Read [0.8 upgrade guide](./docs/0.8-upgrade.md) for more information.
+#### Read [0.8 upgrade guide](./doc/0.8-upgrade.md) for more information.
 
 #### Which libraries work together with Reagent 0.8:
 

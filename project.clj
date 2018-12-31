@@ -1,4 +1,4 @@
-(defproject reagent "0.8.0"
+(defproject reagent "0.8.2-SNAPSHOT"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
@@ -7,15 +7,14 @@
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "16.3.0-1"]
-                 [cljsjs/react-dom "16.3.0-1"]
-                 [cljsjs/react-dom-server "16.3.0-1"]
-                 [cljsjs/create-react-class "15.6.2-0"]]
+                 [cljsjs/react "16.6.0-0"]
+                 [cljsjs/react-dom "16.6.0-0"]
+                 [cljsjs/react-dom-server "16.6.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.10"]
             [lein-codox "0.10.3"]
-            [lein-figwheel "0.5.15"]]
+            [lein-figwheel "0.5.18"]]
 
   :source-paths ["src"]
 
@@ -23,11 +22,10 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.238"]
-                                  [figwheel "0.5.15"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.439"]
+                                  [figwheel "0.5.18"]
                                   [doo "0.1.10"]
-                                  [com.google.javascript/closure-compiler-unshaded "v20180319"]
-                                  [cljsjs/prop-types "15.6.0-0"]]
+                                  [cljsjs/prop-types "15.6.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
@@ -35,9 +33,7 @@
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
-             :repl false
-             ;; :npm-deps and :stable-names
-             :validate-config false}
+             :repl false}
 
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all
@@ -47,8 +43,8 @@
   ;; In future :main alone should be enough to find entry file.
   :cljsbuild
   {:builds
-   {:client
-    {:source-paths ["demo"]
+   [{:id "client"
+     :source-paths ["demo"]
      :watch-paths ["src" "demo" "test"]
      :figwheel true
      :compiler {:parallel-build true
@@ -56,12 +52,12 @@
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
-                :asset-path "js/out"
                 :npm-deps false
+                :asset-path "js/out"
                 :checked-arrays :warn}}
 
-    :client-npm
-    {:source-paths ["demo"]
+    {:id "client-npm"
+     :source-paths ["demo"]
      :watch-paths ["src" "demo" "test"]
      :figwheel true
      :compiler {:parallel-build true
@@ -69,11 +65,12 @@
                 :main "reagentdemo.dev"
                 :output-dir "target/cljsbuild/client-npm/public/js/out"
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
+                :npm-deps true
                 :asset-path "js/out"
                 :checked-arrays :warn}}
 
-    :test
-    {:source-paths ["test"]
+    {:id "test"
+     :source-paths ["test"]
      :compiler {:parallel-build true
                 :optimizations :none
                 :main "reagenttest.runtests"
@@ -84,29 +81,31 @@
                 :aot-cache true
                 :checked-arrays :warn}}
 
-    :test-npm
-    {:source-paths ["test"]
+    {:id "test-npm"
+     :source-paths ["test"]
      :compiler {:parallel-build true
                 :optimizations :none
                 :main "reagenttest.runtests"
                 :asset-path "js/out"
                 :output-dir "target/cljsbuild/test-npm/out"
                 :output-to "target/cljsbuild/test-npm/main.js"
+                :npm-deps true
                 :aot-cache true
                 :checked-arrays :warn}}
 
     ;; Separate source-path as this namespace uses Node built-in modules which
     ;; aren't available for other targets, and would break other builds.
-    :prerender
-    {:source-paths ["prerender"]
+    {:id "prerender"
+     :source-paths ["prerender"]
      :compiler {:main "sitetools.prerender"
                 :target :nodejs
                 :output-dir "target/cljsbuild/prerender/out"
                 :output-to "target/cljsbuild/prerender/main.js"
+                :npm-deps true
                 :aot-cache true}}
 
-    :node-test
-    {:source-paths ["test/reagenttest/runtests.cljs"]
+    {:id "node-test"
+     :source-paths ["test/reagenttest/runtests.cljs"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -118,8 +117,8 @@
                 :aot-cache true
                 :checked-arrays :warn}}
 
-    :node-test-npm
-    {:source-paths ["test/reagenttest/runtests.cljs"]
+    {:id "node-test-npm"
+     :source-paths ["test/reagenttest/runtests.cljs"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -127,13 +126,14 @@
                 :optimizations :none
                 :output-dir "target/cljsbuild/node-test-npm/out"
                 :output-to "target/cljsbuild/node-test-npm/main.js"
+                :npm-deps true
                 :aot-cache true
                 :checked-arrays :warn}}
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.
-    :prod
-    {:source-paths ["demo"]
+    {:id "prod"
+     :source-paths ["demo"]
      :compiler {:main "reagentdemo.prod"
                 :optimizations :advanced
                 :elide-asserts true
@@ -145,8 +145,8 @@
                 :npm-deps false
                 :aot-cache true}}
 
-    :prod-npm
-    {:source-paths ["demo"]
+    {:id "prod-npm"
+     :source-paths ["demo"]
      :compiler {:main "reagentdemo.prod"
                 :optimizations :advanced
                 :elide-asserts true
@@ -155,10 +155,11 @@
                 :output-to "target/cljsbuild/prod-npm/public/js/main.js"
                 :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
                 :closure-warnings {:global-this :off}
+                :npm-deps true
                 :aot-cache true}}
 
-    :prod-test
-    {:source-paths ["test"]
+    {:id "prod-test"
+     :source-paths ["test"]
      :compiler {:main "reagenttest.runtests"
                 :optimizations :advanced
                 :elide-asserts true
@@ -170,8 +171,8 @@
                 :aot-cache true
                 :checked-arrays :warn}}
 
-    :prod-test-npm
-    {:source-paths ["test"]
+    {:id "prod-test-npm"
+     :source-paths ["test"]
      :compiler {:main "reagenttest.runtests"
                 :optimizations :advanced
                 :elide-asserts true
@@ -180,5 +181,6 @@
                 :output-to "target/cljsbuild/prod-test-npm/main.js"
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
+                :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}}})
+                :checked-arrays :warn}}]})

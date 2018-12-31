@@ -2,17 +2,16 @@
   "private": true,
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
-    "create-react-class": "15.6.2",
-    "prop-types": "15.6.0",
-    "react": "16.3.0",
-    "react-dom": "16.3.0"
+    "prop-types": "15.6.2",
+    "react": "16.6.0",
+    "react-dom": "16.6.0"
   },
   "devDependencies": {
-    "gzip-size-cli": "^2.1.0",
-    "karma": "2.0.0",
+    "gzip-size-cli": "3.0.0",
+    "karma": "3.1.1",
     "karma-chrome-launcher": "2.2.0",
     "karma-cljs-test": "0.1.0",
     "karma-junit-reporter": "1.2.0",
-    "md5-file": "^4.0.0"
+    "md5-file": "4.0.0"
   }
 }

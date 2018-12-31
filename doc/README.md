@@ -1,12 +1,12 @@
 ## Tutorials
 
-1. [Using Hiccup to Describe HTML](/docs/UsingHiccupToDescribeHTML.md)
-2. [Creating Reagent Components](/docs/CreatingReagentComponents.md)
-3. [Using [square brackets] instead of (parentheses)](/docs/UsingSquareBracketsInsteadOfParens.md)
-4. [When do components update?](/docs/WhenDoComponentsUpdate.md)
-5. [[WIP] Managing State: atoms, cursors, Reactions, and tracking](/docs/ManagingState.md)
-6. [Batching and Timing: How Reagent Renders Changes to Application State](/docs/BatchingAndTiming.md)
-7. [Interop with React](/docs/InteropWithReact.md)
+1. [Using Hiccup to Describe HTML](UsingHiccupToDescribeHTML.md)
+2. [Creating Reagent Components](CreatingReagentComponents.md)
+3. [Using [square brackets] instead of (parentheses)](UsingSquareBracketsInsteadOfParens.md)
+4. [When do components update?](WhenDoComponentsUpdate.md)
+5. [[WIP] Managing State: atoms, cursors, Reactions, and tracking](ManagingState.md)
+6. [Batching and Timing: How Reagent Renders Changes to Application State](BatchingAndTiming.md)
+7. [Interop with React](InteropWithReact.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial
@@ -17,9 +17,11 @@ Also:
 
 ## Commercial Videos Series
 
+  * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT)
+  * [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
   * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
-  
+
 ## Frequently Asked Questions
 
 1. [Why isn't my Component re-rendering?](FAQ/ComponentNotRerendering.md)
@@ -31,6 +33,9 @@ Also:
 5. [How do I force Component re-creation?](https://groups.google.com/forum/#!topic/reagent-project/tNY4gzk7TUY) (external link)
 6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 
+## Examples
+
+- [MaterialUI v1 with working TextField](examples/material-ui.md)
 
 ### Want To Add An FAQ?
 
@@ -40,5 +45,5 @@ Many Thanks!! We'd like that:
 
 #### Misc Docs
 
- - [0.8-upgrade](/docs/0.8-upgrade.md)
- - [development](/docs/development.md)
+ - [0.8-upgrade](0.8-upgrade.md)
+ - [development](development.md)

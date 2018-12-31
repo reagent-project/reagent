@@ -52,6 +52,46 @@ As of reagent 0.8.0, the `class` attribute accepts a collection of classes and w
 [:div {:class ["a-class" (when active? "active") "b-class"]}]
 ```
 
+## Special notation for id and class
+
+The id of an element can be indicated with a hash (`#`) after the name of the element.
+
+This:
+
+```clojure
+[:div#my-id]
+```
+
+is the same as this:
+
+```clojure
+[:div {:id "my-id"}]
+```
+
+One or more classes can indicated for an element with a `.` and the class-name like this:
+
+```clojure
+[:div.my-class.my-other-class.etc]
+```
+
+which is the same as:
+
+```clojure
+[:div {:class ["my-class" "my-other-class" "etc"]}]
+```
+
+Special notations for id and classes can be used together. The id must be listed first:
+
+```clojure
+[:div#my-id.my-class.my-other-class]
+```
+
+which is the same as:
+
+```clojure
+[:div {:id "my-id" :class ["my-class" "my-other-class"]}]
+```
+
 ## Special notation for nested elements
 
 Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements together by using a `>` character.

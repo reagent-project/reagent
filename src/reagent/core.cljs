@@ -22,12 +22,16 @@
   that any Reagent hiccup forms must be processed with as-element. For example
   like this:
 
-    (r/create-element \"div\" #js{:className \"foo\"}
-       \"Hi \" (r/as-element [:strong \"world!\"])
+  ```cljs
+  (r/create-element \"div\" #js{:className \"foo\"}
+    \"Hi \" (r/as-element [:strong \"world!\"])
+  ```
 
   which is equivalent to
 
-    [:div.foo \"Hi\" [:strong \"world!\"]]"
+  ```cljs
+  [:div.foo \"Hi\" [:strong \"world!\"]]
+  ```"
   ([type]
    (create-element type nil))
   ([type props]
@@ -102,15 +106,17 @@
   "Create a component, React style. Should be called with a map,
   looking like this:
 
-    {:get-initial-state (fn [this])
-     :component-will-receive-props (fn [this new-argv])
-     :should-component-update (fn [this old-argv new-argv])
-     :component-will-mount (fn [this])
-     :component-did-mount (fn [this])
-     :component-will-update (fn [this new-argv])
-     :component-did-update (fn [this old-argv])
-     :component-will-unmount (fn [this])
-     :reagent-render (fn [args....])}   ;; or :render (fn [this])
+  ```cljs
+  {:get-initial-state (fn [this])
+   :component-will-receive-props (fn [this new-argv])
+   :should-component-update (fn [this old-argv new-argv])
+   :component-will-mount (fn [this])
+   :component-did-mount (fn [this])
+   :component-will-update (fn [this new-argv])
+   :component-did-update (fn [this old-argv])
+   :component-will-unmount (fn [this])
+   :reagent-render (fn [args....])}   ;; or :render (fn [this])
+  ```
 
   Everything is optional, except either :reagent-render or :render."
   [spec]
@@ -118,7 +124,7 @@
 
 
 (defn current-component
-  "Returns the current React component (a.k.a this) in a component
+  "Returns the current React component (a.k.a `this`) in a component
   function."
   []
   comp/*current-component*)
@@ -131,14 +137,14 @@
 
 (defn state
   "Returns the state of a component, as set with replace-state or set-state.
-  Equivalent to (deref (r/state-atom this))"
+  Equivalent to `(deref (r/state-atom this))`"
   [this]
   (assert-component this)
   (deref (state-atom this)))
 
 (defn replace-state
   "Set state of a component.
-  Equivalent to (reset! (state-atom this) new-state)"
+  Equivalent to `(reset! (state-atom this) new-state)`"
   [this new-state]
   (assert-component this)
   (assert-new-state new-state)
@@ -146,7 +152,7 @@
 
 (defn set-state
   "Merge component state with new-state.
-  Equivalent to (swap! (state-atom this) merge new-state)"
+  Equivalent to `(swap! (state-atom this) merge new-state)`"
   [this new-state]
   (assert-component this)
   (assert-new-state new-state)
@@ -187,11 +193,27 @@
   [this]
   (dom/dom-node this))
 
+(defn class-names
+  "Function which normalizes and combines class values to a string
+
+  Reagent allows classes to be defined as:
+  - Strings
+  - Named objects (Symbols or Keywords)
+  - Collections of previous types"
+  ([])
+  ([class] (util/class-names class))
+  ([class1 class2] (util/class-names class1 class2))
+  ([class1 class2 & others] (apply util/class-names class1 class2 others)))
+
 (defn merge-props
-  "Utility function that merges two maps, handling :class and :style
-  specially, like React's transferPropsTo."
-  [defaults props]
-  (util/merge-props defaults props))
+  "Utility function that merges some maps, handling `:class` and `:style`.
+
+  The :class value is always normalized (using `class-names`) even if no
+  merging is done."
+  ([] (util/merge-props))
+  ([defaults] (util/merge-props defaults))
+  ([defaults props] (util/merge-props defaults props))
+  ([defaults props & others] (apply util/merge-props defaults props others)))
 
 (defn flush
   "Render dirty components immediately to the DOM.
@@ -200,8 +222,6 @@
   batching of updates there."
   []
   (batch/flush))
-
-
 
 ;; Ratom
 
@@ -218,8 +238,8 @@
   Reagent atoms (or track, etc), the value will be updated whenever
   the atom changes.
 
-  In other words, @(track foo bar) will produce the same result
-  as (foo bar), but foo will only be called again when the atoms it
+  In other words, `@(track foo bar)` will produce the same result
+  as `(foo bar)`, but foo will only be called again when the atoms it
   depends on changes, and will only trigger updates of components when
   its result changes.
 
@@ -253,8 +273,10 @@
 
   Use for example like this:
 
+  ```cljs
   (wrap (:foo @state)
         swap! state assoc :foo)
+  ```
 
   Probably useful only for passing to child components."
   [value reset-fn & args]
@@ -269,18 +291,23 @@
 
   Behaves like a Reagent atom but focuses updates and derefs to
   the specified path within the wrapped Reagent atom. e.g.,
-    (let [c (cursor ra [:nested :content])]
-      ... @c ;; equivalent to (get-in @ra [:nested :content])
-      ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
-      ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
-      )
+
+  ```cljs
+  (let [c (cursor ra [:nested :content])]
+    ... @c ;; equivalent to (get-in @ra [:nested :content])
+    ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
+    ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
+    )
+  ```
 
   The first parameter can also be a function, that should look
   something like this:
 
-    (defn set-get
-      ([k] (get-in @state k))
-      ([k v] (swap! state assoc-in k v)))
+  ```cljs
+  (defn set-get
+    ([k] (get-in @state k))
+    ([k v] (swap! state assoc-in k v)))
+  ```
 
   The function will be called with one argument – the path passed to
   cursor – when the cursor is deref'ed, and two arguments (path and
@@ -288,7 +315,7 @@
 
   Given that set-get function, (and that state is a Reagent atom, or
   another cursor) these cursors are equivalent:
-  (cursor state [:foo]) and (cursor set-get [:foo]).
+  `(cursor state [:foo])` and `(cursor set-get [:foo])`.
 
   Note that a cursor is lazy: its value will not change until it is
   used. This may be noticed with add-watch."
@@ -299,7 +326,7 @@
 ;; Utilities
 
 (defn rswap!
-  "Swaps the value of a to be (apply f current-value-of-atom args).
+  "Swaps the value of a to be `(apply f current-value-of-atom args)`.
 
   rswap! works like swap!, except that recursive calls to rswap! on
   the same atom are allowed – and it always returns nil."

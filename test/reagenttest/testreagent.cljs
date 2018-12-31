@@ -1,7 +1,6 @@
 (ns reagenttest.testreagent
   (:require [cljs.test :as t :refer-macros [is deftest testing]]
             [react :as react]
-            [create-react-class :as create-react-class]
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dbg println log dev?]]
             [reagent.core :as r]
@@ -440,15 +439,18 @@
     (is (= (rstr (ae [:div [:div "foo"]]))
            (rstr (ae [:div (ce "div" nil "foo")]))))))
 
-(def ndiv (create-react-class
-            #js {:displayName "ndiv"
-                 :render
-                 (fn []
-                   (this-as
-                     this
-                     (r/create-element
-                       "div" #js{:className (.. this -props -className)}
-                       (.. this -props -children))))}))
+(def ndiv (let [cmp (fn [])]
+            (gobj/extend
+              (.-prototype cmp)
+              (.-prototype react/Component)
+              #js {:render (fn []
+                             (this-as
+                               this
+                               (r/create-element
+                                 "div" #js {:className ($ this :props.className)}
+                                 ($ this :props.children))))})
+            (gobj/extend cmp react/Component)
+            cmp))
 
 (deftest test-adapt-class
   (let [d1 (r/adapt-react-class ndiv)
@@ -572,6 +574,27 @@
          (rstr [:p {:class "a b c"}])))
   (is (= (rstr [:p {:class #{"a" "b" "c"}}])
          (rstr [:p {:class "a b c"}]))))
+
+(deftest class-different-types
+  (testing "named values are supported"
+    (is (= (rstr [:p {:class :a}])
+           (rstr [:p {:class "a"}])))
+    (is (= (rstr [:p.a {:class :b}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p.a {:class 'b}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p {:class [:a :b]}])
+           (rstr [:p {:class "a b"}])))
+    (is (= (rstr [:p {:class ['a :b]}])
+           (rstr [:p {:class "a b"}]))))
+
+  (testing "non-named values like numbers"
+    (is (= (rstr [:p {:class [1 :b]}])
+           (rstr [:p {:class "1 b"}]))))
+
+  (testing "falsey values are filtered from collections"
+    (is (= (rstr [:p {:class [:a :b false nil]}])
+           (rstr [:p {:class "a b"}])))) )
 
 (deftest test-force-update
   (let [v (atom {:v1 0
@@ -940,9 +963,19 @@
     (is (thrown-with-msg?
          :default #"Invalid Hiccup form: \[23]"
          (rstr [23])))
-    (is (thrown-with-msg?
-         :default #"Expected React component in: \[:> \[:div]]"
-         (rstr [:> [:div]])))
+    ;; This used to be asserted by Reagent, but because it is hard to validate
+    ;; components, now we just trust React will validate elements.
+    ; (is (thrown-with-msg?
+    ;      :default #"Expected React component in: \[:> \[:div]]"
+    ;      (rstr [:> [:div]])))
+    ;; This is from React.createElement
+    ;; NOTE: browser-npm uses production cjs bundle for now which only shows
+    ;; the minified error
+    (debug/track-warnings
+      (wrap-capture-console-error
+        #(is (thrown-with-msg?
+               :default #"(Element type is invalid:|Minified React error)"
+               (rstr [:> [:div]])))))
     (is (thrown-with-msg?
          :default #"Invalid tag: 'p.'"
          (rstr [:p.])))
@@ -958,7 +991,13 @@
             comp4 (fn comp4 []
                     (for [i (range 0 1)]
                       [:p "foo"]))
-            nat (create-react-class #js {:render (fn [])})
+            nat (let [cmp (fn [])]
+                  (gobj/extend
+                    (.-prototype cmp)
+                    (.-prototype react/Component)
+                    #js {:render (fn [])})
+                  (gobj/extend cmp react/Component)
+                  cmp)
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
             stack2 (str "in " pkg "comp2 > " pkg "comp1")
@@ -1157,6 +1196,73 @@
                      [:div "hello"]
                      [:div "world"]]
                     ^{:key 2}
-                    [children])])]
-      (is (= "<div><div>hello</div><div>world</div><div>foo</div></div>"
+                    [children]
+                    ^{:key 3}
+                    [:<>
+                     [:div "1"]
+                     [:div "2"]])])]
+      (is (= "<div><div>hello</div><div>world</div><div>foo</div><div>1</div><div>2</div></div>"
              (as-string [comp]))))))
+
+(defonce my-context (react/createContext "default"))
+
+(def Provider (.-Provider my-context))
+(def Consumer (.-Consumer my-context))
+
+(deftest new-context-test
+  (is (= "<div>Context: foo</div>"
+         (rstr (r/create-element
+                 Provider #js {:value "foo"}
+                 (r/create-element
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
+
+  (testing "context default value works"
+    (is (= "<div>Context: default</div>"
+           (rstr (r/create-element
+                   Consumer #js {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v])))))))
+
+  (testing "context works with adapt-react-class"
+    (let [provider (r/adapt-react-class Provider)
+          consumer (r/adapt-react-class Consumer)]
+      (is (= "<div>Context: bar</div>"
+             (rstr [provider {:value "bar"}
+                    [consumer {}
+                     (fn [v]
+                       (r/as-element [:div "Context: " v]))]])))))
+
+  (testing "context works with :>"
+    (is (= "<div>Context: bar</div>"
+           (rstr [:> Provider {:value "bar"}
+                  [:> Consumer {}
+                   (fn [v]
+                     (r/as-element [:div "Context: " v]))]])))))
+
+(deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
+  (let [prop (r/atom {:todos 1})
+        component-was-updated (atom false)
+        error-thrown-after-updating-props (atom false)
+        component-class (r/create-class {:reagent-render (fn [& args]
+                                                           [:div (str (first args))])
+                                         :component-did-update (fn [& args]
+                                                                 (reset! component-was-updated true))})
+        component (fn []
+                    [component-class @prop])]
+
+    (when (and isClient (dev?))
+      (let [e (debug/track-warnings
+                #(with-mounted-component [component]
+                   (fn [c div]
+                     (reset! prop (sorted-map 1 2))
+                     (try
+                       (r/flush)
+                       (catch :default e
+                         (reset! error-thrown-after-updating-props true)))
+
+                     (is (not @component-was-updated))
+                     (is (not @error-thrown-after-updating-props)))))]
+        (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
+                     (first (:warn e))))))))

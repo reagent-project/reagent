@@ -28,6 +28,7 @@ test ! -e tmp/js/out
 cd tmp
 
 # Restore files not created by this script
+git add docs/master/
 git checkout -- README.md docs/
 git add .
 git commit -m "Built site from $SHA"

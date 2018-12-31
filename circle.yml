@@ -55,7 +55,10 @@ workflows:
   version: 2
   test-and-update-site:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /v.*/
       - update-site:
           requires:
             - test

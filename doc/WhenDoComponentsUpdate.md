@@ -123,8 +123,9 @@ And, finally, a Form-2 parent Component which uses these two child components:
     (fn  parent-renderer 
       []
       [:div 
-        [more-button counter]            ;; no @ on counter
-        [greet-number @counter]])))      ;; notice the @. The prop is an int
+        [greet-number @counter]      ;; notice the @. The prop is an int
+        [more-button counter]])))    ;; no @ on counter
+	
 ```
 
 With this setup, answer this question: what rerendering happens each time the `more-button` gets clicked and `counter` gets incremented? 
@@ -186,7 +187,7 @@ The `=` version is more accurate, more intuitive, but potentially more expensive
 
 ### Efficient Re-renders
 
-Its only via rerenders that a UI will change.  So re-rendering is pretty essential.  
+It's only via rerenders that a UI will change.  So re-rendering is pretty essential.  
 
 On the other hand, unnecessary re-rendering should be avoided.  In the worst case, it could lead to performance problems.  By unnecessary rendering, I mean rerenders which result in unchanged HTML. That's a whole lot of work for no reason.
 
@@ -194,9 +195,9 @@ So this notion of "changed" is pretty important.  It controls if we are doing un
 
 ### Lifecycle Functions
 
-When `props` change, the entire underlying React machinery is engaged. React Components can have lifecycle methods like `component-did-update` and these functions will get called, just as they would if you were dealing with a React Component. 
+When `props` change, the entire underlying React machinery is engaged. Reagent Components can have lifecycle methods like `component-did-update` and these functions will get called, just as they would if you were dealing with a React Component. 
 
-But ... when the rerender is re-run because an input ratom changed, **Lifecycle functions are not run**.  So, for example, `component-did-update` will not be called on the Component. 
+But ... when the re-render occurs because an input ratom changed, **Lifecycle functions are not run**.  So, for example, `component-did-update` will not be called on the Component. 
 
 Careful of this one. It trips people up.
 

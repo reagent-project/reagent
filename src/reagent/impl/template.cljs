@@ -2,7 +2,7 @@
   (:require [react :as react]
             [clojure.string :as string]
             [clojure.walk :refer [prewalk]]
-            [reagent.impl.util :as util :refer [is-client]]
+            [reagent.impl.util :as util :refer [is-client named?]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
@@ -21,10 +21,6 @@
 
 
 ;;; Common utilities
-
-(defn ^boolean named? [x]
-  (or (keyword? x)
-      (symbol? x)))
 
 (defn ^boolean hiccup-tag? [x]
   (or (named? x)
@@ -83,7 +79,7 @@
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
       (let [v (util/dash-to-camel k)]
-        (gobj/set prop-name-cache (name k) v)
+        (gobj/set custom-prop-name-cache (name k) v)
         v))
     k))
 
@@ -114,20 +110,12 @@
 
       ;; Merge classes
       class
-      (assoc :class (let [old-class (:class props)]
-                      (if (nil? old-class) class (str class " " old-class)))))))
-
-(defn stringify-class [{:keys [class] :as props}]
-  (if (coll? class)
-    (->> class
-         (filter identity)
-         (string/join " ")
-         (assoc props :class))
-    props))
+      (assoc :class (util/class-names class (:class props))))))
 
 (defn convert-props [props id-class]
-  (let [props (-> props
-                  stringify-class
+  (let [class (:class props)
+        props (-> props
+                  (cond-> class (assoc :class (util/class-names class)))
                   (set-id-class id-class))]
     (if (.-custom id-class)
       (convert-custom-prop-value props)
@@ -374,8 +362,6 @@
           0 (let [component (nth v 1 nil)]
               ;; Support [:> component ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (assert (or (string? component) (fn? component))
-                      (hiccup-err v "Expected React component in"))
               (native-element (->HiccupTag component nil nil nil) v 2))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           ;; Apply metadata (e.g. :key) to the outermost element.

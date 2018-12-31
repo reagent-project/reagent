@@ -6,6 +6,8 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
+            [reagent.impl.template-test]
+            [reagent.impl.util-test]
             [cljs.test :as test]
             [doo.runner :as doo :include-macros true]
             [reagent.core :as r]
@@ -20,8 +22,7 @@
                      :color :#aaa})
 
 (defn all-tests []
-  #_(test/run-tests 'reagenttest.testratomasync)
-  (test/run-all-tests #"reagenttest.test.*"))
+  (test/run-all-tests #"(reagenttest\.test.*|reagent\..*-test)"))
 
 (defmethod test/report [::test/default :summary] [m]
   ;; ClojureScript 2814 doesn't return anything from run-tests
@@ -55,4 +56,4 @@
     (run-tests)
     [#'test-output-mini]))
 
-(doo/doo-all-tests #"reagenttest.test.*")
+(doo/doo-all-tests #"(reagenttest\.test.*|reagent\..*-test)")
