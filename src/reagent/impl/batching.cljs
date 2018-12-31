@@ -47,7 +47,7 @@
 (defn enqueue [queue fs f]
   (assert-some f "Enqueued function")
   (.push fs f)
-  (.schedule queue ))
+  (.schedule queue))
 
 (deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
@@ -75,15 +75,25 @@
     (set! scheduled? false)
     (.flush-queues this))
 
+  (flush-before-flush [this]
+    (when-some [fs (.-beforeFlush this)]
+      (set! (.-beforeFlush this) nil)
+      (run-funs fs)))
+
+  (flush-render [this]
+    (when-some [fs (.-componentQueue this)]
+      (set! (.-componentQueue this) nil)
+      (run-queue fs)))
+
   (flush-after-render [this]
-    (run-funs (.-afterRender this)))
+    (when-some [fs (.-afterRender this)]
+      (set! (.-afterRender this) nil)
+      (run-funs fs)))
 
   (flush-queues [this]
-    (run-funs (.-beforeFlush this))
+    (.flush-before-flush this)
     (ratom-flush)
-    (when-some [cs (.-componentQueue this)]
-      (set! (.-componentQueue this) nil)
-      (run-queue cs))
+    (.flush-render this)
     (.flush-after-render this)))
 
 (defonce render-queue (->RenderQueue false))
