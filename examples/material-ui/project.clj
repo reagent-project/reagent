@@ -42,7 +42,6 @@
                 :install-deps true
                 :npm-deps {react "16.6.0"
                            react-dom "16.6.0"
-                           create-react-class "15.6.3"
                            "@material-ui/core" "3.1.1"
                            "@material-ui/icons" "3.0.1"}
                 :process-shim true}}}})
