@@ -1,9 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
-  (:require [reagent.debug :refer-macros [dbg assert-some]]
-            [reagent.impl.util :refer [is-client]]
-            [clojure.string :as string]
-            [goog.object :as gobj]))
+  (:require [reagent.debug :refer-macros [assert-some]]
+            [reagent.impl.util :refer [is-client]]))
 
 ;;; Update batching
 
@@ -42,48 +40,49 @@
 ;; Set from ratom.cljs
 (defonce ratom-flush (fn []))
 
-;; TODO: Use interop properties instead of gobj
+(defn run-funs [fs]
+  (dotimes [i (alength fs)]
+    ((aget fs i))))
+
+(defn enqueue [queue fs f]
+  (assert-some f "Enqueued function")
+  (.push fs f)
+  (.schedule queue ))
+
 (deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
-  (enqueue [this k f]
-    (assert-some f "Enqueued function")
-    (when (nil? (gobj/get this k))
-      (gobj/set this k (array)))
-    (.push (gobj/get this k) f)
-    (.schedule this))
-
-  (run-funs [this k]
-    (when-some [^array fs (gobj/get this k)]
-      (gobj/set this k nil)
-      (dotimes [i (alength fs)]
-        ((gobj/get fs i)))))
-
   (schedule [this]
     (when-not scheduled?
       (set! scheduled? true)
       (next-tick #(.run-queues this))))
 
   (queue-render [this c]
-    (.enqueue this "componentQueue" c))
+    (when (nil? (.-componentQueue this))
+      (set! (.-componentQueue this) (array)))
+    (enqueue this (.-componentQueue this) c))
 
   (add-before-flush [this f]
-    (.enqueue this "beforeFlush" f))
+    (when (nil? (.-beforeFlush this))
+      (set! (.-beforeFlush this) (array)))
+    (enqueue this (.-beforeFlush this) f))
 
   (add-after-render [this f]
-    (.enqueue this "afterRender" f))
+    (when (nil? (.-afterRender this))
+      (set! (.-afterRender this) (array)))
+    (enqueue this (.-afterRender this) f))
 
   (run-queues [this]
     (set! scheduled? false)
     (.flush-queues this))
 
   (flush-after-render [this]
-    (.run-funs this "afterRender"))
+    (run-funs (.-afterRender this)))
 
   (flush-queues [this]
-    (.run-funs this "beforeFlush")
+    (run-funs (.-beforeFlush this))
     (ratom-flush)
-    (when-some [cs (gobj/get this "componentQueue")]
-      (gobj/set this "componentQueue" nil)
+    (when-some [cs (.-componentQueue this)]
+      (set! (.-componentQueue this) nil)
       (run-queue cs))
     (.flush-after-render this)))
 
