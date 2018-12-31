@@ -195,10 +195,12 @@
   (dom/dom-node this))
 
 (defn merge-props
-  "Utility function that merges two maps, handling :class and :style
+  "Utility function that merges some maps, handling :class and :style
   specially, like React's transferPropsTo."
-  [defaults props]
-  (util/merge-props defaults props))
+  ([] (util/merge-props))
+  ([defaults] (util/merge-props defaults))
+  ([defaults props] (util/merge-props defaults props))
+  ([defaults props & others] (apply util/merge-props defaults props others)))
 
 (defn flush
   "Render dirty components immediately to the DOM.
