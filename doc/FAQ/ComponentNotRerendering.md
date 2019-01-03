@@ -14,8 +14,9 @@ We'll deal with these two cases seperately.
 
 If a ratom changes but your Component doesn't update, then the gotchas to look out for are: 
 1. Make sure you are using a `reagent.core/atom` (i.e. a Reagent ratom) instead of a normal `clojure.core/atom`. Carefully check the `require` at the top of the `ns`.  Components are only reactive with respect to Reagent ratoms. They don't react to changes in a Clojure atom. 
-2. Make sure you actually `deref` your ratom (e.g, @app-state) inside of your component. It is a common mistake for people to forget the leading `@`. 
-3. Make sure your ratom will survive a rerender. Either declare it as a global var, or use a form-2 component. [Read this](https://github.com/reagent-project/reagent-cookbook/tree/master/basics/component-level-state) if you want to understand why.
+2. Make sure you actually `deref` your ratom (e.g, @app-state) during the render function of your component. It is a common mistake for people to forget the leading `@`.  Note that derefs that happen outside of the render function (such as during event handlers) do not make your component reactive to that ratom. 
+3a. Make sure your ratom will survive a rerender. Either declare it as a global var, or use a form-2 or form-3 component. [Read this](https://github.com/reagent-project/reagent-cookbook/tree/master/basics/component-level-state) if you want to understand why.
+3b. If you put your ratom in a form-2 or form-3 component, be sure you are calling that function using \[square brackets\], not \(parenthesis\). 
 4. Make sure to `deref` your ratom outside of a seq or wrap that seq in a `doall`. See this [related issue](https://github.com/reagent-project/reagent/issues/18).
 
 ### Props Change
