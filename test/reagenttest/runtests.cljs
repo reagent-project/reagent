@@ -6,6 +6,7 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
+            [reagenttest.testinterop]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
             [cljs.test :as test]

@@ -13,10 +13,8 @@ to normalize and combine `:class` values (similar to `classnames` JS library)
 - Fix comparing Reagent `PartialFn` to `nil` ([#385](https://github.com/reagent-project/reagent/issues/385))
 - Reagent no longer abuses `aget` or `aset` for accessing objects, and instead
 uses correct Object interop forms, allowing use of ClojureScript `:checked-arrays :warn` option. ([#325](https://github.com/reagent-project/reagent/issues/325))
-- **Removed `reagent.interop` namespace**
-    - These macros where bad practice and don't work properly if
-    React code is optimized by Closure. Proper object interop forms or `goog.object` functions
-    should be used instead.
+- Deprecated `reagent.interop` namespace
+    - It is better to use proper object interop forms or `goog.object` functions instead.
 
 ## 0.8.1 (2018-05-15)
 
