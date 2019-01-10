@@ -6,6 +6,10 @@
              :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
 
+;; Test code generated from with-let macro
+;; https://github.com/reagent-project/reagent/issues/420
+(set! *warn-on-infer* true)
+
 (defn fixture [f]
   (set! rv/debug true)
   (f)

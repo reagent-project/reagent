@@ -54,7 +54,8 @@
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :npm-deps false
                 :asset-path "js/out"
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :infer-externs true}}
 
     {:id "client-npm"
      :source-paths ["demo"]
@@ -79,7 +80,8 @@
                 :output-to "target/cljsbuild/test/main.js"
                 :npm-deps false
                 :aot-cache true
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :infer-externs true}}
 
     {:id "test-npm"
      :source-paths ["test"]
