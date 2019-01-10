@@ -4,6 +4,7 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...master)**
 
+- Fix using `with-let` macro in namespaces with `*warn-on-infer*` enabled ([#420](https://github.com/reagent-project/reagent/issues/420))
 - Fix using metadata to set React key with Fragment shortcut (`:<>`) ([#401](https://github.com/reagent-project/reagent/issues/401))
 - Create React Component without `create-react-class` ([#416](https://github.com/reagent-project/reagent/issues/416))
 - Allow any number of arguments for `reagent.core/merge-props` and
