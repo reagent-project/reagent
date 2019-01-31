@@ -17,6 +17,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **Commercial video material**
     * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT)
     * [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
+    * [Learn Re-frame](https://www.jacekschae.com/learn-re-frame-pro?coupon=REAGENT) (Affiliate link, early access)
     * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
     * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
