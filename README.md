@@ -43,13 +43,9 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
 [![CircleCI](https://circleci.com/gh/reagent-project/reagent.svg?style=svg)](https://circleci.com/gh/reagent-project/reagent)
 
-This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
+This is all you need to do if you want the standard version of React. If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide `react` and `react-dom` namespaces (by creating `.cljs` files with just `ns` form, or by adding your own `:foregn-libs` entries).
 
-    [reagent "0.7.0" :exclusions [cljsjs/react]]
-    [cljsjs/react-with-addons "15.4.2-2"]
-
-If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
-
+    [reagent "0.x.x" :exclusions [cljsjs/react cljsjs/react-dom]]
 
 ## Examples
 
