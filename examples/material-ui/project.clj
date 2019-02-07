@@ -40,8 +40,8 @@
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :asset-path "js/out"
                 :install-deps true
-                :npm-deps {react "16.6.0"
-                           react-dom "16.6.0"
+                :npm-deps {react "16.8.1"
+                           react-dom "16.8.1"
                            "@material-ui/core" "3.1.1"
                            "@material-ui/icons" "3.0.1"}
                 :process-shim true}}}})

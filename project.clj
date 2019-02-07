@@ -3,13 +3,13 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "16.6.0-0"]
-                 [cljsjs/react-dom "16.6.0-0"]
-                 [cljsjs/react-dom-server "16.6.0-0"]]
+                 [cljsjs/react "16.8.1-0"]
+                 [cljsjs/react-dom "16.8.1-0"]
+                 [cljsjs/react-dom-server "16.8.1-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
@@ -22,7 +22,7 @@
           :exclude clojure.string
           :source-paths ["src"]}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.439"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.516"]
                                   [figwheel "0.5.18"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.6.2-0"]]
