@@ -1,11 +1,11 @@
 (defproject geometry-reagent "0.6.0"
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.107"]
-                 [reagent "0.6.0"]
-                 [figwheel "0.3.7"]]
+  :dependencies [[org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojurescript "1.10.516"]
+                 [reagent "0.8.1"]
+                 [figwheel "0.5.18"]]
 
-  :plugins [[lein-cljsbuild "1.0.6"]
-            [lein-figwheel "0.3.7"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-figwheel "0.5.18"]]
 
   :hooks [leiningen.cljsbuild]
 

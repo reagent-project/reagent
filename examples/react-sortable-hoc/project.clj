@@ -1,12 +1,12 @@
 (defproject reagent/react-sortable-hoc-example "0.1.0"
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.339"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojurescript "1.10.516"]
                  [reagent "0.8.1"]
-                 [figwheel "0.5.16"]
+                 [figwheel "0.5.18"]
                  [cljsjs/react-sortable-hoc "0.8.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-figwheel "0.5.16"]]
+            [lein-figwheel "0.5.18"]]
 
   :figwheel {:repl false
              :http-server-root "public"}

@@ -1,12 +1,11 @@
 (ns geometry.core
-  (:require 
-   [reagent.core :as r]
-   [geometry.components :as c]
-   [geometry.geometry :as g]))
+  (:require [reagent.core :as r]
+            [geometry.components :as c]
+            [geometry.geometry :as g]))
 
 (enable-console-print!)
 
-(defonce points 
+(defonce points
   (r/atom
    {:p1 (g/point 100 100)
     :p2 (g/point 200 200)
@@ -49,9 +48,11 @@
                     (max 100))
           position (/ (- new-x 100)
                       (- 500 100))
-          history (:history @slider)]
+          history (:history @slider)
+          history-points (nth history (int (* (dec (count history)) position)) nil)]
       (swap! slider assoc p (g/point new-x 50))
-      (reset! points (nth history (int (* (dec (count history)) position)))))))
+      (if history-points
+        (reset! points history-points)))))
 
 (defn root [svg-root]
   (let [{:keys [p1 p2 p3 p c]} @points]
@@ -70,7 +71,7 @@
      [c/point {:on-drag (move-point svg-root :p3)} p3]]))
 
 (defn main [{:keys [width height]}]
-  [:svg 
+  [:svg
    {:width (or width 800)
     :height (or height 600)
     :style {:border "1px solid black"}}
