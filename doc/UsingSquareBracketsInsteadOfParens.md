@@ -211,4 +211,4 @@ Notice the vector `["Mum" "Dad" "Aunt Edith"]` in the hiccup.  Reagent will try 
 
 ## Next Step
 
-We've now seen how we can use functions and `[]` to create Components. In the [[next tutorial|When Do components update?]], we'll understand how and when these Components update. 
+We've now seen how we can use functions and `[]` to create Components. In the [next tutorial](WhenDoComponentsUpdate.md), we'll understand how and when these Components update. 
