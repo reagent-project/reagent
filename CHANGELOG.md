@@ -16,6 +16,7 @@ to normalize and combine `:class` values (similar to `classnames` JS library)
 uses correct Object interop forms, allowing use of ClojureScript `:checked-arrays :warn` option. ([#325](https://github.com/reagent-project/reagent/issues/325))
 - Deprecated `reagent.interop` namespace
     - It is better to use proper object interop forms or `goog.object` functions instead.
+- Drop `:export` metadata from `force-update-all` function
 
 ## 0.8.1 (2018-05-15)
 

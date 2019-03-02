@@ -87,7 +87,7 @@
 (def as-component as-element)
 (def render-component render)
 
-(defn ^:export force-update-all
+(defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
   probably only useful in a development environment, when you want to
   update components in response to some dynamic changes to code.
