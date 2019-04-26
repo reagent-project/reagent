@@ -8,7 +8,8 @@
                     ["[WIP] Managing State: atoms, cursors, Reactions, and tracking" {:file "doc/ManagingState.md"}]
                     ["Batching and Timing: How Reagent Renders Changes to Application State" {:file "doc/BatchingAndTiming.md"}]
                     ["Interop with React" {:file "doc/InteropWithReact.md"}]
-                    ["React Features" {:file "doc/ReactFeatures.md"}]]
+                    ["React Features" {:file "doc/ReactFeatures.md"}]
+                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]]
                    ["Frequently Asked Questions" {}
                     ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
                     ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]
