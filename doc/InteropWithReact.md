@@ -183,6 +183,10 @@ to always put the call at the top, as in `my-div` here:
       [:p "Some other text in bold."]]])
 ```
 
+## React Features
+
+- [React Features and how to use them in Reagent](./ReactFeatures.md)
+
 ## Examples
 
 - [Material-UI](../examples/material-ui/src/example/core.cljs)
