@@ -1,15 +1,14 @@
 (ns reagentdemo.news.news050
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/news050.html")
+(def url "/news/news050.html")
 (def title "News in 0.5.0")
 
-(def new-in-alpha [:strong "New since 0.5.0-alpha: "])
+(def new-in-alpha nil)
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -33,7 +32,7 @@
   (let [{:keys [first-name last-name]} @n]
     [:div
      [:p "I'm editing " first-name " " last-name "."]
-     
+
      [input "First name: " (r/wrap first-name
                                    swap! n assoc :first-name)]
      [input "Last name:  " (r/wrap last-name
@@ -107,11 +106,12 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2014-12-10"]
    [:div.demo-text
     [:p "Reagent 0.5.0 has automatic importing of React.js, two kinds
     of cursors, better integration of native React components, better
     performance, easier integration with e.g Figwheel, and more."]
-    
+
     (if summary
       [link {:href url
              :class 'news-read-more} "Read more"]
@@ -211,7 +211,7 @@
        the getter function will re-run to change the value of the
        cursor just like a Reagent component does."]
 
-       [:h3 "Values and references"]
+       [:h2 "Values and references"]
 
        [:p "So what’s the difference between wraps and cursors? Why
        have both?"]
@@ -232,7 +232,7 @@
        they " [:code "deref"] " a normal Reagent atom (unnecessary
        re-rendering is avoided by checking if the cursor's value has
        changed using " [:code "identical?"] ")."]
-       
+
 
        [:h2 "Faster rendering"]
 

@@ -4,14 +4,11 @@
 
 ;; Styles for syntax highlighting
 
-(def comment-style {:style {:color "gray"
-                            :font-style "italic"}})
-(def string-style {:style {:color "green"}})
+(def comment-style {:style {:color "gray" :font-style "italic"}})
+(def string-style  {:style {:color "green"}})
 (def keyword-style {:style {:color "blue"}})
-(def builtin-style {:style {:font-weight "bold"
-                            :color "#687868"}})
-(def def-style {:style {:color "#55c"
-                        :font-weight "bold"}})
+(def builtin-style {:style {:color "#687868" :font-weight "bold"}})
+(def def-style     {:style {:color "#5050c0" :font-weight "bold"}})
 
 (def paren-style-1 {:style {:color "#272"}})
 (def paren-style-2 {:style {:color "#940"}})
@@ -29,7 +26,7 @@
                "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
                "=" "partial" "first" "second" "rest" "list" "conj"
                "drop" "when-let" "if-let" "add-watch" "mod" "quot"
-               "bit-test" "vector"})
+               "bit-test" "vector" "do" "try" "catch" "finally"})
 
 (def styles {:comment  comment-style
              :str-litt string-style
@@ -39,50 +36,52 @@
 
 (def paren-styles [paren-style-1 paren-style-2 paren-style-3])
 
-(defn tokenize [src]
-  (let [ws " \\t\\n"
-        open "\\[({"
-        close ")\\]}"
-        sep (str ws open close)
+(def tokenize-pattern
+  (let [ws        " \\t\\n"
+        open      "\\[({"
+        close     ")\\]}"
+        sep       (str ws open close)
         comment-p ";.*"
-        str-p "\"[^\"]*\""
-        open-p (str "[" open "]")
-        close-p (str "[" close "]")
-        iden-p (str "[^" sep "]+")
-        meta-p (str "\\^" iden-p)
-        any-p (str "[" ws "]+" "|\\^[^" sep "]+|.")
-        patt (re-pattern (str "("
-                              (string/join ")|(" [comment-p str-p open-p
-                                                  close-p meta-p iden-p any-p])
-                              ")"))
-        keyw-re #"^:"
-        qualif-re #"^r/"]
-    (for [[s comment str-litt open close met iden any] (re-seq patt src)]
-      (cond
-       comment [:comment s]
-       str-litt [:str-litt s]
-       open [:open s]
-       close [:close s]
-       met [:other s]
-       iden (cond
-             (re-find keyw-re s) [:keyw s]
-             (builtins s) [:builtin s]
-             (re-find qualif-re s) [:builtin s]
-             :else [:iden s])
-       any [:other s]))))
+        str-p     "\"[^\"]*\""
+        open-p    (str "[" open "]")
+        close-p   (str "[" close "]")
+        iden-p    (str "[^" sep "]+")
+        meta-p    (str "\\^" iden-p)
+        any-p     (str "[" ws "]+|\\^[^" sep "]+|.")]
+    (re-pattern (str "("
+                     (string/join ")|(" [comment-p str-p open-p
+                                         close-p meta-p iden-p any-p])
+                     ")"))))
+
+(def keyw-re #"^:")
+(def qualif-re #"^[a-z]+/")
+(def def-re #"^def|^ns\b")
+
+(defn tokenize [src]
+  (for [[s comment strlitt open close met iden any]
+        (re-seq tokenize-pattern src)]
+    (cond
+      (some? comment) [:comment s]
+      (some? strlitt) [:str-litt s]
+      (some? open)    [:open s]
+      (some? close)   [:close s]
+      (some? met)     [:other s]
+      (some? iden)    (cond (re-find keyw-re s) [:keyw s]
+                            (builtins s) [:builtin s]
+                            (re-find qualif-re s) [:builtin s]
+                            :else [:iden s])
+      (some? any)     [:other s])))
 
 (defn syntaxify [src]
-  (let [def-re #"^def|^ns\b"
-        ncol (count paren-styles)
-        paren-style (fn [level]
-                      (nth paren-styles (mod level ncol)))]
+  (let [ncol (count paren-styles)
+        paren-style #(nth paren-styles (mod % ncol))]
     (loop [tokens (tokenize (str src " "))
            prev nil
            level 0
            res []]
       (let [[kind val] (first tokens)
             level' (case kind
-                     :open (inc level)
+                     :open  (inc level)
                      :close (dec level)
                      level)
             style (case kind
@@ -94,7 +93,7 @@
             remain (rest tokens)]
         (if-not (empty? remain)
           (recur remain
-                 (if (= kind :other) prev val)
+                 (case kind :other prev val)
                  level'
                  (if (nil? style)
                    (let [old (peek res)]
@@ -102,4 +101,4 @@
                        (conj (pop res) (str old val))
                        (conj res val)))
                    (conj res [:span style val])))
-          (apply vector :pre res))))))
+          (into [:pre] res))))))

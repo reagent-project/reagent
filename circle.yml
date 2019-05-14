@@ -1,0 +1,77 @@
+version: 2
+jobs:
+  test:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.8.1-node-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
+      - restore_cache:
+          key: reagent-npm-{{ checksum "package.json" }}
+      - run: sudo npm install -g karma-cli
+      - run: npm install
+      - run: ./run-tests.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.lein
+            - ~/.cljs/.aot_cache
+          key: reagent-{{ checksum "project.clj" }}
+      - save_cache:
+          paths:
+            - node_modules
+          key: reagent-npm-{{ checksum "package.json" }}
+
+    environment:
+      NPM_CONFIG_LOGLEVEL: warn
+  update-site:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.8.1-node
+    steps:
+      - checkout
+      - add_ssh_keys
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
+      - restore_cache:
+          key: reagent-npm-{{ checksum "package.json" }}
+      - run: npm install
+      - deploy:
+          command: ./build-example-site.sh
+  update-tagged-docs:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - add_ssh_keys
+      - restore_cache:
+          key: reagent-{{ checksum "project.clj" }}
+      - deploy:
+          command: ./build-docs.sh
+workflows:
+  version: 2
+  test-and-update-site:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /v.*/
+      - update-site:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
+      - update-tagged-docs:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only: /v.*/

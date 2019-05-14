@@ -1,25 +1,35 @@
-
 (ns reagent.debug
-  (:refer-clojure :exclude [prn println]))
+  (:refer-clojure :exclude [prn println time]))
 
 (defmacro log
   "Print with console.log, if it exists."
   [& forms]
-  `(when (clojure.core/exists? js/console)
+  `(when reagent.debug.has-console
      (.log js/console ~@forms)))
 
 (defmacro warn
   "Print with console.warn."
   [& forms]
   (when *assert*
-    `(when (clojure.core/exists? js/console)
-       (.warn js/console (str "Warning: " ~@forms)))))
+    `(when reagent.debug.has-console
+       (.warn (if reagent.debug.tracking
+                reagent.debug.track-console js/console)
+              (str "Warning: " ~@forms)))))
 
 (defmacro warn-unless
   [cond & forms]
   (when *assert*
-    `(when (and (not ~cond) (clojure.core/exists? js/console))
-       (.warn js/console (str "Warning: " ~@forms)))))
+    `(when (not ~cond)
+       (warn ~@forms))))
+
+(defmacro error
+  "Print with console.error."
+  [& forms]
+  (when *assert*
+    `(when reagent.debug.has-console
+       (.error (if reagent.debug.tracking
+                 reagent.debug.track-console js/console)
+               (str ~@forms)))))
 
 (defmacro println
   "Print string with console.log"
@@ -51,3 +61,36 @@ as well as package name and line number. Returns x."
   "True if assertions are enabled."
   []
   (if *assert* true false))
+
+(defmacro time [& forms]
+  (let [ns (str cljs.analyzer/*cljs-ns*)
+        label (str ns ":" (:line (meta &form)))]
+    `(let [label# ~label
+           res# (do
+                  (js/console.time label#)
+                  ~@forms)]
+       (js/console.timeEnd label#)
+       res#)))
+
+(defmacro assert-some [value tag]
+  `(assert ~value (str ~tag " must not be nil")))
+
+(defmacro assert-component [value]
+  `(assert (comp/reagent-component? ~value)
+           (str "Expected a reagent component, not "
+                (pr-str ~value))))
+
+(defmacro assert-js-object [value]
+  `(assert (not (map? ~value))
+           (str "Expected a JS object, not "
+                (pr-str ~value))))
+
+(defmacro assert-new-state [value]
+  `(assert (or (nil? ~value) (map? ~value))
+           (str "Expected a valid new state, not "
+                (pr-str ~value))))
+
+(defmacro assert-callable [value]
+  `(assert (ifn? ~value)
+           (str "Expected something callable, not "
+                (pr-str ~value))))

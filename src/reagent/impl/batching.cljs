@@ -1,10 +1,7 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
-  (:require [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [.' .!]]
-            [reagent.ratom :as ratom]
-            [reagent.impl.util :refer [is-client]]
-            [clojure.string :as string]))
+  (:require [reagent.debug :refer-macros [assert-some]]
+            [reagent.impl.util :refer [is-client]]))
 
 ;;; Update batching
 
@@ -20,15 +17,15 @@
   (if-not is-client
     fake-raf
     (let [w js/window]
-      (or (.' w :requestAnimationFrame)
-          (.' w :webkitRequestAnimationFrame)
-          (.' w :mozRequestAnimationFrame)
-          (.' w :msRequestAnimationFrame)
+      (or (.-requestAnimationFrame w)
+          (.-webkitRequestAnimationFrame w)
+          (.-mozRequestAnimationFrame w)
+          (.-msRequestAnimationFrame w)
           fake-raf))))
 
 (defn compare-mount-order [c1 c2]
-  (- (.' c1 :cljsMountOrder)
-     (.' c2 :cljsMountOrder)))
+  (- (.-cljsMountOrder c1)
+     (.-cljsMountOrder c2)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents
@@ -36,74 +33,91 @@
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
     (let [c (aget a i)]
-      (when (.' c :cljsIsDirty)
-        (.' c forceUpdate)))))
+      (when (true? (.-cljsIsDirty c))
+        (.forceUpdate c)))))
 
-(defn run-funs [a]
-  (dotimes [i (alength a)]
-    ((aget a i))))
 
-(deftype RenderQueue [^:mutable queue ^:mutable scheduled?
-                      ^:mutable after-render]
+;; Set from ratom.cljs
+(defonce ratom-flush (fn []))
+
+(defn run-funs [fs]
+  (dotimes [i (alength fs)]
+    ((aget fs i))))
+
+(defn enqueue [queue fs f]
+  (assert-some f "Enqueued function")
+  (.push fs f)
+  (.schedule queue))
+
+(deftype RenderQueue [^:mutable ^boolean scheduled?]
   Object
-  (queue-render [this c]
-    (.push queue c)
-    (.schedule this))
-  (add-after-render [_ f]
-    (.push after-render f))
   (schedule [this]
     (when-not scheduled?
       (set! scheduled? true)
-      (next-tick #(.run-queue this))))
-  (run-queue [_]
-    (let [q queue aq after-render]
-      (set! queue (array))
-      (set! after-render (array))
-      (set! scheduled? false)
-      (run-queue q)
-      (run-funs aq))))
+      (next-tick #(.run-queues this))))
 
-(def render-queue (RenderQueue. (array) false (array)))
+  (queue-render [this c]
+    (when (nil? (.-componentQueue this))
+      (set! (.-componentQueue this) (array)))
+    (enqueue this (.-componentQueue this) c))
+
+  (add-before-flush [this f]
+    (when (nil? (.-beforeFlush this))
+      (set! (.-beforeFlush this) (array)))
+    (enqueue this (.-beforeFlush this) f))
+
+  (add-after-render [this f]
+    (when (nil? (.-afterRender this))
+      (set! (.-afterRender this) (array)))
+    (enqueue this (.-afterRender this) f))
+
+  (run-queues [this]
+    (set! scheduled? false)
+    (.flush-queues this))
+
+  (flush-before-flush [this]
+    (when-some [fs (.-beforeFlush this)]
+      (set! (.-beforeFlush this) nil)
+      (run-funs fs)))
+
+  (flush-render [this]
+    (when-some [fs (.-componentQueue this)]
+      (set! (.-componentQueue this) nil)
+      (run-queue fs)))
+
+  (flush-after-render [this]
+    (when-some [fs (.-afterRender this)]
+      (set! (.-afterRender this) nil)
+      (run-funs fs)))
+
+  (flush-queues [this]
+    (.flush-before-flush this)
+    (ratom-flush)
+    (.flush-render this)
+    (.flush-after-render this)))
+
+(defonce render-queue (->RenderQueue false))
 
 (defn flush []
-  (.run-queue render-queue))
+  (.flush-queues render-queue))
+
+(defn flush-after-render []
+  (.flush-after-render render-queue))
 
 (defn queue-render [c]
-  (.! c :cljsIsDirty true)
-  (.queue-render render-queue c))
+  (when-not (.-cljsIsDirty c)
+    (set! (.-cljsIsDirty c) true)
+    (.queue-render render-queue c)))
 
 (defn mark-rendered [c]
-  (.! c :cljsIsDirty false))
+  (set! (.-cljsIsDirty c) false))
 
-(defn do-after-flush [f]
+(defn do-before-flush [f]
+  (.add-before-flush render-queue f))
+
+(defn do-after-render [f]
   (.add-after-render render-queue f))
 
-(defn do-later [f]
-  (do-after-flush f)
-  (.schedule render-queue))
-
-;; Render helper
-
-(defn is-reagent-component [c]
-  (some-> c (.' :props) (.' :argv)))
-
-(defn run-reactively [c run]
-  (assert (is-reagent-component c))
-  (mark-rendered c)
-  (let [rat (.' c :cljsRatom)]
-    (if (nil? rat)
-      (let [res (ratom/capture-derefed run c)
-            derefed (ratom/captured c)]
-        (when (not (nil? derefed))
-          (.! c :cljsRatom
-              (ratom/make-reaction run
-                                   :auto-run #(queue-render c)
-                                   :derefed derefed)))
-        res)
-      (ratom/run rat))))
-
-(defn dispose [c]
-  (some-> (.' c :cljsRatom)
-          ratom/dispose!)
-  (mark-rendered c))
-
+(defn schedule []
+  (when (false? (.-scheduled? render-queue))
+    (.schedule render-queue)))

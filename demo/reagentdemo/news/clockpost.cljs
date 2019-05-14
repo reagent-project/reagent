@@ -1,13 +1,12 @@
 (ns reagentdemo.news.clockpost
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
 
-(def url "news/binary-clock.html")
+(def url "/news/binary-clock.html")
 (def title "A binary clock")
 
 (defn fn-src [src]
@@ -22,6 +21,7 @@
 
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-02-26"]
      [:div.demo-text
 
       (when-not summary
@@ -122,5 +122,4 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent: " title))
+(tools/register-page url [#'main] title)

@@ -6,10 +6,20 @@
 
 ;; this repeats all the atom tests but using cursors instead
 
-(defn running []
+(defn fixture [f]
+  (r/flush)
   (set! rv/debug true)
+  (f)
+  (set! rv/debug false))
+
+(t/use-fixtures :once fixture)
+
+(defn running []
   (rv/running))
+
 (defn dispose [v] (rv/dispose! v))
+
+(def testite 10)
 
 (deftest basic-cursor
   (let [runs (running)
@@ -25,11 +35,13 @@
              @sv @c2 @comp)
         const (run!
                (reset! out @res))]
+    (r/flush)
     (is (= @count 1) "constrain ran")
     (is (= @out 2))
     (reset! start 1)
+    (r/flush)
     (is (= @out 3))
-    (is (= @count 4))
+    (is (<= 2 @count 3))
     (dispose const)
     (is (= @start-base {:a {:b {:c 1}}}))
     (is (= (running) runs))))
@@ -46,10 +58,12 @@
               (swap! c3-count inc)
               (+ @c1 @c2))
             :auto-run true)]
+    (r/flush)
     (is (= @c3-count 0))
     (is (= @c3 1))
     (is (= @c3-count 1) "t1")
     (swap! start inc)
+    (r/flush)
     (is (= @c3-count 2) "t2")
     (is (= @c3 2))
     (is (= @c3-count 2) "t3")
@@ -69,6 +83,7 @@
               (swap! !counter inc))]
       (is (= 1 @!counter) "Constraint run on init")
       (reset! !signal "foo")
+      (r/flush)
       (is (= 2 @!counter)
           "Counter auto updated")
       (is (= @!ctr-base {:x {:y 2 :z 0}}))
@@ -85,7 +100,7 @@
 
 
 (deftest test-unsubscribe
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:test {:unsubscribe 0 :value 42}})
           a (r/cursor a-base [:test :unsubscribe])
@@ -171,7 +186,7 @@
     (is (= runs (running)))))
 
 (deftest test-dispose
-  (dotimes [x 10]
+  (dotimes [x testite]
     (let [runs (running)
           a-base (rv/atom {:a 0 :b 0})
           a (r/cursor a-base [:a])
@@ -191,28 +206,32 @@
                                 :on-dispose #(reset! disposed-cns true))]
       @cns
       (is (= @res 2))
-      (is (= (+ 4 runs) (running)))
+      (is (= (+ 6 runs) (running)))
       (is (= @count-b 1))
       (is (= {:a 0 :b 0} @a-base))
       (reset! a -1)
+      (r/flush)
       (is (= @res 1))
       (is (= @disposed nil))
       (is (= @count-b 2))
-      (is (= (+ 4 runs) (running)) "still running")
+      (is (= (+ 6 runs) (running)) "still running")
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
+      (r/flush)
       (is (= @res 1))
       (is (= @disposed true))
-      (is (= (+ 3 runs) (running)) "less running count")
+      (is (= (+ 4 runs) (running)) "less running count")
       (is (= {:a 2 :b 0} @a-base))
 
       (reset! disposed nil)
       (reset! a -1)
+      (r/flush)
       ;; This fails sometimes on node. I have no idea why.
       (is (= 1 @res) "should be one again")
       (is (= @disposed nil))
       (is (= {:a -1 :b 0} @a-base))
       (reset! a 2)
+      (r/flush)
       (is (= @res 1))
       (is (= @disposed true))
       (dispose cns)
@@ -336,6 +355,12 @@
     (is (= (get-in @test-atom [])
            {:z 3}))
 
+    (reset! test-cursor {}) ;; empty map
+    (swap! test-cursor assoc :x 1 :y 2 :z 3 :w)
+    (is (= @test-cursor {:x 1 :y 2 :z 3 :w nil}))
+    (is (= (get-in @test-atom [:a :b :c :d])
+           {:x 1 :y 2 :z 3 :w nil}))
+
     (is (= runs (running)))))
 
 
@@ -432,7 +457,8 @@
         c (r/cursor a [:foo])
         f (fn []
             (swap! c assoc :not-pristine true)
-            (swap! a update-in [:foo :active?] not))
+            (swap! a update-in [:foo :active?] not)
+            (r/flush))
         spy (r/atom nil)
         r (run!
            (reset! spy (:active? @c)))]

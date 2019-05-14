@@ -1,13 +1,12 @@
 (ns reagentdemo.news.undodemo
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc.core :as todomvc]))
 
-(def url "news/cloact-reagent-undo-demo.html")
+(def url "/news/cloact-reagent-undo-demo.html")
 (def title "Cloact becomes Reagent: Undo is trivial")
 
 (def ns-src (s/syntaxed "(ns example
@@ -53,6 +52,9 @@
   (let [head title]
     [:div.reagent-demo
      [:h1 [link {:href url} head]]
+     ;; Undo demo originall added on 0a0dbdee7dfdaa545171d41fa1c3a18a1cae6e1b
+     [:span "2014-01-19"]
+
      [:div.demo-text
       [:h2 "(reset! cloact-name \"Reagent\")"]
 
@@ -89,4 +91,4 @@
 
          [undo-demo-cleanup]])]]))
 
-(tools/register-page url [main] title)
+(tools/register-page url [#'main] title)

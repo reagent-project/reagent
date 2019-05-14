@@ -1,12 +1,11 @@
 (ns reagentdemo.news.async
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/reagent-is-async.html")
+(def url "/news/reagent-is-async.html")
 (def title "Faster by waiting")
 
 (def ns-src (s/syntaxed "(ns example
@@ -94,6 +93,8 @@
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-01-30"]
+
      [:div.demo-text
       [:h2 "Reagent gets async rendering"]
 
@@ -197,5 +198,4 @@
                             :ncolors-choose :color-plate
                             :palette :color-demo])]}]])]]))
 
-(tools/register-page url [main]
-                     (str "Reagent: " title))
+(tools/register-page url [#'main] title)

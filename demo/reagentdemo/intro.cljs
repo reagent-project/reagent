@@ -1,7 +1,6 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
-            [reagent.debug :refer-macros [dbg println]]
+            [reagent.debug :refer-macros [dbg println time]]
             [clojure.string :as string]
             [reagentdemo.syntax :as s]
             [sitetools.core :refer [link]]
@@ -66,8 +65,8 @@
        "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
-  (r/render-component [simple-component]
-                      (.-body js/document)))
+  (r/render [simple-component]
+    (.-body js/document)))
 
 (def bmi-data (r/atom {:height 180 :weight 80}))
 
@@ -82,7 +81,7 @@
   [:input {:type "range" :value value :min min :max max
            :style {:width "100%"}
            :on-change (fn [e]
-                        (swap! bmi-data assoc param (.-target.value e))
+                        (swap! bmi-data assoc param (.. e -target -value))
                         (when (not= param :bmi)
                           (swap! bmi-data assoc :bmi nil)))}])
 
@@ -129,7 +128,7 @@
 
      [:p "The goal of Reagent is to make it possible to define
      arbitrarily complex UIs using just a couple of basic concepts,
-     and to be fast enough by default that you rarely have to care
+     and to be fast enough by default that you rarely have to think
      about performance."]
 
      [:p "A very basic Reagent component may look something like this: "]
@@ -226,7 +225,7 @@
 
    [:p "Reagent supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
-    [:code "reagent.core/render-component"] "."]
+    [:code "reagent.core/render"] "."]
 
    [:p "It takes two arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would
@@ -277,7 +276,7 @@
 
    [:p "Incidentally, this page also uses another React trick: the
    entire page is pre-rendered using Node, and "
-   [:code "reagent.core/render-component-to-string"] ". When it is loaded
+   [:code "reagent.dom.server/render-to-string"] ". When it is loaded
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 

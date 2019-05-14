@@ -1,12 +1,11 @@
 (ns reagentdemo.news.news051
   (:require [reagent.core :as r]
-            [reagent.interop :refer-macros [.' .!]]
             [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
-(def url "news/news051.html")
+(def url "/news/news051.html")
 (def title "News in 0.5.1")
 
 (def ns-src (s/syntaxed "(ns example.core
@@ -36,12 +35,13 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2015-09-09"]
    [:div.demo-text
     [:p "Reagent 0.5.1 contains a new convenient shortcut for nested
     elements, better error messages, new logic for maintaining cursor
     position in inputs, a new version of React, and some bug fixes and
     improvements."]
-    
+
     (if summary
       [link {:href url :class 'news-read-more} "Read more"]
       [:div.demo-text
@@ -64,7 +64,7 @@
        [:p "with identical results, thus saving several square
        brackets from an untimely death."]
 
-       
+
        [:h2 "Keeping position"]
 
        [:p "Reagent now tries harder to maintain cursor position in
@@ -84,7 +84,7 @@
 
        [:ul
         [:li "React is updated to 0.13.3."]
-        
+
         [:li "A bit better error messages. In particular, the current
         component path is now printed when an exception is thrown."]
 

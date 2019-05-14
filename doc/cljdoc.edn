@@ -1,0 +1,24 @@
+{:cljdoc.api/platforms #{"cljs"}
+ :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
+                   ["Tutorials" {}
+                    ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
+                    ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
+                    ["Using [square brackets] instead of (parentheses)" {:file "doc/UsingSquareBracketsInsteadOfParens.md"}]
+                    ["When do components update?" {:file "doc/WhenDoComponentsUpdate.md"}]
+                    ["[WIP] Managing State: atoms, cursors, Reactions, and tracking" {:file "doc/ManagingState.md"}]
+                    ["Batching and Timing: How Reagent Renders Changes to Application State" {:file "doc/BatchingAndTiming.md"}]
+                    ["Interop with React" {:file "doc/InteropWithReact.md"}]
+                    ["React Features" {:file "doc/ReactFeatures.md"}]
+                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]]
+                   ["Frequently Asked Questions" {}
+                    ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
+                    ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]
+                    ["How can I use an entity like \"nbsp\"?" {:file "doc/FAQ/UsingAnEntity.md"}]
+                    ["Why is my attribute (like autoFocus) missing?" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
+                    ["How can I use React's dangerouslySetInnerHTML?" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
+                    ["Reagent doesn't work after updating dependencies" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
+                   ["Examples" {}
+                    ["Material-UI v1" {:file "doc/examples/material-ui.md"}]]
+                   ["Other" {}
+                    ["0.8 Upgrade guide" {:file "doc/0.8-upgrade.md"}]
+                    ["Development guide" {:file "doc/development.md"}]]]}

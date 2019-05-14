@@ -3,7 +3,7 @@
             [clojure.string :as string]))
 
 
-;;;; Source splitting
+;;; Source splitting
 
 (defn src-parts [src]
   (string/split src #"\n(?=[(])"))
@@ -23,8 +23,18 @@
 ;;; Macros
 
 (defmacro syntaxed [src]
-  (assert (string? src))
   `(reagentdemo.syntax/syntaxify ~src))
+
+;; ;; A much simpler way to find source: currently broken with #js annotations
+;; (defmacro src-for [& syms]
+;;   (let [s (map #(list 'with-out-str (list 'cljs.repl/source %)) syms)]
+;;     `(->> [~@s]
+;;           (string/join "\n")
+;;           syntaxed)))
+
+;; (defmacro src-from-file [f]
+;;   (let [src (-> f io/resource slurp)]
+;;     `(syntaxed ~src)))
 
 (defmacro src-of
   ([funs]
@@ -40,8 +50,7 @@
                  (str ".cljs"))
              resource)
          src (-> f io/resource slurp)
-         fm (fun-map src)
          sel (if (nil? funs)
                src
                (-> src fun-map (src-for-names funs)))]
-     `(reagentdemo.syntax/syntaxify ~sel))))
+     `(syntaxed ~sel))))
