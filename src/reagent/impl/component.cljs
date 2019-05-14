@@ -192,6 +192,10 @@
     (fn componentWillUpdate [nextprops]
       (this-as c (.call f c c (props-argv c nextprops))))
 
+    :getSnapshotBeforeUpdate
+    (fn getSnapshotBeforeUpdate [_ _]
+      (this-as c (.call f c c)))
+
     :componentDidUpdate
     (fn componentDidUpdate [oldprops _ snapshot]
       (this-as c (.call f c c (props-argv c oldprops) snapshot)))
