@@ -193,8 +193,8 @@
       (this-as c (.call f c c (props-argv c nextprops))))
 
     :getSnapshotBeforeUpdate
-    (fn getSnapshotBeforeUpdate [_ _]
-      (this-as c (.call f c c)))
+    (fn getSnapshotBeforeUpdate [oldprops _]
+      (this-as c (.call f c c (props-argv c oldprops))))
 
     :componentDidUpdate
     (fn componentDidUpdate [oldprops _ snapshot]
