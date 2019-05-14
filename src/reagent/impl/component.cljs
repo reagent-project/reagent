@@ -193,8 +193,8 @@
       (this-as c (.call f c c (props-argv c nextprops))))
 
     :componentDidUpdate
-    (fn componentDidUpdate [oldprops]
-      (this-as c (.call f c c (props-argv c oldprops))))
+    (fn componentDidUpdate [oldprops _ snapshot]
+      (this-as c (.call f c c (props-argv c oldprops) snapshot)))
 
     :componentWillMount
     (fn componentWillMount []
