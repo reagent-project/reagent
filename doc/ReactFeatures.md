@@ -27,7 +27,7 @@ Reagent:
    [child-c]])
 ```
 
-Reagent syntax follows [React Fragment short syntax].
+Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fragments.html#short-syntax).
 
 ## Context
 
