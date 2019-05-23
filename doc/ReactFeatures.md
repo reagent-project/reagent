@@ -29,7 +29,7 @@ Reagent:
 
 Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fragments.html#short-syntax).
 
-## Context
+## [Context](https://reactjs.org/docs/context.html)
 
 ```cljs
 (defonce my-context (react/createContext "default"))
@@ -47,7 +47,7 @@ Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fr
 Tests contain example of using old React lifecycle Context API (`context-wrapper` function):
 [tests](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1141-L1165)
 
-## Error boundaries
+## [Error boundaries](https://reactjs.org/docs/error-boundaries.html)
 
 You can use `ComponentDidCatch` lifecycle method with `create-class`:
 
@@ -64,7 +64,7 @@ You can use `ComponentDidCatch` lifecycle method with `create-class`:
                           comp))}))
 ```
 
-## Hooks
+## [Hooks](https://reactjs.org/docs/hooks-intro.html)
 
 Hooks can't be used inside class components, and Reagent implementation creates
 a class component from every function (i.e. Reagent component).
@@ -97,7 +97,7 @@ If you need to pass RAtom state into these components, dereference them in
 the Reagent components and pass the value (and if needed, function to update them)
 as properties into the React function component.
 
-## Portals
+## [Portals](https://reactjs.org/docs/portals.html)
 
 ```cljs
 (defn reagent-component []
@@ -111,7 +111,7 @@ as properties into the React function component.
 TODO: Can this be done without create-class and `:render`.
 TODO: This might have problems handling Ratoms, test.
 
-## Hydrate
+## [Hydrate](https://reactjs.org/docs/react-dom.html#hydrate)
 
 ```cljs
 (react-dom/hydrate (r/as-element [main-component]) container)
