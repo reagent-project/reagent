@@ -3,6 +3,32 @@
 Most React features should be usable from Reagent, even if Reagent doesn't
 provide functions to use them directly.
 
+## [Fragments](https://reactjs.org/docs/fragments.html)
+
+JSX:
+```js
+render() {
+  return (
+    <React.Fragment>
+      <ChildA />
+      <ChildB />
+      <ChildC />
+    </React.Fragment>
+  );
+}
+```
+
+Reagent:
+```cljs
+(defn example []
+  [:<>
+   [child-a]
+   [child-b]
+   [child-c]])
+```
+
+Reagent syntax follows [React Fragment short syntax].
+
 ## Context
 
 ```cljs
