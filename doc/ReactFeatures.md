@@ -7,7 +7,7 @@ provide functions to use them directly.
 
 JSX:
 ```js
-render() {
+function example() {
   return (
     <React.Fragment>
       <ChildA />
