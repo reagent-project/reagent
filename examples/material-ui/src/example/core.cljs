@@ -54,10 +54,10 @@
     #js {:palette #js {:primary #js {:main (gobj/get (.-red mui-colors) 100)}}}))
 
 (defn custom-styles [theme]
-  #js {:button #js {:margin (.. theme -spacing -unit)}
+  #js {:button #js {:margin (.spacing theme 1)}
        :textField #js {:width 200
-                       :marginLeft (.. theme -spacing -unit)
-                       :marginRight (.. theme -spacing -unit)}})
+                       :marginLeft (.spacing theme 1)
+                       :marginRight (.spacing theme 1)}})
 
 (def with-custom-styles (withStyles custom-styles))
 
@@ -68,7 +68,7 @@
   [:> mui/Grid
    {:container true
     :direction "column"
-    :spacing 16}
+    :spacing 2}
 
    [:> mui/Grid {:item true}
     [:> mui/Toolbar
@@ -135,7 +135,7 @@
     [:> mui/Grid
      {:container true
       :direction "row"
-      :spacing 8}
+      :spacing 4}
 
      ;; For properties that require React Node as parameter,
      ;; either use r/as-element to convert Reagent hiccup forms into React elements,
