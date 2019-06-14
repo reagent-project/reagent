@@ -3,8 +3,8 @@
                  [org.clojure/clojurescript "1.10.516"]
                  [reagent "0.8.1"]
                  [figwheel "0.5.18"]
-                 [cljsjs/react "16.8.3-0"]
-                 [cljsjs/react-dom "16.8.3-0"]
+                 [cljsjs/react "16.8.6-0"]
+                 [cljsjs/react-dom "16.8.6-0"]
                  [cljsjs/material-ui "4.1.0-0"]
                  [cljsjs/material-ui-icons "3.0.1-0"]]
 
@@ -42,8 +42,8 @@
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :asset-path "js/out"
                 :install-deps true
-                :npm-deps {react "16.8.3"
-                           react-dom "16.8.3"
+                :npm-deps {react "16.8.6"
+                           react-dom "16.8.6"
                            "@material-ui/core" "4.1.0"
                            "@material-ui/icons" "3.0.1"}
                 :process-shim true}}}})

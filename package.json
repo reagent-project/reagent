@@ -3,8 +3,8 @@
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
     "prop-types": "15.6.2",
-    "react": "16.8.1",
-    "react-dom": "16.8.1"
+    "react": "16.8.6",
+    "react-dom": "16.8.6"
   },
   "devDependencies": {
     "gzip-size-cli": "3.0.0",
