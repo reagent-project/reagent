@@ -112,9 +112,9 @@
 (defn intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
-        react {:href "http://facebook.github.io/react/"}
+        react {:href "https://reactjs.org/"}
         hiccup {:href "https://github.com/weavejester/hiccup"}
-        dynamic-children {:href "http://facebook.github.io/react/docs/multiple-components.html#dynamic-children"}]
+        react-keys {:href "https://reactjs.org/docs/lists-and-keys.html#keys"}]
     [:div.demo-text
 
      [:h2 "Introduction to Reagent"]
@@ -168,7 +168,7 @@
      and helps React to improve performance for large lists. The key
      can be given either (as in this example) as meta-data, or as a "
      [:code ":key"] " item in the first argument to a component (if it
-     is a map). See React’s " [:a dynamic-children "documentation"] "
+     is a map). See React’s " [:a react-keys "documentation"] "
      for more info."]]))
 
 (defn managing-state []
