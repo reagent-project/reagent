@@ -24,7 +24,7 @@ Use your best judgement on what is needed here.
 
 **Create pull requests to the master branch**.
 
-Check [development docs](./docs/development.md)
+Check [development docs](./doc/development.md)
 
 ## Pull requests for bugs
 
