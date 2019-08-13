@@ -22,14 +22,9 @@ Reagent provides a way to write efficient React components using (almost) nothin
     * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
     * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
-### Prerequisites
-
-* Java JDK
-* [Leiningen](http://leiningen.org/)
-
 ### Usage
 
-To create a new Reagent project simply run:
+To create a new Reagent project using [Leiningen](http://leiningen.org/) template simply run:
 
     lein new reagent myproject
 
