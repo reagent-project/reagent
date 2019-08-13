@@ -211,22 +211,21 @@
     ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillMount
     (fn componentWillMount []
-      (this-as c
-               (set! (.-cljsMountOrder c) (batch/next-mount-count))
-               (when-not (nil? f)
-                 (.call f c c))))
+      (this-as c (.call f c c)))
 
     ;; Deprecated - will work in 17.x
     :UNSAFE_componentWillMount
     (fn componentWillMount []
-      (this-as c
-               (set! (.-cljsMountOrder c) (batch/next-mount-count))
-               (when-not (nil? f)
-                 (.call f c c))))
+      (this-as c (.call f c c)))
 
     :componentDidMount
     (fn componentDidMount []
-      (this-as c (.call f c c)))
+      (this-as c
+        ;; This method is called after everything inside the
+        ;; has been mounted. This is reverse compared to WillMount.
+        (set! (.-cljsMountOrder c) (batch/next-mount-count))
+        (when-not (nil? f)
+          (.call f c c))))
 
     :componentWillUnmount
     (fn componentWillUnmount []
@@ -251,8 +250,7 @@
 ;; Though the value is nil here, the wrapper function will be
 ;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
-                 ;; Handled in add-oblifatory fn
-                 ; :componentWillMount nil
+                 :componentDidMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-method-name (util/memoize-1 util/dash-to-method-name))
@@ -263,14 +261,7 @@
              {} fun-map))
 
 (defn add-obligatory [fun-map]
-  (merge obligatory
-         ;; If fun map contains the old name, without UNSAFE_ prefix, use that
-         ;; name, so user will get a warning. If no method use UNSAFE_ method
-         ;; for Reagent implementation.
-         (if (contains? fun-map :componentWillMount)
-           nil
-           {:UNSAFE_componentWillMount nil})
-         fun-map))
+  (merge obligatory fun-map))
 
 (defn wrap-funs [fmap]
   (when (dev?)
