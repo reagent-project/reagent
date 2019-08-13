@@ -19,6 +19,20 @@
   (is (= "a b c d"
          (util/class-names "a" "b" nil ["c" "d"]))))
 
+(deftest dash-to-prop-name-test
+  (is (= "tabIndex" (util/dash-to-prop-name :tab-index)))
+  (is (= "data-foo-bar" (util/dash-to-prop-name :data-foo-bar))))
+
+(deftest dash-to-method-name-test
+  (is (= "componentDidMount"
+         (util/dash-to-method-name :component-did-mount)))
+  (is (= "componentDidMount"
+         (util/dash-to-method-name :componentDidMount)))
+  (is (= "UNSAFE_componentDidMount"
+         (util/dash-to-method-name :unsafe-component-did-mount)))
+  (is (= "UNSAFE_componentDidMount"
+         (util/dash-to-method-name :unsafe_componentDidMount))))
+
 ; (simple-benchmark []
 ;                   (do (util/class-names "a" "b")
 ;                       (util/class-names nil "a")

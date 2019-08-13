@@ -740,7 +740,7 @@
               (reset! t (first args))
               (add-args :initial-state args)
               {:foo "bar"})
-            :component-will-mount
+            :UNSAFE_component-will-mount
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-mount args))
@@ -752,11 +752,11 @@
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :should-update args) true)
-            :component-will-receive-props
+            :UNSAFE_component-will-receive-props
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-receive args))
-            :component-will-update
+            :UNSAFE_component-will-update
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-update args))
@@ -839,7 +839,7 @@
               (reset! oldprops (-> args first r/props))
               (add-args :initial-state args)
               {:foo "bar"})
-            :component-will-mount
+            :UNSAFE_component-will-mount
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-mount args))
@@ -851,14 +851,14 @@
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :should-update args) true)
-            :component-will-receive-props
+            :UNSAFE_component-will-receive-props
             (fn [& args]
               (reset! newprops (-> args second second))
               (this-as c
                        (is (= c (first args)))
                        (add-args :will-receive (into [(dissoc (r/props c) :children)]
                                                      (:children (r/props c))))))
-            :component-will-update
+            :UNSAFE_component-will-update
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-update args))

@@ -46,7 +46,7 @@
   (if (named? k)
     (if-some [k' (cache-get prop-name-cache (name k))]
       k'
-      (let [v (util/dash-to-camel k)]
+      (let [v (util/dash-to-prop-name k)]
         (gobj/set prop-name-cache (name k))
         v))
     k))
@@ -78,7 +78,7 @@
   (if (named? k)
     (if-some [k' (cache-get custom-prop-name-cache (name k))]
       k'
-      (let [v (util/dash-to-camel k)]
+      (let [v (util/dash-to-prop-name k)]
         (gobj/set custom-prop-name-cache (name k) v)
         v))
     k))

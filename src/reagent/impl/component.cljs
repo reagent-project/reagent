@@ -167,7 +167,13 @@
     (fn getInitialState [c]
       (reset! (state-atom c) (.call f c c)))
 
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillReceiveProps
+    (fn componentWillReceiveProps [nextprops]
+      (this-as c (.call f c c (props-argv c nextprops))))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillReceiveProps
     (fn componentWillReceiveProps [nextprops]
       (this-as c (.call f c c (props-argv c nextprops))))
 
@@ -188,7 +194,13 @@
                        noargv (.call f c c (get-argv c) (props-argv c nextprops))
                        :else  (.call f c c old-argv new-argv))))))
 
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillUpdate
+    (fn componentWillUpdate [nextprops]
+      (this-as c (.call f c c (props-argv c nextprops))))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillUpdate
     (fn componentWillUpdate [nextprops]
       (this-as c (.call f c c (props-argv c nextprops))))
 
@@ -196,7 +208,16 @@
     (fn componentDidUpdate [oldprops]
       (this-as c (.call f c c (props-argv c oldprops))))
 
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillMount
+    (fn componentWillMount []
+      (this-as c
+               (set! (.-cljsMountOrder c) (batch/next-mount-count))
+               (when-not (nil? f)
+                 (.call f c c))))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillMount
     (fn componentWillMount []
       (this-as c
                (set! (.-cljsMountOrder c) (batch/next-mount-count))
@@ -230,18 +251,26 @@
 ;; Though the value is nil here, the wrapper function will be
 ;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
-                 :componentWillMount nil
+                 ;; Handled in add-oblifatory fn
+                 ; :componentWillMount nil
                  :componentWillUnmount nil})
 
-(def dash-to-camel (util/memoize-1 util/dash-to-camel))
+(def dash-to-method-name (util/memoize-1 util/dash-to-method-name))
 
 (defn camelify-map-keys [fun-map]
   (reduce-kv (fn [m k v]
-               (assoc m (-> k dash-to-camel keyword) v))
+               (assoc m (-> k dash-to-method-name keyword) v))
              {} fun-map))
 
 (defn add-obligatory [fun-map]
-  (merge obligatory fun-map))
+  (merge obligatory
+         ;; If fun map contains the old name, without UNSAFE_ prefix, use that
+         ;; name, so user will get a warning. If no method use UNSAFE_ method
+         ;; for Reagent implementation.
+         (if (contains? fun-map :componentWillMount)
+           nil
+           {:UNSAFE_componentWillMount nil})
+         fun-map))
 
 (defn wrap-funs [fmap]
   (when (dev?)
