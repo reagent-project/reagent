@@ -107,13 +107,14 @@
 
   ```cljs
   {:get-initial-state (fn [this])
-   :component-will-receive-props (fn [this new-argv])
+   :UNSAFE_component-will-receive-props (fn [this new-argv])
    :should-component-update (fn [this old-argv new-argv])
-   :component-will-mount (fn [this])
+   :UNSAFE_component-will-mount (fn [this])
    :component-did-mount (fn [this])
-   :component-will-update (fn [this new-argv])
+   :UNSAFE_component-will-update (fn [this new-argv])
    :component-did-update (fn [this old-argv])
    :component-will-unmount (fn [this])
+   :component-did-catch (fn [this error info])
    :reagent-render (fn [args....])}   ;; or :render (fn [this])
   ```
 
