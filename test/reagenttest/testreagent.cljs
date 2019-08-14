@@ -1282,7 +1282,7 @@
                                                             ;; "Expensive" calculation based on the props
                                                             #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
                             :render (fn [this]
-                                      (r/as-element [:p "Value " (.-v (.-state this))]))})
+                                      (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
           component (fn []
                       [pure-component {:value @prop}])]
       (with-mounted-component [component]
