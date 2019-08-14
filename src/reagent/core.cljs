@@ -106,23 +106,40 @@
   "Creates JS class based on provided Clojure map, for example:
 
   ```cljs
-  {:get-initial-state (fn [this])
-   :UNSAFE_component-will-receive-props (fn [this new-argv])
+  {;; Constructor
+   :constructor (fn [this props])
+   :get-initial-state (fn [this])
+   ;; Static methods
+   :get-derived-state-from-props (fn [props state] partial-state)
+   :get-derived-state-from-error (fn [error] partial-state)
+   ;; Methods
+   :get-snapshot-before-update (fn [this old-argv new-argv] snapshot)
    :should-component-update (fn [this old-argv new-argv])
-   :UNSAFE_component-will-mount (fn [this])
    :component-did-mount (fn [this])
-   :UNSAFE_component-will-update (fn [this new-argv])
-   :component-did-update (fn [this old-argv])
+   :component-did-update (fn [this old-argv old-state snapshot])
    :component-will-unmount (fn [this])
    :component-did-catch (fn [this error info])
-   :reagent-render (fn [args....])}   ;; or :render (fn [this])
+   :reagent-render (fn [args....])
+   ;; Or alternatively:
+   :render (fn [this])
+   ;; Deprecated methods:
+   :UNSAFE_component-will-receive-props (fn [this new-argv])
+   :UNSAFE_component-will-update (fn [this new-argv new-state])
+   :UNSAFE_component-will-mount (fn [this])}
   ```
 
   Everything is optional, except either :reagent-render or :render.
 
   Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
   and can be provided in snake-case or camelCase.
-  Constructor function is defined using key `:get-initial-state`.
+
+  State can be initialized using constructor, which matches React.Component class,
+  or using getInitialState which matches old React createClass function and is
+  now implemented by Reagent for compatibility.
+
+  State can usually be anything, e.g. Cljs object. But if using getDerivedState
+  methods, the state has to be plain JS object as React implementation uses
+  Object.assign to merge partial state into the current state.
 
   React built-in static methods or properties are automatically defined as statics."
   [spec]

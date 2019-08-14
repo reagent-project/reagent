@@ -162,10 +162,19 @@
     :getDefaultProps
     (throw (js/Error. "getDefaultProps not supported"))
 
+    :getDerivedStateFromProps
+    (fn getDerivedStateFromProps [props state]
+      ;; Read props from Reagent argv
+      (.call f nil (if-some [a (.-argv props)] (extract-props a) props) state))
+
     ;; In ES6 React, this is now part of the constructor
     :getInitialState
     (fn getInitialState [c]
       (reset! (state-atom c) (.call f c c)))
+
+    :getSnapshotBeforeUpdate
+    (fn getSnapshotBeforeUpdate [oldprops oldstate]
+      (this-as c (.call f c c (props-argv c oldprops) oldstate)))
 
     ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillReceiveProps
@@ -196,17 +205,17 @@
 
     ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillUpdate
-    (fn componentWillUpdate [nextprops]
-      (this-as c (.call f c c (props-argv c nextprops))))
+    (fn componentWillUpdate [nextprops nextstate]
+      (this-as c (.call f c c (props-argv c nextprops) nextstate)))
 
     ;; Deprecated - will work in 17.x
     :UNSAFE_componentWillUpdate
-    (fn componentWillUpdate [nextprops]
-      (this-as c (.call f c c (props-argv c nextprops))))
+    (fn componentWillUpdate [nextprops nextstate]
+      (this-as c (.call f c c (props-argv c nextprops) nextstate)))
 
     :componentDidUpdate
-    (fn componentDidUpdate [oldprops]
-      (this-as c (.call f c c (props-argv c oldprops))))
+    (fn componentDidUpdate [oldprops oldstate snapshot]
+      (this-as c (.call f c c (props-argv c oldprops) oldstate snapshot)))
 
     ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillMount
@@ -317,17 +326,20 @@
   [body]
   {:pre [(map? body)]}
   (let [body (cljsify body)
-        methods (map-to-js (apply dissoc body :displayName :getInitialState
+        methods (map-to-js (apply dissoc body :displayName :getInitialState :constructor
                                   :render :reagentRender
                                   built-in-static-method-names))
         static-methods (map-to-js (select-keys body built-in-static-method-names))
         display-name (:displayName body)
-        construct (:getInitialState body)
+        get-initial-state (:getInitialState body)
+        construct (:constructor body)
         cmp (fn [props context updater]
               (this-as this
                 (.call react/Component this props context updater)
                 (when construct
-                  (construct this))
+                  (construct this props))
+                (when get-initial-state
+                  (set! (.-state this) (get-initial-state this)))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
