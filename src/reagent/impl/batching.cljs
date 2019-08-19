@@ -23,9 +23,14 @@
           (.-msRequestAnimationFrame w)
           fake-raf))))
 
-(defn compare-mount-order [c1 c2]
-  (- (.-cljsMountOrder c1)
-     (.-cljsMountOrder c2)))
+(defn compare-mount-order
+  [c1 c2]
+  ;; Mount order is now set in DidMount method.  I.e. the
+  ;; top-most component is mounted last and gets largest
+  ;; number. This is reverse compared to WillMount where method
+  ;; for top component gets called first.
+  (- (.-cljsMountOrder c2)
+     (.-cljsMountOrder c1)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents

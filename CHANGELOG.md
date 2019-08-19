@@ -4,9 +4,13 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...master)**
 
+- Default to React 16.9
 - Fix using `with-let` macro in namespaces with `*warn-on-infer*` enabled ([#420](https://github.com/reagent-project/reagent/issues/420))
 - Fix using metadata to set React key with Fragment shortcut (`:<>`) ([#401](https://github.com/reagent-project/reagent/issues/401))
 - Create React Component without `create-react-class` ([#416](https://github.com/reagent-project/reagent/issues/416))
+    - `React.Component` doesn't have `getInitialState` method, but this is implemented by
+    Reagent for compatibility with old components.
+    - `constructor` can be used to initialize components (e.g. set the state)
 - Allow any number of arguments for `reagent.core/merge-props` and
 ensure `:class` is merged correctly when it is defined as collection. ([#412](https://github.com/reagent-project/reagent/issues/412))
 - Add `reagent.core/class-names` utility functions which can be used
@@ -17,6 +21,9 @@ uses correct Object interop forms, allowing use of ClojureScript `:checked-array
 - Deprecated `reagent.interop` namespace
     - It is better to use proper object interop forms or `goog.object` functions instead.
 - Drop `:export` metadata from `force-update-all` function
+- `componentWillReceiveProps`, `componentWillUpdate` and `componentWillMount` lifecycle methods are deprecated
+    - Using these directly will show warning, using `UNSAFE_` prefixed version will silence the warning.
+    - These methods will continue to work with React 16.9 and 17.
 
 ## 0.8.1 (2018-05-15)
 

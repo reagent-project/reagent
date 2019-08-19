@@ -7,6 +7,7 @@
             [reagent.dom.server :as server]
             [reagent.impl.util :as util]
             [reagenttest.utils :as u :refer [with-mounted-component found-in]]
+            [clojure.string :as string]
             [goog.string :as gstr]
             [goog.object :as gobj]
             [prop-types :as prop-types]))
@@ -740,7 +741,7 @@
               (reset! t (first args))
               (add-args :initial-state args)
               {:foo "bar"})
-            :component-will-mount
+            :UNSAFE_component-will-mount
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-mount args))
@@ -752,11 +753,11 @@
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :should-update args) true)
-            :component-will-receive-props
+            :UNSAFE_component-will-receive-props
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-receive args))
-            :component-will-update
+            :UNSAFE_component-will-update
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-update args))
@@ -794,11 +795,11 @@
                 (is (= (:should-update @res)
                        {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
                 (is (= (:will-update @res)
-                       {:at 7 :args [@t [@comp "a" "c"]]}))
+                       {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}))
                 (is (= (:render @res)
                        {:at 8 :args ["a" "c"]}))
                 (is (= (:did-update @res)
-                       {:at 9 :args [@t [@comp "a" "b"]]})))]
+                       {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]})))]
     (when isClient
       (with-mounted-component [c2] check)
       (is (= (:will-unmount @res)
@@ -839,7 +840,7 @@
               (reset! oldprops (-> args first r/props))
               (add-args :initial-state args)
               {:foo "bar"})
-            :component-will-mount
+            :UNSAFE_component-will-mount
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-mount args))
@@ -851,14 +852,14 @@
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :should-update args) true)
-            :component-will-receive-props
+            :UNSAFE_component-will-receive-props
             (fn [& args]
               (reset! newprops (-> args second second))
               (this-as c
                        (is (= c (first args)))
                        (add-args :will-receive (into [(dissoc (r/props c) :children)]
                                                      (:children (r/props c))))))
-            :component-will-update
+            :UNSAFE_component-will-update
             (fn [& args]
               (this-as c (is (= c (first args))))
               (add-args :will-update args))
@@ -1266,3 +1267,82 @@
                      (is (not @error-thrown-after-updating-props)))))]
         (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
                      (first (:warn e))))))))
+
+(deftest get-derived-state-from-props-test
+  (when isClient
+    (let [prop (r/atom 0)
+          ;; Usually one can use Cljs object as React state. However,
+          ;; getDerivedStateFromProps implementation in React uses
+          ;; Object.assign to merge current state and partial state returned
+          ;; from the method, so the state has to be plain old object.
+          pure-component (r/create-class
+                           {:constructor (fn [this]
+                                           (set! (.-state this) #js {}))
+                            :get-derived-state-from-props (fn [props state]
+                                                            ;; "Expensive" calculation based on the props
+                                                            #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
+                            :render (fn [this]
+                                      (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
+          component (fn []
+                      [pure-component {:value @prop}])]
+      (with-mounted-component [component]
+        (fn [c div]
+          (is (found-in #"Value foo" div))
+          (swap! prop inc)
+          (r/flush)
+          (is (found-in #"Value foo foo" div)))))))
+
+(deftest get-derived-state-from-error-test
+  (when isClient
+    (let [prop (r/atom 0)
+          component (r/create-class
+                      {:constructor (fn [this props]
+                                      (set! (.-state this) #js {:hasError false}))
+                       :get-derived-state-from-error (fn [error]
+                                                       #js {:hasError true})
+                       :component-did-catch (fn [this e info])
+                       :render (fn [this]
+                                 (js/console.log (r/children this))
+                                 (r/as-element (if (.-hasError (.-state this))
+                                                 [:p "Error"]
+                                                 (into [:<>] (r/children this)))))})
+          bad-component (fn []
+                          (if (= 0 @prop)
+                            [:div "Ok"]
+                            (throw (js/Error. "foo"))))]
+      (wrap-capture-window-error
+        (wrap-capture-console-error
+          #(with-mounted-component [component [bad-component]]
+             (fn [c div]
+               (is (found-in #"Ok" div))
+               (swap! prop inc)
+               (r/flush)
+               (is (found-in #"Error" div)))))))))
+
+(deftest get-snapshot-before-update-test
+  (when isClient
+    (let [ref (react/createRef)
+          prop (r/atom 0)
+          did-update (atom nil)
+          component (r/create-class
+                      {:get-snapshot-before-update (fn [this [_ prev-props] prev-state]
+                                                     {:height (.. ref -current -scrollHeight)})
+                       :component-did-update (fn [this [_ prev-props] prev-state snapshot]
+                                               (reset! did-update snapshot))
+                       :render (fn [this]
+                                 (r/as-element
+                                   [:div
+                                    {:ref ref
+                                     :style {:height "20px"}}
+                                    "foo"]))})
+          component-2 (fn []
+                        [component {:value @prop}])]
+      (with-mounted-component [component-2]
+        (fn [c div]
+          ;; Attach to DOM to get real height value
+          (.appendChild js/document.body div)
+          (is (found-in #"foo" div))
+          (swap! prop inc)
+          (r/flush)
+          (is (= {:height 20} @did-update))
+          (.removeChild js/document.body div))))))

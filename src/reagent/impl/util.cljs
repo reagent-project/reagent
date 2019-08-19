@@ -28,7 +28,7 @@
     (string/upper-case s)
     (str (string/upper-case (subs s 0 1)) (subs s 1))))
 
-(defn dash-to-camel [dashed]
+(defn dash-to-prop-name [dashed]
   (if (string? dashed)
     dashed
     (let [name-str (name dashed)
@@ -36,6 +36,14 @@
       (if (dont-camel-case start)
         name-str
         (apply str start (map capitalize parts))))))
+
+(defn dash-to-method-name [dashed]
+  (if (string? dashed)
+    dashed
+    (let [name-str (name dashed)
+          name-str (string/replace name-str #"(unsafe|UNSAFE)[-_]" "UNSAFE_")
+          [start & parts] (string/split name-str #"-")]
+      (apply str start (map capitalize parts)))))
 
 (defn fun-name [f]
   (let [n (or (and (fn? f)

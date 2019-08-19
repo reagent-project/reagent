@@ -162,12 +162,27 @@
     :getDefaultProps
     (throw (js/Error. "getDefaultProps not supported"))
 
+    :getDerivedStateFromProps
+    (fn getDerivedStateFromProps [props state]
+      ;; Read props from Reagent argv
+      (.call f nil (if-some [a (.-argv props)] (extract-props a) props) state))
+
     ;; In ES6 React, this is now part of the constructor
     :getInitialState
     (fn getInitialState [c]
       (reset! (state-atom c) (.call f c c)))
 
+    :getSnapshotBeforeUpdate
+    (fn getSnapshotBeforeUpdate [oldprops oldstate]
+      (this-as c (.call f c c (props-argv c oldprops) oldstate)))
+
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillReceiveProps
+    (fn componentWillReceiveProps [nextprops]
+      (this-as c (.call f c c (props-argv c nextprops))))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillReceiveProps
     (fn componentWillReceiveProps [nextprops]
       (this-as c (.call f c c (props-argv c nextprops))))
 
@@ -188,24 +203,38 @@
                        noargv (.call f c c (get-argv c) (props-argv c nextprops))
                        :else  (.call f c c old-argv new-argv))))))
 
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillUpdate
-    (fn componentWillUpdate [nextprops]
-      (this-as c (.call f c c (props-argv c nextprops))))
+    (fn componentWillUpdate [nextprops nextstate]
+      (this-as c (.call f c c (props-argv c nextprops) nextstate)))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillUpdate
+    (fn componentWillUpdate [nextprops nextstate]
+      (this-as c (.call f c c (props-argv c nextprops) nextstate)))
 
     :componentDidUpdate
-    (fn componentDidUpdate [oldprops]
-      (this-as c (.call f c c (props-argv c oldprops))))
+    (fn componentDidUpdate [oldprops oldstate snapshot]
+      (this-as c (.call f c c (props-argv c oldprops) oldstate snapshot)))
 
+    ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillMount
     (fn componentWillMount []
-      (this-as c
-               (set! (.-cljsMountOrder c) (batch/next-mount-count))
-               (when-not (nil? f)
-                 (.call f c c))))
+      (this-as c (.call f c c)))
+
+    ;; Deprecated - will work in 17.x
+    :UNSAFE_componentWillMount
+    (fn componentWillMount []
+      (this-as c (.call f c c)))
 
     :componentDidMount
     (fn componentDidMount []
-      (this-as c (.call f c c)))
+      (this-as c
+        ;; This method is called after everything inside the
+        ;; has been mounted. This is reverse compared to WillMount.
+        (set! (.-cljsMountOrder c) (batch/next-mount-count))
+        (when-not (nil? f)
+          (.call f c c))))
 
     :componentWillUnmount
     (fn componentWillUnmount []
@@ -230,14 +259,14 @@
 ;; Though the value is nil here, the wrapper function will be
 ;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
-                 :componentWillMount nil
+                 :componentDidMount nil
                  :componentWillUnmount nil})
 
-(def dash-to-camel (util/memoize-1 util/dash-to-camel))
+(def dash-to-method-name (util/memoize-1 util/dash-to-method-name))
 
 (defn camelify-map-keys [fun-map]
   (reduce-kv (fn [m k v]
-               (assoc m (-> k dash-to-camel keyword) v))
+               (assoc m (-> k dash-to-method-name keyword) v))
              {} fun-map))
 
 (defn add-obligatory [fun-map]
@@ -297,17 +326,20 @@
   [body]
   {:pre [(map? body)]}
   (let [body (cljsify body)
-        methods (map-to-js (apply dissoc body :displayName :getInitialState
+        methods (map-to-js (apply dissoc body :displayName :getInitialState :constructor
                                   :render :reagentRender
                                   built-in-static-method-names))
         static-methods (map-to-js (select-keys body built-in-static-method-names))
         display-name (:displayName body)
-        construct (:getInitialState body)
+        get-initial-state (:getInitialState body)
+        construct (:constructor body)
         cmp (fn [props context updater]
               (this-as this
                 (.call react/Component this props context updater)
                 (when construct
-                  (construct this))
+                  (construct this props))
+                (when get-initial-state
+                  (set! (.-state this) (get-initial-state this)))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
