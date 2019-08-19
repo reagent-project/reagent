@@ -24,6 +24,8 @@ uses correct Object interop forms, allowing use of ClojureScript `:checked-array
 - `componentWillReceiveProps`, `componentWillUpdate` and `componentWillMount` lifecycle methods are deprecated
     - Using these directly will show warning, using `UNSAFE_` prefixed version will silence the warning.
     - These methods will continue to work with React 16.9 and 17.
+    - Reagent implementation has been changed to use `componentDidMount` instead of
+    `componentWillMount` to manage RAtoms.
 
 ## 0.8.1 (2018-05-15)
 
