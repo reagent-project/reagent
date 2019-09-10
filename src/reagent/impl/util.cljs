@@ -24,7 +24,7 @@
 (def dont-camel-case #{"aria" "data"})
 
 (defn capitalize [s]
-  (if (< (count s) 2)
+  (if (< (.-length s) 2)
     (string/upper-case s)
     (str (string/upper-case (subs s 0 1)) (subs s 1))))
 
@@ -32,10 +32,21 @@
   (if (string? dashed)
     dashed
     (let [name-str (name dashed)
-          [start & parts] (string/split name-str #"-")]
-      (if (dont-camel-case start)
-        name-str
-        (apply str start (map capitalize parts))))))
+          [start & parts] (.split name-str #"-")]
+      (cond
+        (contains? dont-camel-case start) name-str
+
+        (not (nil? parts))
+        (-> parts
+            (array-reduce
+              (fn [a p]
+                (.push a (capitalize p))
+                a)
+              #js [])
+            (.join "")
+            (->> (str start)))
+
+        :else start))))
 
 (defn dash-to-method-name [dashed]
   (if (string? dashed)
