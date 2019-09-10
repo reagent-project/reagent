@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.9.0-rc1 (2019-09-10)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...v0.9.0-rc1)**
 
 - Default to React 16.9
 - Fix using `with-let` macro in namespaces with `*warn-on-infer*` enabled ([#420](https://github.com/reagent-project/reagent/issues/420))
