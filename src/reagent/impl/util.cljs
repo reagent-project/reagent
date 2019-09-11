@@ -36,15 +36,14 @@
       (cond
         (contains? dont-camel-case start) name-str
 
-        (not (nil? parts))
+        (some? parts)
         (-> parts
             (array-reduce
               (fn [a p]
                 (.push a (capitalize p))
                 a)
-              #js [])
-            (.join "")
-            (->> (str start)))
+              #js [start])
+            (.join ""))
 
         :else start))))
 
