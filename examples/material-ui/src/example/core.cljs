@@ -8,6 +8,13 @@
             [goog.object :as gobj]
             [reagent.impl.template :as rtpl]))
 
+(set! *warn-on-infer* true)
+
+(defn event-value
+  [^js/Event e]
+  (let [^js/HTMLInputElement el (.-target e)]
+    (.-value el)))
+
 ;; TextField cursor fix:
 
 (def ^:private input-component
@@ -51,9 +58,9 @@
 
 (def custom-theme
   (createMuiTheme
-    #js {:palette #js {:primary #js {:main (gobj/get (.-red mui-colors) 100)}}}))
+    #js {:palette #js {:primary #js {:main (gobj/get (.-red ^js/Mui.Colors mui-colors) 100)}}}))
 
-(defn custom-styles [theme]
+(defn custom-styles [^js/Mui.Theme theme]
   #js {:button #js {:margin (.spacing theme 1)}
        :textField #js {:width 200
                        :marginLeft (.spacing theme 1)
@@ -97,7 +104,7 @@
       :helper-text "Helper text"
       :class (.-textField classes)
       :on-change (fn [e]
-                   (reset! text-state (.. e -target -value)))
+                   (reset! text-state (event-value e)))
       :inputRef #(js/console.log "input-ref" %)}]]
 
    [:> mui/Grid {:item true}
@@ -107,8 +114,8 @@
       :placeholder "Placeholder"
       :helper-text "Helper text"
       :class (.-textField classes)
-      :on-change (fn [e]
-                   (reset! text-state (.. e -target -value)))
+      :on-change (fn [^js/DomEvent e]
+                   (reset! text-state (event-value e)))
       :multiline true
       ;; TODO: Autosize textarea is broken.
       :rows 10}]]
@@ -121,7 +128,7 @@
       :helper-text "Helper text"
       :class (.-textField classes)
       :on-change (fn [e]
-                   (reset! text-state (.. e -target -value)))
+                   (reset! text-state (event-value e)))
       :select true}
      [:> mui/MenuItem
       {:value 1}

@@ -28,7 +28,20 @@
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :asset-path "js/out"
-                :npm-deps false}}
+                :npm-deps false
+                :infer-externs true}}
+
+    :adv
+    {:source-paths ["src"]
+     :compiler {:parallel-build true
+                :source-map "target/cljsbuild/adv/public/js/main.js.map"
+                :optimizations :advanced
+                :main "example.core"
+                :output-dir "target/cljsbuild/adv/public/js/out"
+                :output-to "target/cljsbuild/adv/public/js/main.js"
+                :asset-path "js/out"
+                :npm-deps false
+                :infer-externs true}}
 
     ;; FIXME: Doesn't work due to Closure bug with scoped npm packages
     :client-npm
