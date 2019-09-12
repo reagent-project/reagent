@@ -114,7 +114,7 @@
       :placeholder "Placeholder"
       :helper-text "Helper text"
       :class (.-textField classes)
-      :on-change (fn [^js/DomEvent e]
+      :on-change (fn [e]
                    (reset! text-state (event-value e)))
       :multiline true
       ;; TODO: Autosize textarea is broken.
