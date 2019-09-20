@@ -1,5 +1,6 @@
 (ns example.core
-  (:require [reagent.core :as r]
+  (:require [cljsjs.material-ui] ; Needed to use any sort of advanced compiling
+            [reagent.core :as r]
             ;; Scoped names require Cljs 1.10.439
             ["@material-ui/core" :as mui]
             ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
