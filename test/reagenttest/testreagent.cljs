@@ -1042,16 +1042,16 @@
   (let [error (r/atom nil)
         error-boundary (fn error-boundary [comp]
                          (r/create-class
-                           {:component-did-catch (fn [this e info]
-                                                   (reset! error e))
-                            :get-derived-state-from-error (fn [error]
+                           {:component-did-catch (fn [this e info])
+                            :get-derived-state-from-error (fn [e]
+                                                            (reset! error e)
                                                             #js {})
                             :reagent-render (fn [comp]
                                               (if @error
                                                 [:div "Something went wrong."]
                                                 comp))}))
         comp1 (fn comp1 []
-                  (throw (js/Error. "Test error")))]
+                (throw (js/Error. "Test error")))]
     (debug/track-warnings
       (wrap-capture-window-error
         (wrap-capture-console-error
@@ -1304,7 +1304,6 @@
                                                        #js {:hasError true})
                        :component-did-catch (fn [this e info])
                        :render (fn [this]
-                                 (js/console.log (r/children this))
                                  (r/as-element (if (.-hasError (.-state this))
                                                  [:p "Error"]
                                                  (into [:<>] (r/children this)))))})

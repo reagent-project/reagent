@@ -51,15 +51,16 @@ Tests contain example of using old React lifecycle Context API (`context-wrapper
 
 [Relevant method docs](https://reactjs.org/docs/react-component.html#static-getderivedstatefromerror)
 
-You can use `getDerivedStateFromError` (since React 16.6.0 and Reagent 0.9) and `ComponentDidCatch` lifecycle method with `create-class`:
+You can use `getDerivedStateFromError` (since React 16.6.0 and Reagent 0.9) (and `ComponentDidCatch`) lifecycle method with `create-class`:
 
 ```cljs
 (defn error-boundary [comp]
   (let [error (r/atom nil)]
     (r/create-class
-      {:component-did-catch (fn [this e info]
-                              (reset! error e))
-       :get-derived-state-from-error-test (fn [error] #js {})
+      {:component-did-catch (fn [this e info])
+       :get-derived-state-from-error-test (fn [e]
+                                            (reset! error e)
+                                            #js {})
        :reagent-render (fn [comp]
                           (if @error
                             [:div
@@ -76,8 +77,7 @@ can be more obvious with the new `getDerivedStateFromError` method:
   (r/create-class
     {:constructor (fn [this props]
                     (set! (.-state this) #js {:error nil}))
-     :component-did-catch (fn [this e info]
-                            (js/console.error "Error inside error boundary" e))
+     :component-did-catch (fn [this e info])
      :get-derived-state-from-error-test (fn [error] #js {:error error})
      :render (fn [this]
                (r/as-element
@@ -85,8 +85,13 @@ can be more obvious with the new `getDerivedStateFromError` method:
                    [:div
                     "Something went wrong."
                     [:button {:on-click #(.setState this #js {:error nil})} "Try again"]]
-                   comp))})))
+                   (into [:<>] (r/children this)))})))
 ```
+
+As per React docs, `getDerivedStateFromError` is what should update the state
+after error, it can be also used to update RAtom as in Reagent the Ratom is available
+in function closure even for static methods. `ComponentDidCatch` can be used
+for side-effects, like logging the error.
 
 ## [Hooks](https://reactjs.org/docs/hooks-intro.html)
 
