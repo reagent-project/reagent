@@ -29,6 +29,18 @@
 (defn rstr [react-elem]
   (server/render-to-static-markup react-elem))
 
+(defn log-error [& f]
+  (debug/error (apply str f)))
+
+(defn wrap-capture-console-error [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (try
+        (f)
+        (finally
+          (set! js/console.error org))))))
+
 (deftest really-simple-test
   (when (and isClient
              (not (:really-simple-test @tests-done)))
@@ -537,11 +549,26 @@
              (for [i (range 3)]
                ^{:key i} [:p i (some-> a deref)])
              (for [i (range 3)]
-               [:p {:key i} i (some-> a deref)])])]
-    (with-mounted-component [c]
-      (fn [c div]
-        ;; Just make sure this doesn't print a debug message
-        ))))
+               [:p {:key i} i (some-> a deref)])])
+        w (debug/track-warnings
+            #(with-mounted-component [c]
+               (fn [c div])))]
+    (is (empty? (:warn w))))
+
+  (when r/is-client
+    (testing "Check warning text can be produced even if hiccup contains function literals"
+      (let [c (fn key-tester []
+                [:div
+                 (for [i (range 3)]
+                   ^{:key nil}
+                   [:button {:on-click #(js/console.log %)}])])
+            w (debug/track-warnings
+                (wrap-capture-console-error
+                  #(with-mounted-component [c]
+                     (fn [c div]))))]
+        (if (debug/dev?)
+          (is (= "Warning: Every element in a seq should have a unique :key: ([:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}])\n (in reagenttest.testreagent.key_tester)"
+                 (first (:warn w)))))))))
 
 (deftest test-extended-syntax
   (is (= (rstr [:p>b "foo"])
@@ -920,9 +947,6 @@
 (defn foo []
   [:div])
 
-(defn log-error [& f]
-  (debug/error (apply str f)))
-
 (defn wrap-capture-window-error [f]
   (if (exists? js/window)
     (fn []
@@ -943,15 +967,6 @@
           (f)
           (finally
             (.removeListener process "uncaughtException" l)))))))
-
-(defn wrap-capture-console-error [f]
-  (fn []
-    (let [org js/console.error]
-      (set! js/console.error log-error)
-      (try
-        (f)
-        (finally
-          (set! js/console.error org))))))
 
 (deftest test-err-messages
   (when (dev?)

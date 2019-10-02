@@ -339,7 +339,9 @@
     (str (prewalk (fn [x]
                     (if (fn? x)
                       (let [n (util/fun-name x)]
-                        (case n "" x (symbol n)))
+                        (case n
+                          ("" nil) x
+                          (symbol n)))
                       x)) coll))
     (str coll)))
 
