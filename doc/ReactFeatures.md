@@ -49,19 +49,43 @@ Tests contain example of using old React lifecycle Context API (`context-wrapper
 
 ## [Error boundaries](https://reactjs.org/docs/error-boundaries.html)
 
-You can use `ComponentDidCatch` lifecycle method with `create-class`:
+[Relevant method docs](https://reactjs.org/docs/react-component.html#static-getderivedstatefromerror)
+
+You can use `getDerivedStateFromError` (since React 16.6.0 and Reagent 0.9) and `ComponentDidCatch` lifecycle method with `create-class`:
+
+```cljs
+(defn error-boundary [comp]
+  (let [error (r/atom nil)]
+    (r/create-class
+      {:component-did-catch (fn [this e info]
+                              (reset! error e))
+       :get-derived-state-from-error-test (fn [error] #js {})
+       :reagent-render (fn [comp]
+                          (if @error
+                            [:div
+                             "Something went wrong."
+                             [:button {:on-click #(reset! error nil)} "Try again"]]
+                            comp))})))
+```
+
+Alternatively, one could use React state instead of RAtom to keep track of error state, which
+can be more obvious with the new `getDerivedStateFromError` method:
 
 ```cljs
 (defn error-boundary [comp]
   (r/create-class
-    {:component-did-catch (fn [this e info]
-                            (reset! error e))
-     :reagent-render (fn [comp]
-                        (if @error
-                          [:div
-                           "Something went wrong."
-                           [:button {:on-click #(reset! error nil)} "Try again"]]
-                          comp))}))
+    {:constructor (fn [this props]
+                    (set! (.-state this) #js {:error nil}))
+     :component-did-catch (fn [this e info]
+                            (js/console.error "Error inside error boundary" e))
+     :get-derived-state-from-error-test (fn [error] #js {:error error})
+     :render (fn [this]
+               (r/as-element
+                 (if @error
+                   [:div
+                    "Something went wrong."
+                    [:button {:on-click #(.setState this #js {:error nil})} "Try again"]]
+                   comp))})))
 ```
 
 ## [Hooks](https://reactjs.org/docs/hooks-intro.html)

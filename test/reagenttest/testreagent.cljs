@@ -1044,6 +1044,8 @@
                          (r/create-class
                            {:component-did-catch (fn [this e info]
                                                    (reset! error e))
+                            :get-derived-state-from-error (fn [error]
+                                                            #js {})
                             :reagent-render (fn [comp]
                                               (if @error
                                                 [:div "Something went wrong."]
