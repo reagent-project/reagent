@@ -58,7 +58,7 @@ You can use `getDerivedStateFromError` (since React 16.6.0 and Reagent 0.9) (and
   (let [error (r/atom nil)]
     (r/create-class
       {:component-did-catch (fn [this e info])
-       :get-derived-state-from-error-test (fn [e]
+       :get-derived-state-from-error (fn [e]
                                             (reset! error e)
                                             #js {})
        :reagent-render (fn [comp]
@@ -78,7 +78,7 @@ can be more obvious with the new `getDerivedStateFromError` method:
     {:constructor (fn [this props]
                     (set! (.-state this) #js {:error nil}))
      :component-did-catch (fn [this e info])
-     :get-derived-state-from-error-test (fn [error] #js {:error error})
+     :get-derived-state-from-error (fn [error] #js {:error error})
      :render (fn [this]
                (r/as-element
                  (if @error
