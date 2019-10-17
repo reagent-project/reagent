@@ -47,7 +47,7 @@
     (if-some [k' (cache-get prop-name-cache (name k))]
       k'
       (let [v (util/dash-to-prop-name k)]
-        (gobj/set prop-name-cache (name k))
+        (gobj/set prop-name-cache (name k) v)
         v))
     k))
 
