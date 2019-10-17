@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc1...v0.9.0-rc2)**
+
+- Fixed bug in rc1 introduced in [#325](https://github.com/reagent-project/reagent/issues/325) where `gobj/set` was missing one parameter ([#454](https://github.com/reagent-project/reagent/issues/454))
+- Fix logging missing `:key` errors where problematic form contains function literals ([#452](https://github.com/reagent-project/reagent/issues/452))
+
 ## 0.9.0-rc1 (2019-09-10)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...v0.9.0-rc1)**
