@@ -101,6 +101,7 @@ Referring to the example in [React's documentation](https://reactjs.org/docs/fra
 
 ```cljs
 (defn columns
+  []
   [:<>
     [:td "Hello"]
     [:td "World"]]
