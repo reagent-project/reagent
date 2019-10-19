@@ -40,7 +40,7 @@ The `:style` attribute can be written a string or as a map. The following two ar
       "Alert"]
 ```
 
-The map form is the same as [React's style attribute](https://reactjs.org/docs/dom-elements.html#style), except that when using the map form of the style attribute, the keys should be the same name as the CSS attribute as shown in the above example (not camel cased as is required JavaScript).
+The map form is the same as [React's style attribute](https://reactjs.org/docs/dom-elements.html#style), except that when using the map form of the style attribute, the keys should be the same as the CSS attribute as shown in the example above (not in camel case as is required JavaScript).
 
 ## Special interpretation of `class` attribute
 
@@ -68,7 +68,7 @@ is the same as this:
 [:div {:id "my-id"}]
 ```
 
-One or more classes can indicated for an element with a `.` and the class-name like this:
+One or more classes can be indicated for an element with a `.` and the class-name like this:
 
 ```clojure
 [:div.my-class.my-other-class.etc]
@@ -94,7 +94,7 @@ which is the same as:
 
 ## Special notation for nested elements
 
-Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements together by using a `>` character.
+Reagent extends standard Hiccup in one way: it is possible to stack elements together by using a `>` character.
 
 This:
 
@@ -133,7 +133,7 @@ If it encounters a ClojureScript vector, it will interpret it as Hiccup. Reagent
 1. A keyword like `:div` or `:span`, which it will create using React.createElement
 2. A symbol like `my-component`.
 
-If it is symbol, then reagent will evaluate a function by that name. Reagent expects one of three things from this function:
+If it's a symbol, then reagent will evaluate a function by that name. Reagent expects one of three things from this function:
 
 1. A Hiccup vector. Reagent creates a React component with the function as its render method and uses the Hiccup vector for the initial render.
 2. A ClojureScript function. Reagent will then create a React component with this inner function as the render method and will then call the inner function for the initial render.
