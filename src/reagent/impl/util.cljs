@@ -32,17 +32,19 @@
   (if (string? dashed)
     dashed
     (let [name-str (name dashed)
-          [start & parts] (.split name-str #"-")]
+          all-parts (.split name-str #"-")
+          start (aget all-parts 0)
+          rest-parts (.slice all-parts 1)]
       (cond
         (contains? dont-camel-case start) name-str
 
-        (some? parts)
-        (-> parts
-            (array-reduce
+        (> (.-length all-parts) 1)
+        (-> (reduce
               (fn [a p]
                 (.push a (capitalize p))
                 a)
-              #js [start])
+              #js [start]
+              rest-parts)
             (.join ""))
 
         :else start))))
