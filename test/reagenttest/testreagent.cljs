@@ -1318,7 +1318,7 @@
                        :get-derived-state-from-error (fn [error]
                                                        #js {:hasError true})
                        :component-did-catch (fn [this e info])
-                       :render (fn [this]
+                       :render (fn [^js/React.Component this]
                                  (r/as-element (if (.-hasError (.-state this))
                                                  [:p "Error"]
                                                  (into [:<>] (r/children this)))))})
