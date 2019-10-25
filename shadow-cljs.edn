@@ -1,0 +1,9 @@
+{:source-paths ["src" "test"]
+ :builds {:test {:target :karma
+                 :output-to "target/shadow-cljs/resources/public/js/karma.js"
+                 :output-dir "target/shadow-cljs/resources/public/js"
+                 :asset-path "js"
+                 :source-map true
+                 :compiler-options {:infer-externs :auto}
+                 :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}}
+ :dependencies []}

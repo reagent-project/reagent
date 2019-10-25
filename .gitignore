@@ -14,3 +14,4 @@ reagent.iml
 
 node_modules
 junit
+.shadow-cljs
