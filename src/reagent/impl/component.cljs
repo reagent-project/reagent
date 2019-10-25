@@ -34,21 +34,21 @@
     (if (> (count v) first-child)
       (subvec v first-child))))
 
-(defn props-argv [c p]
+(defn props-argv [^js/React.Component c p]
   (if-some [a (.-argv p)]
     a
     [(.-constructor c) (shallow-obj-to-map p)]))
 
-(defn get-argv [c]
+(defn get-argv [^js/React.Component c]
   (props-argv c (.-props c)))
 
-(defn get-props [c]
+(defn get-props [^js/React.Component c]
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-props v)
       (shallow-obj-to-map p))))
 
-(defn get-children [c]
+(defn get-children [^js/React.Component c]
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-children v)

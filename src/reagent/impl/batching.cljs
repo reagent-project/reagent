@@ -37,7 +37,7 @@
   ;; are rendered before children
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
-    (let [c (aget a i)]
+    (let [^js/React.Component c (aget a i)]
       (when (true? (.-cljsIsDirty c))
         (.forceUpdate c)))))
 

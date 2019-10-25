@@ -179,7 +179,7 @@
 
 (def ^:dynamic *always-update* false)
 
-(defn force-update [comp deep]
+(defn force-update [^js/React.Component comp deep]
   (if deep
     (binding [*always-update* true]
       (.forceUpdate comp))
