@@ -2,7 +2,7 @@
 
 ## 0.9.0-rc3 (2019-11-19)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc1...v0.9.0-rc2)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc2...v0.9.0-rc3)**
 
 Fixed a shortcoming of using JS interop forms introduced in 0.9.0-rc1:
 
