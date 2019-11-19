@@ -6,8 +6,7 @@
 
 Fixed a shortcoming of using JS interop forms introduced in 0.9.0-rc1:
 
-[#461](https://github.com/reagent-project/reagent/pull/461): Add type hints for
-JS interop calls, so that externs inference works for Shadow-CLJS and other users.
+- Add type hints for JS interop calls, so that externs inference works for Shadow-CLJS and other users. ([#461](https://github.com/reagent-project/reagent/pull/461))
 
 ## 0.9.0-rc2 (2019-10-17)
 
