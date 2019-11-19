@@ -24,7 +24,7 @@
           fake-raf))))
 
 (defn compare-mount-order
-  [c1 c2]
+  [^clj c1 ^clj c2]
   ;; Mount order is now set in DidMount method.  I.e. the
   ;; top-most component is mounted last and gets largest
   ;; number. This is reverse compared to WillMount where method
@@ -37,7 +37,7 @@
   ;; are rendered before children
   (.sort a compare-mount-order)
   (dotimes [i (alength a)]
-    (let [c (aget a i)]
+    (let [^js/React.Component c (aget a i)]
       (when (true? (.-cljsIsDirty c))
         (.forceUpdate c)))))
 
@@ -49,7 +49,7 @@
   (dotimes [i (alength fs)]
     ((aget fs i))))
 
-(defn enqueue [queue fs f]
+(defn enqueue [^clj queue fs f]
   (assert-some f "Enqueued function")
   (.push fs f)
   (.schedule queue))
@@ -109,12 +109,12 @@
 (defn flush-after-render []
   (.flush-after-render render-queue))
 
-(defn queue-render [c]
+(defn queue-render [^clj c]
   (when-not (.-cljsIsDirty c)
     (set! (.-cljsIsDirty c) true)
     (.queue-render render-queue c)))
 
-(defn mark-rendered [c]
+(defn mark-rendered [^clj c]
   (set! (.-cljsIsDirty c) false))
 
 (defn do-before-flush [f]

@@ -15,6 +15,7 @@
     "karma-chrome-launcher": "2.2.0",
     "karma-cljs-test": "0.1.0",
     "karma-junit-reporter": "1.2.0",
-    "md5-file": "4.0.0"
+    "md5-file": "4.0.0",
+    "shadow-cljs": "2.8.67"
   }
 }

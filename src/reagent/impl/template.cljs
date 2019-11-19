@@ -112,7 +112,7 @@
       class
       (assoc :class (util/class-names class (:class props))))))
 
-(defn convert-props [props id-class]
+(defn convert-props [props ^clj id-class]
   (let [class (:class props)
         props (-> props
                   (cond-> class (assoc :class (util/class-names class)))
@@ -139,7 +139,7 @@
 (declare input-component-set-value)
 
 (defn input-node-set-value
-  [node rendered-value dom-value component {:keys [on-write]}]
+  [node rendered-value dom-value ^clj component {:keys [on-write]}]
   (if-not (and (identical? node (.-activeElement js/document))
             (has-selection-api? (.-type node))
             (string? rendered-value)
@@ -187,7 +187,7 @@
           (set! (.-selectionStart node) new-cursor-offset)
           (set! (.-selectionEnd node) new-cursor-offset))))))
 
-(defn input-component-set-value [this]
+(defn input-component-set-value [^clj this]
   (when (.-cljsInputLive this)
     (set! (.-cljsInputDirty this) false)
     (let [rendered-value (.-cljsRenderedValue this)
@@ -197,7 +197,7 @@
       (when (not= rendered-value dom-value)
         (input-node-set-value node rendered-value dom-value this {})))))
 
-(defn input-handle-change [this on-change e]
+(defn input-handle-change [^clj this on-change e]
   (set! (.-cljsDOMValue this) (-> e .-target .-value))
   ;; Make sure the input is re-rendered, in case on-change
   ;; wants to keep the value unchanged
@@ -207,7 +207,7 @@
   (on-change e))
 
 (defn input-render-setup
-  [this jsprops]
+  [^clj this ^js jsprops]
   ;; Don't rely on React for updating "controlled inputs", since it
   ;; doesn't play well with async rendering (misses keystrokes).
   (when (and (some? jsprops)
@@ -227,7 +227,7 @@
       (set! (.-defaultValue jsprops) value)
       (set! (.-onChange jsprops) #(input-handle-change this on-change %)))))
 
-(defn input-unmount [this]
+(defn input-unmount [^clj this]
   (set! (.-cljsInputLive this) nil))
 
 (defn ^boolean input-component? [x]
@@ -396,7 +396,7 @@
 (defn expand-seq [s]
   (into-array (map as-element s)))
 
-(defn expand-seq-dev [s o]
+(defn expand-seq-dev [s ^clj o]
   (into-array (map (fn [val]
                      (when (and (vector? val)
                                 (nil? (key-from-vec val)))

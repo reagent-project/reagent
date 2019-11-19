@@ -34,21 +34,21 @@
     (if (> (count v) first-child)
       (subvec v first-child))))
 
-(defn props-argv [c p]
+(defn props-argv [^js/React.Component c p]
   (if-some [a (.-argv p)]
     a
     [(.-constructor c) (shallow-obj-to-map p)]))
 
-(defn get-argv [c]
+(defn get-argv [^js/React.Component c]
   (props-argv c (.-props c)))
 
-(defn get-props [c]
+(defn get-props [^js/React.Component c]
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-props v)
       (shallow-obj-to-map p))))
 
-(defn get-children [c]
+(defn get-children [^js/React.Component c]
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-children v)
@@ -64,19 +64,19 @@
   (and (fn? c)
        (some? (some-> c (.-prototype) (.-render)))))
 
-(defn ^boolean reagent-component? [c]
+(defn ^boolean reagent-component? [^clj c]
   (some? (.-reagentRender c)))
 
-(defn cached-react-class [c]
+(defn cached-react-class [^clj c]
   (.-cljsReactClass c))
 
-(defn cache-react-class [c constructor]
+(defn cache-react-class [^clj c constructor]
   (set! (.-cljsReactClass c) constructor))
 
 
 ;;; State
 
-(defn state-atom [this]
+(defn state-atom [^clj this]
   (let [sa (.-cljsState this)]
     (if-not (nil? sa)
       sa
@@ -95,7 +95,7 @@
      2) Function (form-2 component) - updates the render function to `res` i.e. the internal function
         and calls wrap-render again (`recur`), until the render result doesn't evaluate to a function.
      3) Anything else - Returns the result of evaluating `c`"
-  [c]
+  [^clj c]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
         ;; cljsLegacyRender tells if this calls was defined
@@ -150,7 +150,7 @@
      ;; TODO: Use static property for cljsRatom
      (this-as c (if util/*non-reactive*
                   (do-render c)
-                  (let [rat (gobj/get c "cljsRatom")]
+                  (let [^clj rat (gobj/get c "cljsRatom")]
                     (batch/mark-rendered c)
                     (if (nil? rat)
                       (ratom/run-in-reaction #(do-render c) c "cljsRatom"
@@ -232,7 +232,7 @@
       (this-as c
         ;; This method is called after everything inside the
         ;; has been mounted. This is reverse compared to WillMount.
-        (set! (.-cljsMountOrder c) (batch/next-mount-count))
+        (set! (.-cljsMountOrder ^clj c) (batch/next-mount-count))
         (when-not (nil? f)
           (.call f c c))))
 
@@ -347,13 +347,13 @@
     ;; These names SHOULD be mangled by Closure so we can't use goog/extend
 
     (when (:render body)
-      (set! (.-render (.-prototype cmp)) (:render body)))
+      (set! (.-render ^js (.-prototype cmp)) (:render body)))
 
     (when (:reagentRender body)
-      (set! (.-reagentRender (.-prototype cmp)) (:reagentRender body)))
+      (set! (.-reagentRender ^clj (.-prototype cmp)) (:reagentRender body)))
 
     (when (:cljsLegacyRender body)
-      (set! (.-cljsLegacyRender (.-prototype cmp)) (:cljsLegacyRender body)))
+      (set! (.-cljsLegacyRender ^clj (.-prototype cmp)) (:cljsLegacyRender body)))
 
     (gobj/extend cmp react/Component static-methods)
 

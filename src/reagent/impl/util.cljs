@@ -107,7 +107,7 @@
   (-invoke [_ a b c d e f g h i j k l m n o p q r s t rest]
     (apply pfn a b c d e f g h i j k l m n o p q r s t rest))
   IEquiv
-  (-equiv [_ other]
+  (-equiv [_ ^clj other]
     (and (instance? PartialFn other)
          (= f (.-f other))
          (= args (.-args other))))
@@ -179,7 +179,7 @@
 
 (def ^:dynamic *always-update* false)
 
-(defn force-update [comp deep]
+(defn force-update [^js/React.Component comp deep]
   (if deep
     (binding [*always-update* true]
       (.forceUpdate comp))
