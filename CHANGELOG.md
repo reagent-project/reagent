@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-rc3 (2019-11-19)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc1...v0.9.0-rc2)**
+
+Fixed a shortcoming of using JS interop forms introduced in 0.9.0-rc1:
+
+[#461](https://github.com/reagent-project/reagent/pull/461): Add type hints for
+JS interop calls, so that externs inference works for Shadow-CLJS and other users.
+
 ## 0.9.0-rc2 (2019-10-17)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc1...v0.9.0-rc2)**
