@@ -9,7 +9,7 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[Documentation, 0.8](https://cljdoc.org/d/reagent/reagent/)**
+  * **[Documentation, 0.8](https://cljdoc.org/d/reagent/reagent/0.8.1/doc/documentation-index)**
   * **Documentation, next release, 0.9**
       * **[API docs](http://reagent-project.github.io/docs/master/)**
       * **[Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
