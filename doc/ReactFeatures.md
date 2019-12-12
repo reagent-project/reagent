@@ -44,6 +44,31 @@ Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fr
           container)
 ```
 
+Alternatively you can use the [static contextType property](https://reactjs.org/docs/context.html#classcontexttype)
+
+```cljs
+(defonce my-context (react/createContext "default"))
+
+(def Provider (.-Provider my-context))
+
+(defn show-context []
+  (r/create-class
+   {:context-type my-context
+    :reagent-render (fn []
+                      [:p (.-context (reagent.core/current-component))])}))
+
+;; Alternatively with metadata on a form-1 component:
+;;
+;; (def show-context
+;;   ^{:context-type my-context}
+;;   (fn []
+;;     [:p (.-context (reagent.core/current-component))]))
+
+(r/render [:> Provider {:value "bar"}
+           [show-context]]
+          container)
+```
+
 Tests contain example of using old React lifecycle Context API (`context-wrapper` function):
 [tests](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1141-L1165)
 

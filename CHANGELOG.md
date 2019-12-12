@@ -1,5 +1,9 @@
 # Changelog
 
+## master
+
+- Add support for the static [Class.contextType](https://reactjs.org/docs/context.html#classcontexttype) property
+
 ## 0.9.0-rc3 (2019-11-19)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc2...v0.9.0-rc3)**
