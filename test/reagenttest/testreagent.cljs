@@ -1371,3 +1371,28 @@
           (r/flush)
           (is (= {:height 20} @did-update))
           (.removeChild js/document.body div))))))
+
+(deftest issue-462-test
+  (when isClient
+    (let [val (r/atom 0)
+          render (atom 0)
+          a (fn issue-462-a [nr]
+              (js/console.log "rendering a")
+              (swap! render inc)
+              [:h1 "Value " nr])
+          b (fn issue-462-b []
+              [:div
+               ^{:key @val}
+               [a @val]])
+          c (fn issue-462-c []
+              ^{:key @val}
+              [b])]
+      (with-mounted-component [c]
+        (fn [c div]
+          (is (= 1 @render))
+          (reset! val 1)
+          (r/flush)
+          (is (= 2 @render))
+          (reset! val 0)
+          (r/flush)
+          (is (= 3 @render)))))))
