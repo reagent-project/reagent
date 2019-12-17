@@ -229,12 +229,7 @@
 
     :componentDidMount
     (fn componentDidMount []
-      (this-as c
-        ;; This method is called after everything inside the
-        ;; has been mounted. This is reverse compared to WillMount.
-        (set! (.-cljsMountOrder ^clj c) (batch/next-mount-count))
-        (when-not (nil? f)
-          (.call f c c))))
+      (this-as c (.call f c c)))
 
     :componentWillUnmount
     (fn componentWillUnmount []
@@ -259,7 +254,6 @@
 ;; Though the value is nil here, the wrapper function will be
 ;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
-                 :componentDidMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-method-name (util/memoize-1 util/dash-to-method-name))
@@ -340,6 +334,7 @@
                   (construct this props))
                 (when get-initial-state
                   (set! (.-state this) (get-initial-state this)))
+                (set! (.-cljsMountOrder ^clj this) (batch/next-mount-count))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)

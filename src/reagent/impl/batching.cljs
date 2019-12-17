@@ -29,8 +29,8 @@
   ;; top-most component is mounted last and gets largest
   ;; number. This is reverse compared to WillMount where method
   ;; for top component gets called first.
-  (- (.-cljsMountOrder c2)
-     (.-cljsMountOrder c1)))
+  (- (.-cljsMountOrder c1)
+     (.-cljsMountOrder c2)))
 
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents
