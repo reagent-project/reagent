@@ -1,5 +1,6 @@
 (ns geometry.core
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             [geometry.components :as c]
             [geometry.geometry :as g]))
 
@@ -33,7 +34,7 @@
 
 (defn get-bcr [svg-root]
   (-> svg-root
-      r/dom-node
+      rdom/dom-node
       .getBoundingClientRect))
 
 (defn move-point [svg-root p]
@@ -85,5 +86,4 @@
   (.getElementById js/document id))
 
 (defn ^:export run []
-  (r/render [main]
-            (by-id "app")))
+  (rdom/render [main] (by-id "app")))

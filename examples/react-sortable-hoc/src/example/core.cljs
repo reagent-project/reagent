@@ -1,5 +1,6 @@
 (ns example.core
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             ;; FIXME: add global-exports support
             [cljsjs.react-sortable-hoc]
             [goog.object :as gobj]))
@@ -70,6 +71,6 @@
   [sortable-component])
 
 (defn start []
-  (r/render [main] (js/document.getElementById "app")))
+  (rdom/render [main] (js/document.getElementById "app")))
 
 (start)

@@ -37,11 +37,12 @@ Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fr
 (def Provider (.-Provider my-context))
 (def Consumer (.-Consumer my-context))
 
-(r/render [:> Provider {:value "bar"}
-           [:> Consumer {}
-            (fn [v]
-              (r/as-element [:div "Context: " v]))]]
-          container)
+(rdom/render
+  [:> Provider {:value "bar"}
+   [:> Consumer {}
+    (fn [v]
+      (r/as-element [:div "Context: " v]))]]
+  container)
 ```
 
 Alternatively you can use the [static contextType property](https://reactjs.org/docs/context.html#classcontexttype)
@@ -64,9 +65,10 @@ Alternatively you can use the [static contextType property](https://reactjs.org/
 ;;   (fn []
 ;;     [:p (.-context (reagent.core/current-component))]))
 
-(r/render [:> Provider {:value "bar"}
-           [show-context]]
-          container)
+(rdom/render
+  [:> Provider {:value "bar"}
+   [show-context]]
+  container)
 ```
 
 Tests contain example of using old React lifecycle Context API (`context-wrapper` function):

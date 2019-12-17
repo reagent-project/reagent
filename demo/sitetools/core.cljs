@@ -1,7 +1,8 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [reagent.dom :as rdom])
   (:import goog.History
            [goog.history Html5History EventType]))
 
@@ -110,4 +111,4 @@
           conf (swap! config merge page-conf)
           {:keys [page-path body main-div]} conf]
       (init-history page-path)
-      (r/render body (js/document.getElementById main-div)))))
+      (rdom/render body (js/document.getElementById main-div)))))

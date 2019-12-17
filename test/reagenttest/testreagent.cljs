@@ -4,6 +4,7 @@
             [reagent.ratom :as rv :refer-macros [reaction]]
             [reagent.debug :as debug :refer-macros [dev?]]
             [reagent.core :as r]
+            [reagent.dom :as rdom]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
             [reagenttest.utils :as u :refer [with-mounted-component]]
@@ -45,7 +46,7 @@
           (is (= "div in really-simple" (.-innerText div)))
           (r/flush)
           (is (= 2 @ran))
-          (r/force-update-all)
+          (rdom/force-update-all)
           (is (= 3 @ran))))
       (is (= 3 @ran)))))
 
@@ -187,7 +188,7 @@
           (is (= "this is foobar" (.-innerText div)))))
       (is (= 2 @ran)))))
 
-(deftest shoud-update-test
+(deftest should-update-test
   (when r/is-client
     (let [parent-ran (r/atom 0)
           child-ran (r/atom 0)
@@ -246,7 +247,7 @@
           (r/flush)
           (is (= 7 @child-ran))
 
-          (r/force-update-all)
+          (rdom/force-update-all)
           (is (= 8 @child-ran)))))))
 
 (deftest dirty-test
@@ -1080,7 +1081,7 @@
                                  [:div {:ref #(reset! ref %)} "foobar"])
                :component-did-mount
                (fn [this]
-                 (reset! node (r/dom-node this)))})]
+                 (reset! node (rdom/dom-node this)))})]
     (with-mounted-component [comp]
       (fn [c div]
         (is (= "foobar" (.-innerHTML @ref)))

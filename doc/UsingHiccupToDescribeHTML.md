@@ -119,7 +119,7 @@ The primary entrypoint to the reagent library is `reagent.core/render`.
   (:require [reagent.core :as r]))
 
 (defn render-simple []
-  (r/render [:div [:p "Hello world!"]]
+  (rdom/render [:div [:p "Hello world!"]]
     (.-body js/document)))
 ```
 
@@ -137,5 +137,5 @@ If it's a symbol, then reagent will evaluate a function by that name. Reagent ex
 
 1. A Hiccup vector. Reagent creates a React component with the function as its render method and uses the Hiccup vector for the initial render.
 2. A ClojureScript function. Reagent will then create a React component with this inner function as the render method and will then call the inner function for the initial render.
-3. A React component. Reagent will render this using React.createElement. Note, this could be a result of calling (React.core/create-class) or it could be a React component you have imported from a JavaScript library.
+3. A React component. Reagent will render this using React.createElement. Note, this could be a result of calling `reagent.core/create-class` or it could be a React component you have imported from a JavaScript library.
 

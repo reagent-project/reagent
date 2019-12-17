@@ -1,6 +1,6 @@
 # Managing state: atoms, cursors, Reactions, and tracking
 
-Although it is possible to update reagent components by remounting the entire component tree with `react.core/render`, Reagent comes with a sophisticated state management library based on `reagent.core/atom`, which allows components to track application state and update only when needed. Reagent also provides cursors, which are like ratoms but can be constructed from portions of one or more other ratoms to limit or expand which ratoms a component watches. Finally, Reagent provides a set of tracking primitives called reactions and a set of utility functions to build more customized state management.
+Although it is possible to update reagent components by remounting the entire component tree with `reagent.dom/render`, Reagent comes with a sophisticated state management library based on `reagent.core/atom`, which allows components to track application state and update only when needed. Reagent also provides cursors, which are like ratoms but can be constructed from portions of one or more other ratoms to limit or expand which ratoms a component watches. Finally, Reagent provides a set of tracking primitives called reactions and a set of utility functions to build more customized state management.
 
 **TODO is this right?**
 
@@ -133,8 +133,8 @@ Cursors are created with `reagent/cursor`, which takes a ratom and a keypath (li
   [:div @bar-cursor])
 
 (defn mount-root []
-  (reagent/render [:div [quux-component] [bar-component]]
-	(.getElementById js/document "app"))
+  (rdom/render [:div [quux-component] [bar-component]]
+    (.getElementById js/document "app"))
   (js/setTimeout (fn [] (swap! state assoc :baz "NEW BAZ")) 1000)
   (js/setTimeout (fn [] (swap! state assoc-in [:foo :bar] "NEW BAR")) 2000))
 

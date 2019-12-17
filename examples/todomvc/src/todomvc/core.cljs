@@ -1,5 +1,6 @@
 (ns todomvc.core
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [reagent.dom :as rdom]))
 
 (defonce todos (r/atom (sorted-map)))
 
@@ -42,7 +43,7 @@
                                nil)}])))
 
 (def todo-edit (with-meta todo-input
-                 {:component-did-mount #(.focus (r/dom-node %))}))
+                 {:component-did-mount #(.focus (rdom/dom-node %))}))
 
 (defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
@@ -105,5 +106,4 @@
           [:p "Double-click to edit a todo"]]]))))
 
 (defn ^:export run []
-  (r/render [todo-app]
-            (js/document.getElementById "app")))
+  (rdom/render [todo-app] (js/document.getElementById "app")))

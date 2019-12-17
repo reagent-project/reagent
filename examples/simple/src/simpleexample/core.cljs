@@ -1,5 +1,6 @@
 (ns simpleexample.core
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [reagent.dom :as rdom]))
 
 (defonce timer (r/atom (js/Date.)))
 
@@ -31,5 +32,4 @@
    [color-input]])
 
 (defn ^:export run []
-  (r/render [simple-example]
-            (js/document.getElementById "app")))
+  (rdom/render [simple-example] (js/document.getElementById "app")))

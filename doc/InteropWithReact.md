@@ -33,11 +33,11 @@ As an example, here are four ways to create the same element:
                                         "world")]])
 
 (defn mount-root []
-  (reagent/render [integration]
+  (rdom/render [integration]
     (.getElementById js/document "app")))
 ```
 
-This works because `reagent/render` itself expects (1) a React element or (2) a
+This works because `reagent.dom/render` itself expects (1) a React element or (2) a
 Hiccup form. If passed an element, it just uses it. If passed a Hiccup, it
 creats a (cached) React component and then creates an element from that
 component.
@@ -45,7 +45,7 @@ component.
 ## Creating React Elements from Hiccup forms
 
 The `reagent.core/as-element` function creates a React element from a Hiccup
-form. In the previous section, we discussed how `reagent/render` expects either
+form. In the previous section, we discussed how `reagent.dom/render` expects either
 (1) a Hiccup form or (2) a React Element. If it encounters a Hiccup form, it
 calls `as-element` on it. When you have a React component that wraps children,
 you can pass Hiccup forms to it wrapped in `as-element`.

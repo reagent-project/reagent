@@ -1,5 +1,6 @@
 (ns example.core
   (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
             ;; Scoped names require Cljs 1.10.439
             ["@material-ui/core" :as mui]
             ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
@@ -173,6 +174,6 @@
       [:> (with-custom-styles (r/reactify-component form))]]]]])
 
 (defn start []
-  (r/render [main] (js/document.getElementById "app")))
+  (rdom/render [main] (js/document.getElementById "app")))
 
 (start)

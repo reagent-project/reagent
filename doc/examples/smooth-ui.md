@@ -16,5 +16,5 @@ it's workaround logic to control input value and cursor position:
                  ; (.. system -meta -props)
                  [:input (dissoc props :__scTheme :theme :control :size :valid)])))
 
-(r/render [:> Input {:as r-input ...}] container)
+(rdom/render [:> Input {:as r-input ...}] container)
 ```
