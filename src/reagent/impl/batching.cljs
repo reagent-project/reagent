@@ -25,10 +25,6 @@
 
 (defn compare-mount-order
   [^clj c1 ^clj c2]
-  ;; Mount order is now set in DidMount method.  I.e. the
-  ;; top-most component is mounted last and gets largest
-  ;; number. This is reverse compared to WillMount where method
-  ;; for top component gets called first.
   (- (.-cljsMountOrder c1)
      (.-cljsMountOrder c2)))
 
