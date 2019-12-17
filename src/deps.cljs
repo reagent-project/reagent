@@ -1,2 +1,2 @@
-{:npm-deps {"react" "16.9.0"
-            "react-dom" "16.9.0"}}
+{:npm-deps {"react" "16.12.0"
+            "react-dom" "16.12.0"}}
