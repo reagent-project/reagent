@@ -1,6 +1,5 @@
 (ns reagent.impl.util
-  (:require [reagent.debug :refer-macros [dbg log warn]]
-            [clojure.string :as string]))
+  (:require [clojure.string :as string]))
 
 (def is-client (and (exists? js/window)
                     (-> (.-document js/window) nil? not)))

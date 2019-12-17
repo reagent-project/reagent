@@ -1,0 +1,4 @@
+{:lint-as {reagent.core/with-let clojure.core/let}
+ :linters {:unused-binding {:level :off}
+           :if {:level :off}
+           :unused-referred-var {:exclude {cljs.test [deftest testing is]}}}}

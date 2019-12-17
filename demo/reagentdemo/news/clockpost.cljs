@@ -1,7 +1,5 @@
 (ns reagentdemo.news.clockpost
-  (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg]]
-            [reagentdemo.syntax :as s]
+  (:require [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))

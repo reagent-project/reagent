@@ -7,8 +7,7 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.debug :as deb :refer-macros [dbg prn
-                                                  assert-some assert-component
+            [reagent.debug :as deb :refer-macros [assert-some assert-component
                                                   assert-js-object assert-new-state
                                                   assert-callable]]
             [reagent.dom :as dom]))
@@ -84,8 +83,8 @@
   (dom/unmount-component-at-node container))
 
 ;; For backward compatibility
-(def as-component as-element)
-(def render-component render)
+(def ^{:deprecated true} as-component as-element)
+(def ^{:deprecated true} render-component render)
 
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
@@ -356,17 +355,18 @@
   [a f & args]
   {:pre [(satisfies? IAtom a)
          (ifn? f)]}
-  (if a.rswapping
-    (-> (or a.rswapfs (set! a.rswapfs (array)))
+  (if (.-rswapping a)
+    (-> (or (.-rswapfs a)
+            (set! (.-rswapfs a) (array)))
         (.push #(apply f % args)))
-    (do (set! a.rswapping true)
+    (do (set! (.-rswapping a) true)
         (try (swap! a (fn [state]
                         (loop [s (apply f state args)]
-                          (if-some [sf (some-> a.rswapfs .shift)]
+                          (if-some [sf (some-> a .-rswapfs .shift)]
                             (recur (sf s))
                             s))))
              (finally
-               (set! a.rswapping false)))))
+               (set! (.-rswapping a) false)))))
   nil)
 
 (defn next-tick

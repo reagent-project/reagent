@@ -1,11 +1,10 @@
 (ns reagenttest.testreagent
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [react :as react]
             [reagent.ratom :as rv :refer-macros [reaction]]
-            [reagent.debug :as debug :refer-macros [dbg println log dev?]]
+            [reagent.debug :as debug :refer-macros [dev?]]
             [reagent.core :as r]
             [reagent.dom.server :as server]
-            [reagent.impl.util :as util]
             [reagenttest.utils :as u :refer [with-mounted-component found-in]]
             [clojure.string :as string]
             [goog.string :as gstr]
@@ -217,30 +216,30 @@
           (rflush)
           (is (= @child-ran 1))
           (is (found-in #"child-foo" div))
-          (do (reset! child-props {:style {:display :none}})
-              (rflush))
+          (reset! child-props {:style {:display :none}})
+          (rflush)
           (is (= @child-ran 2))
-          (do (reset! child-props {:style {:display :none}})
-              (rflush))
+          (reset! child-props {:style {:display :none}})
+          (rflush)
           (is (= @child-ran 2) "keyw is equal")
-          (do (reset! child-props {:class :foo}) (rflush))
+          (reset! child-props {:class :foo}) (rflush)
           (is (= @child-ran 3))
-          (do (reset! child-props {:class :foo}) (rflush))
+          (reset! child-props {:class :foo}) (rflush)
           (is (= @child-ran 3))
-          (do (reset! child-props {:class 'foo}) (rflush))
+          (reset! child-props {:class 'foo})
           (is (= @child-ran 4) "symbols are different from keyw")
-          (do (reset! child-props {:class 'foo}) (rflush))
+          (reset! child-props {:class 'foo})
           (is (= @child-ran 4) "symbols are equal")
-          (do (reset! child-props {:style {:color 'red}}) (rflush))
+          (reset! child-props {:style {:color 'red}})
           (is (= @child-ran 5))
-          (do (reset! child-props {:on-change (r/partial f)})
-              (rflush))
+          (reset! child-props {:on-change (r/partial f)})
+          (rflush)
           (is (= @child-ran 6))
-          (do (reset! child-props {:on-change (r/partial f)})
-              (rflush))
+          (reset! child-props {:on-change (r/partial f)})
+          (rflush)
           (is (= @child-ran 6))
-          (do (reset! child-props {:on-change (r/partial f1)})
-              (rflush))
+          (reset! child-props {:on-change (r/partial f1)})
+          (rflush)
           (is (= @child-ran 7))
 
           (r/force-update-all)
@@ -311,11 +310,11 @@
                (as-string [:div#bar {:id "foo"}]))
       "Dynamic id overwrites static"))
 
-(deftest ifn-component []
-  (defmulti my-div :type)
-  (defmethod my-div :fooish [child] [:div.foo (:content child)])
-  (defmethod my-div :barish [child] [:div.bar (:content child)])
+(defmulti my-div :type)
+(defmethod my-div :fooish [child] [:div.foo (:content child)])
+(defmethod my-div :barish [child] [:div.bar (:content child)])
 
+(deftest ifn-component []
   (let [comp {:foo [:div "foodiv"]
               :bar [:div "bardiv"]}]
     (is (re-find #"foodiv"

@@ -1,5 +1,5 @@
 (ns reagenttest.testratom
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
             [reagent.debug :as debug :refer-macros [dbg]]
             [reagent.core :as r]))

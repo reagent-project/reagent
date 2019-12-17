@@ -1,8 +1,5 @@
 (ns reagentdemo.news.news060release
-  (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :as s]
-            [reagentdemo.common :as common :refer [demo-component]]
+  (:require [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.news.news060 :as news060]
             [reagentdemo.news.news060rc :as news060rc]))

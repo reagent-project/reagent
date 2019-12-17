@@ -3,10 +3,7 @@
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]
-            [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg]]))
-
-(defonce ^:private imported nil)
+            [reagent.ratom :as ratom]))
 
 (defonce ^:private roots (atom {}))
 

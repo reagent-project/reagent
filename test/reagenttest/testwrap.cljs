@@ -1,6 +1,5 @@
 (ns reagenttest.testwrap
-  (:require [cljs.test :as t :refer-macros [is deftest]]
-            [reagent.debug :refer-macros [dbg println log]]
+  (:require [clojure.test :as t :refer-macros [is deftest]]
             [reagent.core :as r]
             [reagenttest.utils :as u :refer [with-mounted-component found-in]]))
 

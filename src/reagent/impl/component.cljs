@@ -4,9 +4,7 @@
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg prn dev? warn error warn-unless
-                                          assert-callable]]
-            [goog.object :as gobj]))
+            [reagent.debug :refer-macros [dev? warn error warn-unless assert-callable]]))
 
 (declare ^:dynamic *current-component*)
 

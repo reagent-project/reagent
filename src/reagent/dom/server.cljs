@@ -4,8 +4,6 @@
             [reagent.impl.template :as tmpl]
             [reagent.ratom :as ratom]))
 
-(defonce ^:private imported nil)
-
 (defn render-to-string
   "Turns a component into an HTML string."
   [component]

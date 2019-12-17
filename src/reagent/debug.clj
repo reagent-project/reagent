@@ -1,5 +1,6 @@
 (ns reagent.debug
-  (:refer-clojure :exclude [prn println time]))
+  (:refer-clojure :exclude [prn println time])
+  (:require [cljs.analyzer :as analyzer]))
 
 (defmacro log
   "Print with console.log, if it exists."
@@ -46,7 +47,7 @@ nice clickable links to source in modern browsers)."
   "Useful debugging macro that prints the source and value of x,
 as well as package name and line number. Returns x."
   [x]
-  (let [ns (str cljs.analyzer/*cljs-ns*)]
+  (let [ns (str analyzer/*cljs-ns*)]
     `(let [x# ~x]
        (println (str "dbg "
                      ~ns ":"
@@ -63,7 +64,7 @@ as well as package name and line number. Returns x."
   (if *assert* true false))
 
 (defmacro time [& forms]
-  (let [ns (str cljs.analyzer/*cljs-ns*)
+  (let [ns (str analyzer/*cljs-ns*)
         label (str ns ":" (:line (meta &form)))]
     `(let [label# ~label
            res# (do

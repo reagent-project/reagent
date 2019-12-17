@@ -1,7 +1,6 @@
 (ns reagenttest.testcursor
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
 ;; this repeats all the atom tests but using cursors instead

@@ -6,13 +6,11 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
-            [reagenttest.testinterop]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
-            [cljs.test :as test]
+            [clojure.test :as test]
             [doo.runner :as doo :include-macros true]
-            [reagent.core :as r]
-            [reagent.debug :refer [dbg log]]))
+            [reagent.core :as r]))
 
 (enable-console-print!)
 

@@ -1,9 +1,6 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println time]]
-            [clojure.string :as string]
             [reagentdemo.syntax :as s]
-            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))

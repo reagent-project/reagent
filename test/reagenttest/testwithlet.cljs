@@ -1,9 +1,8 @@
 (ns reagenttest.testwithlet
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv]
-            [reagent.debug :as d :refer-macros [dbg]]
-            [reagent.core :as r
-             :refer [flush track track! dispose!] :refer-macros [with-let]]
+            [reagent.debug :as d]
+            [reagent.core :as r :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
 
 ;; Test code generated from with-let macro

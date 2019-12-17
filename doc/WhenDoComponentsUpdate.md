@@ -227,7 +227,7 @@ Now, imagine it used like this:
     []
     [greet-family-square  "Mum" "Dad" @extra])
 
-(reagent.core/render-component [top-level-component] (.-body js/document)))
+(reagent.core/render [top-level-component] (.-body js/document)))
 ```
 
 The first time the page is rendered, the DOM created will greet three cherished people.  All good.  At this point, the `round` and `square` versions of `greet-family` would be equally good at getting the initial DOM into our browser.

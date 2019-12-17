@@ -1,8 +1,8 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.ratom :refer [with-let]])
+  (:require-macros [reagent.ratom])
   (:require [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg log warn error dev? time]]
+            [reagent.debug :refer-macros [warn dev?]]
             [reagent.impl.batching :as batch]
             [clojure.set :as s]
             [goog.object :as obj]))
@@ -33,20 +33,21 @@
                  (recur (inc i))
                  false))))))
 
-(defn- in-context [obj f]
+(defn- in-context
   "When f is executed, if (f) derefs any ratoms, they are then added to 'obj.captured'(*ratom-context*).
 
-   See function notify-deref-watcher! to know how *ratom-context* is updated"
+  See function notify-deref-watcher! to know how *ratom-context* is updated"
+  [obj f]
   (binding [*ratom-context* obj]
     (f)))
 
 (defn- deref-capture
   "Returns `(in-context f r)`.  Calls `_update-watching` on r with any
-   `deref`ed atoms captured during `in-context`, if any differ from the
-   `watching` field of r.  Clears the `dirty?` flag on r.
+  `deref`ed atoms captured during `in-context`, if any differ from the
+  `watching` field of r.  Clears the `dirty?` flag on r.
 
-   Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
-   the reaction is also added to the list of watches on each ratoms f derefs."
+  Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
+  the reaction is also added to the list of watches on each ratoms f derefs."
   [f ^clj r]
   (set! (.-captured r) nil)
   (when (dev?)
@@ -92,14 +93,14 @@
             (->> (.-watches this)
                  (reduce-kv #(doto %1 (.push %2) (.push %3)) #js[])
                  (set! (.-watchesArr this)))
-            w)]
-    (let [len (alength a)]
-      (loop [i 0]
-        (when (< i len)
-          (let [k (aget a i)
-                f (aget a (inc i))]
-            (f k this old new))
-          (recur (+ 2 i)))))))
+            w)
+        len (alength a)]
+    (loop [i 0]
+      (when (< i len)
+        (let [k (aget a i)
+              f (aget a (inc i))]
+          (f k this old new))
+        (recur (+ 2 i))))))
 
 (defn- pr-atom [a writer opts s]
   (-write writer (str "#<" s " "))

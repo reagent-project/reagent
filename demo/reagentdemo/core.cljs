@@ -1,11 +1,7 @@
 (ns reagentdemo.core
-  (:require [reagent.core :as r]
-            [clojure.string :as string]
-            [sitetools.core :as tools :refer [emit link]]
-            [reagentdemo.common :as common :refer [demo-component]]
+  (:require [sitetools.core :as tools :refer [link]]
             [reagentdemo.intro :as intro]
-            [reagentdemo.news :as news]
-            [reagent.debug :refer-macros [dbg println]]))
+            [reagentdemo.news :as news]))
 
 (def github {:href "https://github.com/reagent-project/reagent"})
 

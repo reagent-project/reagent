@@ -1,8 +1,7 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
-            [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg log dev?]])
+            [reagent.core :as r])
   (:import goog.History
            [goog.history Html5History EventType]))
 

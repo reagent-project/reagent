@@ -1,7 +1,7 @@
 (ns reagenttest.testratomasync
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
-            [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :as debug :refer-macros [dbg]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
+            [reagent.ratom :as rv :refer-macros [reaction]]
+            [reagent.debug :as debug]
             [reagent.core :as r]))
 
 (defn fixture [f]

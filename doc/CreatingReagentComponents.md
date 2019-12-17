@@ -192,7 +192,7 @@ A `Form-3` component definition looks like this:
          (fn [x y z]           ;; remember to repeat parameters
             [:div (str x " " y " " z)])})))
 
-(reagent/render-component 
+(reagent/render
     [my-component 1 2 3]         ;; pass in x y z
     (.-body js/document))
 
