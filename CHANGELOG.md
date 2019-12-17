@@ -1,8 +1,13 @@
 # Changelog
 
-## master
+## 0.9.0-rc4 (2019-12-17)
 
-- Add support for the static [Class.contextType](https://reactjs.org/docs/context.html#classcontexttype) property
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc3...v0.9.0-rc4)**
+
+Fixes the last known (this far) regression in 0.9.
+
+- Use Component constructor to keep track of component mount order for RAtom updates ([#462](https://github.com/reagent-project/reagent/pull/462))
+- Add support for the static [Class.contextType](https://reactjs.org/docs/context.html#classcontexttype) property ([#467](https://github.com/reagent-project/reagent/pull/467))
 
 ## 0.9.0-rc3 (2019-11-19)
 
