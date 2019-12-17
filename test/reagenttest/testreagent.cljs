@@ -5,6 +5,7 @@
             [reagent.debug :as debug :refer-macros [dev?]]
             [reagent.core :as r]
             [reagent.dom.server :as server]
+            [reagent.impl.component :as comp]
             [reagenttest.utils :as u :refer [with-mounted-component]]
             [clojure.string :as string]
             [goog.string :as gstr]
@@ -660,10 +661,10 @@
 (deftest test-component-path
   (let [a (atom nil)
         tc (r/create-class {:display-name "atestcomponent"
-                           :render (fn []
-                                     (let [c (r/current-component)]
-                                       (reset! a (r/component-path c))
-                                       [:div]))})]
+                            :render (fn []
+                                      (let [c (r/current-component)]
+                                        (reset! a (comp/component-path c))
+                                        [:div]))})]
     (with-mounted-component [tc]
       (fn [c]
         (is (seq @a))

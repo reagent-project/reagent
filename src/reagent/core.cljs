@@ -83,8 +83,8 @@
   (dom/unmount-component-at-node container))
 
 ;; For backward compatibility
-(def ^{:deprecated true} as-component as-element)
-(def ^{:deprecated true} render-component render)
+(def ^{:deprecated "0.10.0"} as-component as-element)
+(def ^{:deprecated "0.10.0"} render-component render)
 
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
@@ -390,8 +390,9 @@
   (util/make-partial-fn f args))
 
 (defn component-path
-  ;; Try to return the path of component c as a string.
-  ;; Maybe useful for debugging and error reporting, but may break
-  ;; with future versions of React (and return nil).
+  "Try to return the path of component c as a string.
+  Maybe useful for debugging and error reporting, but may break
+  with future versions of React (and return nil)."
+  {:deprecated "0.10.0"}
   [c]
   (comp/component-path c))
