@@ -1257,7 +1257,16 @@
            (rstr [:> Provider {:value "bar"}
                   [:> Consumer {}
                    (fn [v]
-                     (r/as-element [:div "Context: " v]))]])))))
+                     (r/as-element [:div "Context: " v]))]]))))
+
+  (testing "static contextType"
+    (let [comp (r/create-class
+                 {:context-type my-context
+                  :reagent-render (fn []
+                                    (this-as this
+                                      (r/as-element [:div "Context: " (.-context this)])))})]
+      (is (= "<div>Context: default</div>"
+             (rstr [comp]))))))
 
 (deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
   (let [prop (r/atom {:todos 1})

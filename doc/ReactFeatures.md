@@ -70,7 +70,7 @@ Alternatively you can use the [static contextType property](https://reactjs.org/
 ```
 
 Tests contain example of using old React lifecycle Context API (`context-wrapper` function):
-[tests](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1141-L1165)
+[tests](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1159-L1168)
 
 ## [Error boundaries](https://reactjs.org/docs/error-boundaries.html)
 
