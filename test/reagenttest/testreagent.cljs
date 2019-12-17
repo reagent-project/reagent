@@ -1377,7 +1377,6 @@
     (let [val (r/atom 0)
           render (atom 0)
           a (fn issue-462-a [nr]
-              (js/console.log "rendering a")
               (swap! render inc)
               [:h1 "Value " nr])
           b (fn issue-462-b []
