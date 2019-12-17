@@ -312,7 +312,7 @@
 ;; https://gist.github.com/thheller/7f530b34de1c44589f4e0671e1ef7533#file-es6-class-cljs-L18
 
 (def built-in-static-method-names
-  [:childContextTypes :contextTypes
+  [:childContextTypes :contextTypes :contextType
    :getDerivedStateFromProps :getDerivedStateFromError])
 
 (defn create-class
