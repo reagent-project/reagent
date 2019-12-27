@@ -6,7 +6,7 @@ How can I use an entity like "nbsp"?
 
 If you try to do this:
 ```clj
-[:div  "hello" "&nbsp;" "there"]     ;; <--- note: attempt to use an entity
+[:div "hello" "&nbsp;" "there"]     ;; <--- note: attempt to use an entity
 ```
 then you will see the string for the entity. Which is not what you want. 
 
@@ -21,7 +21,7 @@ Instead you should do this:
   2. Use it like this ... 
 
   ```clj
-   [:div "hello"  (gstring/unescapeEntities "&nbsp;") "there"]
+   [:div "hello" (gstring/unescapeEntities "&nbsp;") "there"]
   ```
 
 **Note:** `unescapeEntities` relies on the DOM to produce a string with unescape entities;
