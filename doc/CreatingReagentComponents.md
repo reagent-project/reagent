@@ -204,7 +204,7 @@ A `Form-3` component definition looks like this:
    [my-component 1 2 3]]) ;; Be sure to put the Reagent class in square brackets to force it to render!
 ```
 
-Note the `old-argv` above in the signature for `component-did-mount`.  Many of these Reagent lifecycle method analogs take `prev-argv` or `old-argv` (see the docstring for `reagent/create-class` for a full listing).  These `argv` arguments include the component constructor as the first argument, which should generally be ignored.  This is the same format returned by `(reagent/argv this)`.
+Note the `old-argv` above in the signature for `component-did-update`.  Many of these Reagent lifecycle method analogs take `prev-argv` or `old-argv` (see the docstring for `reagent/create-class` for a full listing).  These `argv` arguments include the component constructor as the first argument, which should generally be ignored.  This is the same format returned by `(reagent/argv this)`.
 
 Alternately, you can use `(reagent/props this)` and `(reagent/props children)`, but, conceptually, these don't map as clearly to the `argv` concept.  Specifically, the arguments to your render function are actually passed as children (not props) to the underlying React component, **unless the first argument is a map.**   If the first argument is a map, then that map is passed as props, and the rest of the arguments are passed as children.  Using `props` and `children` may read a bit cleaner, but you do need to pay attention to whether you're passing a props map or not.
 
