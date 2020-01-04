@@ -109,10 +109,10 @@ Child component 2:
 ```clj
 (defn more-button
   "I'm a button labelled 'More' which increments counter when clicked"
-  [counter]                             ;; a ratom
+  [counter]                                ;; a ratom
   [:div  {:class "button-class"
- 	     :on-click  #(swap! counter inc)}   ;; increment the int value in counter
-	     "More"])      
+          :on-click  #(swap! counter inc)} ;; increment the int value in counter
+   "More"])    
 ```
 
 And, finally, a Form-2 parent Component which uses these two child components:
