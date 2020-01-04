@@ -120,7 +120,7 @@ And, finally, a Form-2 parent Component which uses these two child components:
 (defn parent
   [] 
   (let [counter  (reagent.ratom/atom 1)]    ;; the render closes over this state
-    (fn  parent-renderer 
+    (fn 				    ;; parent-renderer 
       []
       [:div 
         [greet-number @counter]      ;; notice the @. The prop is an int
