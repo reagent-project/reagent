@@ -323,7 +323,7 @@
           (str "src must be a reactive atom or a function, not "
                (pr-str src)
                " while attempting to get path: "
-               (pr-str path))
+               (pr-str path)))
   (->RCursor src path nil nil nil))
 
 
