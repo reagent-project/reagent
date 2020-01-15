@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 (2020-01-15)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...v0.9.0)**
+
+**[compare against rc4](https://github.com/reagent-project/reagent/compare/v0.9.0-rc3...v0.9.0-rc4)**
+
+Includes one small improvement, no fixes since rc4.
+
+- Include cursor path in `cursor` assert message ([#472](https://github.com/reagent-project/reagent/pull/472))
+
 ## 0.9.0-rc4 (2019-12-17)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.9.0-rc3...v0.9.0-rc4)**
