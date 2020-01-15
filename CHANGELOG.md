@@ -1,10 +1,16 @@
 # Changelog
 
+## 0.9.1 (2020-01-15)
+
+Removed broken untracked files from the package.
+
 ## 0.9.0 (2020-01-15)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.8.1...v0.9.0)**
 
 **[compare against rc4](https://github.com/reagent-project/reagent/compare/v0.9.0-rc4...v0.9.0)**
+
+**Package includes broken files**
 
 Includes one small improvement, no fixes since rc4.
 
