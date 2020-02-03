@@ -3,7 +3,7 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
                  ;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
@@ -14,7 +14,7 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
             [lein-codox "0.10.3"]
-            [lein-figwheel "0.5.18"]]
+            [lein-figwheel "0.5.19"]]
 
   :source-paths ["src"]
 
@@ -23,9 +23,9 @@
           :source-paths ["src"]}
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.597"]
-                                  [figwheel "0.5.18"]
+                                  [figwheel "0.5.19"]
                                   [doo "0.1.11"]
-                                  [cljsjs/prop-types "15.6.2-0"]]
+                                  [cljsjs/prop-types "15.7.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
