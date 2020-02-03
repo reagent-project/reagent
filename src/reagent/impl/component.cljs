@@ -431,3 +431,64 @@
   (if (react-class? comp)
     comp
     (as-class comp)))
+
+(defonce fun-component-state #js {})
+
+(defn functional-render [jsprops]
+  (let [argv (.-argv jsprops)
+        tag (.-tag jsprops)
+        res (if util/*non-reactive*
+              (apply tag argv)
+              ;; Create persistent ID for each rendered functional component,
+              ;; this is used to store internal Reagent state, like render
+              ;; reaction etc. in a separate store where changes doesn't
+              ;; trigger render.
+              (let [[id _] (react/useState (js/Symbol))
+                    [_ update-count] (react/useState 0)
+                    reagent-state (or (gobj/get fun-component-state id)
+                                      ;; TODO: Mock state atom?
+                                      (let [obj #js {:forceUpdate (fn [] (update-count inc))
+                                                     :cljsMountOrder (batch/next-mount-count)}]
+                                        (gobj/set fun-component-state id obj)
+                                        obj))]
+
+                (react/useEffect
+                  (fn mount []
+                    (fn unmount []
+                      (some-> (.-cljsRatom reagent-state) ratom/dispose!)
+                      (gobj/remove fun-component-state id)))
+                  ;; Only run effect once on mount and unmount
+                  #js [])
+
+                ;; Note: it might be possible to mock some React Component
+                ;; methods in the object and use it as *current-component*
+
+                ;; TODO: If return value is ifn?, consider form-2 component.
+
+                (assert-callable tag)
+
+                (batch/mark-rendered reagent-state)
+
+                ;; static-fns :render
+                (if-let [rat (.-cljsRatom reagent-state)]
+                  (._run rat false)
+                  (ratom/run-in-reaction
+                    ;; Mock Class component API
+                    #(binding [*current-component* reagent-state]
+                       (apply tag argv))
+                    reagent-state
+                    "cljsRatom"
+                    batch/queue-render
+                    rat-opts))))]
+    ;; do-render
+    ;; wrap-render
+    (cond
+      (vector? res) (as-element res)
+      ;; FIXME: Support form-2 components???
+      ; (ifn? res) (let [f (if (reagent-class? res)
+      ;                      (create-class
+      ;                        {:reagent-render (fn [& args]
+      ;                                           (as-element (apply vector res args)))})
+      ;                      res)]
+      ;              f)
+      :else res)))

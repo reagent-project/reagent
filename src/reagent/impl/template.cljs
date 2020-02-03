@@ -287,12 +287,27 @@
     (-> v (nth 1 nil) get-key)))
 
 (defn reag-element [tag v]
-  (let [c (comp/as-class tag)
-        jsprops #js {}]
-    (set! (.-argv jsprops) v)
-    (when-some [key (key-from-vec v)]
-      (set! (.-key jsprops) key))
-    (react/createElement c jsprops)))
+  (if (or false
+          (comp/react-class? tag)
+          ;; FIXME: Probably temporary workaround.
+          (:class-component (meta tag)))
+    ;; as-class unncessary later as tag is always class
+    (let [c (comp/as-class tag)
+          jsprops #js {}]
+      (set! (.-argv jsprops) v)
+      (when-some [key (key-from-vec v)]
+        (set! (.-key jsprops) key))
+      (react/createElement c jsprops))
+    (let [jsprops #js {:tag tag
+                       :argv (subvec v 1)}]
+      (when-some [key (key-from-vec v)]
+        (set! (.-key jsprops) key))
+      (react/createElement comp/functional-render jsprops))))
+
+(defn reag-fun-element [v]
+  (let [tag (nth v 1)
+        argv (drop 2 v)]
+    (react/createElement comp/functional-render #js {:tag tag :argv argv})))
 
 (defn fragment-element [argv]
   (let [props (nth argv 1 nil)
@@ -354,6 +369,9 @@
     (cond
       (keyword-identical? :<> tag)
       (fragment-element v)
+
+      (keyword-identical? :< tag)
+      (reag-fun-element v)
 
       (hiccup-tag? tag)
       (let [n (name tag)

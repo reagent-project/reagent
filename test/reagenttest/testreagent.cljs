@@ -145,7 +145,7 @@
           v2 (r/atom 0)
           c2 (fn [{val :val}]
                (swap! ran inc)
-               (is (= val @v1))
+               (is (= @v1 val))
                [:div @v2])
           c1 (fn []
                (swap! ran inc)
@@ -175,13 +175,17 @@
 (deftest init-state-test
   (when r/is-client
     (let [ran (r/atom 0)
-          really-simple (fn []
-                          (let [this (r/current-component)]
-                            (swap! ran inc)
-                            (r/set-state this {:foo "foobar"})
-                            (fn []
-                              [:div (str "this is "
-                                         (:foo (r/state this)))])))]
+          really-simple
+          ;; NOTE: Manually marking the following component as stateful.
+          ;; TODO: Should maybe just use create-class here.
+          ^:class-component
+          (fn []
+            (let [this (r/current-component)]
+              (swap! ran inc)
+              (r/set-state this {:foo "foobar"})
+              (fn []
+                [:div (str "this is "
+                           (:foo (r/state this)))])))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
@@ -1124,6 +1128,7 @@
         (r/flush)
         (is (= 1 @val))
         (is (= 2 @spy))
+        ;; TODO: Functional component can't be force updated from the outside
         (r/force-update c)
         (is (= 3 @spy))
         (r/next-tick #(reset! spy 0))
@@ -1392,3 +1397,67 @@
           (reset! val 0)
           (r/flush)
           (is (= 3 @render)))))))
+
+;; :< creates functional component for now.
+;; This is for testing only, hopefully functional component
+;; can be the default later.
+(deftest functional-component-poc-simple
+  (when r/is-client
+    (let [c (fn [x]
+              [:span "Hello " x])]
+        (with-mounted-component [:< c "foo"]
+          (fn [c div]
+            (is (nil? c) "Render returns nil for stateless components")
+            (is (= "Hello foo" (.-innerText div))))))))
+
+(deftest functional-component-poc-state-hook
+  (when r/is-client
+    (let [;; Probably not the best idea to keep
+          ;; refernce to state hook update fn, but
+          ;; works for testing.
+          set-count! (atom nil)
+          c (fn [x]
+              (let [[c set-count] (react/useState x)]
+                (reset! set-count! set-count)
+                [:span "Count " c]))]
+      (with-mounted-component [:< c 5]
+        (fn [c div]
+          (is (nil? c) "Render returns nil for stateless components")
+          (is (= "Count 5" (.-innerText div)))
+          (@set-count! 6)
+          (is (= "Count 6" (.-innerText div))))))))
+
+(deftest functional-component-poc-ratom
+  (when r/is-client
+    (let [count (r/atom 5)
+          c (fn [x]
+              [:span "Count " @count])]
+      (with-mounted-component [:< c 5]
+        (fn [c div]
+          (is (nil? c) "Render returns nil for stateless components")
+          (is (= "Count 5" (.-innerText div)))
+          (reset! count 6)
+          (r/flush)
+          (is (= "Count 6" (.-innerText div)))
+          ;; TODO: Test that component RAtom is disposed
+          )))))
+
+
+(deftest functional-component-poc-ratom-state-hook
+  (when r/is-client
+    (let [r-count (r/atom 3)
+          set-count! (atom nil)
+          c (fn [x]
+              (let [[c set-count] (react/useState x)]
+                (reset! set-count! set-count)
+                [:span "Counts " @r-count " " c]))]
+      (with-mounted-component [:< c 15]
+        (fn [c div]
+          (is (nil? c) "Render returns nil for stateless components")
+          (is (= "Counts 3 15" (.-innerText div)))
+          (reset! r-count 6)
+          (r/flush)
+          (is (= "Counts 6 15" (.-innerText div)))
+          (@set-count! 17)
+          (is (= "Counts 6 17" (.-innerText div)))
+          )))))

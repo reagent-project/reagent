@@ -6,6 +6,7 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
+            [reagenttest.testnext]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
             [clojure.test :as test]
