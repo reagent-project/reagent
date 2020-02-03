@@ -27,11 +27,3 @@
                                  (f)
                                  (cb)))))
            (reverse fs))))
-
-(defn found-in [re div]
-  (let [res (.-innerHTML div)]
-    (if (re-find re res)
-      true
-      (do (println "Not found: " res)
-          false))))
-

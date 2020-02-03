@@ -1,7 +1,7 @@
 (ns reagenttest.testwrap
   (:require [clojure.test :as t :refer-macros [is deftest]]
             [reagent.core :as r]
-            [reagenttest.utils :as u :refer [with-mounted-component found-in]]))
+            [reagenttest.utils :as u :refer [with-mounted-component]]))
 
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
@@ -112,19 +112,19 @@
           (fn [c div done]
             (u/run-fns-after-render
               (fn []
-                (is (found-in #"value:1:" div))
+                (is (= "value:1:" (.-innerText div)))
                 (is (= @ran 1))
 
                 (reset! @grand-state {:foobar 2}))
               (fn []
                 (is (= @state {:foo {:bar {:foobar 2}}}))
                 (is (= @ran 2))
-                (is (found-in #"value:2:" div))
+                (is (= "value:2:" (.-innerText div)))
 
                 (swap! state update-in [:foo :bar] assoc :foobar 3))
               (fn []
                 (is (= @ran 3))
-                (is (found-in #"value:3:" div))
+                (is (= "value:3:" (.-innerText div)))
                 (reset! state {:foo {:bar {:foobar 3}}
                                :foo1 {}}))
               (fn []
@@ -136,23 +136,23 @@
                 (reset! state {:foo {:bar {:foobar 2}}
                                :foo2 {}}))
               (fn []
-                (is (found-in #"value:2:" div))
+                (is (= "value:2:" (.-innerText div)))
                 (is (= @ran 4))
 
                 (reset! @grand-state {:foobar 2}))
               (fn []
-                (is (found-in #"value:2:" div))
+                (is (= "value:2:" (.-innerText div)))
                 (is (= @ran 5))
 
                 (reset! state {:foo {:bar {:foobar 4}}})
                 (reset! @grand-state {:foobar 4}))
               (fn []
-                (is (found-in #"value:4:" div))
+                (is (= "value:4:" (.-innerText div)))
                 (is (= @ran 6))
 
                 (reset! @grand-state {:foobar 4}))
               (fn []
-                (is (found-in #"value:4:" div))
+                (is (= "value:4:" (.-innerText div)))
                 (is (= @ran 7)))
               done)))))))
 
