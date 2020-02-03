@@ -3,7 +3,7 @@ jobs:
   test:
     working_directory: ~/work
     docker:
-      - image: circleci/clojure:lein-2.8.1-node-browsers
+      - image: circleci/clojure:lein-2.9.1-node-browsers
     steps:
       - checkout
       - restore_cache:
@@ -29,7 +29,7 @@ jobs:
   update-site:
     working_directory: ~/work
     docker:
-      - image: circleci/clojure:lein-2.8.1-node
+      - image: circleci/clojure:lein-2.9.1-node
     steps:
       - checkout
       - add_ssh_keys
@@ -43,7 +43,7 @@ jobs:
   update-tagged-docs:
     working_directory: ~/work
     docker:
-      - image: circleci/clojure:lein-2.8.1
+      - image: circleci/clojure:lein-2.9.1
     steps:
       - checkout
       - add_ssh_keys
