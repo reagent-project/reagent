@@ -8,43 +8,43 @@
         ws (fn [] (r/wrap (:foo @state)
                           swap! state assoc :foo))]
     (let [w1 (ws) w2 (ws)]
-      (is (= @w1 1))
+      (is (= 1 @w1))
       (is (= w1 w2))
       (reset! w1 1)
-      (is (= @w1 1))
+      (is (= 1 @w1))
       (is (= @w1 @w2))
       (is (not= w1 w2)))
 
     (let [w1 (ws) w2 (ws)]
-      (is (= @w1 1))
+      (is (= 1 @w1))
       (is (= w1 w2))
       (reset! w2 1)
-      (is (= @w2 1))
+      (is (= 1 @w2))
       (is (= @w1 @w2))
       (is (not= w1 w2))
       (reset! w1 1))
 
     (let [w1 (ws) w2 (ws)]
-      (is (= @w1 1))
+      (is (= 1 @w1))
       (is (= w1 w2))
       (is (= w2 w1))
       (reset! w1 2)
-      (is (= @w1 2))
-      (is (= (:foo @state) 2))
+      (is (= 2 @w1))
+      (is (= 2 (:foo @state)))
       (is (not= @w1 @w2))
       (is (not= w1 w2))
       (is (not= w2 w1))
       (reset! w1 1)
-      (is (= (:foo @state) 1)))
+      (is (= 1 (:foo @state))))
 
     (let [w1 (ws) w2 (ws)]
-      (is (= @w1 1))
+      (is (= 1 @w1))
       (is (= w1 w2))
       (reset! w1 2)
       (reset! w2 2)
-      (is (= @w1 2))
-      (is (= (:foo @state) 2))
-      (is (= @w2 2))
+      (is (= 2 @w1))
+      (is (= 2 (:foo @state)))
+      (is (= 2 @w2))
       (is (= @w1 @w2))
       (is (not= w1 w2))
       (reset! w1 1))))
@@ -82,7 +82,7 @@
     (is (not= b a))
     (is (= (swap! a update-in [:k] inc)
            (swap! b update-in [:k] inc)))
-    (is (= @a @b {:k 2}))
+    (is (= {:k 2} @a @b))
     (is (= (swap! a assoc :k 3 :l 4 :m 7 :n 8 :o)
            (swap! b assoc :k 3 :l 4 :m 7 :n 8 :o)))
     (is (= (reset! a 23)
@@ -90,7 +90,7 @@
     (is (= @a @b))
     (is (= (swap! a inc)
            (swap! b inc)))
-    (is (= @a @b 24))))
+    (is (= 24 @a @b))))
 
 (deftest test-wrap
   (when r/is-client
@@ -113,47 +113,47 @@
             (u/run-fns-after-render
               (fn []
                 (is (= "value:1:" (.-innerText div)))
-                (is (= @ran 1))
+                (is (= 1 @ran))
 
                 (reset! @grand-state {:foobar 2}))
               (fn []
-                (is (= @state {:foo {:bar {:foobar 2}}}))
-                (is (= @ran 2))
+                (is (= {:foo {:bar {:foobar 2}}} @state))
+                (is (= 2 @ran))
                 (is (= "value:2:" (.-innerText div)))
 
                 (swap! state update-in [:foo :bar] assoc :foobar 3))
               (fn []
-                (is (= @ran 3))
+                (is (= 3 @ran))
                 (is (= "value:3:" (.-innerText div)))
                 (reset! state {:foo {:bar {:foobar 3}}
                                :foo1 {}}))
               (fn []
-                (is (= @ran 3))
+                (is (= 3 @ran))
                 (reset! @grand-state {:foobar 3}))
               (fn []
-                (is (= @ran 3))
+                (is (= 3 @ran))
 
                 (reset! state {:foo {:bar {:foobar 2}}
                                :foo2 {}}))
               (fn []
                 (is (= "value:2:" (.-innerText div)))
-                (is (= @ran 4))
+                (is (= 4 @ran))
 
                 (reset! @grand-state {:foobar 2}))
               (fn []
                 (is (= "value:2:" (.-innerText div)))
-                (is (= @ran 5))
+                (is (= 5 @ran))
 
                 (reset! state {:foo {:bar {:foobar 4}}})
                 (reset! @grand-state {:foobar 4}))
               (fn []
                 (is (= "value:4:" (.-innerText div)))
-                (is (= @ran 6))
+                (is (= 6 @ran))
 
                 (reset! @grand-state {:foobar 4}))
               (fn []
                 (is (= "value:4:" (.-innerText div)))
-                (is (= @ran 7)))
+                (is (= 7 @ran)))
               done)))))))
 
 (deftest test-cursor
@@ -174,25 +174,25 @@
           (fn [c div done]
             (u/run-fns-after-render
               (fn []
-                (is (= @a-count 1))
-                (is (= @b-count 1))
+                (is (= 1 @a-count))
+                (is (= 1 @b-count))
 
 
                 (swap! state update-in [:a :v] inc)
-                (is (= @a-count 1)))
+                (is (= 1 @a-count)))
               (fn []
-                (is (= @a-count 2))
-                (is (= @b-count 1))
+                (is (= 2 @a-count))
+                (is (= 1 @b-count))
 
                 (reset! state {:a {:v 2} :b {:v 2}}))
               (fn []
-                (is (= @a-count 2))
-                (is (= @b-count 1))
+                (is (= 2 @a-count))
+                (is (= 1 @b-count))
 
                 (reset! state {:a {:v 3} :b {:v 2}}))
               (fn []
-                (is (= @a-count 3))
-                (is (= @b-count 1)))
+                (is (= 3 @a-count))
+                (is (= 1 @b-count)))
               done)))))))
 
 (deftest test-fn-cursor
@@ -212,23 +212,23 @@
                [derefer bc]])]
    (with-mounted-component [comp]
      (fn [c div]
-       (is (= @a-count 1))
-       (is (= @b-count 1))
+       (is (= 1 @a-count))
+       (is (= 1 @b-count))
 
        (swap! state update-in [:a :v] inc)
-       (is (= @a-count 1))
-       (is (= @b-count 1))
+       (is (= 1 @a-count))
+       (is (= 1 @b-count))
 
        (r/flush)
-       (is (= @a-count 2))
-       (is (= @b-count 2))
+       (is (= 2 @a-count))
+       (is (= 2 @b-count))
 
        (reset! state {:a {:v 2} :b {:v 2}})
        (r/flush)
-       (is (= @a-count 2))
-       (is (= @b-count 2))
+       (is (= 2 @a-count))
+       (is (= 2 @b-count))
 
        (reset! state {:a {:v 3} :b {:v 2}})
        (r/flush)
-       (is (= @a-count 3))
-       (is (= @b-count 3))))))
+       (is (= 3 @a-count))
+       (is (= 3 @b-count))))))

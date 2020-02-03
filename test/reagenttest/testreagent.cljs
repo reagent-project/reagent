@@ -143,7 +143,7 @@
           v2 (r/atom 0)
           c2 (fn [{val :val}]
                (swap! ran inc)
-               (is (= @v1 val))
+               (is (= val @v1))
                [:div @v2])
           c1 (fn []
                (swap! ran inc)
@@ -152,23 +152,23 @@
       (with-mounted-component [c1]
         (fn [c div]
           (r/flush)
-          (is (= @ran 2))
+          (is (= 2 @ran))
           (swap! v2 inc)
-          (is (= @ran 2))
+          (is (= 2 @ran))
           (r/flush)
-          (is (= @ran 3))
+          (is (= 3 @ran))
           (swap! v1 inc)
           (r/flush)
-          (is (= @ran 5))
+          (is (= 5 @ran))
           (swap! v2 inc)
           (swap! v1 inc)
           (r/flush)
-          (is (= @ran 7))
+          (is (= 7 @ran))
           (swap! v1 inc)
           (swap! v1 inc)
           (swap! v2 inc)
           (r/flush)
-          (is (= @ran 9)))))))
+          (is (= 9 @ran)))))))
 
 (deftest init-state-test
   (when r/is-client
@@ -202,51 +202,51 @@
       (with-mounted-component [parent nil nil]
         (fn [c div]
           (r/flush)
-          (is (= @child-ran 1))
+          (is (= 1 @child-ran))
           (is (= "child-foo" (.-innerText div)))
 
           (reset! child-props {:style {:display :none}})
           (r/flush)
-          (is (= @child-ran 2))
+          (is (= 2 @child-ran))
 
           (reset! child-props {:style {:display :none}})
           (r/flush)
-          (is (= @child-ran 2) "keyw is equal")
+          (is (= 2 @child-ran) "keyw is equal")
 
           (reset! child-props {:class :foo}) (r/flush)
           (r/flush)
-          (is (= @child-ran 3))
+          (is (= 3 @child-ran))
 
           (reset! child-props {:class :foo}) (r/flush)
           (r/flush)
-          (is (= @child-ran 3))
+          (is (= 3 @child-ran))
 
           (reset! child-props {:class 'foo})
           (r/flush)
-          (is (= @child-ran 4) "symbols are different from keyw")
+          (is (= 4 @child-ran) "symbols are different from keyw")
 
           (reset! child-props {:class 'foo})
           (r/flush)
-          (is (= @child-ran 4) "symbols are equal")
+          (is (= 4 @child-ran) "symbols are equal")
 
           (reset! child-props {:style {:color 'red}})
           (r/flush)
-          (is (= @child-ran 5))
+          (is (= 5 @child-ran))
 
           (reset! child-props {:on-change (r/partial f)})
           (r/flush)
-          (is (= @child-ran 6))
+          (is (= 6 @child-ran))
 
           (reset! child-props {:on-change (r/partial f)})
           (r/flush)
-          (is (= @child-ran 6))
+          (is (= 6 @child-ran))
 
           (reset! child-props {:on-change (r/partial f1)})
           (r/flush)
-          (is (= @child-ran 7))
+          (is (= 7 @child-ran))
 
           (r/force-update-all)
-          (is (= @child-ran 8)))))))
+          (is (= 8 @child-ran)))))))
 
 (deftest dirty-test
   (when r/is-client
@@ -254,7 +254,7 @@
           state (r/atom 0)
           really-simple (fn []
                           (swap! ran inc)
-                          (if (= @state 1)
+                          (if (= 1 @state)
                             (reset! state 3))
                           [:div (str "state=" @state)])]
       (with-mounted-component [really-simple nil nil]
@@ -273,14 +273,13 @@
 (deftest to-string-test []
   (let [comp (fn [props]
                [:div (str "i am " (:foo props))])]
-    (is (re-find #"i am foobar"
-                 (as-string [comp {:foo "foobar"}])))))
+    (is (= "<div>i am foobar</div>" (as-string [comp {:foo "foobar"}])))))
 
 (deftest data-aria-test []
-  (is (re-find #"data-foo"
-               (as-string [:div {:data-foo "x"}])))
-  (is (re-find #"aria-labelledby"
-               (as-string [:div {:aria-labelledby "x"}])))
+  (is (= "<div data-foo=\"x\"></div>"
+         (as-string [:div {:data-foo "x"}])))
+  (is (= "<div aria-labelledby=\"x\"></div>"
+         (as-string [:div {:aria-labelledby "x"}])))
   ;; Skip test: produces warning in new React
   ;; (is (not (re-find #"enctype"
   ;;                   (as-string [:div {"enc-type" "x"}])))
@@ -297,10 +296,10 @@
 (deftest dynamic-id-class []
   (is (re-find #"id=.foo"
                (as-string [:div#foo {:class "bar"}])))
-  (is (re-find #"class=.foo bar"
-               (as-string [:div.foo {:class "bar"}])))
-  (is (re-find #"class=.foo bar"
-               (as-string [:div.foo.bar])))
+  (is (= "<div class=\"foo bar\"></div>"
+         (as-string [:div.foo {:class "bar"}])))
+  (is (= "<div class=\"foo bar\"></div>"
+         (as-string [:div.foo.bar])))
   (is (re-find #"id=.foo"
                (as-string [:div#foo.foo.bar])))
   (is (re-find #"class=.xxx bar"
@@ -309,8 +308,8 @@
                (as-string [:div.bar {:id "foo"}])))
   (is (re-find #"id=.foo"
                (as-string [:div.bar.xxx {:id "foo"}])))
-  (is (re-find #"id=.foo"
-               (as-string [:div#bar {:id "foo"}]))
+  (is (= "<div id=\"foo\"></div>"
+         (as-string [:div#bar {:id "foo"}]))
       "Dynamic id overwrites static"))
 
 (defmulti my-div :type)
@@ -320,32 +319,26 @@
 (deftest ifn-component []
   (let [comp {:foo [:div "foodiv"]
               :bar [:div "bardiv"]}]
-    (is (re-find #"foodiv"
-                 (as-string [:div [comp :foo]])))
-    (is (re-find #"bardiv"
-                 (as-string [:div [comp :bar]])))
-    (is (re-find #"class=.foo"
-                 (as-string [my-div {:type :fooish :content "inner"}])))))
+    (is (= "<div><div>foodiv</div></div>"
+           (as-string [:div [comp :foo]])))
+    (is (= "<div><div>bardiv</div></div>"
+           (as-string [:div [comp :bar]])))
+    (is (= "<div class=\"foo\">inner</div>"
+           (as-string [my-div {:type :fooish :content "inner"}])))))
 
 (deftest symbol-string-tag []
-  (is (re-find #"foobar"
-               (as-string ['div "foobar"])))
-  (is (re-find #"foobar"
-               (as-string ["div" "foobar"])))
-  (is (re-find #"id=.foo"
-               (as-string ['div#foo "x"])))
-  (is (re-find #"id=.foo"
-               (as-string ["div#foo" "x"])))
-  (is (re-find #"class=.foo bar"
-               (as-string ['div.foo {:class "bar"}])))
-  (is (re-find #"class=.foo bar"
-               (as-string ["div.foo.bar"])))
+  (is (= "<div>foobar</div>" (as-string ['div "foobar"])))
+  (is (= "<div>foobar</div>" (as-string ["div" "foobar"])))
+  (is (= "<div id=\"foo\">x</div>" (as-string ['div#foo "x"])))
+  (is (= "<div id=\"foo\">x</div>" (as-string ["div#foo" "x"])))
+  (is (= "<div class=\"foo bar\"></div>" (as-string ['div.foo {:class "bar"}])))
+  (is (= "<div class=\"foo bar\"></div>" (as-string ["div.foo.bar"])))
   (is (re-find #"id=.foo"
                (as-string ['div#foo.foo.bar]))))
 
 (deftest partial-test []
   (let [p1 (r/partial vector 1 2)]
-    (is (= (p1 3) [1 2 3]))
+    (is (= [1 2 3] (p1 3)))
     (is (= p1 (r/partial vector 1 2)))
     (is (ifn? p1))
     (is (= (r/partial vector 1 2) p1))
@@ -356,10 +349,10 @@
   (let [null-comp (fn [do-show]
                     (when do-show
                       [:div "div in test-null-component"]))]
-    (is (not (re-find #"test-null-component"
-                      (as-string [null-comp false]))))
-    (is (re-find #"test-null-component"
-                 (as-string [null-comp true])))))
+    (is (= ""
+           (as-string [null-comp false])))
+    (is (= "<div>div in test-null-component</div>"
+           (as-string [null-comp true])))))
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
@@ -433,26 +426,26 @@
 (deftest test-create-element
   (let [ae r/as-element
         ce r/create-element]
-    (is (= (rstr (ae [:div]))
-           (rstr (ce "div"))))
-    (is (= (rstr (ae [:div]))
-           (rstr (ce "div" nil))))
-    (is (= (rstr (ae [:div "foo"]))
-           (rstr (ce "div" nil "foo"))))
-    (is (= (rstr (ae [:div "foo" "bar"]))
-           (rstr (ce "div" nil "foo" "bar"))))
-    (is (= (rstr (ae [:div "foo" "bar" "foobar"]))
-           (rstr (ce "div" nil "foo" "bar" "foobar"))))
+    (is (= (rstr (ce "div"))
+           (rstr (ae [:div]))))
+    (is (= (rstr (ce "div" nil))
+           (rstr (ae [:div]))))
+    (is (= (rstr (ce "div" nil "foo"))
+           (rstr (ae [:div "foo"]))))
+    (is (= (rstr (ce "div" nil "foo" "bar"))
+           (rstr (ae [:div "foo" "bar"]))))
+    (is (= (rstr (ce "div" nil "foo" "bar" "foobar"))
+           (rstr (ae [:div "foo" "bar" "foobar"]))))
 
-    (is (= (rstr (ae [:div.foo "bar"]))
-           (rstr (ce "div" #js{:className "foo"} "bar"))))
+    (is (= (rstr (ce "div" #js{:className "foo"} "bar"))
+           (rstr (ae [:div.foo "bar"]))))
 
-    (is (= (rstr (ae [:div [:div "foo"]]))
-           (rstr (ce "div" nil (ce "div" nil "foo")))))
-    (is (= (rstr (ae [:div [:div "foo"]]))
-           (rstr (ce "div" nil (ae [:div "foo"])))))
-    (is (= (rstr (ae [:div [:div "foo"]]))
-           (rstr (ae [:div (ce "div" nil "foo")]))))))
+    (is (= (rstr (ce "div" nil (ce "div" nil "foo")))
+           (rstr (ae [:div [:div "foo"]]))))
+    (is (= (rstr (ce "div" nil (ae [:div "foo"])))
+           (rstr (ae [:div [:div "foo"]]))))
+    (is (= (rstr (ae [:div (ce "div" nil "foo")]))
+           (rstr (ae [:div [:div "foo"]]))))))
 
 (def ndiv (let [cmp (fn [])]
             (gobj/extend
@@ -526,23 +519,23 @@
               (reset! a args)
               [:p "p:" (:a p) (:children p)])
         c1 (r/reactify-component c1r)]
-    (is (= (rstr [:p "p:a"])
-           (rstr (ce c1 #js{:a "a"}))))
-    (is (= @a nil))
-    (is (= (rstr [:p "p:"])
-           (rstr (ce c1 #js{:a nil}))))
-    (is (= (rstr [:p "p:"])
-           (rstr (ce c1 nil))))
+    (is (= (rstr (ce c1 #js{:a "a"}))
+           (rstr [:p "p:a"])))
+    (is (= nil @a))
+    (is (= (rstr (ce c1 #js{:a nil}))
+           (rstr [:p "p:"])))
+    (is (= (rstr (ce c1 nil))
+           (rstr [:p "p:"])))
 
-    (is (= (rstr [:p "p:a" [:b "b"]])
-           (rstr (ce c1 #js{:a "a"}
-                     (ae [:b "b"])))))
-    (is (= @a nil))
-    (is (= (rstr [:p "p:a" [:b "b"] [:i "i"]])
-           (rstr (ce c1 #js{:a "a"}
+    (is (= (rstr (ce c1 #js{:a "a"}
+                     (ae [:b "b"])))
+           (rstr [:p "p:a" [:b "b"]])))
+    (is (= nil @a))
+    (is (= (rstr (ce c1 #js{:a "a"}
                      (ae [:b "b"])
-                     (ae [:i "i"])))))
-    (is (= @a nil))))
+                     (ae [:i "i"])))
+           (rstr [:p "p:a" [:b "b"] [:i "i"]])))
+    (is (= nil @a))))
 
 (deftest test-keys
   (let [a nil ;; (r/atom "a")
@@ -573,16 +566,16 @@
                  (first (:warn w)))))))))
 
 (deftest test-extended-syntax
-  (is (= (rstr [:p>b "foo"])
-         "<p><b>foo</b></p>"))
-  (is (= (rstr [:p.foo>b "x"])
-         (rstr [:p.foo [:b "x"]])))
-  (is (= (rstr [:div.foo>p.bar.foo>b.foobar "xy"])
-         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
-  (is (= (rstr [:div.foo>p.bar.foo>b.foobar {} "xy"])
-         (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])))
-  (is (= (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])
-         (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]]))))
+  (is (= "<p><b>foo</b></p>"
+         (rstr [:p>b "foo"])))
+  (is (= (rstr [:p.foo [:b "x"]])
+         (rstr [:p.foo>b "x"])))
+  (is (= (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])
+         (rstr [:div.foo>p.bar.foo>b.foobar "xy"])))
+  (is (= (rstr [:div.foo [:p.bar.foo [:b.foobar "xy"]]])
+         (rstr [:div.foo>p.bar.foo>b.foobar {} "xy"])))
+  (is (= (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]])
+         (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"]))))
 
 (deftest extended-syntax-metadata
   (when r/is-client
@@ -596,35 +589,35 @@
           )))))
 
 (deftest test-class-from-collection
-  (is (= (rstr [:p {:class ["a" "b" "c" "d"]}])
-         (rstr [:p {:class "a b c d"}])))
-  (is (= (rstr [:p {:class ["a" nil "b" false "c" nil]}])
-         (rstr [:p {:class "a b c"}])))
-  (is (= (rstr [:p {:class '("a" "b" "c")}])
-         (rstr [:p {:class "a b c"}])))
-  (is (= (rstr [:p {:class #{"a" "b" "c"}}])
-         (rstr [:p {:class "a b c"}]))))
+  (is (= (rstr [:p {:class "a b c d"}])
+         (rstr [:p {:class ["a" "b" "c" "d"]}])))
+  (is (= (rstr [:p {:class "a b c"}])
+         (rstr [:p {:class ["a" nil "b" false "c" nil]}])))
+  (is (= (rstr [:p {:class "a b c"}])
+         (rstr [:p {:class '("a" "b" "c")}])))
+  (is (= (rstr [:p {:class "a b c"}])
+         (rstr [:p {:class #{"a" "b" "c"}}]))))
 
 (deftest class-different-types
   (testing "named values are supported"
-    (is (= (rstr [:p {:class :a}])
-           (rstr [:p {:class "a"}])))
-    (is (= (rstr [:p.a {:class :b}])
-           (rstr [:p {:class "a b"}])))
-    (is (= (rstr [:p.a {:class 'b}])
-           (rstr [:p {:class "a b"}])))
-    (is (= (rstr [:p {:class [:a :b]}])
-           (rstr [:p {:class "a b"}])))
-    (is (= (rstr [:p {:class ['a :b]}])
-           (rstr [:p {:class "a b"}]))))
+    (is (= (rstr [:p {:class "a"}])
+           (rstr [:p {:class :a}])))
+    (is (= (rstr [:p {:class "a b"}])
+           (rstr [:p.a {:class :b}])))
+    (is (= (rstr [:p {:class "a b"}])
+           (rstr [:p.a {:class 'b}])))
+    (is (= (rstr [:p {:class "a b"}])
+           (rstr [:p {:class [:a :b]}])))
+    (is (= (rstr [:p {:class "a b"}])
+           (rstr [:p {:class ['a :b]}]))))
 
   (testing "non-named values like numbers"
-    (is (= (rstr [:p {:class [1 :b]}])
-           (rstr [:p {:class "1 b"}]))))
+    (is (= (rstr [:p {:class "1 b"}])
+           (rstr [:p {:class [1 :b]}]))))
 
   (testing "falsey values are filtered from collections"
-    (is (= (rstr [:p {:class [:a :b false nil]}])
-           (rstr [:p {:class "a b"}])))) )
+    (is (= (rstr [:p {:class "a b"}])
+           (rstr [:p {:class [:a :b false nil]}])))) )
 
 (deftest test-force-update
   (let [v (atom {:v1 0
@@ -646,23 +639,23 @@
              [:div "" (reset! spy @(r/track t1))])]
     (with-mounted-component [c2]
       (fn [c div]
-        (is (= @v {:v1 1 :v2 1}))
+        (is (= {:v1 1 :v2 1} @v))
 
         (r/force-update (:c2 @comps))
-        (is (= @v {:v1 1 :v2 2}))
+        (is (= {:v1 1 :v2 2} @v))
 
         (r/force-update (:c1 @comps))
-        (is (= @v {:v1 2 :v2 2}))
+        (is (= {:v1 2 :v2 2} @v))
 
         (r/force-update (:c2 @comps) true)
-        (is (= @v {:v1 3 :v2 3}))))
+        (is (= {:v1 3 :v2 3} @v))))
     (with-mounted-component [c3]
       (fn [c]
-        (is (= @spy 0))
+        (is (= 0 @spy))
         (swap! state inc)
-        (is (= @spy 0))
+        (is (= 0 @spy))
         (r/force-update (:c3 @comps))
-        (is (= @spy 1))))))
+        (is (= 1 @spy))))))
 
 (deftest test-component-path
   (let [a (atom nil)
@@ -681,7 +674,7 @@
              [:div (map 1)])
         c2 (fn []
              [c1 (sorted-map 1 "foo" 2 "bar")])]
-    (is (= (rstr [c2]) "<div>foo</div>"))))
+    (is (= "<div>foo</div>" (rstr [c2])))))
 
 (deftest basic-with-let
   (when r/is-client
@@ -732,10 +725,10 @@
                 [f @s]))]
       (with-mounted-component [c]
         (fn [_ div]
-          (is (= @a "foo"))
+          (is (= "foo" @a))
           (reset! s "bar")
           (r/flush)
-          (is (= @a "bar")))))))
+          (is (= "bar" @a)))))))
 
 (deftest with-let-non-reactive
   (let [n1 (atom 0)
@@ -808,38 +801,38 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= (:initial-state @res)
-                       {:at 1 :args [@t]}))
-                (is (= (:will-mount @res)
-                       {:at 2 :args [@t]}))
-                (is (= (:render @res)
-                       {:at 3 :args ["a" "b"]}))
-                (is (= (:did-mount @res)
-                       {:at 4 :args [@t]}))
+                (is (= {:at 1 :args [@t]}
+                       (:initial-state @res)))
+                (is (= {:at 2 :args [@t]}
+                       (:will-mount @res)))
+                (is (= {:at 3 :args ["a" "b"]}
+                       (:render @res)))
+                (is (= {:at 4 :args [@t]}
+                       (:did-mount @res)))
 
                 (reset! arg ["a" "c"])
                 (r/flush)
-                (is (= (:will-receive @res)
-                       {:at 5 :args [@t [@comp "a" "c"]]}))
-                (is (= (:should-update @res)
-                       {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}))
-                (is (= (:will-update @res)
-                       {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}))
-                (is (= (:render @res)
-                       {:at 8 :args ["a" "c"]}))
-                (is (= (:did-update @res)
-                       {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]})))]
+                (is (= {:at 5 :args [@t [@comp "a" "c"]]}
+                       (:will-receive @res)))
+                (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
+                       (:should-update @res)))
+                (is (= {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}
+                       (:will-update @res)))
+                (is (= {:at 8 :args ["a" "c"]}
+                       (:render @res)))
+                (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
+                       (:did-update @res))))]
     (when r/is-client
       (with-mounted-component [c2] check)
-      (is (= (:will-unmount @res)
-             {:at 10 :args [@t]}))
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res)))
 
       (reset! comp (with-meta render2 ls))
       (reset! arg defarg)
       (reset! n1 0)
       (with-mounted-component [c2] check)
-      (is (= (:will-unmount @res)
-             {:at 10 :args [@t]})))))
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res))))))
 
 
 (deftest lifecycle-native
@@ -856,8 +849,8 @@
                  (this-as
                   c
                   (when @newprops
-                    (is (= @newprops) (first args))
-                    (is (= @newprops) (r/props c)))
+                    (is (= (first args) @newprops))
+                    (is (= (r/props c) @newprops)))
                   (is (= c (r/current-component)))
                   (is (= (first args) (r/props c)))
                   (add-args :render
@@ -908,43 +901,43 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= (:initial-state @res)
-                       {:at 1 :args [@t]}))
-                (is (= (:will-mount @res)
-                       {:at 2 :args [@t]}))
-                (is (= (:render @res)
-                       {:at 3 :args [[:children ["a" "b"]]]}))
-                (is (= (:did-mount @res)
-                       {:at 4 :args [@t]}))
+                (is (= {:at 1 :args [@t]}
+                       (:initial-state @res)))
+                (is (= {:at 2 :args [@t]}
+                       (:will-mount @res)))
+                (is (= {:at 3 :args [[:children ["a" "b"]]]}
+                       (:render @res)))
+                (is (= {:at 4 :args [@t]}
+                       (:did-mount @res)))
 
                 (reset! arg [{:f "oo"} "a" "c"])
                 (r/flush)
 
-                (is (= (:will-receive @res)
-                       {:at 5 :args [{:foo "bar"} "a" "b"]}))
+                (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
+                       (:will-receive @res)))
                 (let [a (:should-update @res)
                       {at :at
                        [this oldv newv] :args} a]
-                  (is (= at 6))
-                  (is (= (count (:args a)) 3))
-                  (is (= (js->clj oldv) (js->clj [@comp @oldprops])))
-                  (is (= newv [@comp @newprops])))
+                  (is (= 6 at))
+                  (is (= 3 (count (:args a))))
+                  (is (= (js->clj [@comp @oldprops]) (js->clj oldv)))
+                  (is (= [@comp @newprops] newv)))
                 (let [a (:will-update @res)
                       {at :at
                        [this newv] :args} a]
-                  (is (= at 7))
-                  (is (= newv [@comp @newprops])))
-                (is (= (:render @res)
-                       {:at 8 :args [[:children ["a" "c"]]]}))
+                  (is (= 7 at))
+                  (is (= [@comp @newprops] newv)))
+                (is (= {:at 8 :args [[:children ["a" "c"]]]}
+                       (:render @res)))
                 (let [a (:did-update @res)
                       {at :at
                        [this oldv] :args} a]
-                  (is (= at 9))
-                  (is (= oldv [@comp @oldprops]))))]
+                  (is (= 9 at))
+                  (is (= [@comp @oldprops] oldv))))]
     (when r/is-client
       (with-mounted-component [cnative] check)
-      (is (= (:will-unmount @res)
-             {:at 10 :args [@t]})))))
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res))))))
 
 (defn foo []
   [:div])
@@ -1029,8 +1022,8 @@
                       #(is (thrown-with-msg?
                              :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
                              (rend [comp2 [:div. "foo"]]))))))]
-          (is (= (last (:error e))
-                 (str "Error rendering component (" stack2 ")"))))
+          (is (= (str "Error rendering component (" stack2 ")")
+                 (last (:error e)))))
 
         (let [e (debug/track-warnings
                   (wrap-capture-window-error
@@ -1038,8 +1031,8 @@
                       #(is (thrown-with-msg?
                              :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
                              (rend [comp1 [:div. "foo"]]))))))]
-          (is (= (last (:error e))
-                 (str "Error rendering component (" stack1 ")"))))
+          (is (= (str "Error rendering component (" stack1 ")")
+                 (last (:error e)))))
 
         (let [e (debug/track-warnings #(r/as-element [nat]))]
           (is (re-find #"Using native React classes directly"
@@ -1089,8 +1082,8 @@
                  (reset! node (r/dom-node this)))})]
     (with-mounted-component [comp]
       (fn [c div]
-        (is (= (.-innerHTML @ref) "foobar"))
-        (is (= (.-innerHTML @node) "foobar"))
+        (is (= "foobar" (.-innerHTML @ref)))
+        (is (= "foobar" (.-innerHTML @node)))
         (is (identical? @ref @node))))))
 
 (deftest test-empty-input
@@ -1111,42 +1104,42 @@
         state (r/atom 0)
         comp (fn []
                (let [old @spy]
-                 (is (nil? (r/after-render
-                            (fn []
-                              (is (= "DIV" (.-tagName @node)))
-                              (swap! spy inc)))))
-                 (is (= old @spy))
+                 (r/after-render
+                   (fn []
+                     (is (= "DIV" (.-tagName @node)))
+                     (swap! spy inc)))
+                 (is (= @spy old))
                  (is (= @exp @val))
                  [:div {:ref #(reset! node %)} @state]))]
     (with-mounted-component [comp]
       (fn [c div]
-        (is (= @spy 1))
+        (is (= 1 @spy))
         (swap! state inc)
-        (is (= @spy 1))
-        (is (nil? (r/next-tick #(swap! val inc))))
+        (is (= 1 @spy))
+        (r/next-tick #(swap! val inc))
         (reset! exp 1)
-        (is (= @val 0))
-        (is (nil? (r/flush)))
-        (is (= @val 1))
-        (is (= @spy 2))
-        (is (nil? (r/force-update c)))
-        (is (= @spy 3))
-        (is (nil? (r/next-tick #(reset! spy 0))))
-        (is (= @spy 3))
+        (is (= 0 @val))
         (r/flush)
-        (is (= @spy 0))))
-    (is (= @node nil))))
+        (is (= 1 @val))
+        (is (= 2 @spy))
+        (r/force-update c)
+        (is (= 3 @spy))
+        (r/next-tick #(reset! spy 0))
+        (is (= 3 @spy))
+        (r/flush)
+        (is (= 0 @spy))))
+    (is (= nil @node))))
 
 (deftest style-property-names-are-camel-cased
-  (is (re-find #"<div style=\"text-align:center(;?)\">foo</div>"
-               (rstr [:div {:style {:text-align "center"}} "foo"]))))
+  (is (= "<div style=\"text-align:center\">foo</div>"
+         (rstr [:div {:style {:text-align "center"}} "foo"]))))
 
 (deftest custom-element-class-prop
-  (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (rstr [:custom-element {:class "foobar"} "foo"])))
+  (is (= "<custom-element class=\"foobar\">foo</custom-element>"
+         (rstr [:custom-element {:class "foobar"} "foo"])))
 
-  (is (re-find #"<custom-element class=\"foobar\">foo</custom-element>"
-               (rstr [:custom-element.foobar "foo"]))))
+  (is (= "<custom-element class=\"foobar\">foo</custom-element>"
+         (rstr [:custom-element.foobar "foo"]))))
 
 (deftest html-entities
   (testing "entity numbers can be unescaped always"
