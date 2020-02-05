@@ -1429,14 +1429,11 @@
           (r/flush)
           (is (= 3 @render)))))))
 
-;; :< creates functional component for now.
-;; This is for testing only, hopefully functional component
-;; can be the default later.
 (deftest functional-component-poc-simple
   (when r/is-client
     (let [c (fn [x]
               [:span "Hello " x])]
-        (with-mounted-component [:< c "foo"]
+        (with-mounted-component [c "foo"]
           (fn [c div]
             (is (nil? c) "Render returns nil for stateless components")
             (is (= "Hello foo" (.-innerText div))))))))
@@ -1451,7 +1448,7 @@
               (let [[c set-count] (react/useState x)]
                 (reset! set-count! set-count)
                 [:span "Count " c]))]
-      (with-mounted-component [:< c 5]
+      (with-mounted-component [c 5]
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Count 5" (.-innerText div)))
@@ -1463,7 +1460,7 @@
     (let [count (r/atom 5)
           c (fn [x]
               [:span "Count " @count])]
-      (with-mounted-component [:< c 5]
+      (with-mounted-component [c 5]
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Count 5" (.-innerText div)))
@@ -1482,7 +1479,7 @@
               (let [[c set-count] (react/useState x)]
                 (reset! set-count! set-count)
                 [:span "Counts " @r-count " " c]))]
-      (with-mounted-component [:< c 15]
+      (with-mounted-component [c 15]
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Counts 3 15" (.-innerText div)))
