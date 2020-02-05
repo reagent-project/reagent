@@ -13,7 +13,7 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
-            [lein-codox "0.10.3"]
+            [lein-codox "0.10.7"]
             [lein-figwheel "0.5.19"]]
 
   :source-paths ["src"]
