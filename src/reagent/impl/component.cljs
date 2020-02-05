@@ -402,59 +402,68 @@
 
 (defn functional-render [jsprops]
   (let [argv (.-argv jsprops)
-        tag (.-tag jsprops)
-        res (if util/*non-reactive*
-              (apply tag argv)
-              ;; Create persistent ID for each rendered functional component,
-              ;; this is used to store internal Reagent state, like render
-              ;; reaction etc. in a separate store where changes doesn't
-              ;; trigger render.
-              (let [[id _] (react/useState (js/Symbol))
-                    [_ update-count] (react/useState 0)
-                    reagent-state (or (gobj/get fun-component-state id)
-                                      ;; TODO: Mock state atom?
-                                      (let [obj #js {:forceUpdate (fn [] (update-count inc))
-                                                     :cljsMountOrder (batch/next-mount-count)}]
-                                        (gobj/set fun-component-state id obj)
-                                        obj))]
+        tag (.-tag jsprops)]
+    (if util/*non-reactive*
+      (let [res (apply tag argv)]
+        (cond
+          (vector? res) (as-element res)
+          (ifn? res) (let [f (if (reagent-class? res)
+                               (fn [& args]
+                                 (as-element (apply vector res args)))
+                               res)]
+                       (as-element (apply f argv)))
+          :else res))
+      (let [;; Create persistent ID for each rendered functional component,
+            ;; this is used to store internal Reagent state, like render
+            ;; reaction etc. in a separate store where changes doesn't
+            ;; trigger render.
+            [id _] (react/useState (js/Symbol))
 
-                (react/useEffect
-                  (fn mount []
-                    (fn unmount []
-                      (some-> (.-cljsRatom reagent-state) ratom/dispose!)
-                      (gobj/remove fun-component-state id)))
-                  ;; Only run effect once on mount and unmount
-                  #js [])
+            ;; Use counter to trigger render manually.
+            [_ update-count] (react/useState 0)
 
-                ;; Note: it might be possible to mock some React Component
-                ;; methods in the object and use it as *current-component*
+            ;; This object mimics React Class attributes and methods.
+            ;; To support form-2 components, even the render fn needs to
+            ;; be stored as it is created during the first render,
+            ;; and subsequent renders need to retrieve the created fn.
+            reagent-state (or (gobj/get fun-component-state id)
+                              (let [obj #js {:forceUpdate (fn [] (update-count inc))
+                                             :cljsMountOrder (batch/next-mount-count)
+                                             :renderFn tag}]
+                                (gobj/set fun-component-state id obj)
+                                obj))]
 
-                ;; TODO: If return value is ifn?, consider form-2 component.
+        (react/useEffect
+          (fn mount []
+            (fn unmount []
+              (some-> (.-cljsRatom reagent-state) ratom/dispose!)
+              (gobj/remove fun-component-state id)))
+          ;; Only run effect once on mount and unmount
+          #js [])
 
-                (assert-callable tag)
+        (assert-callable tag)
 
-                (batch/mark-rendered reagent-state)
+        (batch/mark-rendered reagent-state)
 
-                ;; static-fns :render
-                (if-let [rat (.-cljsRatom reagent-state)]
-                  (._run rat false)
-                  (ratom/run-in-reaction
-                    ;; Mock Class component API
-                    #(binding [*current-component* reagent-state]
-                       (apply tag argv))
-                    reagent-state
-                    "cljsRatom"
-                    batch/queue-render
-                    rat-opts))))]
-    ;; do-render
-    ;; wrap-render
-    (cond
-      (vector? res) (as-element res)
-      ;; FIXME: Support form-2 components???
-      ; (ifn? res) (let [f (if (reagent-class? res)
-      ;                      (create-class
-      ;                        {:reagent-render (fn [& args]
-      ;                                           (as-element (apply vector res args)))})
-      ;                      res)]
-      ;              f)
-      :else res)))
+        ;; static-fns :render
+        (let [res (if-let [rat (.-cljsRatom reagent-state)]
+                    (._run rat false)
+                    (ratom/run-in-reaction
+                      ;; Mock Class component API
+                      #(binding [*current-component* reagent-state]
+                         (apply (.-renderFn reagent-state) argv))
+                      reagent-state
+                      "cljsRatom"
+                      batch/queue-render
+                      rat-opts))]
+          (cond
+            (vector? res) (as-element res)
+            (ifn? res) (let [;; If original fn returned class (create-class) wrap in fn and call that.
+                             f (if (reagent-class? res)
+                                 (fn [& args]
+                                   (as-element (apply vector res args)))
+                                 res)]
+                         ;; Store the returned fn in state, so it will be used in following render calls.
+                         (set! (.-renderFn reagent-state) f)
+                         (as-element (apply f argv)))
+            :else res))))))
