@@ -175,17 +175,13 @@
 (deftest init-state-test
   (when r/is-client
     (let [ran (r/atom 0)
-          really-simple
-          ;; NOTE: Manually marking the following component as stateful.
-          ;; TODO: Should maybe just use create-class here.
-          ^:class-component
-          (fn []
-            (let [this (r/current-component)]
-              (swap! ran inc)
-              (r/set-state this {:foo "foobar"})
-              (fn []
-                [:div (str "this is "
-                           (:foo (r/state this)))])))]
+          really-simple (fn []
+                          (let [this (r/current-component)]
+                            (swap! ran inc)
+                            (r/set-state this {:foo "foobar"})
+                            (fn []
+                              [:div (str "this is "
+                                         (:foo (r/state this)))])))]
       (with-mounted-component [really-simple nil nil]
         (fn [c div]
           (swap! ran inc)
@@ -1157,7 +1153,6 @@
         (r/flush)
         (is (= 1 @val))
         (is (= 2 @spy))
-        ;; TODO: Functional component can't be force updated from the outside
         (r/force-update c)
         (is (= 3 @spy))
         (r/next-tick #(reset! spy 0))
