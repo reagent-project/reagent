@@ -311,11 +311,6 @@
         (set! (.-key jsprops) key))
       (react/createElement comp/functional-render jsprops))))
 
-(defn reag-fun-element [v]
-  (let [tag (nth v 1)
-        argv (drop 2 v)]
-    (react/createElement comp/functional-render #js {:tag tag :argv argv})))
-
 (defn fragment-element [argv]
   (let [props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
@@ -376,9 +371,6 @@
     (cond
       (keyword-identical? :<> tag)
       (fragment-element v)
-
-      (keyword-identical? :< tag)
-      (reag-fun-element v)
 
       (hiccup-tag? tag)
       (let [n (name tag)
