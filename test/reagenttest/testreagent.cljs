@@ -11,19 +11,11 @@
             [goog.object :as gobj]
             [prop-types :as prop-types]))
 
-(def tests-done (atom {}))
-
 (t/use-fixtures :once
                 {:before (fn []
                            (set! rv/debug true))
                  :after  (fn []
                            (set! rv/debug false))})
-
-(defn running [] (rv/running))
-
-(def isClient r/is-client)
-
-(def rflush r/flush)
 
 (defn rstr [react-elem]
   (server/render-to-static-markup react-elem))
@@ -41,9 +33,7 @@
           (set! js/console.error org))))))
 
 (deftest really-simple-test
-  (when (and isClient
-             (not (:really-simple-test @tests-done)))
-    (swap! tests-done assoc :really-simple-test true)
+  (when r/is-client
     (let [ran (r/atom 0)
           really-simple (fn []
                           (swap! ran inc)
@@ -59,7 +49,7 @@
       (is (= 3 @ran)))))
 
 (deftest test-simple-callback
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           comp (r/create-class
                 {:component-did-mount #(swap! ran inc)
@@ -79,7 +69,7 @@
       (is (= 3 @ran)))))
 
 (deftest test-state-change
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           self (r/atom nil)
           comp (r/create-class
@@ -98,18 +88,18 @@
           (r/replace-state @self {:foo "there"})
           (r/state @self)
 
-          (rflush)
+          (r/flush)
           (is (= "hi there" (.-innerText div)))
 
           (r/set-state @self {:foo "you"})
-          (rflush)
+          (r/flush)
           (is (= "hi you" (.-innerText div)))))
       (is (= 4 @ran)))))
 
 (deftest test-ratom-change
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
-          runs (running)
+          runs (rv/running)
           val (r/atom 0)
           secval (r/atom 0)
           v1-ran (atom 0)
@@ -120,7 +110,7 @@
       (with-mounted-component [comp]
         (fn [C div]
           (r/flush)
-          (is (not= runs (running)))
+          (is (not= runs (rv/running)))
           (is (= "val 0 0 0" (.-innerText div)))
           (is (= 1 @ran))
 
@@ -143,11 +133,11 @@
           (is (= 2 @v1-ran))
           (is (= "val 1 1 0" (.-innerText div)))
           (is (= 2 @ran) "did not run")))
-      (is (= runs (running)))
+      (is (= runs (rv/running)))
       (is (= 2 @ran)))))
 
 (deftest batched-update-test []
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           v1 (r/atom 0)
           v2 (r/atom 0)
@@ -161,27 +151,27 @@
                 [c2 {:val @v1}]])]
       (with-mounted-component [c1]
         (fn [c div]
-          (rflush)
+          (r/flush)
           (is (= @ran 2))
           (swap! v2 inc)
           (is (= @ran 2))
-          (rflush)
+          (r/flush)
           (is (= @ran 3))
           (swap! v1 inc)
-          (rflush)
+          (r/flush)
           (is (= @ran 5))
           (swap! v2 inc)
           (swap! v1 inc)
-          (rflush)
+          (r/flush)
           (is (= @ran 7))
           (swap! v1 inc)
           (swap! v1 inc)
           (swap! v2 inc)
-          (rflush)
+          (r/flush)
           (is (= @ran 9)))))))
 
 (deftest init-state-test
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           really-simple (fn []
                           (let [this (r/current-component)]
@@ -197,9 +187,7 @@
       (is (= 2 @ran)))))
 
 (deftest shoud-update-test
-  (when (and isClient
-             (not (:should-update-test @tests-done)))
-    (swap! tests-done assoc :should-update-test true)
+  (when r/is-client
     (let [parent-ran (r/atom 0)
           child-ran (r/atom 0)
           child-props (r/atom nil)
@@ -213,40 +201,55 @@
                   [:div "child-foo" [child @child-props]])]
       (with-mounted-component [parent nil nil]
         (fn [c div]
-          (rflush)
+          (r/flush)
           (is (= @child-ran 1))
           (is (= "child-foo" (.-innerText div)))
+
           (reset! child-props {:style {:display :none}})
-          (rflush)
+          (r/flush)
           (is (= @child-ran 2))
+
           (reset! child-props {:style {:display :none}})
-          (rflush)
+          (r/flush)
           (is (= @child-ran 2) "keyw is equal")
-          (reset! child-props {:class :foo}) (rflush)
+
+          (reset! child-props {:class :foo}) (r/flush)
+          (r/flush)
           (is (= @child-ran 3))
-          (reset! child-props {:class :foo}) (rflush)
+
+          (reset! child-props {:class :foo}) (r/flush)
+          (r/flush)
           (is (= @child-ran 3))
+
           (reset! child-props {:class 'foo})
+          (r/flush)
           (is (= @child-ran 4) "symbols are different from keyw")
+
           (reset! child-props {:class 'foo})
+          (r/flush)
           (is (= @child-ran 4) "symbols are equal")
+
           (reset! child-props {:style {:color 'red}})
+          (r/flush)
           (is (= @child-ran 5))
+
           (reset! child-props {:on-change (r/partial f)})
-          (rflush)
+          (r/flush)
           (is (= @child-ran 6))
+
           (reset! child-props {:on-change (r/partial f)})
-          (rflush)
+          (r/flush)
           (is (= @child-ran 6))
+
           (reset! child-props {:on-change (r/partial f1)})
-          (rflush)
+          (r/flush)
           (is (= @child-ran 7))
 
           (r/force-update-all)
           (is (= @child-ran 8)))))))
 
 (deftest dirty-test
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           state (r/atom 0)
           really-simple (fn []
@@ -259,7 +262,7 @@
           (is (= 1 @ran))
           (is (= "state=0" (.-innerText div)))
           (reset! state 1)
-          (rflush)
+          (r/flush)
           (is (= 2 @ran))
           (is (= "state=3" (.-innerText div)))))
       (is (= 2 @ran)))))
@@ -368,7 +371,7 @@
                           {:__html "<p>foobar</p>"}} ]))))
 
 (deftest test-return-class
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           top-ran (r/atom 0)
           comp (fn []
@@ -400,7 +403,7 @@
           (is (= 4 @ran)))))))
 
 (deftest test-return-class-fn
-  (when isClient
+  (when r/is-client
     (let [ran (r/atom 0)
           top-ran (r/atom 0)
           comp (fn []
@@ -681,7 +684,7 @@
     (is (= (rstr [c2]) "<div>foo</div>"))))
 
 (deftest basic-with-let
-  (when isClient
+  (when r/is-client
     (let [n1 (atom 0)
           n2 (atom 0)
           n3 (atom 0)
@@ -702,7 +705,7 @@
       (is (= [1 2 1] [@n1 @n2 @n3])))))
 
 (deftest with-let-destroy-only
-  (when isClient
+  (when r/is-client
     (let [n1 (atom 0)
           n2 (atom 0)
           c (fn []
@@ -717,7 +720,7 @@
       (is (= [1 1] [@n1 @n2])))))
 
 (deftest with-let-arg
-  (when isClient
+  (when r/is-client
     (let [a (atom 0)
           s (r/atom "foo")
           f (fn [x]
@@ -826,7 +829,7 @@
                        {:at 8 :args ["a" "c"]}))
                 (is (= (:did-update @res)
                        {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]})))]
-    (when isClient
+    (when r/is-client
       (with-mounted-component [c2] check)
       (is (= (:will-unmount @res)
              {:at 10 :args [@t]}))
@@ -938,7 +941,7 @@
                        [this oldv] :args} a]
                   (is (= at 9))
                   (is (= oldv [@comp @oldprops]))))]
-    (when isClient
+    (when r/is-client
       (with-mounted-component [cnative] check)
       (is (= (:will-unmount @res)
              {:at 10 :args [@t]})))))
@@ -1278,7 +1281,7 @@
         component (fn []
                     [component-class @prop])]
 
-    (when (and isClient (dev?))
+    (when (and r/is-client (dev?))
       (let [e (debug/track-warnings
                 #(with-mounted-component [component]
                    (fn [c div]
@@ -1294,7 +1297,7 @@
                      (first (:warn e))))))))
 
 (deftest get-derived-state-from-props-test
-  (when isClient
+  (when r/is-client
     (let [prop (r/atom 0)
           ;; Usually one can use Cljs object as React state. However,
           ;; getDerivedStateFromProps implementation in React uses
@@ -1318,7 +1321,7 @@
           (is (= "Value foo foo" (.-innerText div))))))))
 
 (deftest get-derived-state-from-error-test
-  (when isClient
+  (when r/is-client
     (let [prop (r/atom 0)
           component (r/create-class
                       {:constructor (fn [this props]
@@ -1344,7 +1347,7 @@
                (is (= "Error" (.-innerText div))))))))))
 
 (deftest get-snapshot-before-update-test
-  (when isClient
+  (when r/is-client
     (let [ref (react/createRef)
           prop (r/atom 0)
           did-update (atom nil)
@@ -1372,7 +1375,7 @@
           (.removeChild js/document.body div))))))
 
 (deftest issue-462-test
-  (when isClient
+  (when r/is-client
     (let [val (r/atom 0)
           render (atom 0)
           a (fn issue-462-a [nr]
