@@ -198,9 +198,9 @@
           child (fn [p]
                   (swap! child-ran inc)
                   [:div (:val p)])
-          parent(fn []
-                  (swap! parent-ran inc)
-                  [:div "child-foo" [child @child-props]])]
+          parent (fn []
+                   (swap! parent-ran inc)
+                   [:div "child-foo" [child @child-props]])]
       (with-mounted-component [parent nil nil]
         (fn [c div]
           (r/flush)
