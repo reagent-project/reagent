@@ -119,7 +119,7 @@ The primary entrypoint to the reagent library is `reagent.core/render`.
   (:require [reagent.core :as r]))
 
 (defn render-simple []
-  (rdom/render [:div [:p "Hello world!"]]
+  (r/render [:div [:p "Hello world!"]]
     (.-body js/document)))
 ```
 
