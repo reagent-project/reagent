@@ -116,7 +116,7 @@ The primary entrypoint to the reagent library is `reagent.core/render`.
 
 ```clojure
 (ns example
-  (:require [reagent.core :as r]))
+  (:require [reagent.dom :as rdom]))
 
 (defn render-simple []
   (rdom/render [:div [:p "Hello world!"]]
