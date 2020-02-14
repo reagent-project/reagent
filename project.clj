@@ -25,12 +25,15 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.597"]
                                   [figwheel "0.5.19"]
+                                  [figwheel-sidecar "0.5.19"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.7.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]
+
+  :repl-options {:init (do (require '[figwheel-sidecar.repl-api :refer :all]))}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
