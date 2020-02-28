@@ -3,8 +3,8 @@
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
     "prop-types": "15.7.2",
-    "react": "16.12.0",
-    "react-dom": "16.12.0"
+    "react": "16.13.0",
+    "react-dom": "16.13.0"
   },
   "scripts": {
     "start": "lein figwheel client-npm"
