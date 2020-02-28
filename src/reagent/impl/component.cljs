@@ -121,7 +121,8 @@
       :else res)))
 
 (defn component-name [c]
-  (some-> c .-constructor .-displayName))
+  (or (some-> c .-constructor .-displayName)
+      (some-> c .-constructor .-name)))
 
 (defn comp-name []
   (if (dev?)
@@ -400,6 +401,35 @@
 
 (defonce fun-component-state #js {})
 
+(defn functional-wrap-render
+  [^clj c argv]
+  (let [f (.-reagentRender c)
+        _ (assert-callable f)
+        res (apply (.-reagentRender c) argv)]
+    (cond
+      (vector? res) (as-element res)
+      (ifn? res) (let [f (if (reagent-class? res)
+                           (fn [& args]
+                             (as-element (apply vector res args)))
+                           res)]
+                   (set! (.-reagentRender c) f)
+                   (recur c argv))
+      :else res)))
+
+(defn functional-do-render [c argv]
+  (binding [*current-component* c]
+    (if (dev?)
+      ;; Log errors, without using try/catch (and mess up call stack)
+      (let [ok (array false)]
+        (try
+          (let [res (functional-wrap-render c argv)]
+            (aset ok 0 true)
+            res)
+          (finally
+            (when-not (aget ok 0)
+              (error (str "Error rendering component" (comp-name)))))))
+      (functional-wrap-render c argv))))
+
 (defn functional-render [jsprops]
   (let [argv (.-argv jsprops)
         tag (.-tag jsprops)]
@@ -429,41 +459,47 @@
             reagent-state (or (gobj/get fun-component-state id)
                               (let [obj #js {:forceUpdate (fn [] (update-count inc))
                                              :cljsMountOrder (batch/next-mount-count)
-                                             :renderFn tag}]
+                                             ;; Use reagentRender name, as that is also used
+                                             ;; by class components, and some checks.
+                                             ;; ReagentRender is replaced with form-2 inner fn,
+                                             ;; constructor refers to the original fn.
+                                             :reagentRender tag
+                                             :constructor tag
+                                             :cljsIsDirty false}]
                                 (gobj/set fun-component-state id obj)
                                 obj))]
 
         (react/useEffect
           (fn mount []
             (fn unmount []
-              (some-> (.-cljsRatom reagent-state) ratom/dispose!)
+              (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
               (gobj/remove fun-component-state id)))
           ;; Only run effect once on mount and unmount
           #js [])
 
         (assert-callable tag)
-
         (batch/mark-rendered reagent-state)
 
         ;; static-fns :render
-        (let [res (if-let [rat (.-cljsRatom reagent-state)]
-                    (._run rat false)
-                    (ratom/run-in-reaction
-                      ;; Mock Class component API
-                      #(binding [*current-component* reagent-state]
-                         (apply (.-renderFn reagent-state) argv))
-                      reagent-state
-                      "cljsRatom"
-                      batch/queue-render
-                      rat-opts))]
-          (cond
-            (vector? res) (as-element res)
-            (ifn? res) (let [;; If original fn returned class (create-class) wrap in fn and call that.
-                             f (if (reagent-class? res)
-                                 (fn [& args]
-                                   (as-element (apply vector res args)))
-                                 res)]
-                         ;; Store the returned fn in state, so it will be used in following render calls.
-                         (set! (.-renderFn reagent-state) f)
-                         (as-element (apply f argv)))
-            :else res))))))
+        (if-let [rat (gobj/get reagent-state "cljsRatom")]
+          (._run rat false)
+          (ratom/run-in-reaction
+            ;; Mock Class component API
+            #(functional-do-render reagent-state argv)
+            reagent-state
+            "cljsRatom"
+            batch/queue-render
+            rat-opts))))))
+
+(defonce fun-components #js {})
+
+(defn funtional-render-fn
+  "Create copy of functional-render with displayName set to name of the
+  original Reagent component."
+  [tag]
+  ;; TODO: Could be disabled for optimized builds?
+  (or (gobj/get fun-components tag)
+    (let [f (.bind functional-render #js {})]
+      (set! (.-displayName f) (util/fun-name tag))
+      (gobj/set fun-components tag f)
+      f)))
