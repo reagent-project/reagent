@@ -37,7 +37,8 @@
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
-             :repl false}
+             :repl true
+             :nrepl-port 27397}
 
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all
