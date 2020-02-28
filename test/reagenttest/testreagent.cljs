@@ -145,8 +145,7 @@
           v2 (r/atom 0)
           c2 (fn [{val :val}]
                (swap! ran inc)
-               ;; FIXME:
-               ; (is (= val @v1))
+               (is (= val @v1))
                [:div @v2])
           c1 (fn []
                (swap! ran inc)
@@ -663,9 +662,9 @@
              [:div "" (reset! spy @(r/track t1))])]
     (with-mounted-component [c2]
       (fn [c div]
-        ;; FIXME:
-        ; (is (= {:v1 1 :v2 1} @v))
+        (is (= {:v1 1 :v2 1} @v))
 
+        ;; FIXME:
         ; (r/force-update (:c2 @comps))
         ; (is (= {:v1 1 :v2 2} @v))
 
