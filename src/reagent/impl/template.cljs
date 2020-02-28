@@ -309,7 +309,7 @@
                        :argv (subvec v 1)}]
       (when-some [key (key-from-vec v)]
         (set! (.-key jsprops) key))
-      (react/createElement comp/functional-render jsprops))))
+      (react/createElement (comp/funtional-render-fn tag) jsprops))))
 
 (defn fragment-element [argv]
   (let [props (nth argv 1 nil)
