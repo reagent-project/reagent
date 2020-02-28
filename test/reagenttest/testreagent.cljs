@@ -586,7 +586,7 @@
                   #(with-mounted-component [c]
                      (fn [c div]))))]
         (if (dev?)
-          (is (= "Warning: Every element in a seq should have a unique :key: ([:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}])\n (in reagenttest.testreagent.key_tester)"
+          (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
                  (first (:warn w)))))))))
 
 (deftest test-extended-syntax
@@ -1041,8 +1041,6 @@
                   cmp)
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
-            re (fn [& s]
-                 (re-pattern (apply str s)))
             rend (fn [x]
                    (with-mounted-component x identity))]
 
@@ -1051,19 +1049,19 @@
                   (wrap-capture-window-error
                     (wrap-capture-console-error
                       #(is (thrown-with-msg?
-                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                             :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                              (rend [comp2 [:div. "foo"]]))))))]
-          (is (= (str "Error rendering component (" stack1 ")")
-                 (last (:error e)))))
+          (is (re-find #"Error rendering component \(in reagenttest.testreagent.comp1\)"
+                       (last (:error e)))))
 
         (let [e (debug/track-warnings
                   (wrap-capture-window-error
                     (wrap-capture-console-error
                       #(is (thrown-with-msg?
-                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
+                             :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                              (rend [comp1 [:div. "foo"]]))))))]
-          (is (= (str "Error rendering component (" stack1 ")")
-                 (last (:error e)))))
+          (is (re-find #"Error rendering component \(in reagenttest.testreagent.comp1\)"
+                       (last (:error e)))))
 
         (let [e (debug/track-warnings #(r/as-element [nat]))]
           (is (re-find #"Using native React classes directly"
