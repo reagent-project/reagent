@@ -399,8 +399,6 @@
     comp
     (as-class comp)))
 
-(defonce fun-component-state #js {})
-
 (defn functional-wrap-render
   [^clj c argv]
   (let [f (.-reagentRender c)
@@ -416,19 +414,21 @@
                    (recur c argv))
       :else res)))
 
-(defn functional-do-render [c argv]
+(defn functional-do-render [c]
   (binding [*current-component* c]
     (if (dev?)
       ;; Log errors, without using try/catch (and mess up call stack)
       (let [ok (array false)]
         (try
-          (let [res (functional-wrap-render c argv)]
+          (let [res (functional-wrap-render c (.-argv c))]
             (aset ok 0 true)
             res)
           (finally
             (when-not (aget ok 0)
               (error (str "Error rendering component" (comp-name)))))))
-      (functional-wrap-render c argv))))
+      (functional-wrap-render c (.-argv c)))))
+
+(def fun-component-state #js {})
 
 (defn functional-render [jsprops]
   (let [argv (.-argv jsprops)
@@ -465,7 +465,10 @@
                                              ;; constructor refers to the original fn.
                                              :reagentRender tag
                                              :constructor tag
-                                             :cljsIsDirty false}]
+                                             :cljsIsDirty false
+                                             ;; Argv is also stored in the state,
+                                             ;; so reaction fn will always see the latest value.
+                                             :argv argv}]
                                 (gobj/set fun-component-state id obj)
                                 obj))]
 
@@ -479,19 +482,20 @@
 
         (assert-callable tag)
         (batch/mark-rendered reagent-state)
+        (set! (.-argv reagent-state) argv)
 
         ;; static-fns :render
         (if-let [rat (gobj/get reagent-state "cljsRatom")]
           (._run rat false)
           (ratom/run-in-reaction
             ;; Mock Class component API
-            #(functional-do-render reagent-state argv)
+            #(functional-do-render reagent-state)
             reagent-state
             "cljsRatom"
             batch/queue-render
             rat-opts))))))
 
-(defonce fun-components #js {})
+(def fun-components #js {})
 
 (defn funtional-render-fn
   "Create copy of functional-render with displayName set to name of the
