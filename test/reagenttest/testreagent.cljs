@@ -563,7 +563,7 @@
                 (wrap-capture-console-error
                   #(with-mounted-component [c]
                      (fn [c div]))))]
-        (if (debug/dev?)
+        (if (dev?)
           (is (= "Warning: Every element in a seq should have a unique :key: ([:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}] [:button {:on-click #object[Function]}])\n (in reagenttest.testreagent.key_tester)"
                  (first (:warn w)))))))))
 
@@ -664,7 +664,7 @@
         tc (r/create-class {:display-name "atestcomponent"
                             :render (fn []
                                       (let [c (r/current-component)]
-                                        (reset! a (comp/component-path c))
+                                        (reset! a (comp/component-name c))
                                         [:div]))})]
     (with-mounted-component [tc]
       (fn [c]
@@ -1013,18 +1013,19 @@
                   cmp)
             pkg "reagenttest.testreagent."
             stack1 (str "in " pkg "comp1")
-            stack2 (str "in " pkg "comp2 > " pkg "comp1")
             re (fn [& s]
                  (re-pattern (apply str s)))
             rend (fn [x]
                    (with-mounted-component x identity))]
+
+        ;; Error is orginally caused by comp1, so only that is shown in the error
         (let [e (debug/track-warnings
                   (wrap-capture-window-error
                     (wrap-capture-console-error
                       #(is (thrown-with-msg?
-                             :default (re "Invalid tag: 'div.' \\(" stack2 "\\)")
+                             :default (re "Invalid tag: 'div.' \\(" stack1 "\\)")
                              (rend [comp2 [:div. "foo"]]))))))]
-          (is (= (str "Error rendering component (" stack2 ")")
+          (is (= (str "Error rendering component (" stack1 ")")
                  (last (:error e)))))
 
         (let [e (debug/track-warnings
@@ -1052,9 +1053,11 @@
 
 (deftest test-error-boundary
   (let [error (r/atom nil)
+        info (r/atom nil)
         error-boundary (fn error-boundary [comp]
                          (r/create-class
-                           {:component-did-catch (fn [this e info])
+                           {:component-did-catch (fn [this e i]
+                                                   (reset! info i))
                             :get-derived-state-from-error (fn [e]
                                                             (reset! error e)
                                                             #js {})
@@ -1063,15 +1066,22 @@
                                                 [:div "Something went wrong."]
                                                 comp))}))
         comp1 (fn comp1 []
-                (throw (js/Error. "Test error")))]
+                (throw (js/Error. "Test error")))
+        comp2 (fn comp2 []
+                [comp1])]
     (debug/track-warnings
       (wrap-capture-window-error
         (wrap-capture-console-error
-          #(with-mounted-component [error-boundary [comp1]]
+          #(with-mounted-component [error-boundary [comp2]]
              (fn [c div]
                (r/flush)
                (is (= "Test error" (.-message @error)))
-               (is (re-find #"Something went wrong\." (.-innerHTML div))))))))))
+               (is (re-find #"Something went wrong\." (.-innerHTML div)))
+               (if (dev?)
+                 (is (re-find #"\n    in reagenttest.testreagent.comp1 \(created by reagenttest.testreagent.comp2\)\n    in reagenttest.testreagent.comp2 \(created by reagent[0-9]+\)\n    in reagent[0-9]+ \(created by reagenttest.testreagent.error_boundary\)\n    in reagenttest.testreagent.error_boundary"
+                       (.-componentStack @info)))
+                 (is (re-find #"\n    in .+\n    in .+\n    in reagent[0-9]+\n    in .+"
+                       (.-componentStack @info))) ))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)

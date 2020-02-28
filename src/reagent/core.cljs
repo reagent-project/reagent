@@ -345,11 +345,3 @@
   "Works just like clojure.core/partial, but the result can be compared with ="
   [f & args]
   (util/make-partial-fn f args))
-
-(defn component-path
-  "Try to return the path of component c as a string.
-  Maybe useful for debugging and error reporting, but may break
-  with future versions of React (and return nil)."
-  {:deprecated "1.0.0"}
-  [c]
-  (comp/component-path c))

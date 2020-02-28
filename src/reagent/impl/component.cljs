@@ -120,7 +120,17 @@
                    (recur c))
       :else res)))
 
-(declare comp-name)
+(defn component-name [c]
+  (some-> c .-constructor .-displayName))
+
+(defn comp-name []
+  (if (dev?)
+    (let [c *current-component*
+          n (component-name c)]
+      (if-not (empty? n)
+        (str " (in " n ")")
+        ""))
+    ""))
 
 (defn do-render [c]
   (binding [*current-component* c]
@@ -361,50 +371,6 @@
     (set! (.. cmp -prototype -constructor) cmp)
 
     cmp))
-
-(defn fiber-component-path [fiber]
-  (let [name (some-> fiber
-                     (.-type)
-                     (.-displayName))
-        parent (some-> fiber
-                       (.-return))
-        path (some-> parent
-                     fiber-component-path
-                     (str " > "))
-        res (str path name)]
-    (when-not (empty? res) res)))
-
-(defn component-path [c]
-  ;; Alternative branch for React 16
-  ;; Try both original name (for UMD foreign-lib) and manged name (property access, for Closure optimized React)
-  (if-let [fiber (or (some-> c (gobj/get "_reactInternalFiber"))
-                     (some-> c (.-_reactInternalFiber)))]
-    (fiber-component-path fiber)
-    (let [instance (or (some-> c (gobj/get "_reactInternalInstance"))
-                       (some-> c (.-_reactInternalInstance))
-                       c)
-          elem (or (some-> instance (gobj/get "_currentElement"))
-                   (some-> instance (.-_currentElement)))
-          name (some-> elem
-                       (.-type)
-                       (.-displayName))
-          owner (or (some-> elem (gobj/get "_owner"))
-                    (some-> elem (.-_owner)))
-          path (some-> owner
-                       component-path
-                       (str " > "))
-          res (str path name)]
-      (when-not (empty? res) res))))
-
-(defn comp-name []
-  (if (dev?)
-    (let [c *current-component*
-          n (or (component-path c)
-                (some-> c .-constructor util/fun-name))]
-      (if-not (empty? n)
-        (str " (in " n ")")
-        ""))
-    ""))
 
 (defn fn-to-class [f]
   (assert-callable f)
