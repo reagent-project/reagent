@@ -502,8 +502,16 @@
   [tag]
   ;; TODO: Could be disabled for optimized builds?
   (or (gobj/get fun-components tag)
-      (let [f (fn [jsprops] (functional-render jsprops))]
-        (set! (.-displayName f) (util/fun-name tag))
+      (let [f (fn [jsprops] (functional-render jsprops))
+            _ (set! (.-displayName f) (util/fun-name tag))
+            f (react/memo f (fn [prev-props next-props]
+                              (let [old-argv (.-argv prev-props)
+                                    new-argv (.-argv next-props)]
+                                (and (false? util/*always-update*)
+                                     (try
+                                       (= old-argv new-argv)
+                                       (catch :default e
+                                         (warn "Exception thrown while comparing argv's in shouldComponentUpdate: " old-argv " " new-argv " " e)
+                                         false))))))]
         (gobj/set fun-components tag f)
-        ;; Wrap in React.memo
         f)))
