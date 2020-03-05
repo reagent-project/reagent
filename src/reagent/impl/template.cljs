@@ -294,10 +294,10 @@
           (get-key (nth v 2 nil))))))
 
 (defn reag-element [tag v]
-  (if (or false
-          (comp/react-class? tag)
-          ;; FIXME: Probably temporary workaround.
-          (:class-component (meta tag)))
+  (if (or (comp/react-class? tag)
+          ;; TODO: Should check others for real comptibility, this fixes tests
+          ;; TODO: Drop support for fn + meta for Class component methods?
+          (:should-component-update (meta tag)))
     ;; as-class unncessary later as tag is always class
     (let [c (comp/as-class tag)
           jsprops #js {}]
