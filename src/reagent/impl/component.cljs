@@ -400,10 +400,11 @@
     (as-class comp)))
 
 (defn functional-wrap-render
-  [^clj c argv]
+  [c]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
-        res (apply (.-reagentRender c) argv)]
+        argv (.-argv c)
+        res (apply f argv)]
     (cond
       (vector? res) (as-element res)
       (ifn? res) (let [f (if (reagent-class? res)
@@ -411,7 +412,7 @@
                              (as-element (apply vector res args)))
                            res)]
                    (set! (.-reagentRender c) f)
-                   (recur c argv))
+                   (recur c))
       :else res)))
 
 (defn functional-do-render [c]
@@ -420,80 +421,78 @@
       ;; Log errors, without using try/catch (and mess up call stack)
       (let [ok (array false)]
         (try
-          (let [res (functional-wrap-render c (.-argv c))]
+          (let [res (functional-wrap-render c)]
             (aset ok 0 true)
             res)
           (finally
             (when-not (aget ok 0)
               (error (str "Error rendering component" (comp-name)))))))
-      (functional-wrap-render c (.-argv c)))))
+      (functional-wrap-render c))))
 
 (def fun-component-state #js {})
 
 (defn functional-render [jsprops]
-  (let [argv (.-argv jsprops)
-        tag (.-tag jsprops)]
-    (if util/*non-reactive*
-      (let [res (apply tag argv)]
-        (cond
-          (vector? res) (as-element res)
-          (ifn? res) (let [f (if (reagent-class? res)
-                               (fn [& args]
-                                 (as-element (apply vector res args)))
-                               res)]
-                       (as-element (apply f argv)))
-          :else res))
-      (let [;; Create persistent ID for each rendered functional component,
-            ;; this is used to store internal Reagent state, like render
-            ;; reaction etc. in a separate store where changes doesn't
-            ;; trigger render.
-            [id _] (react/useState (js/Symbol))
+  (if util/*non-reactive*
+    ;; Non-reactive component needs just the render fn and argv
+    (functional-do-render jsprops)
+    (let [argv (.-argv jsprops)
+          tag (.-reagentRender jsprops)
+          ;; Create persistent ID for each rendered functional component,
+          ;; this is used to store internal Reagent state, like render
+          ;; reaction etc. in a separate store where changes doesn't
+          ;; trigger render.
+          [id _] (react/useState (js/Symbol))
 
-            ;; Use counter to trigger render manually.
-            [_ update-count] (react/useState 0)
+          ;; Use counter to trigger render manually.
+          [_ update-count] (react/useState 0)
 
-            ;; This object mimics React Class attributes and methods.
-            ;; To support form-2 components, even the render fn needs to
-            ;; be stored as it is created during the first render,
-            ;; and subsequent renders need to retrieve the created fn.
-            reagent-state (or (gobj/get fun-component-state id)
-                              (let [obj #js {:forceUpdate (fn [] (update-count inc))
-                                             :cljsMountOrder (batch/next-mount-count)
-                                             ;; Use reagentRender name, as that is also used
-                                             ;; by class components, and some checks.
-                                             ;; ReagentRender is replaced with form-2 inner fn,
-                                             ;; constructor refers to the original fn.
-                                             :reagentRender tag
-                                             :constructor tag
-                                             :cljsIsDirty false
-                                             ;; Argv is also stored in the state,
-                                             ;; so reaction fn will always see the latest value.
-                                             :argv argv}]
-                                (gobj/set fun-component-state id obj)
-                                obj))]
+          ;; This object mimics React Class attributes and methods.
+          ;; To support form-2 components, even the render fn needs to
+          ;; be stored as it is created during the first render,
+          ;; and subsequent renders need to retrieve the created fn.
+          reagent-state (or (gobj/get fun-component-state id)
+                            ;; TODO: Could also initialize using jsprops object here.
+                            ;; TODO: Allow cljsMountOrder name to optimized.
+                            (let [obj #js {:forceUpdate (fn [] (update-count inc))
+                                           :cljsMountOrder (batch/next-mount-count)
+                                           ;; Use reagentRender name, as that is also used
+                                           ;; by class components, and some checks.
+                                           ;; ReagentRender is replaced with form-2 inner fn,
+                                           ;; constructor refers to the original fn.
+                                           :constructor tag}]
+                              ;; These names can be optimized, so they can't be set in
+                              ;; object literal.
+                              (set! (.-reagentRender obj) tag)
+                              (gobj/set fun-component-state id obj)
+                              obj))
 
-        (react/useEffect
-          (fn mount []
-            (fn unmount []
-              (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
-              (gobj/remove fun-component-state id)))
-          ;; Only run effect once on mount and unmount
-          #js [])
+          rat (gobj/get reagent-state "cljsRatom")]
 
-        (assert-callable tag)
-        (batch/mark-rendered reagent-state)
-        (set! (.-argv reagent-state) argv)
+      (react/useEffect
+        (fn mount []
+          (fn unmount []
+            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
+            (gobj/remove fun-component-state id)))
+        ;; Ignore props - only run effect once on mount and unmount
+        #js [])
 
-        ;; static-fns :render
-        (if-let [rat (gobj/get reagent-state "cljsRatom")]
-          (._run rat false)
-          (ratom/run-in-reaction
-            ;; Mock Class component API
-            #(functional-do-render reagent-state)
-            reagent-state
-            "cljsRatom"
-            batch/queue-render
-            rat-opts))))))
+      ;; Argv is also stored in the state,
+      ;; so reaction fn will always see the latest value.
+      (set! (.-argv reagent-state) argv)
+
+      (batch/mark-rendered reagent-state)
+
+      ;; static-fns :render
+      (if (nil? rat)
+        (ratom/run-in-reaction
+          ;; Mock Class component API
+          #(functional-do-render reagent-state)
+          reagent-state
+          "cljsRatom"
+          batch/queue-render
+          rat-opts)
+        ;; TODO: Consider passing props here, instead of keeping them in state?
+        (._run rat false)))))
 
 (def fun-components #js {})
 
@@ -503,7 +502,8 @@
   [tag]
   ;; TODO: Could be disabled for optimized builds?
   (or (gobj/get fun-components tag)
-    (let [f (.bind functional-render #js {})]
-      (set! (.-displayName f) (util/fun-name tag))
-      (gobj/set fun-components tag f)
-      f)))
+      (let [f (fn [jsprops] (functional-render jsprops))]
+        (set! (.-displayName f) (util/fun-name tag))
+        (gobj/set fun-components tag f)
+        ;; Wrap in React.memo
+        f)))

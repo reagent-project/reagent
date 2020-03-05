@@ -305,8 +305,9 @@
       (when-some [key (key-from-vec v)]
         (set! (.-key jsprops) key))
       (react/createElement c jsprops))
-    (let [jsprops #js {:tag tag
-                       :argv (subvec v 1)}]
+    (let [jsprops #js {}]
+      (set! (.-reagentRender jsprops) tag)
+      (set! (.-argv jsprops) (subvec v 1))
       (when-some [key (key-from-vec v)]
         (set! (.-key jsprops) key))
       (react/createElement (comp/funtional-render-fn tag) jsprops))))
