@@ -1,15 +1,16 @@
 # Changelog
 
-## 0.10.0-alpha
+## 0.10.0 (2020-03-06)
 
 Main feature of this release is to deprecate functions that are going to be
 removed in the future releases, to make transition easier.
 
+- Update default React version to 16.13.0
 - All DOM related functions (notably `render` and `dom-node`) are now deprecated in
 `reagent.core` namespace and versions in `reagent.dom` namespace should be used
-instead. These will be removed in the next version.
+instead. Deprecated functions will be removed in the next version.
 This is to make non-DOM environments (React-native) first class targets with Reagent,
-as requiring `react-dom` always causes problems in such environments.
+as requiring `react-dom` causes problems in such environments.
 - Removed deprecated `reagent.interop` namespace (macros `$`, `$!`, `unchecked-aget` and `unchecked-aset`)
 - Removed `reagent.core/component-path`. The implementation depended on internal React
 details and using just Component `displayName` achieves nearly the same.
