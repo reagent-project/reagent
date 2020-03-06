@@ -1,6 +1,7 @@
 (ns simpleexample.core
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]))
+            [reagent.dom :as rdom]
+            [clojure.string :as str]))
 
 (defonce timer (r/atom (js/Date.)))
 
@@ -13,7 +14,7 @@
   [:h1 message])
 
 (defn clock []
-  (let [time-str (-> @timer .toTimeString (clojure.string/split " ") first)]
+  (let [time-str (-> @timer .toTimeString (str/split " ") first)]
     [:div.example-clock
      {:style {:color @time-color}}
      time-str]))

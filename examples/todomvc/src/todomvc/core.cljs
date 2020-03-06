@@ -1,6 +1,7 @@
 (ns todomvc.core
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]))
+            [reagent.dom :as rdom]
+            [clojure.string :as str]))
 
 (defonce todos (r/atom (sorted-map)))
 
@@ -29,7 +30,7 @@
   (let [val (r/atom title)
         stop #(do (reset! val "")
                   (if on-stop (on-stop)))
-        save #(let [v (-> @val str clojure.string/trim)]
+        save #(let [v (-> @val str str/trim)]
                 (if-not (empty? v) (on-save v))
                 (stop))]
     (fn [{:keys [id class placeholder]}]
