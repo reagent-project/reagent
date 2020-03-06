@@ -147,7 +147,9 @@
            rst)))
 
 (defn- merge-class [p1 p2]
-  (assoc p2 :class (class-names (:class p1) (:class p2))))
+  (if-let [names (class-names (:class p1) (:class p2))]
+    (assoc p2 :class names)
+    p2))
 
 (defn- merge-style [p1 p2]
   (let [style (when-let [s1 (:style p1)]
