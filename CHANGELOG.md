@@ -1,15 +1,18 @@
 # Changelog
 
-## Next
+## 0.10.0-alpha
 
-- Removed deprecated namespaces/function/macros:
-    - Removed `reagent.interop` namespace (macros `$`, `$!`, `unchecked-aget` and `unchecked-aset`)
-    - `reagent.core/component-path` (Reason: implementation depends on internal React
-    details and using just Component `displayName` achieves nearly the same)
-- All DOM related functions (notably `render` and `dom-node`) have been removed
-from `reagent.core` namespace and are now only available in `reagent.dom` namespace.
+Main feature of this release is to deprecate functions that are going to be
+removed in the future releases, to make transition easier.
+
+- All DOM related functions (notably `render` and `dom-node`) are now deprecated in
+`reagent.core` namespace and versions in `reagent.dom` namespace should be used
+instead. These will be removed in the next version.
 This is to make non-DOM environments (React-native) first class targets with Reagent,
 as requiring `react-dom` always causes problems in such environments.
+- Removed deprecated `reagent.interop` namespace (macros `$`, `$!`, `unchecked-aget` and `unchecked-aset`)
+- Removed `reagent.core/component-path`. The implementation depended on internal React
+details and using just Component `displayName` achieves nearly the same.
 - `Error rendering component` messages no longer contain component stack information.
 Instead one should use [an Error Boundary](https://reactjs.org/docs/error-boundaries.html#component-stack-traces)
 to catch the problem and look at the error information `componentStack` property.
