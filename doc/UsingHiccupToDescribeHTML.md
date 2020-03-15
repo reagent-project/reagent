@@ -112,7 +112,7 @@ can be written as:
 
 ## Rendering Hiccup
 
-The primary entrypoint to the reagent library is `reagent.core/render`.
+The primary entrypoint to the reagent library is `reagent.dom/render`.
 
 ```clojure
 (ns example
