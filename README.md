@@ -101,7 +101,7 @@ You mount the component into the DOM like this:
 
 ```clj
 (defn mountit []
-  (r/render [childcaller]
+  (rd/render [childcaller]
             (.-body js/document)))
 ```
 
@@ -109,7 +109,8 @@ assuming we have imported Reagent like this:
 
 ```clj
 (ns example
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [reagent.dom :as rd]))
 ```
 
 State is handled using Reagent's version of `atom`, like this:
