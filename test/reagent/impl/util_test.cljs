@@ -56,6 +56,11 @@
            (util/merge-props {:disabled true :style {:flex 1} :class "foo"}
                              {:disabled false :style {:flex-direction "row"} :class "bar"}))))
 
+  (testing "two arguments without classes"
+    (is (= {:disabled false :style {:flex 1 :flex-direction "row"}}
+           (util/merge-props {:disabled true :style {:flex 1}}
+                             {:disabled false :style {:flex-direction "row"}}))))
+
   (testing "n arguments"
     (is (= {:disabled false
             :checked true
