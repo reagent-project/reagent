@@ -4,7 +4,7 @@
             [goog.events :as evt]
             [reagent.core :as r]
             [reagent.dom.server :as server]
-            [reagent.debug :refer-macros [dbg log dev?]]
+            [reagent.debug :refer [log]]
             [sitetools.core :as tools]
 
             ;; Node libs
