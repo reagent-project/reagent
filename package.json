@@ -18,6 +18,6 @@
     "karma-junit-reporter": "2.0.1",
     "karma-sourcemap-loader": "^0.3.7",
     "md5-file": "4.0.0",
-    "shadow-cljs": "2.8.83"
+    "shadow-cljs": "2.8.93"
   }
 }

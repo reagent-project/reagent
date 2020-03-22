@@ -6,6 +6,7 @@
             ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
             ["@material-ui/core/colors" :as mui-colors]
             ["@material-ui/icons" :as mui-icons]
+            ["@material-ui/lab" :refer [Autocomplete]]
             [goog.object :as gobj]
             [reagent.impl.template :as rtpl]))
 
@@ -70,6 +71,23 @@
 (def with-custom-styles (withStyles custom-styles))
 
 (defonce text-state (r/atom "foobar"))
+
+(defn autocomplete-example []
+  [:> mui/Grid
+   {:item true}
+   [:> Autocomplete {:options ["foo" "bar" "foobar"]
+                     :style {:width 300}
+                     ;; Note that the function parameter is a JS Object!
+                     :render-input (fn [^js params]
+                                     ;; Don't call js->clj because that would
+                                     ;; recursively convert all JS objects (e.g. React ref objects)
+                                     ;; to Cljs maps, which breaks them, even when converted back to JS.
+                                     ;; Best thing is to use r/create-element and
+                                     ;; pass the JS params to it. If necessary,
+                                     ;; use JS interop to modify params.
+                                     (set! (.-variant params) "outlined")
+                                     (set! (.-label params) "Autocomplete")
+                                     (r/create-element mui/TextField params))}]])
 
 ;; Props in cljs but classes in JS object
 (defn form [{:keys [classes] :as props}]
@@ -156,7 +174,14 @@
      [:> mui/Grid {:item true}
       [:> mui/Chip
        {:icon (r/create-element mui-icons/Face)
-        :label "Icon element example, r/create-element"}]]]]])
+        :label "Icon element example, r/create-element"}]]]]
+
+   [:> mui/Grid {:item true}
+    [:> mui/Grid
+     {:container true
+      :direction "row"
+      :spacing 4}
+     [autocomplete-example]]]])
 
 (defn main []
   ;; fragment
