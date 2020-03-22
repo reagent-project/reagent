@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed merge-props adding `:class` property to result even if no argument
+defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
+
 ## 0.10.0 (2020-03-06)
 
 Main feature of this release is to deprecate functions that are going to be
