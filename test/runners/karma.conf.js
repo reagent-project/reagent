@@ -24,5 +24,23 @@ module.exports = function(config) {
     useBrowserName: false // add browser name to report and classes names
   };
 
+  if (process.env.COVERAGE) {
+    configData.reporters = ['dots', 'junit', 'coverage'];
+
+    configData.preprocessors = {
+      'target/cljsbuild/test/out/reagent/**/!(*_test).js': ['sourcemap', 'coverage'],
+    };
+
+    configData.coverageReporter = {
+      reporters: [
+        {type: 'html'},
+        {type: 'lcovonly'},
+      ],
+      dir: 'coverage',
+      subdir: '.',
+      includeAllSources: true,
+    };
+  }
+
   config.set(configData);
 };
