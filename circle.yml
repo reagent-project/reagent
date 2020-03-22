@@ -23,6 +23,9 @@ jobs:
           paths:
             - node_modules
           key: reagent-npm-{{ checksum "package.json" }}
+      - store_artifacts:
+          path: coverage
+      - run: bash <(curl -s https://codecov.io/bash)
 
     environment:
       NPM_CONFIG_LOGLEVEL: warn
