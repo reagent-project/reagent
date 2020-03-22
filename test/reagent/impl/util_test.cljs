@@ -87,7 +87,9 @@
            (util/merge-props {:class "foo bar"}
                              {:class ["baz" "quux"]})
            (util/merge-props nil {:class ["foo" "bar" "baz" "quux"]})
-           (util/merge-props {:class ["foo" "bar" "baz" "quux"]})))))
+           (util/merge-props {:class ["foo" "bar" "baz" "quux"]} nil)
+           (util/merge-props {:class ["foo" "bar" "baz" "quux"]})
+           (util/merge-props {:class "foo bar"} {:class ["baz"]} {:class ["quux"]})))))
 
 (deftest partial-fn-test
   (is (= (util/make-partial-fn println ["a"])
