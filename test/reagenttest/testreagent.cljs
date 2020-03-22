@@ -1,8 +1,8 @@
 (ns reagenttest.testreagent
   (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [react :as react]
-            [reagent.ratom :as rv :refer-macros [reaction]]
-            [reagent.debug :as debug :refer-macros [dev?]]
+            [reagent.ratom :as rv :refer [reaction]]
+            [reagent.debug :as debug :refer [dev?]]
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
@@ -355,6 +355,13 @@
            (as-string [null-comp false])))
     (is (= "<div>div in test-null-component</div>"
            (as-string [null-comp true])))))
+
+(deftest test-string
+  (is (= "<div data-reactroot=\"\">foo</div>"
+         (server/render-to-string [:div "foo"])))
+
+  (is (= "<div data-reactroot=\"\"><p>foo</p></div>"
+         (server/render-to-string [:div [:p "foo"]]))))
 
 (deftest test-static-markup
   (is (= "<div>foo</div>"
