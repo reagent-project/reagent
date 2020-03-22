@@ -56,6 +56,11 @@
            (util/merge-props {:disabled true :style {:flex 1} :class "foo"}
                              {:disabled false :style {:flex-direction "row"} :class "bar"}))))
 
+  (testing "two arguments without classes"
+    (is (= {:disabled false :style {:flex 1 :flex-direction "row"}}
+           (util/merge-props {:disabled true :style {:flex 1}}
+                             {:disabled false :style {:flex-direction "row"}}))))
+
   (testing "n arguments"
     (is (= {:disabled false
             :checked true
@@ -82,7 +87,9 @@
            (util/merge-props {:class "foo bar"}
                              {:class ["baz" "quux"]})
            (util/merge-props nil {:class ["foo" "bar" "baz" "quux"]})
-           (util/merge-props {:class ["foo" "bar" "baz" "quux"]})))))
+           (util/merge-props {:class ["foo" "bar" "baz" "quux"]} nil)
+           (util/merge-props {:class ["foo" "bar" "baz" "quux"]})
+           (util/merge-props {:class "foo bar"} {:class ["baz"]} {:class ["quux"]})))))
 
 (deftest partial-fn-test
   (is (= (util/make-partial-fn println ["a"])
