@@ -78,13 +78,16 @@
    [:> Autocomplete {:options ["foo" "bar" "foobar"]
                      :style {:width 300}
                      ;; Note that the function parameter is a JS Object!
+                     ;; Autocomplete expects the renderInput value to be function
+                     ;; returning React elements, not a component!
+                     ;; So reactify-component won't work here.
                      :render-input (fn [^js params]
-                                     ;; Don't call js->clj because that would
-                                     ;; recursively convert all JS objects (e.g. React ref objects)
+                                     ;; Don't call js->clj because that would recursively
+                                     ;; convert all JS objects (e.g. React ref objects)
                                      ;; to Cljs maps, which breaks them, even when converted back to JS.
                                      ;; Best thing is to use r/create-element and
-                                     ;; pass the JS params to it. If necessary,
-                                     ;; use JS interop to modify params.
+                                     ;; pass the JS params to it.
+                                     ;; If necessary, use JS interop to modify params.
                                      (set! (.-variant params) "outlined")
                                      (set! (.-label params) "Autocomplete")
                                      (r/create-element mui/TextField params))}]])
