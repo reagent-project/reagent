@@ -12,10 +12,8 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[Documentation, 0.9](https://cljdoc.org/d/reagent/reagent/0.9.1/doc/documentation-index)**
-  * **Documentation, next release**
-      * **[API docs](http://reagent-project.github.io/docs/master/)**
-      * **[Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
+  * **[Documentation, latest release](https://cljdoc.org/d/reagent/reagent/CURRENT)**
+  * **Documentation, next release: [API docs](http://reagent-project.github.io/docs/master/), [Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
   * **Community discussion and support channels**
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
     * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
