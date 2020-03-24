@@ -1,7 +1,7 @@
 <img src="logo/logo-text.png" width="264px" alt="Reagent">
 
 [![CircleCI](https://circleci.com/gh/reagent-project/reagent.svg?style=svg)](https://circleci.com/gh/reagent-project/reagent)
-[![Clojars Project](https://img.shields.io/clojars/v/clj-kondo.svg)](https://clojars.org/clj-kondo)
+[![Clojars Project](https://img.shields.io/clojars/v/reagent.svg)](https://clojars.org/reagent)
 [![codecov](https://codecov.io/gh/reagent-project/reagent/branch/master/graph/badge.svg)](https://codecov.io/gh/reagent-project/reagent)
 [![cljdoc badge](https://cljdoc.org/badge/reagent/reagent)](https://cljdoc.org/d/reagent/reagent/CURRENT)
 [![project chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C0620C0C8)
