@@ -11,17 +11,6 @@
 
 ;;; Argv access
 
-(defn shallow-obj-to-map [o]
-  (let [ks (js-keys o)
-        len (alength ks)]
-    (loop [m {}
-           i 0]
-      (if (< i len)
-        (let [k (aget ks i)]
-          (recur (assoc m (keyword k) (gobj/get o k))
-                 (inc i)))
-        m))))
-
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
     (if (map? p) p)))
@@ -35,7 +24,7 @@
 (defn props-argv [^js/React.Component c p]
   (if-some [a (.-argv p)]
     a
-    [(.-constructor c) (shallow-obj-to-map p)]))
+    [(.-constructor c) (util/shallow-obj-to-map p)]))
 
 (defn get-argv [^js/React.Component c]
   (props-argv c (.-props c)))
@@ -44,7 +33,7 @@
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-props v)
-      (shallow-obj-to-map p))))
+      (util/shallow-obj-to-map p))))
 
 (defn get-children [^js/React.Component c]
   (let [p (.-props c)]
