@@ -198,6 +198,9 @@
                  (inc i)))
         m))))
 
+(defn ^boolean js-val? [x]
+  (not (identical? "object" (goog/typeOf x))))
+
 ;; React key
 
 (defn try-get-react-key [x]
