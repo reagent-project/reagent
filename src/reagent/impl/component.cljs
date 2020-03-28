@@ -111,10 +111,11 @@
                   5 (.call f c (nth v 1) (nth v 2) (nth v 3) (nth v 4))
                   (.apply f c (.slice (into-array v) 1)))))]
     (cond
-      (vector? res) (as-element res)
+      ;; FIXME: Opts
+      (vector? res) (as-element res nil)
       (ifn? res) (let [f (if (reagent-class? res)
                            (fn [& args]
-                             (as-element (apply vector res args)))
+                             (as-element (apply vector res args) nil))
                            res)]
                    (set! (.-reagentRender c) f)
                    (recur c))
@@ -373,7 +374,7 @@
 
     cmp))
 
-(defn fn-to-class [f]
+(defn fn-to-class [f opts]
   (assert-callable f)
   (warn-unless (not (and (react-class? f)
                          (not (reagent-class? f))))
@@ -389,15 +390,16 @@
           res (create-class withrender)]
       (cache-react-class f res))))
 
-(defn as-class [tag]
+(defn as-class [tag opts]
+  ;; TODO: Cache per opts
   (if-some [cached-class (cached-react-class tag)]
     cached-class
-    (fn-to-class tag)))
+    (fn-to-class tag opts)))
 
-(defn reactify-component [comp]
+(defn reactify-component [comp opts]
   (if (react-class? comp)
     comp
-    (as-class comp)))
+    (as-class comp opts)))
 
 (defn functional-wrap-render
   [c]
@@ -406,10 +408,10 @@
         argv (.-argv c)
         res (apply f argv)]
     (cond
-      (vector? res) (as-element res)
+      (vector? res) (as-element res (.-opts c))
       (ifn? res) (let [f (if (reagent-class? res)
                            (fn [& args]
-                             (as-element (apply vector res args)))
+                             (as-element (apply vector res args) (.-opts c)))
                            res)]
                    (set! (.-reagentRender c) f)
                    (recur c))
@@ -501,6 +503,7 @@
   original Reagent component."
   [tag]
   ;; TODO: Could be disabled for optimized builds?
+  ;; TODO: Need to cache per opts?
   (or (gobj/get fun-components tag)
       (let [f (fn [jsprops] (functional-render jsprops))
             _ (set! (.-displayName f) (util/fun-name tag))

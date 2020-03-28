@@ -6,14 +6,18 @@
 
 (defn render-to-string
   "Turns a component into an HTML string."
-  [component]
-  (ratom/flush!)
-  (binding [util/*non-reactive* true]
-    (dom-server/renderToString (tmpl/as-element component))))
+  ([component]
+   (render-to-string component nil))
+  ([component opts]
+   (ratom/flush!)
+   (binding [util/*non-reactive* true]
+     (dom-server/renderToString (tmpl/as-element component opts)))))
 
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
-  [component]
-  (ratom/flush!)
+  ([component]
+   (render-to-static-markup component nil))
+  ([component opts]
+   (ratom/flush!)
   (binding [util/*non-reactive* true]
-    (dom-server/renderToStaticMarkup (tmpl/as-element component))))
+    (dom-server/renderToStaticMarkup (tmpl/as-element component opts)))))
