@@ -45,7 +45,7 @@ Reagent syntax follows [React Fragment short syntax](https://reactjs.org/docs/fr
   container)
 ```
 
-[Context example project](../examples/react-sortable-hoc/src/example/core.cljs)
+[Context example project](../examples/react-context/src/example/core.cljs)
 better explains how
 `:>` or `adapt-react-class` convert the properties to JS objects,
 and shows how to use Cljs values with context.
