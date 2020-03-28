@@ -3,7 +3,7 @@
                  [org.clojure/clojurescript "1.10.597"]
                  [reagent "0.10.0"]
                  [figwheel "0.5.19"]
-                 [cljsjs/react-sortable-hoc "1.11.0-0"]]
+                 [cljsjs/react-sortable-hoc "1.11.0-1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-figwheel "0.5.19"]]
