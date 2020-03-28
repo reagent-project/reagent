@@ -2,15 +2,18 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]))
 
-(defn with-mounted-component [comp f]
-  (when r/is-client
-    (let [div (.createElement js/document "div")]
-      (try
-        (let [c (rdom/render comp div)]
-          (f c div))
-        (finally
-          (rdom/unmount-component-at-node div)
-          (r/flush))))))
+(defn with-mounted-component
+  ([comp f]
+   (with-mounted-component comp nil f))
+  ([comp opts f]
+   (when r/is-client
+     (let [div (.createElement js/document "div")]
+       (try
+         (let [c (rdom/render comp div opts)]
+           (f c div))
+         (finally
+           (rdom/unmount-component-at-node div)
+           (r/flush)))))))
 
 (defn with-mounted-component-async [comp done f]
   (when r/is-client

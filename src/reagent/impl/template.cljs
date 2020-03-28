@@ -246,10 +246,10 @@
    :component-did-update input-component-set-value
    :component-will-unmount input-unmount
    :reagent-render
-   (fn [argv component jsprops first-child]
+   (fn [argv component jsprops first-child opts]
      (let [this comp/*current-component*]
        (input-render-setup this jsprops)
-       (make-element argv component jsprops first-child)))})
+       (make-element argv component jsprops first-child opts)))})
 
 (defn reagent-input
   []
@@ -293,13 +293,21 @@
         (if (= :> (nth v 0 nil))
           (get-key (nth v 2 nil))))))
 
-(defn reag-element [tag v]
+(defn reag-element [tag v opts]
+  (let [c (comp/as-class tag opts)
+        jsprops #js {}]
+    (set! (.-argv jsprops) v)
+    (when-some [key (key-from-vec v)]
+      (set! (.-key jsprops) key))
+    (react/createElement c jsprops)))
+
+(defn functional-reag-element [tag v opts]
   (if (or (comp/react-class? tag)
           ;; TODO: Should check others for real comptibility, this fixes tests
           ;; TODO: Drop support for fn + meta for Class component methods?
           (:should-component-update (meta tag)))
     ;; as-class unncessary later as tag is always class
-    (let [c (comp/as-class tag)
+    (let [c (comp/as-class tag opts)
           jsprops #js {}]
       (set! (.-argv jsprops) v)
       (when-some [key (key-from-vec v)]
@@ -308,6 +316,7 @@
     (let [jsprops #js {}]
       (set! (.-reagentRender jsprops) tag)
       (set! (.-argv jsprops) (subvec v 1))
+      (set! (.-opts jsprops) opts)
       (when-some [key (key-from-vec v)]
         (set! (.-key jsprops) key))
       (react/createElement (comp/funtional-render-fn tag) jsprops))))
@@ -335,7 +344,7 @@
       (gobj/set tag-name-cache x v)
       v)))
 
-(defn native-element [parsed argv first]
+(defn native-element [parsed argv first opts]
   (let [component (.-tag parsed)
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))
@@ -343,13 +352,13 @@
                     #js {})
         first-child (+ first (if hasprops 1 0))]
     (if (input-component? component)
-      (-> [(reagent-input) argv component jsprops first-child]
+      (-> [(reagent-input) argv component jsprops first-child opts]
           (with-meta (meta argv))
-          as-element)
+          (as-element opts))
       (do
         (when-some [key (-> (meta argv) get-key)]
           (set! (.-key jsprops) key))
-        (make-element argv component jsprops first-child)))))
+        (make-element argv component jsprops first-child opts)))))
 
 (defn str-coll [coll]
   (if (dev?)
@@ -365,7 +374,7 @@
 (defn hiccup-err [v & msg]
   (str (apply str msg) ": " (str-coll v) "\n" (comp/comp-name)))
 
-(defn vec-to-elem [v]
+(defn vec-to-elem [v opts]
   (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
   (let [tag (nth v 0 nil)]
     (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
@@ -377,53 +386,56 @@
       (let [n (name tag)
             pos (.indexOf n ">")]
         (case pos
-          -1 (native-element (cached-parse n) v 1)
+          -1 (native-element (cached-parse n) v 1 opts)
           0 (let [component (nth v 1 nil)]
               ;; Support [:> component ...]
               (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (native-element (->HiccupTag component nil nil nil) v 2))
+              (native-element (->HiccupTag component nil nil nil) v 2 opts))
           ;; Support extended hiccup syntax, i.e :div.bar>a.foo
           ;; Apply metadata (e.g. :key) to the outermost element.
           ;; Metadata is probably used only with sequeneces, and in that case
           ;; only the key of the outermost element matters.
           (recur (with-meta [(subs n 0 pos)
                              (assoc (with-meta v nil) 0 (subs n (inc pos)))]
-                            (meta v)))))
+                            (meta v))
+                 opts)))
 
       (instance? NativeWrapper tag)
-      (native-element tag v 1)
+      (native-element tag v 1 opts)
 
-      :else (reag-element tag v))))
+      :else (if (:functional-reag-elements? opts)
+              (functional-reag-element tag v opts)
+              (reag-element tag v opts)))))
 
 (declare expand-seq)
 (declare expand-seq-check)
 
-(defn as-element [x]
+(defn as-element [x opts]
   (cond (js-val? x) x
-        (vector? x) (vec-to-elem x)
+        (vector? x) (vec-to-elem x opts)
         (seq? x) (if (dev?)
-                   (expand-seq-check x)
-                   (expand-seq x))
+                   (expand-seq-check x opts)
+                   (expand-seq x opts))
         (named? x) (name x)
         (satisfies? IPrintWithWriter x) (pr-str x)
         :else x))
 
 (set! comp/as-element as-element)
 
-(defn expand-seq [s]
+(defn expand-seq [s opts]
   (into-array (map as-element s)))
 
-(defn expand-seq-dev [s ^clj o]
+(defn expand-seq-dev [s ^clj o opts]
   (into-array (map (fn [val]
                      (when (and (vector? val)
                                 (nil? (key-from-vec val)))
                        (set! (.-no-key o) true))
-                     (as-element val))
+                     (as-element val opts))
                    s)))
 
-(defn expand-seq-check [x]
+(defn expand-seq-check [x opts]
   (let [ctx #js{}
-        [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx))]
+        [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx opts))]
     (when derefed
       (warn (hiccup-err x "Reactive deref not supported in lazy seq, "
                         "it should be wrapped in doall")))
@@ -431,17 +443,17 @@
       (warn (hiccup-err x "Every element in a seq should have a unique :key")))
     res))
 
-(defn make-element [argv component jsprops first-child]
+(defn make-element [argv component jsprops first-child opts]
   (case (- (count argv) first-child)
     ;; Optimize cases of zero or one child
     0 (react/createElement component jsprops)
 
     1 (react/createElement component jsprops
-          (as-element (nth argv first-child nil)))
+          (as-element (nth argv first-child nil) opts))
 
     (.apply react/createElement nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                           (.push a (as-element v)))
+                           (.push a (as-element v opts)))
                          a)
                        #js[component jsprops] argv))))

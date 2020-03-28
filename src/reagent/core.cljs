@@ -46,8 +46,8 @@
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form
   unchanged if it is not a vector."
-  [form]
-  (tmpl/as-element form))
+  ([form] (tmpl/as-element form nil))
+  ([form opts] (tmpl/as-element form opts)))
 
 (defn adapt-react-class
   "Returns an adapter for a native React class, that may be used
@@ -60,9 +60,10 @@
   "Returns an adapter for a Reagent component, that may be used from
   React, for example in JSX. A single argument, props, is passed to
   the component, converted to a map."
-  [c]
-  (assert-some c "Component")
-  (comp/reactify-component c))
+  ([c] (reactify-component c nil))
+  ([c opts]
+   (assert-some c "Component")
+   (comp/reactify-component c opts)))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be

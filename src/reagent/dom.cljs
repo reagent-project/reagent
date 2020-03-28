@@ -34,10 +34,13 @@
   Returns the mounted component instance."
   ([comp container]
    (render comp container nil))
-  ([comp container callback]
+  ([comp container callback-or-opts]
    (ratom/flush!)
-   (let [f (fn []
-             (tmpl/as-element (if (fn? comp) (comp) comp)))]
+   (let [[opts callback] (if (fn? callback-or-opts)
+                           [nil callback-or-opts]
+                           [callback-or-opts (:callback callback-or-opts)])
+         f (fn []
+             (tmpl/as-element (if (fn? comp) (comp) comp) opts))]
      (render-comp f container callback))))
 
 (defn unmount-component-at-node
