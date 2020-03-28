@@ -185,3 +185,24 @@
     (binding [*always-update* true]
       (.forceUpdate comp))
     (.forceUpdate comp)))
+
+;; React key
+
+(defn try-get-react-key [x]
+  ;; try catch to avoid clojurescript peculiarity with
+  ;; sorted-maps with keys that are numbers
+  (try (get x :key)
+       (catch :default e)))
+
+(defn get-react-key [x]
+  (when (map? x)
+    (try-get-react-key x)))
+
+(defn react-key-from-vec [v]
+  (if-some [k (-> (meta v) get-react-key)]
+    k
+    (or (-> v (nth 1 nil) get-react-key)
+        ;; :> is a special case because properties map is the first
+        ;; element of the vector.
+        (if (= :> (nth v 0 nil))
+          (get-react-key (nth v 2 nil))))))
