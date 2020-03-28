@@ -1,5 +1,6 @@
 (ns reagent.impl.util
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [goog.object :as gobj]))
 
 (def is-client (and (exists? js/window)
                     (-> (.-document js/window) nil? not)))
@@ -185,6 +186,17 @@
     (binding [*always-update* true]
       (.forceUpdate comp))
     (.forceUpdate comp)))
+
+(defn shallow-obj-to-map [o]
+  (let [ks (js-keys o)
+        len (alength ks)]
+    (loop [m {}
+           i 0]
+      (if (< i len)
+        (let [k (aget ks i)]
+          (recur (assoc m (keyword k) (gobj/get o k))
+                 (inc i)))
+        m))))
 
 ;; React key
 
