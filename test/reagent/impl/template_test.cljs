@@ -22,8 +22,3 @@
                  (tmpl/convert-props {:class "a"} (tmpl/HiccupTag. nil nil nil true))))
   (is (js-equal? #js {:className "a b" :id "a"}
                  (tmpl/convert-props {:class "b"} (tmpl/HiccupTag. nil "a" "a" false)))))
-
-(deftest key-from-vec-test
-  (is (= 1 (tmpl/key-from-vec ^{:key 1} [:foo "bar"])))
-  (is (= 1 (tmpl/key-from-vec [:foo {:key 1} "bar"])))
-  (is (= 1 (tmpl/key-from-vec [:> "div" {:key 1} "bar"]))))
