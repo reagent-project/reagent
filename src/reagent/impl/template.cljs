@@ -50,9 +50,6 @@
         v))
     k))
 
-(defn ^boolean js-val? [x]
-  (not (identical? "object" (goog/typeOf x))))
-
 (declare convert-prop-value)
 
 (defn kv-conv [o k v]
@@ -60,7 +57,7 @@
     (gobj/set (cached-prop-name k) (convert-prop-value v))))
 
 (defn convert-prop-value [x]
-  (cond (js-val? x) x
+  (cond (util/js-val? x) x
         (named? x) (name x)
         (map? x) (reduce-kv kv-conv #js{} x)
         (coll? x) (clj->js x)
@@ -87,7 +84,7 @@
     (gobj/set (cached-custom-prop-name k) (convert-prop-value v))))
 
 (defn convert-custom-prop-value [x]
-  (cond (js-val? x) x
+  (cond (util/js-val? x) x
         (named? x) (name x)
         (map? x) (reduce-kv custom-kv-conv #js{} x)
         (coll? x) (clj->js x)
@@ -392,7 +389,7 @@
 (declare expand-seq-check)
 
 (defn as-element [x opts]
-  (cond (js-val? x) x
+  (cond (util/js-val? x) x
         (vector? x) (vec-to-elem x opts)
         (seq? x) (if (dev?)
                    (expand-seq-check x opts)
