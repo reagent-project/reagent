@@ -177,3 +177,41 @@ TODO: This might have problems handling Ratoms, test.
 ```cljs
 (react-dom/hydrate (r/as-element [main-component]) container)
 ```
+
+## Component classes
+
+For interop with React libraries, you might need to pass Component classes to other components as parameter. If you have a Reagent component (a function) you can use `r/reactify-component` which returns creates a Class from the function.
+
+If the parent Component awaits classes with some custom methods or properties, you need to be careful and probably should use `r/create-class`. In this case you don't want to use `r/reactify-component` with a function (even if the function returns a class) because `r/reactify-component` wraps the function in another Component class, and parent Component doesn't see the correct class.
+
+```cljs
+;; Correct way
+(def editor
+  (r/create-class
+    {:get-input-node (fn [this] ...)
+     :reagent-render (fn [] [:input ...])})))
+     
+[:> SomeComponent
+ {:editor-component editor}]
+ 
+;; Often incorrect way
+(defn editor [parameter]
+  (r/create-class
+    {:get-input-node (fn [this] ...)
+     :reagent-render (fn [] [:input ...])})))
+     
+[:> SomeComponent
+ {:editor-component (r/reactify-component editor)}]
+```
+
+In the latter case, `:editor-component` is a Reagent wrapper class component, which doesn't have the `getInputNode` method and is rendered using the Component created by `create-class` and which has the method.
+
+
+If you need to add static methods or properties, you need to modify `create-class` return value yourself. The function handles the built-in static-methods (`:childContextTypes :contextTypes :contextType :getDerivedStateFromProps :getDerivedStateFromError`), but not others.
+
+```cljs
+(let [klass (r/create-class ...)]
+  (set! (.-static-property klass) "foobar")
+  (set! (.-static-method klass) (fn [param] ...))
+  klass)
+```
