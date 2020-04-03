@@ -462,6 +462,30 @@
     (dispose r1)
     (is (= runs (running)))))
 
+(deftest running-disposed-reactions
+  (let [ra (r/atom 0)
+        run-number (atom 0)
+        disposed? (atom false)
+        r1 (rv/make-reaction (fn []
+                               (swap! run-number inc)
+                               @ra)
+                             :on-dispose (fn [] (reset! disposed? true)))]
+    (is (= @run-number 0))
+    @r1
+    (is (= @run-number 1))
+    (swap! ra inc)
+    (is (= @run-number 1))
+    @r1
+    (is (= @run-number 2))
+    (rv/dispose! r1)
+    (is (true? @disposed?))
+
+    (is (= @run-number 2))
+    (swap! ra inc)
+    @r1
+    ;; An exception or error should be logged here as we are trying to deref a disposed reaction.
+    (is (= @run-number 2))))
+
 (deftest ratom-with-meta
   (let [value {:val 1}
         meta-value {:meta-val 1}
