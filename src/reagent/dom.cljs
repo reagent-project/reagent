@@ -2,6 +2,7 @@
   (:require [react-dom :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
+            [reagent.impl.input :as input]
             [reagent.impl.batching :as batch]
             [reagent.ratom :as ratom]))
 
@@ -53,7 +54,7 @@
   [this]
   (react-dom/findDOMNode this))
 
-(set! tmpl/find-dom-node dom-node)
+(set! input/find-dom-node dom-node)
 
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
