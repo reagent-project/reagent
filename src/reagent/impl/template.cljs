@@ -165,7 +165,7 @@
         (set! (.-key jsprops) key))
       (react/createElement (comp/funtional-render-fn tag) jsprops))))
 
-(defn fragment-element [argv]
+(defn fragment-element [argv opts]
   (let [props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsprops (or (convert-prop-value (if hasprops props))
@@ -173,7 +173,7 @@
         first-child (+ 1 (if hasprops 1 0))]
     (when-some [key (util/react-key-from-vec argv)]
       (set! (.-key jsprops) key))
-    (make-element argv react/Fragment jsprops first-child)))
+    (make-element argv react/Fragment jsprops first-child opts)))
 
 (defn adapt-react-class
   [c]
@@ -224,7 +224,7 @@
     (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
     (cond
       (keyword-identical? :<> tag)
-      (fragment-element v)
+      (fragment-element v opts)
 
       (hiccup-tag? tag)
       (let [n (name tag)
