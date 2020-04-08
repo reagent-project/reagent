@@ -14,6 +14,9 @@
 (defn main []
   [:div
    [:div.reagent-demo
+    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md"} "Check changelog for the latest releases"]]]
+
+   [:div.reagent-demo
     [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#081-2018-05-15"} "Reagent 0.8.1"]]
     [:span "2018-05-15"]]
    [:div.reagent-demo
