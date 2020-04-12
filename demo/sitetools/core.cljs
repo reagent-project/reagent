@@ -6,8 +6,6 @@
   (:import goog.History
            [goog.history Html5History EventType]))
 
-(enable-console-print!)
-
 ;;; Configuration
 
 (declare main-content)

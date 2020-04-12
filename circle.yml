@@ -7,28 +7,67 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: reagent-{{ checksum "project.clj" }}
+          keys:
+            - lein-v1-{{ checksum "project.clj" }}
+            - lein-v1
       - restore_cache:
-          key: reagent-npm-{{ checksum "package.json" }}
+          keys:
+            - npm-v1-{{ checksum "package.json" }}
+            - npm-v1
       - run: sudo npm install -g karma-cli
       - run: npm install
-      - run: ./run-tests.sh
+      - run: ./run-tests.sh lein
       - save_cache:
           paths:
             - ~/.m2
             - ~/.lein
             - ~/.cljs/.aot_cache
-          key: reagent-{{ checksum "project.clj" }}
+          key: lein-v1-{{ checksum "project.clj" }}
       - save_cache:
           paths:
             - node_modules
-          key: reagent-npm-{{ checksum "package.json" }}
+          key: npm-v1-{{ checksum "package.json" }}
       - store_artifacts:
           path: coverage
       - run: bash <(curl -s https://codecov.io/bash)
 
     environment:
       NPM_CONFIG_LOGLEVEL: warn
+
+  test-clj:
+    working_directory: ~/work
+    docker:
+      - image: circleci/clojure:tools-deps-1.9.0.397-node-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - clj-v1-{{ checksum "deps.edn" }}
+            - clj-v1
+      - restore_cache:
+          keys:
+            - npm-v1-{{ checksum "package.json" }}
+            - vpm-v1
+      - run: sudo npm install -g karma-cli
+      - run: npm install
+      - run: ./run-tests.sh clj
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.lein
+            - ~/.cljs/.aot_cache
+          key: clj-v1-{{ checksum "deps.edn" }}
+      - save_cache:
+          paths:
+            - node_modules
+          key: npm-v1-{{ checksum "package.json" }}
+      - store_artifacts:
+          path: coverage
+      - run: bash <(curl -s https://codecov.io/bash)
+
+    environment:
+      NPM_CONFIG_LOGLEVEL: warn
+
   update-site:
     working_directory: ~/work
     docker:
@@ -37,12 +76,17 @@ jobs:
       - checkout
       - add_ssh_keys
       - restore_cache:
-          key: reagent-{{ checksum "project.clj" }}
+          keys:
+            - lein-v1-{{ checksum "project.clj" }}
+            - lein-v1
       - restore_cache:
-          key: reagent-npm-{{ checksum "package.json" }}
+          keys:
+            - npm-v1-{{ checksum "package.json" }}
+            - npm-v1
       - run: npm install
       - deploy:
           command: ./build-example-site.sh
+
   update-tagged-docs:
     working_directory: ~/work
     docker:
@@ -51,7 +95,9 @@ jobs:
       - checkout
       - add_ssh_keys
       - restore_cache:
-          key: reagent-{{ checksum "project.clj" }}
+          keys:
+            - lein-v1-{{ checksum "project.clj" }}
+            - lein-v1
       - deploy:
           command: ./build-docs.sh
 workflows:
@@ -62,9 +108,14 @@ workflows:
           filters:
             tags:
               only: /v.*/
+      - test-clj:
+          filters:
+            tags:
+              only: /v.*/
       - update-site:
           requires:
             - test
+            - test-clj
           filters:
             branches:
               only:
@@ -72,6 +123,7 @@ workflows:
       - update-tagged-docs:
           requires:
             - test
+            - test-clj
           filters:
             branches:
               ignore:
