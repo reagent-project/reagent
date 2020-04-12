@@ -1,0 +1,4 @@
+{:paths ["src" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo"]
+ :deps {org.clojure/clojurescript {:git/url "https://github.com/clojure/clojurescript.git"
+                                   :sha "7792adf10e8961cbd5b0267a30a7d9655c770086"}
+        doo {:mvn/version "0.1.11"}}}

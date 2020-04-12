@@ -10,6 +10,7 @@
             [reagent.impl.util-test]
             [clojure.test :as test]
             [doo.runner :as doo :include-macros true]
+            [jx.reporter.karma :as karma]
             [reagent.core :as r]))
 
 (enable-console-print!)
@@ -55,4 +56,12 @@
     (run-tests)
     [#'test-output-mini]))
 
+;; Macro which sets *main-cli-fn*
 (doo/doo-all-tests #"(reagenttest\.test.*|reagent\..*-test)")
+
+(defn karma-tests [karma]
+  ;; Just call jx.reporter directly.
+  (karma/run-all-tests karma #"(reagenttest\.test.*|reagent\..*-test)"))
+
+(when (exists? (.-__karma__ js/window))
+  (.loaded_real (.-__karma__ js/window)))
