@@ -60,8 +60,13 @@
 (doo/doo-all-tests #"(reagenttest\.test.*|reagent\..*-test)")
 
 (defn karma-tests [karma]
-  ;; Just call jx.reporter directly.
   (karma/run-all-tests karma #"(reagenttest\.test.*|reagent\..*-test)"))
 
-(when (exists? (.-__karma__ js/window))
-  (.loaded_real (.-__karma__ js/window)))
+;; ^:export doesn't work in advanced optimized bundle,
+;; it is exported to goog.global but webpack doesn't make that
+;; global so Karma doesn't see that. Using window directly
+;; works.
+(set! (.-karmaTests js/window) karma-tests)
+
+(when-let [f (some-> js/window .-__karma__ .-loaded_real)]
+  (f))

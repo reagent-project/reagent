@@ -1,4 +1,5 @@
 {:paths ["src" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo"]
  :deps {org.clojure/clojurescript {:git/url "https://github.com/clojure/clojurescript.git"
-                                   :sha "7792adf10e8961cbd5b0267a30a7d9655c770086"}
+                                   :sha "f83b1f766c32b60a3e2660170e0faf15c6e2a34e"}
+        ; org.clojure/clojurescript {:local/root "/home/juho/Source/clojurescript"}
         doo {:mvn/version "0.1.11"}}}
