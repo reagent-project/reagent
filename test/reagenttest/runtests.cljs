@@ -66,7 +66,8 @@
 ;; it is exported to goog.global but webpack doesn't make that
 ;; global so Karma doesn't see that. Using window directly
 ;; works.
-(set! (.-karmaTests js/window) karma-tests)
+(when (exists? js/window)
+  (set! (.-karmaTests js/window) karma-tests)
 
-(when-let [f (some-> js/window .-__karma__ .-loaded_real)]
-  (f))
+  (when-let [f (some-> js/window .-__karma__ .-loaded_real)]
+    (.-loaded_real (.-__karma__ js/window))))

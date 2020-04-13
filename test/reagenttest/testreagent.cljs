@@ -1163,7 +1163,7 @@
 (deftest html-entities
   (testing "entity numbers can be unescaped always"
     (is (= "<i> </i>"
-           (rstr [:i (gstr/unescapeEntitiesWithDocument "&#160;" js/window.document)]))))
+           (rstr [:i (gstr/unescapeEntities "&#160;")]))))
 
   (when r/is-client
     (testing "When DOM is available, all named entities can be unescaped"
