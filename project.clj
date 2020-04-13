@@ -3,13 +3,7 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 ;; If :npm-deps enabled, these are used only for externs.
-                 ;; Without direct react dependency, other packages,
-                 ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "16.13.0-0"]
-                 [cljsjs/react-dom "16.13.0-0"]
-                 [cljsjs/react-dom-server "16.13.0-0"]]
+  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
@@ -25,10 +19,13 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.597"]
                                   [figwheel "0.5.19"]
-                                  [doo "0.1.11"]
-                                  [cljsjs/prop-types "15.7.2-0"]]
+                                  [doo "0.1.11"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
-                   :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
+                   :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}
+
+             :cljsjs {:dependencies [[cljsjs/react "16.13.0-0"]
+                                     [cljsjs/react-dom "16.13.0-0"]
+                                     [cljsjs/prop-types "15.7.2-0"]]}}
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]
 
@@ -131,7 +128,8 @@
                 :output-to "target/cljsbuild/node-test-npm/main.js"
                 :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :verbose true}}
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.
@@ -159,7 +157,9 @@
                 :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
                 :closure-warnings {:global-this :off}
                 :npm-deps true
-                :aot-cache true}}
+                :aot-cache true
+                :verbose true
+                :externs ["npm_react.ext.js"]}}
 
     {:id "prod-test"
      :source-paths ["test"]
@@ -180,10 +180,12 @@
                 :optimizations :advanced
                 :elide-asserts true
                 :pretty-print false
-                ;; :pseudo-names true
                 :output-to "target/cljsbuild/prod-test-npm/main.js"
                 :output-dir "target/cljsbuild/prod-test-npm/out"
                 :closure-warnings {:global-this :off}
                 :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}]})
+                :checked-arrays :warn
+                :verbose true
+                :pseudo-names true
+                :externs ["npm_react.ext.js"]}}]})

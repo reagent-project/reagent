@@ -457,15 +457,14 @@
            (rstr (ae [:div [:div "foo"]]))))))
 
 (def ndiv (let [cmp (fn [])]
-            (gobj/extend
-              (.-prototype cmp)
-              (.-prototype react/Component)
-              #js {:render (fn []
-                             (this-as
-                               this
-                               (r/create-element
-                                 "div" #js {:className (.. this -props -className)}
-                                 (.. this -props -children))))})
+            (gobj/extend (.-prototype cmp) (.-prototype react/Component))
+            (set! (.-render (.-prototype cmp))
+                  (fn []
+                    (this-as
+                      this
+                      (r/create-element
+                       "div" #js {:className (.. this -props -className)}
+                       (.. this -props -children)))))
             (gobj/extend cmp react/Component)
             cmp))
 
