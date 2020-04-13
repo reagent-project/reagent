@@ -70,4 +70,4 @@
   (set! (.-karmaTests js/window) karma-tests)
 
   (when-let [f (some-> js/window .-__karma__ .-loaded_real)]
-    (.-loaded_real (.-__karma__ js/window))))
+    (.loaded_real (.-__karma__ js/window))))
