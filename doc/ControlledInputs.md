@@ -26,7 +26,7 @@ Reagent to create the input element:
 
 ## React-native
 
-ReactNative has it's own `TextInput` component. Similar workaround can't be (at least easily) implemented in ReactNative, as the component doesn't provide similar API as DOM Inputs to control the selection. Currently best option is to use controlled inputs (`default-value` and `on-change`). If you also need to update the input value from your code, you could change to Input component React key to force recreation of the component:
+ReactNative has it's own `TextInput` component. Similar workaround can't be (at least easily) implemented in ReactNative, as the component doesn't provide similar API as DOM Inputs to control the selection. Currently best option is to use uncontrolled inputs (`default-value` and `on-change`). If you also need to update the input value from your code, you could change to Input component React key to force recreation of the component:
 
 ```clj
 [:> TextInput
@@ -38,6 +38,8 @@ ReactNative has it's own `TextInput` component. Similar workaround can't be (at 
  (swap! k inc)
 ;; When key changes, old component is unmounted and new one created, and the new component will use the new default-value
 ```
+
+(Similar workaround can be also used with DOM inputs)
 
 ## Examples
 
