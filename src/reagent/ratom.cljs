@@ -102,10 +102,10 @@
           (f k this old new))
         (recur (+ 2 i))))))
 
-(defn- pr-atom [a writer opts s]
-  (-write writer (str "#<" s " "))
-  (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
-  (-write writer ">"))
+(defn- pr-atom [a writer opts s v]
+  (-write writer (str "#object[reagent.ratom." s " "))
+  (pr-writer (binding [*ratom-context* nil] v) writer opts)
+  (-write writer "]"))
 
 
 ;;; Queueing
@@ -169,7 +169,7 @@
   (-meta [_] meta)
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Atom:"))
+  (-pr-writer [a w opts] (pr-atom a w opts "RAtom" {:val (-deref a)}))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
@@ -232,7 +232,8 @@
   (-hash [_] (hash [f args]))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Track:")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Track" {:val (-deref a)
+                                                    :f f})))
 
 (defn make-track [f args]
   (Track. f args nil))
@@ -306,7 +307,8 @@
   (-swap! [a f x y more] (-reset! a (apply f (._peek a) x y more)))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts (str "Cursor: " path)))
+  (-pr-writer [a w opts] (pr-atom a w opts "RCursor" {:val (-deref a)
+                                                      :path path}))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
@@ -506,7 +508,7 @@
   (-equiv [o other] (identical? o other))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts (str "Reaction " (hash a) ":")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Reaction" {:val (-deref a)}))
 
   IHash
   (-hash [this] (goog/getUid this)))
@@ -596,7 +598,7 @@
   (-remove-watch [this key]       (remove-w this key))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Wrap:")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Wrapper" {:val (-deref a)})))
 
 (defn make-wrapper [value callback-fn args]
   (->Wrapper value

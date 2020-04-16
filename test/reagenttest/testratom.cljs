@@ -1,7 +1,7 @@
 (ns reagenttest.testratom
   (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :as debug :refer-macros [dbg]]
+            [reagent.debug :as debug :refer-macros [dbg dev?]]
             [reagent.core :as r]))
 
 (defn fixture [f]
@@ -468,3 +468,18 @@
         state (with-meta (r/atom value) meta-value)]
     (is (= (meta state) meta-value))
     (is (= @state value))))
+
+(deftest print-ratom-test
+  (let [x (r/atom {:foo 1})]
+    (is (= "#object[reagent.ratom.RAtom {:val {:foo 1}}]"
+           (pr-str x)))
+    (is (= "#object[reagent.ratom.RCursor {:val 1, :path [:foo]}]"
+           (pr-str (r/cursor x [:foo]))))
+    (is (= "#object[reagent.ratom.Wrapper {:val 1}]"
+           (pr-str (r/wrap (:foo @x) #(reset! x %)))))
+    (is (= (if (dev?)
+             "#object[reagent.ratom.Track {:val 1, :f #object[reagenttest$testratom$foo]}]"
+             "#object[reagent.ratom.Track {:val 1, :f #object[Function]}]")
+           (pr-str (r/track (fn foo [] (:foo @x))))))
+    (is (= "#object[reagent.ratom.Reaction {:val 1}]"
+           (pr-str (reaction (:foo @x)))))))

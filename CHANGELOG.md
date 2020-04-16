@@ -6,6 +6,11 @@
 defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
 - Fix using `:className` property together with keyword class shortcut ([#433](https://github.com/reagent-project/reagent/issues/433))
 - Fix incorrect missing React key warnings with `:>` ([#399](https://github.com/reagent-project/reagent/issues/399))
+- Change RAtom (all types) print format to be readable using ClojureScript reader,
+similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues/439))
+    - Old print output: `#<Atom: 0>`
+    - New print output: `#object[clojure.ratom.RAtom {:val 0}]`
+    - Still not readable by default, requires custom reader for `object` tag.
 
 ## 0.10.0 (2020-03-06)
 
