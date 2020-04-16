@@ -67,25 +67,28 @@
     [simple-component]
     (.-body js/document)))
 
-(def bmi-data (r/atom {:height 180 :weight 80}))
-
-(defn calc-bmi []
-  (let [{:keys [height weight bmi] :as data} @bmi-data
-        h (/ height 100)]
+(defn calc-bmi [{:keys [height weight bmi] :as data}]
+  (let [h (/ height 100)]
     (if (nil? bmi)
       (assoc data :bmi (/ weight (* h h)))
       (assoc data :weight (* bmi h h)))))
 
-(defn slider [param value min max]
+(def bmi-data (r/atom (calc-bmi {:height 180 :weight 80})))
+
+(defn slider [param value min max invalidates]
   [:input {:type "range" :value value :min min :max max
            :style {:width "100%"}
            :on-change (fn [e]
-                        (swap! bmi-data assoc param (.. e -target -value))
-                        (when (not= param :bmi)
-                          (swap! bmi-data assoc :bmi nil)))}])
+                        (let [new-value (js/parseInt (.. e -target -value))]
+                          (swap! bmi-data
+                                 (fn [data]
+                                   (-> data
+                                     (assoc param new-value)
+                                     (dissoc invalidates)
+                                     calc-bmi)))))}])
 
 (defn bmi-component []
-  (let [{:keys [weight height bmi]} (calc-bmi)
+  (let [{:keys [weight height bmi]} @bmi-data
         [color diagnose] (cond
                           (< bmi 18.5) ["orange" "underweight"]
                           (< bmi 25) ["inherit" "normal"]
@@ -95,14 +98,14 @@
      [:h3 "BMI calculator"]
      [:div
       "Height: " (int height) "cm"
-      [slider :height height 100 220]]
+      [slider :height height 100 220 :bmi]]
      [:div
       "Weight: " (int weight) "kg"
-      [slider :weight weight 30 150]]
+      [slider :weight weight 30 150 :bmi]]
      [:div
       "BMI: " (int bmi) " "
       [:span {:style {:color color}} diagnose]
-      [slider :bmi bmi 10 50]]]))
+      [slider :bmi bmi 10 50 :weight]]]))
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
@@ -292,7 +295,7 @@
    [demo-component {:comp bmi-component
                     :src [:pre
                           ns-src
-                          (s/src-of [:bmi-data :calc-bmi :slider
+                          (s/src-of [:calc-bmi :bmi-data :slider
                                      :bmi-component])]}]])
 
 (defn complete-simple-demo []
