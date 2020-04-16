@@ -523,6 +523,14 @@
     (is (= (rstr [:div "a" "b" [:div "c"]])
            (rstr [:> d2 "a" "b" [:div "c"]])))))
 
+(deftest adapt-react-class-shortcut-key-warning
+  (let [w (debug/track-warnings
+           #(with-mounted-component [:div
+                                     (list
+                                      [:> "div" {:key 1} "a"]
+                                      [:> "div" {:key 2} "b"])]
+              (fn [c div])))]
+      (is (empty? (:warn w)))))
 
 (deftest test-reactize-component
   (let [ae r/as-element

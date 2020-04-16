@@ -287,7 +287,11 @@
 (defn key-from-vec [v]
   (if-some [k (-> (meta v) get-key)]
     k
-    (-> v (nth 1 nil) get-key)))
+    (or (-> v (nth 1 nil) get-key)
+        ;; :> is a special case because properties map is the first
+        ;; element of the vector.
+        (if (= :> (nth v 0 nil))
+          (get-key (nth v 2 nil))))))
 
 (defn reag-element [tag v]
   (let [c (comp/as-class tag)
