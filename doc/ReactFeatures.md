@@ -162,15 +162,9 @@ as properties into the React function component.
 
 ```cljs
 (defn reagent-component []
-  (r/create-class
-    {:render (fn [this]
-               (let [el (.. js/document (getElementById "portal-el"))]
-                 (react-dom/createPortal (r/as-element [:div "foo"]) el)))}))
-
+  (let [el (.. js/document (getElementById "portal-el"))]
+    (react-dom/createPortal (r/as-element [:div "foo"]) el)))
 ```
-
-TODO: Can this be done without create-class and `:render`.
-TODO: This might have problems handling Ratoms, test.
 
 ## [Hydrate](https://reactjs.org/docs/react-dom.html#hydrate)
 
