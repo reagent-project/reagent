@@ -1086,9 +1086,9 @@
                (is (re-find #"Something went wrong\." (.-innerHTML div)))
                (if (dev?)
                  (is (re-find #"\n    in reagenttest.testreagent.comp1 \(created by reagenttest.testreagent.comp2\)\n    in reagenttest.testreagent.comp2 \(created by reagent[0-9]+\)\n    in reagent[0-9]+ \(created by reagenttest.testreagent.error_boundary\)\n    in reagenttest.testreagent.error_boundary"
-                       (.-componentStack @info)))
+                       (.-componentStack ^js @info)))
                  (is (re-find #"\n    in .+\n    in .+\n    in reagent[0-9]+\n    in .+"
-                       (.-componentStack @info))) ))))))))
+                       (.-componentStack ^js @info))) ))))))))
 
 (deftest test-dom-node
   (let [node (atom nil)
@@ -1236,7 +1236,9 @@
       (is (= "<div><div>hello</div><div>world</div><div>foo</div><div>1</div><div>2</div></div>"
              (as-string [comp]))))))
 
-(defonce my-context (react/createContext "default"))
+;; In bundle version, the names aren't optimized.
+;; In node module processed versions, names probably are optimized.
+(defonce my-context ^js/MyContext (react/createContext "default"))
 
 (def Provider (.-Provider my-context))
 (def Consumer (.-Consumer my-context))
