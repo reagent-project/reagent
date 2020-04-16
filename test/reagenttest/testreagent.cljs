@@ -302,6 +302,10 @@
          (as-string [:div.foo {:class "bar"}])))
   (is (= "<div class=\"foo bar\"></div>"
          (as-string [:div.foo.bar])))
+  (is (= "<div class=\"foo bar\"></div>"
+         (as-string [:div.foo {:className "bar"}])))
+  (is (= "<div class=\"foo bar\"></div>"
+         (as-string [:div {:className "foo bar"}])))
   (is (re-find #"id=.foo"
                (as-string [:div#foo.foo.bar])))
   (is (re-find #"class=.xxx bar"

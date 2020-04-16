@@ -4,6 +4,7 @@
 
 - Fixed merge-props adding `:class` property to result even if no argument
 defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
+- Fix using `:className` property together with keyword class shortcut ([#433](https://github.com/reagent-project/reagent/issues/433))
 
 ## 0.10.0 (2020-03-06)
 

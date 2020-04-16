@@ -109,7 +109,10 @@
 
       ;; Merge classes
       class
-      (assoc :class (util/class-names class (:class props))))))
+      ;; Note: someone might use React-style :className property,
+      ;; this is the only place where that needs special case. Using
+      ;; :class and :className together is not supported.
+      (assoc :class (util/class-names class (or (:class props) (:className props)))))))
 
 (defn convert-props [props ^clj id-class]
   (let [class (:class props)
