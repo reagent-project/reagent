@@ -191,3 +191,4 @@ to always put the call at the top, as in `my-div` here:
 
 - [Material-UI](../examples/material-ui/src/example/core.cljs)
 - [React-sortable-hoc](../examples/react-sortable-hoc/src/example/core.cljs)
+- [React-transition-group](../examples/react-transition-group/src/example/core.cljs)
