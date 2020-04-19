@@ -14,14 +14,15 @@
   (js/setTimeout f 16))
 
 (def next-tick
-  (if-not is-client
-    fake-raf
-    (let [w js/window]
-      (or (.-requestAnimationFrame w)
-          (.-webkitRequestAnimationFrame w)
-          (.-mozRequestAnimationFrame w)
-          (.-msRequestAnimationFrame w)
-          fake-raf))))
+  (.bind (if-not is-client
+           fake-raf
+           (let [w js/window]
+             (or (.-requestAnimationFrame w)
+                 (.-webkitRequestAnimationFrame w)
+                 (.-mozRequestAnimationFrame w)
+                 (.-msRequestAnimationFrame w)
+                 fake-raf)))
+         js/window))
 
 (defn compare-mount-order
   [^clj c1 ^clj c2]
