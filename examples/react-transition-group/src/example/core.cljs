@@ -25,11 +25,10 @@
        [:> TransitionGroup
         {:component "ul"}
         (for [e (:elements @state)]
-          ;; Looks like :key from props doesn't work with native components
-          ^{:key e}
           ;; Can't move this to separate function, or reagent will add component in between and transitions break
           [:> CSSTransition
-           {:classNames "fade"
+           {:key e
+            :classNames "fade"
             :timeout 500
             :on-enter #(js/console.log "enter" e)
             :on-entering #(js/console.log "entering" e)
