@@ -11,7 +11,7 @@ npm install -g karma-cli
 To prepare different environments for tests run:
 
 ```bash
-./prepare-test.sh
+./prepare-tests.sh
 ```
 
 After this, you can run the full test set:
