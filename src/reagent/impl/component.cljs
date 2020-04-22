@@ -450,6 +450,7 @@
                                            ;; by class components, and some checks.
                                            ;; ReagentRender is replaced with form-2 inner fn,
                                            ;; constructor refers to the original fn.
+                                           :opts (.-opts jsprops)
                                            :constructor tag}]
                               ;; These names can be optimized, so they can't be set in
                               ;; object literal.
