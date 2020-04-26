@@ -19,6 +19,24 @@ functional components when a function is referred in a Hiccup vector:
 (r/set-default-compiler! functional-compiler)
 ```
 
+## Functional components implementation
+
+Features:
+
+- Ratoms works.
+- The functions are wrapped in another Component, which uses two
+state hooks to store component identity and "update count" - which is used to
+force re-render when Ratoms the component uses are updated.
+- The functions is wrapped in `react/memo` to implement `shouldComponentUpdate`
+logic like previously (component is rendered only if the properties change).
+- This implementation passes the same test suite as class components.
+
+Differences to Class component implementation:
+
+- `r/render` doesn't return the Component instance, but just `nil`
+- `r/current-component` returns a mocked object that can be passed to `r/force-update`,
+but won't support everything that real Component instance would support.
+
 ## Reasoning
 
 Now that this mechanism to control how Reagent compiles Hiccup-style markup

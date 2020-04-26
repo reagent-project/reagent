@@ -18,6 +18,8 @@ class components**
     - New Compiler object can be created and passed to functions to control
     how Reagent converts Hiccup-style markup to React components and classes:
     `(r/create-compiler {:functional-components? true})`
+    - This function components implementation supports RAtoms and passes
+    the same test suite as class components, except for a few differences.
     - Passing this options to `render`, `as-element` and other calls will control how
     that markup tree will be converted.
     - `(r/set-default-compiler! compiler)` call can be used to set the default
