@@ -1,6 +1,7 @@
 (ns reagent.impl.input
   (:require [reagent.impl.component :as comp]
-            [reagent.impl.batching :as batch]))
+            [reagent.impl.batching :as batch]
+            [reagent.impl.protocols :as p]))
 
 ;; This gets set from reagent.dom
 ;; No direct reference to reagent.dom as we don't want to load react-dom
@@ -119,20 +120,12 @@
     ("input" "textarea") true
     false))
 
-(def reagent-input-class nil)
-
 (def input-spec
   {:display-name "ReagentInput"
    :component-did-update input-component-set-value
    :component-will-unmount input-unmount
    :reagent-render
-   (fn [argv component jsprops first-child opts]
+   (fn [argv component jsprops first-child compiler]
      (let [this comp/*current-component*]
        (input-render-setup this jsprops)
-       (make-element argv component jsprops first-child opts)))})
-
-(defn reagent-input
-  []
-  (when (nil? reagent-input-class)
-    (set! reagent-input-class (comp/create-class input-spec)))
-  reagent-input-class)
+       (p/make-element compiler argv component jsprops first-child)))})

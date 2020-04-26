@@ -1,6 +1,8 @@
 (ns reagent.impl.util
   (:require [clojure.string :as string]
-            [goog.object :as gobj]))
+            [clojure.walk :refer [prewalk]]
+            [goog.object :as gobj]
+            [reagent.debug :refer-macros [dev?]]))
 
 (def is-client (and (exists? js/window)
                     (-> (.-document js/window) nil? not)))
@@ -179,6 +181,7 @@
   ([p1 p2 & ps]
    (reduce merge-props (merge-props p1 p2) ps)))
 
+;; TODO: Doesn't look like correct place for this
 (def ^:dynamic *always-update* false)
 
 (defn force-update [^js/React.Component comp deep]
@@ -221,3 +224,19 @@
         ;; element of the vector.
         (if (= :> (nth v 0 nil))
           (get-react-key (nth v 2 nil))))))
+
+;; Error messages
+
+(defn- str-coll [coll]
+  (if (dev?)
+    (str (prewalk (fn [x]
+                    (if (fn? x)
+                      (let [n (fun-name x)]
+                        (case n
+                          ("" nil) x
+                          (symbol n)))
+                      x)) coll))
+    (str coll)))
+
+(defn hiccup-err [v comp-name & msg]
+  (str (apply str msg) ": " (str-coll v) "\n" comp-name))

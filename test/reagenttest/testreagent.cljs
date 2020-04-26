@@ -7,6 +7,7 @@
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
+            [reagent.impl.template :as tmpl]
             [reagenttest.utils :as u :refer [with-mounted-component]]
             [clojure.string :as string]
             [goog.string :as gstr]
@@ -36,9 +37,11 @@
 
 ;; Different set of options to try for most test cases
 
+(def functional-compiler (r/create-compiler {:functional-reag-elements? true}))
+
 (def test-options
-  [nil
-   {:functional-reag-elements? true}] )
+  [tmpl/default-compiler
+   functional-compiler])
 
 (deftest really-simple-test
   (when r/is-client
@@ -583,7 +586,7 @@
           c1r (fn reactize [p & args]
                 (reset! a args)
                 [:p "p:" (:a p) (:children p)])
-          c1 (r/reactify-component c1r)]
+          c1 (r/reactify-component c1r opts)]
       (is (= (rstr (ce c1 #js{:a "a"}))
              (rstr [:p "p:a"])))
       (is (= nil @a))
@@ -1526,11 +1529,22 @@
   (when r/is-client
     (let [c (fn [x]
               [:span "Hello " x])]
-        (with-mounted-component [c "foo"]
-          {:functional-reag-elements? true}
-          (fn [c div]
-            (is (nil? c) "Render returns nil for stateless components")
-            (is (= "Hello foo" (.-innerText div))))))))
+        ;; TODO: special markup to create functional Reagent component.
+        (testing "compiler options"
+          (with-mounted-component [c "foo"]
+            functional-compiler
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+        (testing "setting default compiler"
+          (try
+           (r/set-default-compiler! functional-compiler)
+           (with-mounted-component [c "foo"] nil
+             (fn [c div]
+               (is (nil? c) "Render returns nil for stateless components")
+               (is (= "Hello foo" (.-innerText div)))))
+           (finally
+            (r/set-default-compiler! nil)))))))
 
 (deftest functional-component-poc-state-hook
   (when r/is-client
@@ -1543,7 +1557,7 @@
                 (reset! set-count! set-count)
                 [:span "Count " c]))]
       (with-mounted-component [c 5]
-        {:functional-reag-elements? true}
+        functional-compiler
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Count 5" (.-innerText div)))
@@ -1556,7 +1570,7 @@
           c (fn [x]
               [:span "Count " @count])]
       (with-mounted-component [c 5]
-        {:functional-reag-elements? true}
+        functional-compiler
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Count 5" (.-innerText div)))
@@ -1576,7 +1590,7 @@
                 (reset! set-count! set-count)
                 [:span "Counts " @r-count " " c]))]
       (with-mounted-component [c 15]
-        {:functional-reag-elements? true}
+        functional-compiler
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
           (is (= "Counts 3 15" (.-innerText div)))

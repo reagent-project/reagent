@@ -6,6 +6,7 @@
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
+            [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [assert-some assert-component
                                                   assert-js-object assert-new-state
@@ -46,8 +47,8 @@
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form
   unchanged if it is not a vector."
-  ([form] (tmpl/as-element form nil))
-  ([form opts] (tmpl/as-element form opts)))
+  ([form] (p/as-element tmpl/default-compiler form))
+  ([form compiler] (p/as-element compiler form)))
 
 (defn adapt-react-class
   "Returns an adapter for a native React class, that may be used
@@ -60,10 +61,10 @@
   "Returns an adapter for a Reagent component, that may be used from
   React, for example in JSX. A single argument, props, is passed to
   the component, converted to a map."
-  ([c] (reactify-component c nil))
-  ([c opts]
+  ([c] (reactify-component c tmpl/default-compiler))
+  ([c compiler]
    (assert-some c "Component")
-   (comp/reactify-component c opts)))
+   (comp/reactify-component c compiler)))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be
@@ -141,8 +142,10 @@
   Object.assign to merge partial state into the current state.
 
   React built-in static methods or properties are automatically defined as statics."
-  [spec]
-  (comp/create-class spec))
+  ([spec]
+   (comp/create-class spec tmpl/default-compiler))
+  ([spec compiler]
+   (comp/create-class spec compiler)))
 
 
 (defn current-component
@@ -389,3 +392,20 @@
   "Works just like clojure.core/partial, but the result can be compared with ="
   [f & args]
   (util/make-partial-fn f args))
+
+(defn create-compiler
+  "Creates Compiler object with given `opts`,
+  this can be passed to `render`, `as-element` and other functions to control
+  how they turn the Reagent-style Hiccup into React components and elements."
+  [opts]
+  (tmpl/create-compiler opts))
+
+(defn set-default-compiler!
+  "Globally sets the Compiler object used by `render`, `as-element` and other
+  calls by default, when no `compiler` parameter is provided.
+
+  Use `nil` value to restore the original default compiler."
+  [compiler]
+  (tmpl/set-default-compiler! (if (nil? compiler)
+                                tmpl/default-compiler*
+                                compiler)))

@@ -4,6 +4,7 @@
             [reagent.impl.template :as tmpl]
             [reagent.impl.input :as input]
             [reagent.impl.batching :as batch]
+            [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]))
 
 (defonce ^:private roots (atom {}))
@@ -17,7 +18,7 @@
     (react-dom/render (comp) container
       (fn []
         (binding [util/*always-update* false]
-          (swap! roots assoc container [comp container])
+          (swap! roots assoc container comp)
           (batch/flush-after-render)
           (if (some? callback)
             (callback)))))))
@@ -34,14 +35,16 @@
 
   Returns the mounted component instance."
   ([comp container]
-   (render comp container nil))
-  ([comp container callback-or-opts]
+   (render comp container tmpl/default-compiler))
+  ([comp container callback-or-compiler]
    (ratom/flush!)
-   (let [[opts callback] (if (fn? callback-or-opts)
-                           [nil callback-or-opts]
-                           [callback-or-opts (:callback callback-or-opts)])
+   (let [[compiler callback] (if (fn? callback-or-compiler)
+                               [tmpl/default-compiler callback-or-compiler]
+                               ;; TODO: Callback option doesn't make sense now that
+                               ;; val is compiler object, not map.
+                               [callback-or-compiler (:callback callback-or-compiler)])
          f (fn []
-             (tmpl/as-element (if (fn? comp) (comp) comp) opts))]
+             (p/as-element compiler (if (fn? comp) (comp) comp)))]
      (render-comp f container callback))))
 
 (defn unmount-component-at-node
@@ -68,6 +71,6 @@
   of indirection, for example by using `(render [#'foo])` instead."
   []
   (ratom/flush!)
-  (doseq [v (vals @roots)]
-    (apply re-render-component v))
+  (doseq [[container comp] @roots]
+    (re-render-component comp container))
   (batch/flush-after-render))
