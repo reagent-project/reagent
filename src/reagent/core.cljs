@@ -10,8 +10,7 @@
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [assert-some assert-component
                                                   assert-js-object assert-new-state
-                                                  assert-callable]]
-            [reagent.dom :as dom]))
+                                                  assert-callable]]))
 
 (def is-client util/is-client)
 
@@ -65,42 +64,6 @@
   ([c compiler]
    (assert-some c "Component")
    (comp/reactify-component c compiler)))
-
-(defn render
-  "Render a Reagent component into the DOM. The first argument may be
-  either a vector (using Reagent's Hiccup syntax), or a React element.
-  The second argument should be a DOM node.
-
-  Optionally takes a callback that is called when the component is in place.
-
-  Returns the mounted component instance."
-  {:deprecated "0.10.0"}
-  ([comp container]
-   (dom/render comp container))
-  ([comp container callback]
-   (dom/render comp container callback)))
-
-(defn unmount-component-at-node
-  "Remove a component from the given DOM node."
-  {:deprecated "0.10.0"}
-  [container]
-  (dom/unmount-component-at-node container))
-
-(defn force-update-all
-  "Force re-rendering of all mounted Reagent components. This is
-  probably only useful in a development environment, when you want to
-  update components in response to some dynamic changes to code.
-
-  Note that force-update-all may not update root components. This
-  happens if a component 'foo' is mounted with `(render [foo])` (since
-  functions are passed by value, and not by reference, in
-  ClojureScript). To get around this you'll have to introduce a layer
-  of indirection, for example by using `(render [#'foo])` instead."
-  {:deprecated "0.10.0"}
-  []
-  (ratom/flush!)
-  (dom/force-update-all)
-  (batch/flush-after-render))
 
 (defn create-class
   "Creates JS class based on provided Clojure map, for example:
@@ -212,12 +175,6 @@
   [this]
   (assert-component this)
   (comp/get-argv this))
-
-(defn dom-node
-  "Returns the root DOM node of a mounted component."
-  {:deprecated "0.10.0"}
-  [this]
-  (dom/dom-node this))
 
 (defn class-names
   "Function which normalizes and combines class values to a string

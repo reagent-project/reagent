@@ -17,6 +17,8 @@ class components**
     compiler object for all calls.
     - [Read more](./doc/reagent-compiler.md)
     - [Check example](./example/functional-components-and-hooks/src/example/core.cljs)
+- DOM related functions have been removed from `reagent.core` namespace.
+    - These were deprecated in the previous release.
 - Change RAtom (all types) print format to be readable using ClojureScript reader,
 similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues/439))
     - Old print output: `#<Atom: 0>`
