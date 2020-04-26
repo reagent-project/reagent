@@ -33,8 +33,8 @@ logic like previously (component is rendered only if the properties change).
 
 Differences to Class component implementation:
 
-- `r/render` doesn't return the Component instance, but just `nil`
-- `r/current-component` returns a mocked object that can be passed to `r/force-update`,
+- `reagent.dom/render` doesn't return the Component instance, but just `nil`
+- `reagent.core/current-component` returns a mocked object that can be passed to `reagent.core/force-update`,
 but won't support everything that real Component instance would support.
 
 ## Reasoning
