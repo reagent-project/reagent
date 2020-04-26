@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-alpha1 (2020-04-26)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...v1.0.0-alpha1)**
+
+The changes in this release are quite big and change lots of things in
+Reagent implementation, please test and report problems but it is probably good
+idea to wait for a bit before using this in production. There could be more
+changes before final version.
 
 ### Features and changes
 
@@ -35,6 +42,8 @@ defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
 
 ## 0.10.0 (2020-03-06)
 
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.1...v0.10.0)**
+
 Main feature of this release is to deprecate functions that are going to be
 removed in the future releases, to make transition easier.
 
@@ -52,6 +61,8 @@ Instead one should use [an Error Boundary](https://reactjs.org/docs/error-bounda
 to catch the problem and look at the error information `componentStack` property.
 
 ## 0.9.1 (2020-01-15)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v0.9.0...v0.9.1)**
 
 Removed broken untracked files from the package.
 
