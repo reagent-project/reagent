@@ -1,4 +1,4 @@
-(defproject reagent "0.10.0"
+(defproject reagent "1.0.0-SNAPSHOT"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
@@ -25,6 +25,7 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.597"]
                                   [figwheel "0.5.19"]
+                                  [figwheel-sidecar "0.5.19"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.7.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
@@ -32,9 +33,12 @@
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]
 
+  :repl-options {:init (do (require '[figwheel-sidecar.repl-api :refer :all]))}
+
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
-             :repl false}
+             :repl true
+             :nrepl-port 27397}
 
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all

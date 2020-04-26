@@ -6,6 +6,7 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
+            [reagenttest.performancetest]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
             [clojure.test :as test]
@@ -39,14 +40,19 @@
 
 (defn test-output-mini []
   (let [res @test-results]
-    [:div {:style test-box-style
-           :on-click run-tests}
-     (if res
-       (if (zero? (+ (:fail res) (:error res)))
-         "All tests ok"
-         [:span "Test failure: "
-          (:fail res) " failures, " (:error res) " errors."])
-       "testing")]))
+    [:div
+     {:style test-box-style}
+     [:div {:on-click run-tests}
+      (if res
+        (if (zero? (+ (:fail res) (:error res)))
+          "All tests ok"
+          [:span "Test failure: "
+           (:fail res) " failures, " (:error res) " errors."])
+        "testing")]
+     [:button
+      {:on-click (fn [_e]
+                   (reagenttest.performancetest/test-create-element))}
+      "Run performance test"]]))
 
 (defn init! []
   ;; This function is only used when running tests from the demo app.

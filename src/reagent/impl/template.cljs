@@ -1,15 +1,14 @@
 (ns reagent.impl.template
   (:require [react :as react]
             [clojure.string :as string]
-            [clojure.walk :refer [prewalk]]
             [reagent.impl.util :as util :refer [named?]]
             [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
+            [reagent.impl.input :as input]
+            [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dev? warn]]
             [goog.object :as gobj]))
-
-(declare as-element)
 
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
@@ -18,6 +17,9 @@
 
 (deftype NativeWrapper [tag id className])
 
+(defn adapt-react-class
+  [c]
+  (->NativeWrapper c nil nil))
 
 ;;; Common utilities
 
@@ -30,8 +32,10 @@
       (ifn? x)
       (instance? NativeWrapper x)))
 
-
 ;;; Props conversion
+
+;; TODO: Move prop-name caches to the compiler object, if this
+;; conversion can be configured.
 
 (def prop-name-cache #js{:class "className"
                          :for "htmlFor"
@@ -50,9 +54,6 @@
         v))
     k))
 
-(defn ^boolean js-val? [x]
-  (not (identical? "object" (goog/typeOf x))))
-
 (declare convert-prop-value)
 
 (defn kv-conv [o k v]
@@ -60,7 +61,7 @@
     (gobj/set (cached-prop-name k) (convert-prop-value v))))
 
 (defn convert-prop-value [x]
-  (cond (js-val? x) x
+  (cond (util/js-val? x) x
         (named? x) (name x)
         (map? x) (reduce-kv kv-conv #js{} x)
         (coll? x) (clj->js x)
@@ -87,7 +88,7 @@
     (gobj/set (cached-custom-prop-name k) (convert-prop-value v))))
 
 (defn convert-custom-prop-value [x]
-  (cond (js-val? x) x
+  (cond (util/js-val? x) x
         (named? x) (name x)
         (map? x) (reduce-kv custom-kv-conv #js{} x)
         (coll? x) (clj->js x)
@@ -123,142 +124,22 @@
       (convert-custom-prop-value props)
       (convert-prop-value props))))
 
-;;; Specialization for input components
-
-;; This gets set from reagent.dom
-(defonce find-dom-node nil)
-
-;; <input type="??" >
-;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
-;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
-(def these-inputs-have-selection-api #{"text" "textarea" "password" "search"
-                                       "tel" "url"})
-
-(defn ^boolean has-selection-api?
-  [input-type]
-  (contains? these-inputs-have-selection-api input-type))
-
-(declare input-component-set-value)
-
-(defn input-node-set-value
-  [node rendered-value dom-value ^clj component {:keys [on-write]}]
-  (if-not (and (identical? node (.-activeElement js/document))
-            (has-selection-api? (.-type node))
-            (string? rendered-value)
-            (string? dom-value))
-    ;; just set the value, no need to worry about a cursor
-    (do
-      (set! (.-cljsDOMValue component) rendered-value)
-      (set! (.-value node) rendered-value)
-      (when (fn? on-write)
-        (on-write rendered-value)))
-
-    ;; Setting "value" (below) moves the cursor position to the
-    ;; end which gives the user a jarring experience.
-    ;;
-    ;; But repositioning the cursor within the text, turns out to
-    ;; be quite a challenge because changes in the text can be
-    ;; triggered by various events like:
-    ;; - a validation function rejecting a user inputted char
-    ;; - the user enters a lower case char, but is transformed to
-    ;;   upper.
-    ;; - the user selects multiple chars and deletes text
-    ;; - the user pastes in multiple chars, and some of them are
-    ;;   rejected by a validator.
-    ;; - the user selects multiple chars and then types in a
-    ;;   single new char to repalce them all.
-    ;; Coming up with a sane cursor repositioning strategy hasn't
-    ;; been easy ALTHOUGH in the end, it kinda fell out nicely,
-    ;; and it appears to sanely handle all the cases we could
-    ;; think of.
-    ;; So this is just a warning. The code below is simple
-    ;; enough, but if you are tempted to change it, be aware of
-    ;; all the scenarios you have handle.
-    (let [node-value (.-value node)]
-      (if (not= node-value dom-value)
-        ;; IE has not notified us of the change yet, so check again later
-        (batch/do-after-render #(input-component-set-value component))
-        (let [existing-offset-from-end (- (count node-value)
-                                         (.-selectionStart node))
-              new-cursor-offset        (- (count rendered-value)
-                                         existing-offset-from-end)]
-          (set! (.-cljsDOMValue component) rendered-value)
-          (set! (.-value node) rendered-value)
-          (when (fn? on-write)
-            (on-write rendered-value))
-          (set! (.-selectionStart node) new-cursor-offset)
-          (set! (.-selectionEnd node) new-cursor-offset))))))
-
-(defn input-component-set-value [^clj this]
-  (when (.-cljsInputLive this)
-    (set! (.-cljsInputDirty this) false)
-    (let [rendered-value (.-cljsRenderedValue this)
-          dom-value (.-cljsDOMValue this)
-          ;; Default to the root node within this component
-          node (find-dom-node this)]
-      (when (not= rendered-value dom-value)
-        (input-node-set-value node rendered-value dom-value this {})))))
-
-(defn input-handle-change [^clj this on-change e]
-  (set! (.-cljsDOMValue this) (-> e .-target .-value))
-  ;; Make sure the input is re-rendered, in case on-change
-  ;; wants to keep the value unchanged
-  (when-not (.-cljsInputDirty this)
-    (set! (.-cljsInputDirty this) true)
-    (batch/do-after-render #(input-component-set-value this)))
-  (on-change e))
-
-(defn input-render-setup
-  [^clj this ^js jsprops]
-  ;; Don't rely on React for updating "controlled inputs", since it
-  ;; doesn't play well with async rendering (misses keystrokes).
-  (when (and (some? jsprops)
-             (.hasOwnProperty jsprops "onChange")
-             (.hasOwnProperty jsprops "value"))
-    (assert find-dom-node
-            "reagent.dom needs to be loaded for controlled input to work")
-    (let [v (.-value jsprops)
-          value (if (nil? v) "" v)
-          on-change (.-onChange jsprops)]
-      (when-not (.-cljsInputLive this)
-        ;; set initial value
-        (set! (.-cljsInputLive this) true)
-        (set! (.-cljsDOMValue this) value))
-      (set! (.-cljsRenderedValue this) value)
-      (js-delete jsprops "value")
-      (set! (.-defaultValue jsprops) value)
-      (set! (.-onChange jsprops) #(input-handle-change this on-change %)))))
-
-(defn input-unmount [^clj this]
-  (set! (.-cljsInputLive this) nil))
-
-(defn ^boolean input-component? [x]
-  (case x
-    ("input" "textarea") true
-    false))
-
-(def reagent-input-class nil)
-
-(declare make-element)
-
-(def input-spec
-  {:display-name "ReagentInput"
-   :component-did-update input-component-set-value
-   :component-will-unmount input-unmount
-   :reagent-render
-   (fn [argv component jsprops first-child]
-     (let [this comp/*current-component*]
-       (input-render-setup this jsprops)
-       (make-element argv component jsprops first-child)))})
-
-(defn reagent-input
-  []
-  (when (nil? reagent-input-class)
-    (set! reagent-input-class (comp/create-class input-spec)))
-  reagent-input-class)
-
-
 ;;; Conversion from Hiccup forms
+
+(defn make-element* [argv component jsprops first-child compiler]
+  (case (- (count argv) first-child)
+    ;; Optimize cases of zero or one child
+    0 (react/createElement component jsprops)
+
+    1 (react/createElement component jsprops
+          (p/as-element compiler (nth argv first-child nil)))
+
+    (.apply react/createElement nil
+            (reduce-kv (fn [a k v]
+                         (when (>= k first-child)
+                           (.push a (p/as-element compiler v)))
+                         a)
+                       #js [component jsprops] argv))))
 
 (deftype HiccupTag [tag id className custom])
 
@@ -274,48 +155,44 @@
                  ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
                  (not= -1 (.indexOf tag "-")))))
 
-(defn try-get-key [x]
-  ;; try catch to avoid clojurescript peculiarity with
-  ;; sorted-maps with keys that are numbers
-  (try (get x :key)
-       (catch :default e)))
-
-(defn get-key [x]
-  (when (map? x)
-    (try-get-key x)))
-
-(defn key-from-vec [v]
-  (if-some [k (-> (meta v) get-key)]
-    k
-    (or (-> v (nth 1 nil) get-key)
-        ;; :> is a special case because properties map is the first
-        ;; element of the vector.
-        (if (= :> (nth v 0 nil))
-          (get-key (nth v 2 nil))))))
-
-(defn reag-element [tag v]
-  (let [c (comp/as-class tag)
+(defn reag-element [tag v compiler]
+  (let [c (comp/as-class tag compiler)
         jsprops #js {}]
     (set! (.-argv jsprops) v)
-    (when-some [key (key-from-vec v)]
+    (when-some [key (util/react-key-from-vec v)]
       (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
 
-(defn fragment-element [argv]
+(defn functional-reag-element [tag v compiler]
+  ;; TODO: If using functional elements, drop support for meta class methods.
+  (if (or (comp/react-class? tag)
+          (:should-component-update (meta tag)))
+    ;; as-class unncessary later as tag is always class
+    (let [c (comp/as-class tag compiler)
+          jsprops #js {}]
+      (set! (.-argv jsprops) v)
+      (when-some [key (util/react-key-from-vec v)]
+        (set! (.-key jsprops) key))
+      (react/createElement c jsprops))
+    (let [jsprops #js {}]
+      (set! (.-reagentRender jsprops) tag)
+      (set! (.-argv jsprops) (subvec v 1))
+      ; (set! (.-opts jsprops) opts)
+      (when-some [key (util/react-key-from-vec v)]
+        (set! (.-key jsprops) key))
+      (react/createElement (comp/functional-render-fn compiler tag) jsprops))))
+
+(defn fragment-element [argv compiler]
   (let [props (nth argv 1 nil)
         hasprops (or (nil? props) (map? props))
         jsprops (or (convert-prop-value (if hasprops props))
                     #js {})
         first-child (+ 1 (if hasprops 1 0))]
-    (when-some [key (key-from-vec argv)]
+    (when-some [key (util/react-key-from-vec argv)]
       (set! (.-key jsprops) key))
-    (make-element argv react/Fragment jsprops first-child)))
+    (p/make-element compiler argv react/Fragment jsprops first-child)))
 
-(defn adapt-react-class
-  [c]
-  (->NativeWrapper c nil nil))
-
-(def tag-name-cache #js{})
+(def tag-name-cache #js {})
 
 (defn cached-parse [x]
   (if-some [s (cache-get tag-name-cache x)]
@@ -324,113 +201,108 @@
       (gobj/set tag-name-cache x v)
       v)))
 
-(defn native-element [parsed argv first]
+(defn native-element [parsed argv first compiler]
   (let [component (.-tag parsed)
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))
         jsprops (or (convert-props (if hasprops props) parsed)
                     #js {})
         first-child (+ first (if hasprops 1 0))]
-    (if (input-component? component)
-      (-> [(reagent-input) argv component jsprops first-child]
-          (with-meta (meta argv))
-          as-element)
+    (if (input/input-component? component)
+      (let [input-class (or (.-reagentInput compiler)
+                            (let [x (comp/create-class input/input-spec compiler)]
+                              (set! (.-reagentInput compiler) x)
+                              x))]
+        (-> [input-class argv component jsprops first-child compiler]
+            (with-meta (meta argv))
+            (->> (p/as-element compiler))))
       (do
-        (when-some [key (-> (meta argv) get-key)]
+        (when-some [key (-> (meta argv) util/get-react-key)]
           (set! (.-key jsprops) key))
-        (make-element argv component jsprops first-child)))))
+        (p/make-element compiler argv component jsprops first-child)))))
 
-(defn str-coll [coll]
-  (if (dev?)
-    (str (prewalk (fn [x]
-                    (if (fn? x)
-                      (let [n (util/fun-name x)]
-                        (case n
-                          ("" nil) x
-                          (symbol n)))
-                      x)) coll))
-    (str coll)))
+(defn expand-seq [s compiler]
+  (into-array (map #(p/as-element compiler %) s)))
 
-(defn hiccup-err [v & msg]
-  (str (apply str msg) ": " (str-coll v) "\n" (comp/comp-name)))
+(defn expand-seq-dev [s ^clj o compiler]
+  (into-array (map (fn [val]
+                     (when (and (vector? val)
+                                (nil? (util/react-key-from-vec val)))
+                       (set! (.-no-key o) true))
+                     (p/as-element compiler val))
+                   s)))
 
-(defn vec-to-elem [v]
-  (assert (pos? (count v)) (hiccup-err v "Hiccup form should not be empty"))
+(defn expand-seq-check [x compiler]
+  (let [ctx #js {}
+        [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx compiler))]
+    (when derefed
+      (warn (util/hiccup-err x (comp/comp-name) "Reactive deref not supported in lazy seq, "
+                        "it should be wrapped in doall")))
+    (when (.-no-key ctx)
+      (warn (util/hiccup-err x (comp/comp-name) "Every element in a seq should have a unique :key")))
+    res))
+
+(defn hiccup-element [v compiler]
+  (let [tag (nth v 0 nil)
+        n (name tag)
+        pos (.indexOf n ">")]
+    (case pos
+      -1 (native-element (cached-parse n) v 1 compiler)
+      0 (let [component (nth v 1 nil)]
+          (assert (= ">" n) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup tag"))
+          (native-element (->HiccupTag component nil nil nil) v 2 compiler))
+      ;; Support extended hiccup syntax, i.e :div.bar>a.foo
+      ;; Apply metadata (e.g. :key) to the outermost element.
+      ;; Metadata is probably used only with sequeneces, and in that case
+      ;; only the key of the outermost element matters.
+      (recur (with-meta [(subs n 0 pos)
+                         (assoc (with-meta v nil) 0 (subs n (inc pos)))]
+                        (meta v))
+             compiler))))
+
+(defn vec-to-elem [v compiler functional-components?]
+  (when (nil? compiler)
+    (js/console.error "vec-to-elem" (pr-str v)))
+  (assert (pos? (count v)) (util/hiccup-err v (comp/comp-name) "Hiccup form should not be empty"))
   (let [tag (nth v 0 nil)]
-    (assert (valid-tag? tag) (hiccup-err v "Invalid Hiccup form"))
+    (assert (valid-tag? tag) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup form"))
     (cond
       (keyword-identical? :<> tag)
-      (fragment-element v)
+      (fragment-element v compiler)
 
       (hiccup-tag? tag)
-      (let [n (name tag)
-            pos (.indexOf n ">")]
-        (case pos
-          -1 (native-element (cached-parse n) v 1)
-          0 (let [component (nth v 1 nil)]
-              ;; Support [:> component ...]
-              (assert (= ">" n) (hiccup-err v "Invalid Hiccup tag"))
-              (native-element (->HiccupTag component nil nil nil) v 2))
-          ;; Support extended hiccup syntax, i.e :div.bar>a.foo
-          ;; Apply metadata (e.g. :key) to the outermost element.
-          ;; Metadata is probably used only with sequeneces, and in that case
-          ;; only the key of the outermost element matters.
-          (recur (with-meta [(subs n 0 pos)
-                             (assoc (with-meta v nil) 0 (subs n (inc pos)))]
-                            (meta v)))))
+      (hiccup-element v compiler)
 
       (instance? NativeWrapper tag)
-      (native-element tag v 1)
+      (native-element tag v 1 compiler)
 
-      :else (reag-element tag v))))
+      :else (if functional-components?
+              (functional-reag-element tag v compiler)
+              (reag-element tag v compiler)))))
 
-(declare expand-seq)
-(declare expand-seq-check)
-
-(defn as-element [x]
-  (cond (js-val? x) x
-        (vector? x) (vec-to-elem x)
+(defn as-element* [x compiler functional-components?]
+  (cond (util/js-val? x) x
+        (vector? x) (vec-to-elem x compiler functional-components?)
         (seq? x) (if (dev?)
-                   (expand-seq-check x)
-                   (expand-seq x))
+                   (expand-seq-check x compiler)
+                   (expand-seq x compiler))
         (named? x) (name x)
         (satisfies? IPrintWithWriter x) (pr-str x)
         :else x))
 
-(set! comp/as-element as-element)
+(defn create-compiler [opts]
+  (let [id (gensym)]
+    (reify p/Compiler
+      ;; This is used to as cache key to cache component fns per compiler
+      (get-id [this] id)
+      (as-element [this x]
+        ;; TODO: Select on Compiler object initialization correct as-element call.
+        (as-element* x this (true? (:functional-components? opts))))
+      (make-element [this argv component jsprops first-child]
+        (make-element* argv component jsprops first-child this)))))
 
-(defn expand-seq [s]
-  (into-array (map as-element s)))
+(def default-compiler* (create-compiler {}))
+(def ^:dynamic default-compiler default-compiler*)
 
-(defn expand-seq-dev [s ^clj o]
-  (into-array (map (fn [val]
-                     (when (and (vector? val)
-                                (nil? (key-from-vec val)))
-                       (set! (.-no-key o) true))
-                     (as-element val))
-                   s)))
-
-(defn expand-seq-check [x]
-  (let [ctx #js{}
-        [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx))]
-    (when derefed
-      (warn (hiccup-err x "Reactive deref not supported in lazy seq, "
-                        "it should be wrapped in doall")))
-    (when (.-no-key ctx)
-      (warn (hiccup-err x "Every element in a seq should have a unique :key")))
-    res))
-
-(defn make-element [argv component jsprops first-child]
-  (case (- (count argv) first-child)
-    ;; Optimize cases of zero or one child
-    0 (react/createElement component jsprops)
-
-    1 (react/createElement component jsprops
-          (as-element (nth argv first-child nil)))
-
-    (.apply react/createElement nil
-            (reduce-kv (fn [a k v]
-                         (when (>= k first-child)
-                           (.push a (as-element v)))
-                         a)
-                       #js[component jsprops] argv))))
+(defn set-default-compiler! [compiler]
+  (set! default-compiler compiler))

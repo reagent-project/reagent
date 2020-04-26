@@ -131,3 +131,8 @@
          (let [f (fn [] 1)]
            (set! (.-displayName f) "foobar")
            (util/fun-name f)))) )
+
+(deftest react-key-from-vec-test
+  (is (= 1 (util/react-key-from-vec ^{:key 1} [:foo "bar"])))
+  (is (= 1 (util/react-key-from-vec [:foo {:key 1} "bar"])))
+  (is (= 1 (util/react-key-from-vec [:> "div" {:key 1} "bar"]))))

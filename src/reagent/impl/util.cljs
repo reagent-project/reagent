@@ -1,5 +1,8 @@
 (ns reagent.impl.util
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [clojure.walk :refer [prewalk]]
+            [goog.object :as gobj]
+            [reagent.debug :refer-macros [dev?]]))
 
 (def is-client (and (exists? js/window)
                     (-> (.-document js/window) nil? not)))
@@ -178,6 +181,7 @@
   ([p1 p2 & ps]
    (reduce merge-props (merge-props p1 p2) ps)))
 
+;; TODO: Doesn't look like correct place for this
 (def ^:dynamic *always-update* false)
 
 (defn force-update [^js/React.Component comp deep]
@@ -185,3 +189,54 @@
     (binding [*always-update* true]
       (.forceUpdate comp))
     (.forceUpdate comp)))
+
+(defn shallow-obj-to-map [o]
+  (let [ks (js-keys o)
+        len (alength ks)]
+    (loop [m {}
+           i 0]
+      (if (< i len)
+        (let [k (aget ks i)]
+          (recur (assoc m (keyword k) (gobj/get o k))
+                 (inc i)))
+        m))))
+
+(defn ^boolean js-val? [x]
+  (not (identical? "object" (goog/typeOf x))))
+
+;; React key
+
+(defn try-get-react-key [x]
+  ;; try catch to avoid clojurescript peculiarity with
+  ;; sorted-maps with keys that are numbers
+  (try (get x :key)
+       (catch :default e)))
+
+(defn get-react-key [x]
+  (when (map? x)
+    (try-get-react-key x)))
+
+(defn react-key-from-vec [v]
+  (if-some [k (-> (meta v) get-react-key)]
+    k
+    (or (-> v (nth 1 nil) get-react-key)
+        ;; :> is a special case because properties map is the first
+        ;; element of the vector.
+        (if (= :> (nth v 0 nil))
+          (get-react-key (nth v 2 nil))))))
+
+;; Error messages
+
+(defn- str-coll [coll]
+  (if (dev?)
+    (str (prewalk (fn [x]
+                    (if (fn? x)
+                      (let [n (fun-name x)]
+                        (case n
+                          ("" nil) x
+                          (symbol n)))
+                      x)) coll))
+    (str coll)))
+
+(defn hiccup-err [v comp-name & msg]
+  (str (apply str msg) ": " (str-coll v) "\n" comp-name))

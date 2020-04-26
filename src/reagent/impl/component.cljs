@@ -3,6 +3,7 @@
             [react :as react]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
+            [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dev? warn error warn-unless assert-callable]]))
 
@@ -10,17 +11,6 @@
 
 
 ;;; Argv access
-
-(defn shallow-obj-to-map [o]
-  (let [ks (js-keys o)
-        len (alength ks)]
-    (loop [m {}
-           i 0]
-      (if (< i len)
-        (let [k (aget ks i)]
-          (recur (assoc m (keyword k) (gobj/get o k))
-                 (inc i)))
-        m))))
 
 (defn extract-props [v]
   (let [p (nth v 1 nil)]
@@ -35,7 +25,7 @@
 (defn props-argv [^js/React.Component c p]
   (if-some [a (.-argv p)]
     a
-    [(.-constructor c) (shallow-obj-to-map p)]))
+    [(.-constructor c) (util/shallow-obj-to-map p)]))
 
 (defn get-argv [^js/React.Component c]
   (props-argv c (.-props c)))
@@ -44,7 +34,7 @@
   (let [p (.-props c)]
     (if-some [v (.-argv p)]
       (extract-props v)
-      (shallow-obj-to-map p))))
+      (util/shallow-obj-to-map p))))
 
 (defn get-children [^js/React.Component c]
   (let [p (.-props c)]
@@ -65,13 +55,6 @@
 (defn ^boolean reagent-component? [^clj c]
   (some? (.-reagentRender c)))
 
-(defn cached-react-class [^clj c]
-  (.-cljsReactClass c))
-
-(defn cache-react-class [^clj c constructor]
-  (set! (.-cljsReactClass c) constructor))
-
-
 ;;; State
 
 (defn state-atom [^clj this]
@@ -79,10 +62,6 @@
     (if-not (nil? sa)
       sa
       (set! (.-cljsState this) (ratom/atom nil)))))
-
-;; avoid circular dependency: this gets set from template.cljs
-(defonce as-element nil)
-
 
 ;;; Rendering
 
@@ -93,7 +72,7 @@
      2) Function (form-2 component) - updates the render function to `res` i.e. the internal function
         and calls wrap-render again (`recur`), until the render result doesn't evaluate to a function.
      3) Anything else - Returns the result of evaluating `c`"
-  [^clj c]
+  [^clj c compiler]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
         ;; cljsLegacyRender tells if this calls was defined
@@ -111,17 +90,18 @@
                   5 (.call f c (nth v 1) (nth v 2) (nth v 3) (nth v 4))
                   (.apply f c (.slice (into-array v) 1)))))]
     (cond
-      (vector? res) (as-element res)
+      (vector? res) (p/as-element compiler res)
       (ifn? res) (let [f (if (reagent-class? res)
                            (fn [& args]
-                             (as-element (apply vector res args)))
+                             (p/as-element compiler (apply vector res args)))
                            res)]
                    (set! (.-reagentRender c) f)
-                   (recur c))
+                   (recur c compiler))
       :else res)))
 
 (defn component-name [c]
-  (some-> c .-constructor .-displayName))
+  (or (some-> c .-constructor .-displayName)
+      (some-> c .-constructor .-name)))
 
 (defn comp-name []
   (if (dev?)
@@ -132,38 +112,25 @@
         ""))
     ""))
 
-(defn do-render [c]
+(defn do-render [c compiler]
   (binding [*current-component* c]
     (if (dev?)
       ;; Log errors, without using try/catch (and mess up call stack)
       (let [ok (array false)]
         (try
-          (let [res (wrap-render c)]
+          (let [res (wrap-render c compiler)]
             (aset ok 0 true)
             res)
           (finally
             (when-not (aget ok 0)
               (error (str "Error rendering component"
                           (comp-name)))))))
-      (wrap-render c))))
+      (wrap-render c compiler))))
 
 
 ;;; Method wrapping
 
 (def rat-opts {:no-cache true})
-
-(def static-fns
-  {:render
-   (fn render []
-     ;; TODO: Use static property for cljsRatom
-     (this-as c (if util/*non-reactive*
-                  (do-render c)
-                  (let [^clj rat (gobj/get c "cljsRatom")]
-                    (batch/mark-rendered c)
-                    (if (nil? rat)
-                      (ratom/run-in-reaction #(do-render c) c "cljsRatom"
-                                             batch/queue-render rat-opts)
-                      (._run rat false))))))})
 
 (defn custom-wrapper [key f]
   (case key
@@ -274,7 +241,7 @@
 (defn add-obligatory [fun-map]
   (merge obligatory fun-map))
 
-(defn wrap-funs [fmap]
+(defn wrap-funs [fmap compiler]
   (when (dev?)
     (let [renders (select-keys fmap [:render :reagentRender])
           render-fun (-> renders vals first)]
@@ -295,7 +262,15 @@
            :displayName name
            :cljsLegacyRender legacy-render
            :reagentRender render-fun
-           :render (:render static-fns))))
+           :render (fn render []
+                     (this-as c (if util/*non-reactive*
+                                  (do-render c compiler)
+                                  (let [^clj rat (gobj/get c "cljsRatom")]
+                                    (batch/mark-rendered c)
+                                    (if (nil? rat)
+                                      (ratom/run-in-reaction #(do-render c compiler) c "cljsRatom"
+                                                             batch/queue-render rat-opts)
+                                      (._run rat false)))))))))
 
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
@@ -303,11 +278,11 @@
                  (gobj/set (name k) v)))
              #js{} m))
 
-(defn cljsify [body]
+(defn cljsify [body compiler]
   (-> body
       camelify-map-keys
       add-obligatory
-      wrap-funs))
+      (wrap-funs compiler)))
 
 ;; Idea from:
 ;; https://gist.github.com/pesterhazy/2a25c82db0519a28e415b40481f84554
@@ -325,9 +300,9 @@
   Constructor function is defined using key `:getInitialState`.
 
   React built-in static methods or properties are automatically defined as statics."
-  [body]
+  [body compiler]
   {:pre [(map? body)]}
-  (let [body (cljsify body)
+  (let [body (cljsify body compiler)
         methods (map-to-js (apply dissoc body :displayName :getInitialState :constructor
                                   :render :reagentRender
                                   built-in-static-method-names))
@@ -372,7 +347,17 @@
 
     cmp))
 
-(defn fn-to-class [f]
+;; Cache result to the tag but per compiler ID
+;; TODO: Generate cache & get methods to the Object using macro,
+;; can generate code calling interop forms.
+(defn cached-react-class [compiler ^clj c]
+  (gobj/get c (p/get-id compiler)))
+
+(defn cache-react-class [compiler ^clj c constructor]
+  (gobj/set c (p/get-id compiler) constructor)
+  constructor)
+
+(defn fn-to-class [compiler f]
   (assert-callable f)
   (warn-unless (not (and (react-class? f)
                          (not (reagent-class? f))))
@@ -382,18 +367,139 @@
                                                  f)
                (comp-name))
   (if (reagent-class? f)
-    (cache-react-class f f)
+    (cache-react-class compiler f f)
     (let [spec (meta f)
           withrender (assoc spec :reagent-render f)
-          res (create-class withrender)]
-      (cache-react-class f res))))
+          res (create-class withrender compiler)]
+      (cache-react-class compiler f res))))
 
-(defn as-class [tag]
-  (if-some [cached-class (cached-react-class tag)]
+(defn as-class [tag compiler]
+  (if (nil? compiler)
+    (js/console.error "as-class" tag compiler))
+  (if-some [cached-class (cached-react-class compiler tag)]
     cached-class
-    (fn-to-class tag)))
+    (fn-to-class compiler tag)))
 
-(defn reactify-component [comp]
+(defn reactify-component [comp compiler]
   (if (react-class? comp)
     comp
-    (as-class comp)))
+    (as-class comp compiler)))
+
+(defn functional-wrap-render
+  [compiler c]
+  (let [f (.-reagentRender c)
+        _ (assert-callable f)
+        argv (.-argv c)
+        res (apply f argv)]
+    (cond
+      (vector? res) (p/as-element compiler res)
+      (ifn? res) (let [f (if (reagent-class? res)
+                           (fn [& args]
+                             (p/as-element compiler (apply vector res args)))
+                           res)]
+                   (set! (.-reagentRender c) f)
+                   (recur compiler c))
+      :else res)))
+
+(defn functional-do-render [compiler c]
+  (binding [*current-component* c]
+    (if (dev?)
+      ;; Log errors, without using try/catch (and mess up call stack)
+      (let [ok (array false)]
+        (try
+          (let [res (functional-wrap-render compiler c)]
+            (aset ok 0 true)
+            res)
+          (finally
+            (when-not (aget ok 0)
+              (error (str "Error rendering component" (comp-name)))))))
+      (functional-wrap-render compiler c))))
+
+(def fun-component-state #js {})
+
+(defn functional-render [compiler jsprops]
+  (if util/*non-reactive*
+    ;; Non-reactive component needs just the render fn and argv
+    (functional-do-render compiler jsprops)
+    (let [argv (.-argv jsprops)
+          tag (.-reagentRender jsprops)
+          ;; Create persistent ID for each rendered functional component,
+          ;; this is used to store internal Reagent state, like render
+          ;; reaction etc. in a separate store where changes doesn't
+          ;; trigger render.
+          [id _] (react/useState (js/Symbol))
+
+          ;; Use counter to trigger render manually.
+          [_ update-count] (react/useState 0)
+
+          ;; This object mimics React Class attributes and methods.
+          ;; To support form-2 components, even the render fn needs to
+          ;; be stored as it is created during the first render,
+          ;; and subsequent renders need to retrieve the created fn.
+          reagent-state (or (gobj/get fun-component-state id)
+                            ;; TODO: Could also initialize using jsprops object here.
+                            ;; TODO: Allow cljsMountOrder name to optimized.
+                            (let [obj #js {:forceUpdate (fn [] (update-count inc))
+                                           :cljsMountOrder (batch/next-mount-count)
+                                           ;; Use reagentRender name, as that is also used
+                                           ;; by class components, and some checks.
+                                           ;; ReagentRender is replaced with form-2 inner fn,
+                                           ;; constructor refers to the original fn.
+                                           :constructor tag}]
+                              ;; These names can be optimized, so they can't be set in
+                              ;; object literal.
+                              (set! (.-reagentRender obj) tag)
+                              (gobj/set fun-component-state id obj)
+                              obj))
+
+          rat (gobj/get reagent-state "cljsRatom")]
+
+      (react/useEffect
+        (fn mount []
+          (fn unmount []
+            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
+            (gobj/remove fun-component-state id)))
+        ;; Ignore props - only run effect once on mount and unmount
+        #js [])
+
+      ;; Argv is also stored in the state,
+      ;; so reaction fn will always see the latest value.
+      (set! (.-argv reagent-state) argv)
+
+      (batch/mark-rendered reagent-state)
+
+      ;; static-fns :render
+      (if (nil? rat)
+        (ratom/run-in-reaction
+          ;; Mock Class component API
+          #(functional-do-render compiler reagent-state)
+          reagent-state
+          "cljsRatom"
+          batch/queue-render
+          rat-opts)
+        ;; TODO: Consider passing props here, instead of keeping them in state?
+        (._run rat false)))))
+
+(defn functional-render-memo-fn
+  [prev-props next-props]
+  (let [old-argv (.-argv prev-props)
+        new-argv (.-argv next-props)]
+    (and (false? util/*always-update*)
+         (try
+           (= old-argv new-argv)
+           (catch :default e
+             (warn "Exception thrown while comparing argv's in shouldComponentUpdate: " old-argv " " new-argv " " e)
+             false)))))
+
+(defn functional-render-fn
+  "Create copy of functional-render with displayName set to name of the
+  original Reagent component."
+  [compiler tag]
+  ;; TODO: Could be disabled for optimized builds?
+  ;; Or not currently - the memo wrap is required.
+  (or (cached-react-class compiler tag)
+      (let [f (fn [jsprops] (functional-render compiler jsprops))
+            _ (set! (.-displayName f) (util/fun-name tag))
+            f (react/memo f functional-render-memo-fn)]
+        (cache-react-class compiler tag f)
+        f)))
