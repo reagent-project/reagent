@@ -125,7 +125,33 @@ after error, it can be also used to update RAtom as in Reagent the Ratom is avai
 in function closure even for static methods. `ComponentDidCatch` can be used
 for side-effects, like logging the error.
 
+## [Function components](https://reactjs.org/docs/components-and-props.html#function-and-class-components)
+
+JavaScript functions are valid React components, but Reagent implementation
+by default turns the ClojureScript functions referred in Hiccup-vectors to
+Class components.
+
+However, some React features, like Hooks, only work with Functional components.
+There are several ways to use functions as components with Reagent:
+
+Calling `r/create-element` directly with a ClojureScript function doesn't
+wrap the component in any Reagent wrappers, and will create functional components.
+In this case you need to use `r/as-element` inside the function to convert
+Hiccup-style markup to elements, or just returns React Elements yourself.
+You also can't use Ratoms here, as Ratom implementation requires the component
+is wrapped by Reagent.
+
+Using `adapt-react-class` or `:>` is also calls `create-element`, but that
+also does automatic conversion of ClojureScript parameters to JS objects,
+which isn't usually desired if the component is ClojureScript function.
+
+New way is to configure Reagent Hiccup-compiler to create functional components:
+[Read Compiler documentation](./ReagentCompiler.md)
+
 ## [Hooks](https://reactjs.org/docs/hooks-intro.html)
+
+NOTE: This section still refers to workaround using Hooks inside
+class components, read the previous section to create functional components.
 
 Hooks can't be used inside class components, and Reagent implementation creates
 a class component from every function (i.e. Reagent component).
@@ -184,16 +210,16 @@ If the parent Component awaits classes with some custom methods or properties, y
   (r/create-class
     {:get-input-node (fn [this] ...)
      :reagent-render (fn [] [:input ...])})))
-     
+
 [:> SomeComponent
  {:editor-component editor}]
- 
+
 ;; Often incorrect way
 (defn editor [parameter]
   (r/create-class
     {:get-input-node (fn [this] ...)
      :reagent-render (fn [] [:input ...])})))
-     
+
 [:> SomeComponent
  {:editor-component (r/reactify-component editor)}]
 ```

@@ -260,7 +260,7 @@
                         (meta v))
              compiler))))
 
-(defn vec-to-elem [v compiler functional-reag-elements?]
+(defn vec-to-elem [v compiler functional-components?]
   (when (nil? compiler)
     (js/console.error "vec-to-elem" (pr-str v)))
   (assert (pos? (count v)) (util/hiccup-err v (comp/comp-name) "Hiccup form should not be empty"))
@@ -276,13 +276,13 @@
       (instance? NativeWrapper tag)
       (native-element tag v 1 compiler)
 
-      :else (if functional-reag-elements?
+      :else (if functional-components?
               (functional-reag-element tag v compiler)
               (reag-element tag v compiler)))))
 
-(defn as-element* [x compiler functional-reag-elements?]
+(defn as-element* [x compiler functional-components?]
   (cond (util/js-val? x) x
-        (vector? x) (vec-to-elem x compiler functional-reag-elements?)
+        (vector? x) (vec-to-elem x compiler functional-components?)
         (seq? x) (if (dev?)
                    (expand-seq-check x compiler)
                    (expand-seq x compiler))
@@ -297,7 +297,7 @@
       (get-id [this] id)
       (as-element [this x]
         ;; TODO: Select on Compiler object initialization correct as-element call.
-        (as-element* x this (true? (:functional-reag-elements? opts))))
+        (as-element* x this (true? (:functional-components? opts))))
       (make-element [this argv component jsprops first-child]
         (make-element* argv component jsprops first-child this)))))
 

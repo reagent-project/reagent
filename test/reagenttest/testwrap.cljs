@@ -4,7 +4,7 @@
             [reagent.impl.template :as tmpl]
             [reagenttest.utils :as u :refer [with-mounted-component]]))
 
-(def functional-compiler (r/create-compiler {:functional-reag-elements? true}))
+(def functional-compiler (r/create-compiler {:functional-components? true}))
 
 (def test-compilers
   [tmpl/default-compiler*

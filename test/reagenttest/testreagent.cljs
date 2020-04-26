@@ -37,7 +37,7 @@
 
 ;; Different set of options to try for most test cases
 
-(def functional-compiler (r/create-compiler {:functional-reag-elements? true}))
+(def functional-compiler (r/create-compiler {:functional-components? true}))
 
 (def test-compilers
   [tmpl/default-compiler*

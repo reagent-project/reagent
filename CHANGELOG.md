@@ -4,6 +4,19 @@
 
 ### Features and changes
 
+- **Option to render Reagent components as React functional components instead of
+class components**
+    - To ensure backwards compatibility by default, Reagent works as previously and
+    by default creates class components.
+    - New Compiler object can be created and passed to functions to control
+    how Reagent converts Hiccup-style markup to React components and classes:
+    `(r/create-compiler {:functional-components? true})`
+    - Passing this options to `render`, `as-element` and other calls will control how
+    that markup tree will be converted.
+    - `(r/set-default-compiler! compiler)` call can be used to set the default
+    compiler object for all calls.
+    - [Read more](./doc/reagent-compiler.md)
+    - [Check example](./example/functional-components-and-hooks/src/example/core.cljs)
 - Change RAtom (all types) print format to be readable using ClojureScript reader,
 similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues/439))
     - Old print output: `#<Atom: 0>`
