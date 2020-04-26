@@ -10,13 +10,13 @@ functional components when a function is referred in a Hiccup vector:
 <a href="ReactFeatures.md#hooks">React more about Hooks</a>
 
 ```cljs
-(def functional-compiler (r/create-compiler {:functional-components? true}))
+(def functional-compiler (reagent.core/create-compiler {:functional-components? true}))
 
 ;; Using the option
-(r/render [main] div functional-compiler)
-(r/as-element [main] functional-compiler)
+(reagent.dom/render [main] div functional-compiler)
+(reagent.core/as-element [main] functional-compiler)
 ;; Setting compiler as the default
-(r/set-default-compiler! functional-compiler)
+(reagent.core/set-default-compiler! functional-compiler)
 ```
 
 ## Functional components implementation
