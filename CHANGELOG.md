@@ -16,7 +16,7 @@ class components**
     - `(r/set-default-compiler! compiler)` call can be used to set the default
     compiler object for all calls.
     - [Read more](./doc/ReagentCompiler.md)
-    - [Check example](./example/functional-components-and-hooks/src/example/core.cljs)
+    - [Check example](./examples/functional-components-and-hooks/src/example/core.cljs)
 - DOM related functions have been removed from `reagent.core` namespace.
     - These were deprecated in the previous release.
 - Change RAtom (all types) print format to be readable using ClojureScript reader,

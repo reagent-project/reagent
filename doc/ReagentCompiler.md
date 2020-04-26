@@ -7,7 +7,7 @@ As a first step, this can be used to turn on option to create
 functional components when a function is referred in a Hiccup vector:
 `[component-fn parameters]`.
 
-[./ReactFeatures.md#hooks](React more about Hooks)
+<a href="ReactFeatures.md#hooks">React more about Hooks</a>
 
 ```cljs
 (def functional-compiler (r/create-compiler {:functional-components? true}))
