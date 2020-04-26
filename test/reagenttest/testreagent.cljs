@@ -20,8 +20,8 @@
                  :after  (fn []
                            (set! rv/debug false))})
 
-(defn rstr [react-elem opts]
-  (server/render-to-static-markup react-elem opts))
+(defn rstr [react-elem compiler]
+  (server/render-to-static-markup react-elem compiler))
 
 (defn log-error [& f]
   (debug/error (apply str f)))
@@ -39,19 +39,19 @@
 
 (def functional-compiler (r/create-compiler {:functional-reag-elements? true}))
 
-(def test-options
-  [tmpl/default-compiler
+(def test-compilers
+  [tmpl/default-compiler*
    functional-compiler])
 
 (deftest really-simple-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             really-simple (fn []
                             (swap! ran inc)
                             [:div "div in really-simple"])]
         (with-mounted-component [really-simple nil nil]
-          opts
+          compiler
           (fn [c div]
             (swap! ran inc)
             (is (= "div in really-simple" (.-innerText div)))
@@ -63,7 +63,7 @@
 
 (deftest test-simple-callback
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             comp (r/create-class
                    {:component-did-mount #(swap! ran inc)
@@ -77,7 +77,7 @@
                         (swap! ran inc)
                         [:div (str "hi " (:foo props) ".")]))})]
         (with-mounted-component [comp {:foo "you"} 1]
-          opts
+          compiler
           (fn [C div]
             (swap! ran inc)
             (is (= "hi you." (.-innerText div)))))
@@ -85,7 +85,7 @@
 
 (deftest test-state-change
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             self (r/atom nil)
             comp (r/create-class
@@ -97,7 +97,7 @@
                         (swap! ran inc)
                         [:div (str "hi " (:foo (r/state this)))]))})]
         (with-mounted-component [comp]
-          opts
+          compiler
           (fn [C div]
             (swap! ran inc)
             (is (= "hi initial" (.-innerText div)))
@@ -115,7 +115,7 @@
 
 (deftest test-ratom-change
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             runs (rv/running)
             val (r/atom 0)
@@ -126,7 +126,7 @@
                    (swap! ran inc)
                    [:div (str "val " @v1 " " @val " " @secval)])]
         (with-mounted-component [comp]
-          opts
+          compiler
           (fn [C div]
             (r/flush)
             (is (not= runs (rv/running)))
@@ -157,7 +157,7 @@
 
 (deftest batched-update-test []
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             v1 (r/atom 0)
             v2 (r/atom 0)
@@ -170,7 +170,7 @@
                  [:div @v1
                   [c2 {:val @v1}]])]
         (with-mounted-component [c1]
-          opts
+          compiler
           (fn [c div]
             (r/flush)
             (is (= 2 @ran))
@@ -195,7 +195,7 @@
 
 (deftest init-state-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             really-simple (fn []
                             (let [this (r/current-component)]
@@ -205,7 +205,7 @@
                                 [:div (str "this is "
                                            (:foo (r/state this)))])))]
         (with-mounted-component [really-simple nil nil]
-          opts
+          compiler
           (fn [c div]
             (swap! ran inc)
             (is (= "this is foobar" (.-innerText div)))))
@@ -213,7 +213,7 @@
 
 (deftest should-update-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [parent-ran (r/atom 0)
             child-ran (r/atom 0)
             child-props (r/atom nil)
@@ -226,7 +226,7 @@
                      (swap! parent-ran inc)
                      [:div "child-foo" [child @child-props]])]
         (with-mounted-component [parent nil nil]
-          opts
+          compiler
           (fn [c div]
             (r/flush)
             (is (= 1 @child-ran))
@@ -277,7 +277,7 @@
 
 (deftest dirty-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             state (r/atom 0)
             really-simple (fn []
@@ -286,7 +286,7 @@
                               (reset! state 3))
                             [:div (str "state=" @state)])]
         (with-mounted-component [really-simple nil nil]
-          opts
+          compiler
           (fn [c div]
             (is (= 1 @ran))
             (is (= "state=0" (.-innerText div)))
@@ -296,21 +296,21 @@
             (is (= "state=3" (.-innerText div)))))
         (is (= 2 @ran))))))
 
-(defn as-string [comp opts]
-  (server/render-to-static-markup comp opts))
+(defn as-string [comp compiler]
+  (server/render-to-static-markup comp compiler))
 
 (deftest to-string-test []
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [comp (fn [props]
                  [:div (str "i am " (:foo props))])]
-      (is (= "<div>i am foobar</div>" (as-string [comp {:foo "foobar"}] opts))))))
+      (is (= "<div>i am foobar</div>" (as-string [comp {:foo "foobar"}] compiler))))))
 
 (deftest data-aria-test []
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (is (= "<div data-foo=\"x\"></div>"
-           (as-string [:div {:data-foo "x"}] opts)))
+           (as-string [:div {:data-foo "x"}] compiler)))
     (is (= "<div aria-labelledby=\"x\"></div>"
-           (as-string [:div {:aria-labelledby "x"}] opts)))
+           (as-string [:div {:aria-labelledby "x"}] compiler)))
     ;; Skip test: produces warning in new React
     ;; (is (not (re-find #"enctype"
     ;;                   (as-string [:div {"enc-type" "x"}])))
@@ -318,34 +318,34 @@
     ;; FIXME: For some reason UMD module returns everything in
     ;; lowercase, and CommonJS with upper T
     (is (re-find #"enc[tT]ype"
-                 (as-string [:div {"encType" "x"}] opts))
+                 (as-string [:div {"encType" "x"}] compiler))
         "Strings are passed through to React, and have to be camelcase.")
     (is (re-find #"enc[tT]ype"
-                 (as-string [:div {:enc-type "x"}] opts))
+                 (as-string [:div {:enc-type "x"}] compiler))
         "Strings are passed through to React, and have to be camelcase.")))
 
 (deftest dynamic-id-class []
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (is (re-find #"id=.foo"
-                 (as-string [:div#foo {:class "bar"}] opts)))
+                 (as-string [:div#foo {:class "bar"}] compiler)))
     (is (= "<div class=\"foo bar\"></div>"
-           (as-string [:div.foo {:class "bar"}] opts)))
+           (as-string [:div.foo {:class "bar"}] compiler)))
     (is (= "<div class=\"foo bar\"></div>"
-           (as-string [:div.foo.bar] opts)))
+           (as-string [:div.foo.bar] compiler)))
     (is (= "<div class=\"foo bar\"></div>"
-           (as-string [:div.foo {:className "bar"}] opts)))
+           (as-string [:div.foo {:className "bar"}] compiler)))
     (is (= "<div class=\"foo bar\"></div>"
-           (as-string [:div {:className "foo bar"}] opts)))
+           (as-string [:div {:className "foo bar"}] compiler)))
     (is (re-find #"id=.foo"
-                 (as-string [:div#foo.foo.bar] opts)))
+                 (as-string [:div#foo.foo.bar] compiler)))
     (is (re-find #"class=.xxx bar"
-                 (as-string [:div#foo.xxx.bar] opts)))
+                 (as-string [:div#foo.xxx.bar] compiler)))
     (is (re-find #"id=.foo"
-                 (as-string [:div.bar {:id "foo"}] opts)))
+                 (as-string [:div.bar {:id "foo"}] compiler)))
     (is (re-find #"id=.foo"
-                 (as-string [:div.bar.xxx {:id "foo"}] opts)))
+                 (as-string [:div.bar.xxx {:id "foo"}] compiler)))
     (is (= "<div id=\"foo\"></div>"
-           (as-string [:div#bar {:id "foo"}] opts))
+           (as-string [:div#bar {:id "foo"}] compiler))
         "Dynamic id overwrites static")))
 
 (defmulti my-div :type)
@@ -353,26 +353,26 @@
 (defmethod my-div :barish [child] [:div.bar (:content child)])
 
 (deftest ifn-component []
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [comp {:foo [:div "foodiv"]
                 :bar [:div "bardiv"]}]
       (is (= "<div><div>foodiv</div></div>"
-             (as-string [:div [comp :foo]] opts)))
+             (as-string [:div [comp :foo]] compiler)))
       (is (= "<div><div>bardiv</div></div>"
-             (as-string [:div [comp :bar]] opts)))
+             (as-string [:div [comp :bar]] compiler)))
       (is (= "<div class=\"foo\">inner</div>"
-             (as-string [my-div {:type :fooish :content "inner"}] opts))))))
+             (as-string [my-div {:type :fooish :content "inner"}] compiler))))))
 
 (deftest symbol-string-tag []
-  (doseq [opts test-options]
-    (is (= "<div>foobar</div>" (as-string ['div "foobar"] opts)))
-    (is (= "<div>foobar</div>" (as-string ["div" "foobar"] opts)))
-    (is (= "<div id=\"foo\">x</div>" (as-string ['div#foo "x"] opts)))
-    (is (= "<div id=\"foo\">x</div>" (as-string ["div#foo" "x"] opts)))
-    (is (= "<div class=\"foo bar\"></div>" (as-string ['div.foo {:class "bar"}] opts)))
-    (is (= "<div class=\"foo bar\"></div>" (as-string ["div.foo.bar"] opts)))
+  (doseq [compiler test-compilers]
+    (is (= "<div>foobar</div>" (as-string ['div "foobar"] compiler)))
+    (is (= "<div>foobar</div>" (as-string ["div" "foobar"] compiler)))
+    (is (= "<div id=\"foo\">x</div>" (as-string ['div#foo "x"] compiler)))
+    (is (= "<div id=\"foo\">x</div>" (as-string ["div#foo" "x"] compiler)))
+    (is (= "<div class=\"foo bar\"></div>" (as-string ['div.foo {:class "bar"}] compiler)))
+    (is (= "<div class=\"foo bar\"></div>" (as-string ["div.foo.bar"] compiler)))
     (is (re-find #"id=.foo"
-                 (as-string ['div#foo.foo.bar] opts)))))
+                 (as-string ['div#foo.foo.bar] compiler)))))
 
 (deftest partial-test []
   (let [p1 (r/partial vector 1 2)]
@@ -384,36 +384,36 @@
     (is (= (hash p1) (hash (r/partial vector 1 2))))))
 
 (deftest test-null-component
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [null-comp (fn [do-show]
                       (when do-show
                         [:div "div in test-null-component"]))]
       (is (= ""
-             (as-string [null-comp false] opts)))
+             (as-string [null-comp false] compiler)))
       (is (= "<div>div in test-null-component</div>"
-             (as-string [null-comp true] opts))))))
+             (as-string [null-comp true] compiler))))))
 
 (deftest test-string
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (is (= "<div data-reactroot=\"\">foo</div>"
-           (server/render-to-string [:div "foo"] opts)))
+           (server/render-to-string [:div "foo"] compiler)))
 
     (is (= "<div data-reactroot=\"\"><p>foo</p></div>"
-           (server/render-to-string [:div [:p "foo"]] opts)))))
+           (server/render-to-string [:div [:p "foo"]] compiler)))))
 
 (deftest test-static-markup
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (is (= "<div>foo</div>"
-           (rstr [:div "foo"] opts)))
+           (rstr [:div "foo"] compiler)))
     (is (= "<div class=\"bar\"><p>foo</p></div>"
-           (rstr [:div.bar [:p "foo"]] opts)))
+           (rstr [:div.bar [:p "foo"]] compiler)))
     (is (= "<div class=\"bar\"><p>foobar</p></div>"
            (rstr [:div.bar {:dangerously-set-inner-HTML
-                            {:__html "<p>foobar</p>"}}] opts)))))
+                            {:__html "<p>foobar</p>"}}] compiler)))))
 
 (deftest test-return-class
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ran (r/atom 0)
             top-ran (r/atom 0)
             comp (fn []
@@ -432,7 +432,7 @@
             prop (r/atom {:foo "you"})
             parent (fn [] [comp @prop 1])]
         (with-mounted-component [parent]
-          opts
+          compiler
           (fn [C div]
             (swap! ran inc)
             (is (= "hi you." (.-innerText div)))
@@ -447,7 +447,7 @@
 
 (deftest test-return-class-fn
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
     (let [ran (r/atom 0)
           top-ran (r/atom 0)
           comp (fn []
@@ -462,7 +462,7 @@
           prop (r/atom {:foo "you"})
           parent (fn [] [comp @prop 1])]
       (with-mounted-component [parent]
-        opts
+        compiler
         (fn [C div]
           (swap! ran inc)
           (is (= "hi you." (.-innerText div)))
@@ -476,10 +476,10 @@
           (is (= 4 @ran))))))))
 
 (deftest test-create-element
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [ae r/as-element
           ce r/create-element
-          rstr #(rstr % opts)]
+          rstr #(rstr % compiler)]
       (is (= (rstr (ce "div"))
              (rstr (ae [:div]))))
       (is (= (rstr (ce "div" nil))
@@ -515,10 +515,10 @@
             cmp))
 
 (deftest test-adapt-class
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [d1 (r/adapt-react-class ndiv)
           d2 (r/adapt-react-class "div")
-          rstr #(rstr % opts)]
+          rstr #(rstr % compiler)]
       (is (= (rstr [:div])
              (rstr [d1])))
       (is (= (rstr [:div "a"])
@@ -542,10 +542,10 @@
              (rstr [d2 "a" "b" [:div "c"]]))))))
 
 (deftest test-adapt-class-2
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [d1 ndiv
           d2 "div"
-          rstr #(rstr % opts)]
+          rstr #(rstr % compiler)]
       (is (= (rstr [:div])
              (rstr [:> d1])))
       (is (= (rstr [:div "a"])
@@ -578,15 +578,15 @@
       (is (empty? (:warn w)))))
 
 (deftest test-reactize-component
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [ae r/as-element
           ce r/create-element
-          rstr #(rstr % opts)
+          rstr #(rstr % compiler)
           a (atom nil)
           c1r (fn reactize [p & args]
                 (reset! a args)
                 [:p "p:" (:a p) (:children p)])
-          c1 (r/reactify-component c1r opts)]
+          c1 (r/reactify-component c1r compiler)]
       (is (= (rstr (ce c1 #js{:a "a"}))
              (rstr [:p "p:a"])))
       (is (= nil @a))
@@ -606,7 +606,7 @@
       (is (= nil @a)))))
 
 (deftest test-keys
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [a nil ;; (r/atom "a")
           c (fn key-tester []
               [:div
@@ -616,7 +616,7 @@
                  [:p {:key i} i (some-> a deref)])])
           w (debug/track-warnings
               #(with-mounted-component [c]
-                 opts
+                 compiler
                  (fn [c div])))]
       (is (empty? (:warn w))))
 
@@ -630,15 +630,15 @@
               w (debug/track-warnings
                   (wrap-capture-console-error
                     #(with-mounted-component [c]
-                       opts
+                       compiler
                        (fn [c div]))))]
           (if (dev?)
             (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
                          (first (:warn w))))))))))
 
 (deftest test-extended-syntax
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<p><b>foo</b></p>"
            (rstr [:p>b "foo"])))
     (is (= (rstr [:p.foo [:b "x"]])
@@ -662,8 +662,8 @@
           )))))
 
 (deftest test-class-from-collection
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= (rstr [:p {:class "a b c d"}])
            (rstr [:p {:class ["a" "b" "c" "d"]}])))
     (is (= (rstr [:p {:class "a b c"}])
@@ -674,8 +674,8 @@
            (rstr [:p {:class #{"a" "b" "c"}}])))))
 
 (deftest class-different-types
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (testing "named values are supported"
       (is (= (rstr [:p {:class "a"}])
              (rstr [:p {:class :a}])))
@@ -747,8 +747,8 @@
         (is (re-find #"atestcomponent" @a) "component-path should work")))))
 
 (deftest test-sorted-map-key
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (let [c1 (fn [map]
                [:div (map 1)])
           c2 (fn []
@@ -756,7 +756,7 @@
       (is (= "<div>foo</div>" (rstr [c2]))))))
 
 (deftest basic-with-let
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (when r/is-client
       (let [n1 (atom 0)
             n2 (atom 0)
@@ -769,7 +769,7 @@
                   (finally
                     (swap! n3 inc))))]
         (with-mounted-component [c]
-          opts
+          compiler
           (fn [_ div]
             (is (= [1 1 0] [@n1 @n2 @n3]))
             (swap! val inc)
@@ -780,7 +780,7 @@
 
 (deftest with-let-destroy-only
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [n1 (atom 0)
             n2 (atom 0)
             c (fn []
@@ -790,14 +790,14 @@
                   (finally
                     (swap! n2 inc))))]
         (with-mounted-component [c]
-          opts
+          compiler
           (fn [_ div]
             (is (= [1 0] [@n1 @n2]))))
         (is (= [1 1] [@n1 @n2]))))))
 
 (deftest with-let-arg
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [a (atom 0)
             s (r/atom "foo")
             f (fn [x]
@@ -808,7 +808,7 @@
                 (r/with-let []
                   [f @s]))]
         (with-mounted-component [c]
-          opts
+          compiler
           (fn [_ div]
             (is (= "foo" @a))
             (reset! s "bar")
@@ -816,11 +816,11 @@
             (is (= "bar" @a))))))))
 
 (deftest with-let-non-reactive
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [n1 (atom 0)
           n2 (atom 0)
           n3 (atom 0)
-          rstr #(rstr % opts)
+          rstr #(rstr % compiler)
           c (fn []
               (r/with-let [a (swap! n1 inc)]
                 (swap! n2 inc)
@@ -831,7 +831,7 @@
       (is (= [1 1 1] [@n1 @n2 @n3])))))
 
 (deftest lifecycle
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [n1 (atom 0)
           t (atom 0)
           res (atom {})
@@ -911,7 +911,7 @@
                   (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
                          (:did-update @res))))]
       (when r/is-client
-        (with-mounted-component [c2] opts check)
+        (with-mounted-component [c2] compiler check)
         (is (= {:at 10 :args [@t]}
                (:will-unmount @res)))
 
@@ -924,7 +924,7 @@
 
 
 (deftest lifecycle-native
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [n1 (atom 0)
           t (atom 0)
           res (atom {})
@@ -1024,7 +1024,7 @@
                     (is (= 9 at))
                     (is (= [@comp @oldprops] oldv))))]
       (when r/is-client
-        (with-mounted-component [cnative] opts check)
+        (with-mounted-component [cnative] compiler check)
         (is (= {:at 10 :args [@t]}
                (:will-unmount @res)))))))
 
@@ -1054,8 +1054,8 @@
 
 (deftest test-err-messages
   (when (dev?)
-    (doseq [opts test-options
-            :let [rstr #(rstr % opts)]]
+    (doseq [compiler test-compilers
+            :let [rstr #(rstr % compiler)]]
       (is (thrown-with-msg?
             :default #"Hiccup form should not be empty: \[]"
             (rstr [])))
@@ -1103,7 +1103,7 @@
               pkg "reagenttest.testreagent."
               stack1 (str "in " pkg "comp1")
               rend (fn [x]
-                     (with-mounted-component x opts identity))]
+                     (with-mounted-component x compiler identity))]
 
           ;; Error is orginally caused by comp1, so only that is shown in the error
           (let [e (debug/track-warnings
@@ -1124,7 +1124,7 @@
             (is (re-find #"Error rendering component \(in reagenttest.testreagent.comp1\)"
                          (last (:error e)))))
 
-          (let [e (debug/track-warnings #(r/as-element [nat] opts))]
+          (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
             (is (re-find #"Using native React classes directly"
                          (-> e :warn first))))
 
@@ -1134,12 +1134,12 @@
                          (-> e :warn first))))
 
           (let [e (debug/track-warnings
-                    #(r/as-element (comp4) opts))]
+                    #(r/as-element (comp4) compiler))]
             (is (re-find #"Every element in a seq should have a unique :key"
                          (-> e :warn first)))))))))
 
 (deftest test-error-boundary
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [error (r/atom nil)
           info (r/atom nil)
           error-boundary (fn error-boundary [comp]
@@ -1161,7 +1161,7 @@
         (wrap-capture-window-error
           (wrap-capture-console-error
             #(with-mounted-component [error-boundary [comp2]]
-               opts
+               compiler
                (fn [c div]
                  (r/flush)
                  (is (= "Test error" (.-message @error)))
@@ -1175,7 +1175,7 @@
                                 (.-componentStack ^js @info))))))))))))
 
 (deftest test-dom-node
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [node (atom nil)
           ref (atom nil)
           comp (r/create-class
@@ -1185,28 +1185,28 @@
                   (fn [this]
                     (reset! node (rdom/dom-node this)))})]
       (with-mounted-component [comp]
-        opts
+        compiler
         (fn [c div]
           (is (= "foobar" (.-innerHTML @ref)))
           (is (= "foobar" (.-innerHTML @node)))
           (is (identical? @ref @node)))))))
 
 (deftest test-empty-input
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<div><input/></div>"
            (rstr [:div [:input]])))))
 
 (deftest test-object-children
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<p>foo bar1</p>"
            (rstr [:p 'foo " " :bar nil 1])))
     (is (= "<p>#object[reagent.ratom.RAtom {:val 1}]</p>"
            (rstr [:p (r/atom 1)])))))
 
 (deftest test-after-render
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [spy (atom 0)
           val (atom 0)
           exp (atom 0)
@@ -1222,7 +1222,7 @@
                    (is (= @exp @val))
                    [:div {:ref #(reset! node %)} @state]))]
       (with-mounted-component [comp]
-        opts
+        compiler
         (fn [c div]
           (is (= 1 @spy))
           (swap! state inc)
@@ -1244,14 +1244,14 @@
       (is (= nil @node)))))
 
 (deftest style-property-names-are-camel-cased
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<div style=\"text-align:center\">foo</div>"
            (rstr [:div {:style {:text-align "center"}} "foo"])))))
 
 (deftest custom-element-class-prop
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<custom-element class=\"foobar\">foo</custom-element>"
            (rstr [:custom-element {:class "foobar"} "foo"])))
 
@@ -1259,8 +1259,8 @@
            (rstr [:custom-element.foobar "foo"])))))
 
 (deftest html-entities
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (testing "entity numbers can be unescaped always"
       (is (= "<i> </i>"
              (rstr [:i (gstr/unescapeEntities "&#160;")]))))
@@ -1298,13 +1298,13 @@
 
 
 (deftest test-fragments
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (testing "Fragment as array"
       (let [comp (fn comp1 []
-                   #js [(r/as-element [:div "hello"] opts)
-                        (r/as-element [:div "world"] opts)])]
+                   #js [(r/as-element [:div "hello"] compiler)
+                        (r/as-element [:div "world"] compiler)])]
         (is (= "<div>hello</div><div>world</div>"
-               (as-string [comp] opts)))))
+               (as-string [comp] compiler)))))
 
     (testing "Fragment element, :<>"
       (let [comp (fn comp2 []
@@ -1313,7 +1313,7 @@
                     [:div "world"]
                     [:div "foo"] ])]
         (is (= "<div>hello</div><div>world</div><div>foo</div>"
-               (as-string [comp] opts)))))
+               (as-string [comp] compiler)))))
 
     (testing "Fragment key"
       ;; This would cause React warning if both fragements didn't have key set
@@ -1335,7 +1335,7 @@
                        [:div "1"]
                        [:div "2"]])])]
         (is (= "<div><div>hello</div><div>world</div><div>foo</div><div>1</div><div>2</div></div>"
-               (as-string [comp] opts)))))))
+               (as-string [comp] compiler)))))))
 
 ;; In bundle version, the names aren't optimized.
 ;; In node module processed versions, names probably are optimized.
@@ -1345,8 +1345,8 @@
 (def Consumer (.-Consumer my-context))
 
 (deftest new-context-test
-  (doseq [opts test-options
-          :let [rstr #(rstr % opts)]]
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
     (is (= "<div>Context: foo</div>"
            (rstr (r/create-element
                    Provider #js {:value "foo"}
@@ -1388,7 +1388,7 @@
                (rstr [comp])))))))
 
 (deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
-  (doseq [opts test-options]
+  (doseq [compiler test-compilers]
     (let [prop (r/atom {:todos 1})
           component-was-updated (atom false)
           error-thrown-after-updating-props (atom false)
@@ -1402,7 +1402,7 @@
       (when (and r/is-client (dev?))
         (let [e (debug/track-warnings
                   #(with-mounted-component [component]
-                     opts
+                     compiler
                      (fn [c div]
                        (reset! prop (sorted-map 1 2))
                        (try
@@ -1417,7 +1417,7 @@
 
 (deftest get-derived-state-from-props-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [prop (r/atom 0)
             ;; Usually one can use Cljs object as React state. However,
             ;; getDerivedStateFromProps implementation in React uses
@@ -1434,7 +1434,7 @@
             component (fn []
                         [pure-component {:value @prop}])]
         (with-mounted-component [component]
-          opts
+          compiler
           (fn [c div]
             (is (= "Value foo" (.-innerText div)))
             (swap! prop inc)
@@ -1443,7 +1443,7 @@
 
 (deftest get-derived-state-from-error-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [prop (r/atom 0)
             component (r/create-class
                         {:constructor (fn [this props]
@@ -1462,7 +1462,7 @@
         (wrap-capture-window-error
           (wrap-capture-console-error
           #(with-mounted-component [component [bad-component]]
-             opts
+             compiler
              (fn [c div]
                (is (= "Ok" (.-innerText div)))
                (swap! prop inc)
@@ -1471,7 +1471,7 @@
 
 (deftest get-snapshot-before-update-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [ref (react/createRef)
             prop (r/atom 0)
             did-update (atom nil)
@@ -1489,7 +1489,7 @@
             component-2 (fn []
                           [component {:value @prop}])]
         (with-mounted-component [component-2]
-          opts
+          compiler
           (fn [c div]
             ;; Attach to DOM to get real height value
             (.appendChild js/document.body div)
@@ -1501,7 +1501,7 @@
 
 (deftest issue-462-test
   (when r/is-client
-    (doseq [opts test-options]
+    (doseq [compiler test-compilers]
       (let [val (r/atom 0)
             render (atom 0)
             a (fn issue-462-a [nr]
@@ -1515,7 +1515,7 @@
                 ^{:key @val}
                 [b])]
         (with-mounted-component [c]
-          opts
+          compiler
           (fn [c div]
             (is (= 1 @render))
             (reset! val 1)
