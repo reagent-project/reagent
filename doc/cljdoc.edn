@@ -9,6 +9,7 @@
                     ["Batching and Timing: How Reagent Renders Changes to Application State" {:file "doc/BatchingAndTiming.md"}]
                     ["Interop with React" {:file "doc/InteropWithReact.md"}]
                     ["React Features" {:file "doc/ReactFeatures.md"}]
+                    ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
                     ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]]
                    ["Frequently Asked Questions" {}
                     ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]

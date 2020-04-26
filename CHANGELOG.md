@@ -15,7 +15,7 @@ class components**
     that markup tree will be converted.
     - `(r/set-default-compiler! compiler)` call can be used to set the default
     compiler object for all calls.
-    - [Read more](./doc/reagent-compiler.md)
+    - [Read more](./doc/ReagentCompiler.md)
     - [Check example](./example/functional-components-and-hooks/src/example/core.cljs)
 - DOM related functions have been removed from `reagent.core` namespace.
     - These were deprecated in the previous release.

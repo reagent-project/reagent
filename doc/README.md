@@ -8,6 +8,8 @@
 6. [Batching and Timing: How Reagent Renders Changes to Application State](BatchingAndTiming.md)
 7. [Interop with React](InteropWithReact.md)
 8. [React Features](ReactFeatures.md) and how to use them in Reagent
+8. [Reagent Compiler](ReagentCompiler.md)
+8. [Controlled Inpits](ControlledInputs.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial
