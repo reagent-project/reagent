@@ -1,9 +1,9 @@
 (ns example.core
-  "This example shows how to use the `react-mde` library, which privdes a markdown editor as
+  "This example shows how to use the `react-mde` library, which provides a markdown editor as
   a React component.
   The integration is not straightforward because we need to provide a custom `textarea`
-  component to `ReactMde`, so we can have the cursor positining fixes needed by reagent. BUT
-  we must make sure that `ReactMde` sees a ref to the true `textarea` component, and not reagents
+  component to `ReactMde` so we can have the cursor positining fixes needed by reagent. BUT
+  we must make sure that `ReactMde` sees a ref to the true `textarea` component, and not reagent's
   wrapper."
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
@@ -50,13 +50,10 @@
   "Renders a ReactMde component with a custom textarea, but without `forwardRef`"
   []
   (let [state (r/atom {:value "Initial Value!" :tab "write"})
-        textarea (r/create-class
-                  {:reagent-render
-                   (fn [props]
-                     (r/as-element [:textarea props]))})]
+        textarea (r/create-class {:reagent-render (fn [props] [:textarea props])})]
     (fn []
       [:div {:style common-style}
-       [:h3 "Without custom textarea, but no forwardRef"]
+       [:h3 "With custom textarea but no forwardRef"]
        [:i "Cursor behaves fine, but the functionalities from the toolbar are broken."]
        [:> ReactMde {:value (:value @state)
                      :on-change #(swap! state assoc :value %)
