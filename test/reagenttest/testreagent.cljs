@@ -568,6 +568,18 @@
       (is (= (rstr [:div "a" "b" [:div "c"]])
              (rstr [:> d2 "a" "b" [:div "c"]]))))))
 
+(deftest create-element-shortcut-test
+  (when r/is-client
+    (let [p (atom nil)
+          comp (fn [props]
+                 (reset! p props)
+                 (r/as-element [:div "a" (.-children props)]))]
+      (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
+                               [:p "bar"]]
+        (fn [c div]
+          (is (= {:bar "x"} (.-foo @p)))
+          (is (= "<div>a<p>bar</p></div>" (.-innerHTML div))))))))
+
 (deftest adapt-react-class-shortcut-key-warning
   (let [w (debug/track-warnings
            #(with-mounted-component [:div

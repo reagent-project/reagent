@@ -4,7 +4,12 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha1...master)**
 
-- Renamed `:function-components?` option to `:function-components`
+- Renamed `:function-components?` option to `:function-components` ([#496](https://github.com/reagent-project/reagent/issues/496))
+- Added `:f>` shortcut to create Function component from ClojureScript
+function.
+- Added `:r>` (raw) shortcut to use React components, without
+props conversion done by `:>`. Hiccup children are automatically
+converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
 
 ## 1.0.0-alpha1 (2020-04-26)
 

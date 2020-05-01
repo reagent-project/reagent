@@ -219,6 +219,13 @@
           (set! (.-key jsprops) key))
         (p/make-element compiler argv component jsprops first-child)))))
 
+(defn raw-element [comp argv compiler]
+  (let [props (nth argv 2 nil)
+        jsprops (or props #js {})]
+    (when-some [key (-> (meta argv) util/get-react-key)]
+      (set! (.-key jsprops) key))
+    (p/make-element compiler argv comp jsprops 3)))
+
 (defn expand-seq [s compiler]
   (into-array (map #(p/as-element compiler %) s)))
 
@@ -264,8 +271,8 @@
     (assert (valid-tag? tag) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup form"))
     (case tag
       :> (native-element (->HiccupTag (nth v 1 nil) nil nil nil) v 2 compiler)
-      ; :r> nil
-      ; :f> (function-element (nth v 1 nil) v 2 compiler)
+      :r> (raw-element (nth v 1 nil) v compiler)
+      :f> (function-element (nth v 1 nil) v 2 compiler)
       :<> (fragment-element v compiler)
       (cond
        (hiccup-tag? tag)
