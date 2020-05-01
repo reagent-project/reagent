@@ -103,16 +103,16 @@ can be more obvious with the new `getDerivedStateFromError` method:
 (defn error-boundary [comp]
   (r/create-class
     {:constructor (fn [this props]
-                    (set! (.-state this) #js {:error nil}))
-     :component-did-catch (fn [this e info])
-     :get-derived-state-from-error (fn [error] #js {:error error})
-     :render (fn [this]
-               (r/as-element
-                 (if @error
-                   [:div
-                    "Something went wrong."
-                    [:button {:on-click #(.setState this #js {:error nil})} "Try again"]]
-                   (into [:<>] (r/children this)))})))
+                   (set! (.-state this) #js {:error nil}))
+    :component-did-catch (fn [this e info])
+    :get-derived-state-from-error (fn [error] #js {:error error})
+    :render (fn [this]
+              (r/as-element
+                (if-let [error (.. this -state -error)]
+                  [:div
+                   "Something went wrong."
+                   [:button {:on-click #(.setState this #js {:error nil})} "Try again"]]
+                  comp)))}))
 ```
 
 As per React docs, `getDerivedStateFromError` is what should update the state
