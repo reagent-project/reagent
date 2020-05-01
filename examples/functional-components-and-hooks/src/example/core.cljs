@@ -35,7 +35,7 @@
      [clock time-color]
      [color-input time-color update-time-color]]))
 
-(def functional-compiler (r/create-compiler {:functional-components? true}))
+(def functional-compiler (r/create-compiler {:function-components true}))
 
 (defn run []
   (rdom/render [simple-example] (js/document.getElementById "app") functional-compiler))

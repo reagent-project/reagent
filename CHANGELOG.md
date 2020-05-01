@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha1...master)**
+
+- Renamed `:function-components?` option to `:function-components`
+
 ## 1.0.0-alpha1 (2020-04-26)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...v1.0.0-alpha1)**

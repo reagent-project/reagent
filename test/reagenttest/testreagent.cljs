@@ -37,7 +37,7 @@
 
 ;; Different set of options to try for most test cases
 
-(def functional-compiler (r/create-compiler {:functional-components? true}))
+(def functional-compiler (r/create-compiler {:function-components true}))
 
 (def test-compilers
   [tmpl/default-compiler*
@@ -1529,13 +1529,19 @@
   (when r/is-client
     (let [c (fn [x]
               [:span "Hello " x])]
-        ;; TODO: special markup to create functional Reagent component.
+        (testing ":f>"
+          (with-mounted-component [:f> c "foo"]
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+
         (testing "compiler options"
           (with-mounted-component [c "foo"]
             functional-compiler
             (fn [c div]
               (is (nil? c) "Render returns nil for stateless components")
               (is (= "Hello foo" (.-innerText div))))))
+
         (testing "setting default compiler"
           (try
            (r/set-default-compiler! functional-compiler)

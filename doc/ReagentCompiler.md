@@ -10,7 +10,7 @@ functional components when a function is referred in a Hiccup vector:
 <a href="ReactFeatures.md#hooks">Read more about Hooks</a>
 
 ```cljs
-(def functional-compiler (reagent.core/create-compiler {:functional-components? true}))
+(def functional-compiler (reagent.core/create-compiler {:function-components true}))
 
 ;; Using the option
 (reagent.dom/render [main] div functional-compiler)
@@ -24,7 +24,7 @@ functional components when a function is referred in a Hiccup vector:
 Features:
 
 - Ratoms works.
-- The functions are wrapped in another Component, which uses two
+- The functions are wrapped in another function, which uses two
 state hooks to store component identity and "update count" - which is used to
 force re-render when Ratoms the component uses are updated.
 - The functions is wrapped in `react/memo` to implement `shouldComponentUpdate`

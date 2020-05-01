@@ -126,18 +126,18 @@
 
 ;;; Conversion from Hiccup forms
 
-(defn make-element* [argv component jsprops first-child compiler]
+(defn make-element [this argv component jsprops first-child]
   (case (- (count argv) first-child)
     ;; Optimize cases of zero or one child
     0 (react/createElement component jsprops)
 
     1 (react/createElement component jsprops
-          (p/as-element compiler (nth argv first-child nil)))
+                           (p/as-element this (nth argv first-child nil)))
 
     (.apply react/createElement nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                           (.push a (p/as-element compiler v)))
+                          (.push a (p/as-element this v)))
                          a)
                        #js [component jsprops] argv))))
 
@@ -163,24 +163,22 @@
       (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
 
-(defn functional-reag-element [tag v compiler]
-  ;; TODO: If using functional elements, drop support for meta class methods.
-  (if (or (comp/react-class? tag)
-          (:should-component-update (meta tag)))
-    ;; as-class unncessary later as tag is always class
-    (let [c (comp/as-class tag compiler)
-          jsprops #js {}]
-      (set! (.-argv jsprops) v)
-      (when-some [key (util/react-key-from-vec v)]
-        (set! (.-key jsprops) key))
-      (react/createElement c jsprops))
-    (let [jsprops #js {}]
-      (set! (.-reagentRender jsprops) tag)
-      (set! (.-argv jsprops) (subvec v 1))
-      ; (set! (.-opts jsprops) opts)
-      (when-some [key (util/react-key-from-vec v)]
-        (set! (.-key jsprops) key))
-      (react/createElement (comp/functional-render-fn compiler tag) jsprops))))
+(defn function-element [tag v first-arg compiler]
+  (let [jsprops #js {}]
+    (set! (.-reagentRender jsprops) tag)
+    (set! (.-argv jsprops) (subvec v first-arg))
+    ; (set! (.-opts jsprops) opts)
+    (when-some [key (util/react-key-from-vec v)]
+      (set! (.-key jsprops) key))
+    (react/createElement (comp/functional-render-fn compiler tag) jsprops)))
+
+(defn maybe-function-element
+  "If given tag is a Class, use it as a class,
+  else wrap in Reagent function wrapper."
+  [tag v compiler]
+  (if (comp/react-class? tag)
+    (reag-element tag v compiler)
+    (function-element tag v 1 compiler)))
 
 (defn fragment-element [argv compiler]
   (let [props (nth argv 1 nil)
@@ -248,9 +246,7 @@
         pos (.indexOf n ">")]
     (case pos
       -1 (native-element (cached-parse n) v 1 compiler)
-      0 (let [component (nth v 1 nil)]
-          (assert (= ">" n) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup tag"))
-          (native-element (->HiccupTag component nil nil nil) v 2 compiler))
+      0 (assert (= ">" n) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup tag"))
       ;; Support extended hiccup syntax, i.e :div.bar>a.foo
       ;; Apply metadata (e.g. :key) to the outermost element.
       ;; Metadata is probably used only with sequeneces, and in that case
@@ -260,46 +256,48 @@
                         (meta v))
              compiler))))
 
-(defn vec-to-elem [v compiler functional-components?]
+(defn vec-to-elem [v compiler fn-to-element]
   (when (nil? compiler)
     (js/console.error "vec-to-elem" (pr-str v)))
   (assert (pos? (count v)) (util/hiccup-err v (comp/comp-name) "Hiccup form should not be empty"))
   (let [tag (nth v 0 nil)]
     (assert (valid-tag? tag) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup form"))
-    (cond
-      (keyword-identical? :<> tag)
-      (fragment-element v compiler)
+    (case tag
+      :> (native-element (->HiccupTag (nth v 1 nil) nil nil nil) v 2 compiler)
+      ; :r> nil
+      ; :f> (function-element (nth v 1 nil) v 2 compiler)
+      :<> (fragment-element v compiler)
+      (cond
+       (hiccup-tag? tag)
+       (hiccup-element v compiler)
 
-      (hiccup-tag? tag)
-      (hiccup-element v compiler)
+       (instance? NativeWrapper tag)
+       (native-element tag v 1 compiler)
 
-      (instance? NativeWrapper tag)
-      (native-element tag v 1 compiler)
+       :else (fn-to-element tag v compiler)))))
 
-      :else (if functional-components?
-              (functional-reag-element tag v compiler)
-              (reag-element tag v compiler)))))
-
-(defn as-element* [x compiler functional-components?]
+(defn as-element [this x fn-to-element]
   (cond (util/js-val? x) x
-        (vector? x) (vec-to-elem x compiler functional-components?)
+        (vector? x) (vec-to-elem x this fn-to-element)
         (seq? x) (if (dev?)
-                   (expand-seq-check x compiler)
-                   (expand-seq x compiler))
+                   (expand-seq-check x this)
+                   (expand-seq x this))
         (named? x) (name x)
         (satisfies? IPrintWithWriter x) (pr-str x)
         :else x))
 
 (defn create-compiler [opts]
-  (let [id (gensym)]
+  (let [id (gensym)
+        fn-to-element (if (:function-components opts)
+                        maybe-function-element
+                        reag-element)]
     (reify p/Compiler
       ;; This is used to as cache key to cache component fns per compiler
       (get-id [this] id)
       (as-element [this x]
-        ;; TODO: Select on Compiler object initialization correct as-element call.
-        (as-element* x this (true? (:functional-components? opts))))
+        (as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]
-        (make-element* argv component jsprops first-child this)))))
+        (make-element this argv component jsprops first-child)))))
 
 (def default-compiler* (create-compiler {}))
 (def ^:dynamic default-compiler default-compiler*)
