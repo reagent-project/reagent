@@ -577,7 +577,7 @@
       (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
                                [:p "bar"]]
         (fn [c div]
-          (is (= {:bar "x"} (.-foo @p)))
+          (is (= {:bar "x"} (gobj/get @p "foo")))
           (is (= "<div>a<p>bar</p></div>" (.-innerHTML div))))))))
 
 (deftest adapt-react-class-shortcut-key-warning

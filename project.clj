@@ -3,8 +3,7 @@
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
 
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 ;; If :npm-deps enabled, these are used only for externs.
+  :dependencies [;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
                  [cljsjs/react "16.13.0-0"]
@@ -23,7 +22,9 @@
           :source-paths ["src"]
           :doc-paths []}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "1.10.597"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
+                                  ;; TODO: 753 doesn't work with node module processing
+                                  [org.clojure/clojurescript "1.10.597"]
                                   [figwheel "0.5.19"]
                                   [figwheel-sidecar "0.5.19"]
                                   [doo "0.1.11"]
