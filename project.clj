@@ -23,8 +23,7 @@
           :doc-paths []}
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
-                                  ;; TODO: 753 doesn't work with node module processing
-                                  [org.clojure/clojurescript "1.10.597"]
+                                  [org.clojure/clojurescript "1.10.753"]
                                   [figwheel "0.5.19"]
                                   [figwheel-sidecar "0.5.19"]
                                   [doo "0.1.11"]
@@ -74,7 +73,8 @@
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :npm-deps true
                 :asset-path "js/out"
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :language-out :es5}}
 
     {:id "test"
      :source-paths ["test"]
@@ -99,7 +99,8 @@
                 :output-to "target/cljsbuild/test-npm/main.js"
                 :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :language-out :es5}}
 
     ;; Separate source-path as this namespace uses Node built-in modules which
     ;; aren't available for other targets, and would break other builds.
@@ -164,7 +165,8 @@
                 :output-dir "target/cljsbuild/prod-npm/out" ;; Outside of public, not published
                 :closure-warnings {:global-this :off}
                 :npm-deps true
-                :aot-cache true}}
+                :aot-cache true
+                :language-out :es5}}
 
     {:id "prod-test"
      :source-paths ["test"]
@@ -191,4 +193,5 @@
                 :closure-warnings {:global-this :off}
                 :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}]})
+                :checked-arrays :warn
+                :language-out :es5}}]})
