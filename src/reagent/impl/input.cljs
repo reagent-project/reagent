@@ -3,9 +3,6 @@
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]))
 
-;; Workaround circular dependency
-(defonce make-element nil)
-
 ;; <input type="??" >
 ;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
 ;; See: https://html.spec.whatwg.org/multipage/forms.html#do-not-apply
