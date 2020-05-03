@@ -10,6 +10,8 @@ function.
 - Added `:r>` (raw) shortcut to use React components, without
 props conversion done by `:>`. Hiccup children are automatically
 converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
+- Replaced `findDOMNode` use in Reagent input workaround with ref, to ensure
+[StrictMode](https://reactjs.org/docs/strict-mode.html) compatibility ([#490](https://reactjs.org/docs/strict-mode.html))
 
 ## 1.0.0-alpha1 (2020-04-26)
 

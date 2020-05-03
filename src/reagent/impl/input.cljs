@@ -3,11 +3,6 @@
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]))
 
-;; This gets set from reagent.dom
-;; No direct reference to reagent.dom as we don't want to load react-dom
-;; for non dom targets.
-(defonce find-dom-node nil)
-
 ;; Workaround circular dependency
 (defonce make-element nil)
 
@@ -78,7 +73,7 @@
     (let [rendered-value (.-cljsRenderedValue this)
           dom-value (.-cljsDOMValue this)
           ;; Default to the root node within this component
-          node (find-dom-node this)]
+          node (.-inputEl this)]
       (when (not= rendered-value dom-value)
         (input-node-set-value node rendered-value dom-value this {})))))
 
@@ -98,19 +93,24 @@
   (when (and (some? jsprops)
              (.hasOwnProperty jsprops "onChange")
              (.hasOwnProperty jsprops "value"))
-    (assert find-dom-node
-            "reagent.dom needs to be loaded for controlled input to work")
     (let [v (.-value jsprops)
           value (if (nil? v) "" v)
-          on-change (.-onChange jsprops)]
+          on-change (.-onChange jsprops)
+          original-ref-fn (.-ref jsprops)]
       (when-not (.-cljsInputLive this)
         ;; set initial value
         (set! (.-cljsInputLive this) true)
         (set! (.-cljsDOMValue this) value))
+      (when-not (.-reagentRefFn this)
+        (set! (.-reagentRefFn this) (fn [el]
+                                      (set! (.-inputEl this) el)
+                                      (when original-ref-fn
+                                        (original-ref-fn el)))))
       (set! (.-cljsRenderedValue this) value)
       (js-delete jsprops "value")
       (set! (.-defaultValue jsprops) value)
-      (set! (.-onChange jsprops) #(input-handle-change this on-change %)))))
+      (set! (.-onChange jsprops) #(input-handle-change this on-change %))
+      (set! (.-ref jsprops) (.-reagentRefFn this)))))
 
 (defn input-unmount [^clj this]
   (set! (.-cljsInputLive this) nil))
