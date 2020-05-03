@@ -217,13 +217,14 @@
     (try-get-react-key x)))
 
 (defn react-key-from-vec [v]
-  (if-some [k (-> (meta v) get-react-key)]
-    k
-    (or (-> v (nth 1 nil) get-react-key)
-        ;; :> is a special case because properties map is the first
-        ;; element of the vector.
-        (if (= :> (nth v 0 nil))
-          (get-react-key (nth v 2 nil))))))
+  ;; Meta is a map always and is safe to read
+  (or (:key (meta v))
+      (get-react-key (nth v 1 nil))
+      ;; :> is a special case because properties map is the first
+      ;; element of the vector.
+      ;; FIXME: Missing :f>, :r> and tests
+      (if (= :> (nth v 0 nil))
+        (get-react-key (nth v 2 nil)))))
 
 ;; Error messages
 
