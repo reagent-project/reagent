@@ -33,11 +33,22 @@
     [:div
      [greeting "Hello world, it is now"]
      [clock time-color]
-     [color-input time-color update-time-color]]))
+     [color-input time-color update-time-color]
+
+     ;; Or with the default options you can create function components using :f> shortcut:
+     #_#_#_
+     [greeting "Hello world, it is now"]
+     [:f> clock time-color]
+     [:f> color-input time-color update-time-color]
+     ]))
 
 (def functional-compiler (r/create-compiler {:function-components true}))
 
 (defn run []
-  (rdom/render [simple-example] (js/document.getElementById "app") functional-compiler))
+  (rdom/render [simple-example] (js/document.getElementById "app") functional-compiler)
+  ;; Or with default options and shortcut:
+  #_
+  (rdom/render [:f> simple-example] (js/document.getElementById "app"))
+  )
 
 (run)

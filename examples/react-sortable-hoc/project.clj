@@ -1,7 +1,7 @@
 (defproject reagent/react-sortable-hoc-example "0.1.0"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.597"]
-                 [reagent "0.10.0"]
+                 [reagent "1.0.0-SNAPSHOT"]
                  [figwheel "0.5.19"]
                  [cljsjs/react-sortable-hoc "1.11.0-1"]]
 

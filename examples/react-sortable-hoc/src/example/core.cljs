@@ -46,6 +46,19 @@
                   :index index
                   :value value}))]))))
 
+;; Or using new :r> shortcut, which doesn't do props conversion
+#_
+(def SortableList
+  (sort/SortableContainer.
+    (r/reactify-component
+      (fn [{:keys [items]}]
+        [:ul
+         (for [[value index] (map vector items (range))]
+           [:r> SortableItem
+            #js {:key (str "item-" index)
+                 :index index
+                 :value value}])]))))
+
 (defn vector-move [coll prev-index new-index]
   (let [items (into (subvec coll 0 prev-index)
                     (subvec coll (inc prev-index)))]
