@@ -580,12 +580,32 @@
           (is (= {:bar "x"} (gobj/get @p "foo")))
           (is (= "<div>a<p>bar</p></div>" (.-innerHTML div))))))))
 
-(deftest adapt-react-class-shortcut-key-warning
+(deftest shortcut-key-warning
+  ;; TODO: Test create-element with key prop
+
   (let [w (debug/track-warnings
            #(with-mounted-component [:div
                                      (list
                                       [:> "div" {:key 1} "a"]
                                       [:> "div" {:key 2} "b"])]
+              (fn [c div])))]
+      (is (empty? (:warn w))))
+
+  (let [w (debug/track-warnings
+           #(with-mounted-component [:div
+                                     (list
+                                      [:r> "div" #js {:key 1} "a"]
+                                      [:r> "div" #js {:key 2} "b"])]
+              (fn [c div])))]
+      (is (empty? (:warn w))))
+
+  (let [f (fn [props c]
+            [:div props c])
+        w (debug/track-warnings
+           #(with-mounted-component [:div
+                                     (list
+                                      [:f> f {:key 1} "a"]
+                                      [:f> f {:key 2} "b"])]
               (fn [c div])))]
       (is (empty? (:warn w)))))
 

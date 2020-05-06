@@ -135,4 +135,8 @@
 (deftest react-key-from-vec-test
   (is (= 1 (util/react-key-from-vec ^{:key 1} [:foo "bar"])))
   (is (= 1 (util/react-key-from-vec [:foo {:key 1} "bar"])))
-  (is (= 1 (util/react-key-from-vec [:> "div" {:key 1} "bar"]))))
+  (is (= 1 (util/react-key-from-vec [:> "div" {:key 1} "bar"])))
+  (is (= 1 (util/react-key-from-vec [:f> "div" {:key 1} "bar"])))
+  (is (= 1 (util/react-key-from-vec [:r> "div" #js {:key 1} "bar"])))
+  (is (= nil (util/react-key-from-vec [:r> "div" nil "bar"])))
+  )

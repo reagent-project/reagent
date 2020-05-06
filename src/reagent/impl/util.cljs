@@ -222,9 +222,12 @@
       (get-react-key (nth v 1 nil))
       ;; :> is a special case because properties map is the first
       ;; element of the vector.
-      ;; FIXME: Missing :f>, :r> and tests
-      (if (= :> (nth v 0 nil))
-        (get-react-key (nth v 2 nil)))))
+      ;; TODO: Instead of checking all places for the props, select correct
+      ;; prosp value before this is called.
+      (case (nth v 0 nil)
+        (:> :f>) (get-react-key (nth v 2 nil))
+        :r> (some-> (nth v 2 nil) (.-key))
+        nil)))
 
 ;; Error messages
 
