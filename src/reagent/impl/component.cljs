@@ -374,8 +374,6 @@
       (cache-react-class compiler f res))))
 
 (defn as-class [tag compiler]
-  (if (nil? compiler)
-    (js/console.error "as-class" tag compiler))
   (if-some [cached-class (cached-react-class compiler tag)]
     cached-class
     (fn-to-class compiler tag)))
@@ -415,19 +413,12 @@
               (error (str "Error rendering component" (comp-name)))))))
       (functional-wrap-render compiler c))))
 
-(def fun-component-state #js {})
-
 (defn functional-render [compiler jsprops]
   (if util/*non-reactive*
     ;; Non-reactive component needs just the render fn and argv
     (functional-do-render compiler jsprops)
     (let [argv (.-argv jsprops)
           tag (.-reagentRender jsprops)
-          ;; Create persistent ID for each rendered functional component,
-          ;; this is used to store internal Reagent state, like render
-          ;; reaction etc. in a separate store where changes doesn't
-          ;; trigger render.
-          [id _] (react/useState (js/Symbol))
 
           ;; Use counter to trigger render manually.
           [_ update-count] (react/useState 0)
@@ -436,29 +427,30 @@
           ;; To support form-2 components, even the render fn needs to
           ;; be stored as it is created during the first render,
           ;; and subsequent renders need to retrieve the created fn.
-          reagent-state (or (gobj/get fun-component-state id)
-                            ;; TODO: Could also initialize using jsprops object here.
-                            ;; TODO: Allow cljsMountOrder name to optimized.
-                            (let [obj #js {:forceUpdate (fn [] (update-count inc))
-                                           :cljsMountOrder (batch/next-mount-count)
-                                           ;; Use reagentRender name, as that is also used
-                                           ;; by class components, and some checks.
-                                           ;; ReagentRender is replaced with form-2 inner fn,
-                                           ;; constructor refers to the original fn.
-                                           :constructor tag}]
-                              ;; These names can be optimized, so they can't be set in
-                              ;; object literal.
-                              (set! (.-reagentRender obj) tag)
-                              (gobj/set fun-component-state id obj)
-                              obj))
+          state-ref (react/useRef)
 
+          _ (when-not (.-current state-ref)
+              (let [obj #js {}]
+                (set! (.-forceUpdate obj) (fn [] (update-count inc)))
+                (set! (.-cljsMountOrder obj) (batch/next-mount-count))
+                ;; Use reagentRender name, as that is also used
+                ;; by class components, and some checks.
+                ;; reagentRender is replaced with form-2 inner fn,
+                ;; constructor refers to the original fn.
+                (set! (.-constructor obj) tag)
+                (set! (.-reagentRender obj) tag)
+
+                (set! (.-current state-ref) obj)))
+
+          reagent-state (.-current state-ref)
+
+          ;; FIXME: Access cljsRatom using interop forms
           rat (gobj/get reagent-state "cljsRatom")]
 
       (react/useEffect
         (fn mount []
           (fn unmount []
-            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
-            (gobj/remove fun-component-state id)))
+            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)))
         ;; Ignore props - only run effect once on mount and unmount
         #js [])
 
