@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-alpha2 (2020-05-13)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha1...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha1...v1.0.0-alpha2)**
 
 - Renamed `:functional-components?` option to `:function-components` ([#496](https://github.com/reagent-project/reagent/issues/496))
 - Added `:f>` shortcut to create Function component from ClojureScript
