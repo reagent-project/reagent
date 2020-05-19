@@ -36,6 +36,11 @@ Differences to Class component implementation:
 - `reagent.dom/render` doesn't return the Component instance, but just `nil`
 - `reagent.core/current-component` returns a mocked object that can be passed to `reagent.core/force-update`,
 but won't support everything that real Component instance would support.
+- A bit slower compared to Class component implementation
+
+![1.0.0-alpha2 benchmark](benchmark.png)
+
+(Local test run with https://github.com/krausest/js-framework-benchmark, with added function component case)
 
 ## Reasoning
 
