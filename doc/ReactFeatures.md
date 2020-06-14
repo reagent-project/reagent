@@ -113,11 +113,11 @@ can be more obvious with the new `getDerivedStateFromError` method:
      :get-derived-state-from-error (fn [error] #js {:error error})
      :render (fn [this]
                (r/as-element
-                 (if @error
+                 (if-let [error (.. this -state -error)]
                    [:div
                     "Something went wrong."
                     [:button {:on-click #(.setState this #js {:error nil})} "Try again"]]
-                   (into [:<>] (r/children this)))})))
+                   comp)))}))
 ```
 
 As per React docs, `getDerivedStateFromError` is what should update the state
