@@ -1,0 +1,11 @@
+{
+  "name": "material-ui",
+  "dependencies": {
+    "framer-motion": "1.11.1",
+    "react": "16.13.0",
+    "react-dom": "16.13.0"
+  },
+  "devDependencies": {
+    "shadow-cljs": "2.8.93"
+  }
+}
