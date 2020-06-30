@@ -9,7 +9,7 @@
 7. [Interop with React](InteropWithReact.md)
 8. [React Features](ReactFeatures.md) and how to use them in Reagent
 8. [Reagent Compiler](ReagentCompiler.md)
-8. [Controlled Inpits](ControlledInputs.md)
+8. [Controlled Inputs](ControlledInputs.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial
