@@ -27,7 +27,7 @@
             :on-change #(reset! time-color (-> % .-target .-value))}]])
 
 (defn simple-example []
-  [:div
+  [:<>
    [greeting "Hello world, it is now"]
    [clock]
    [color-input]])
