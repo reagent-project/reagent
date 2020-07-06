@@ -1,7 +1,7 @@
 (ns example.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            ["framer-motion" :refer [motion]]))
+            ["framer-motion" :refer [motion AnimatePresence]]))
 
 (set! *warn-on-infer* true)
 
@@ -16,8 +16,10 @@
   (let [show (r/atom false)]
     (fn []
       [:div
-       (if @show
-         [animated])
+       [:> AnimatePresence
+        {}
+        (if @show
+          [animated])]
        [:button
         {:on-click #(swap! show not)}
         "Toggle"]])))

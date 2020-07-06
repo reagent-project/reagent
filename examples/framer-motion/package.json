@@ -6,6 +6,6 @@
     "react-dom": "16.13.0"
   },
   "devDependencies": {
-    "shadow-cljs": "2.8.93"
+    "shadow-cljs": "2.10.14"
   }
 }
