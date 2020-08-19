@@ -17,7 +17,8 @@
                     ["How can I use an entity like \"nbsp\"?" {:file "doc/FAQ/UsingAnEntity.md"}]
                     ["Why is my attribute (like autoFocus) missing?" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
                     ["How can I use React's dangerouslySetInnerHTML?" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
-                    ["Reagent doesn't work after updating dependencies" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
+                    ["Reagent doesn't work after updating dependencies" {:file "doc/FAQ/CljsjsReactProblems.md"}]
+                    ["How do I force Component re-creation?" {:file "doc/FAQ/ForcingComponentRecreation.md"}]]
                    ["Examples" {}
                     ["Material-UI v1" {:file "doc/examples/material-ui.md"}]]
                    ["Other" {}
