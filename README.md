@@ -123,7 +123,7 @@ State is handled using Reagent's version of `atom`, like this:
 
 Any component that dereferences a `reagent.core/atom` will be automatically re-rendered.
 
-If you want do some setting up when the component is first created, the component function can return a new function that will be called to do the actual rendering:
+If you want to do some setting up when the component is first created, the component function can return a new function that will be called to do the actual rendering:
 
 ```clj
 (defn timer-component []
