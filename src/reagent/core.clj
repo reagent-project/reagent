@@ -1,6 +1,6 @@
 (ns reagent.core
   (:require [reagent.ratom :as ra]
-            [cljs.analyzer.api :as ana-api]))
+            cljs.analyzer.api))
 
 (defmacro with-let
   "Bind variables as with let, except that when used in a component
@@ -13,7 +13,7 @@
 (defn- source-info [env]
   (when (:line env)
     {:file (try
-             (ana-api/current-file)
+             ((resolve 'cljs.analyzer.api/current-file))
              (catch Exception _
                ;; ana-api/current-file was added in 1.10.758
                cljs.analyzer/*cljs-file*))
