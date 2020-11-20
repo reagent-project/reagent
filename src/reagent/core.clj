@@ -12,7 +12,11 @@
 
 (defn- source-info [env]
   (when (:line env)
-    {:file (ana-api/current-file)
+    {:file (try
+             (ana-api/current-file)
+             (catch Exception _
+               ;; ana-api/current-file was added in 1.10.758
+               cljs.analyzer/*cljs-file*))
      :line (:line env)
      :column (:column env)}))
 
