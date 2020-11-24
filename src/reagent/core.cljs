@@ -366,3 +366,9 @@
   (tmpl/set-default-compiler! (if (nil? compiler)
                                 tmpl/default-compiler*
                                 compiler)))
+
+(defn render
+  {:deprecated "0.10.0"}
+  [& _]
+  (throw (js/Error. "Reagent.core/render function was moved to reagent.dom namespace in Reagent v1.0."))
+  nil)

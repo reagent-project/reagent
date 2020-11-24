@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- DOM related functions have been removed from `reagent.core` namespace.
+    - There is deprecated no-op `render` function on core ns, this will show
+    deprecation warning during compilation and throw runtime error about
+    function being moved. This should be easier to debug than just
+    warning about missing var and calling null fn on runtime.
+
 ## 1.0.0-alpha2 (2020-05-13)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha1...v1.0.0-alpha2)**
