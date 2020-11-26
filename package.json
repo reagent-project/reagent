@@ -3,8 +3,8 @@
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
     "prop-types": "15.7.2",
-    "react": "16.13.0",
-    "react-dom": "16.13.0"
+    "react": "17.0.1",
+    "react-dom": "17.0.1"
   },
   "scripts": {
     "start": "lein figwheel client-npm"
@@ -19,7 +19,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "4.0.2",
     "md5-file": "4.0.0",
-    "shadow-cljs": "2.8.93",
+    "shadow-cljs": "2.11.8",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   }

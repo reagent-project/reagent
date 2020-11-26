@@ -63,20 +63,22 @@
   (when-not history
     (let [html5 (and page
                      (Html5History.isSupported)
-                     (#{"http:" "https:"} js/location.protocol))]
-      (doto (set! history
-                  (if html5
-                    (doto (Html5History.)
-                      (.setUseFragment false)
-                      (.setPathPrefix (-> js/location.pathname
-                                          (string/replace
-                                           (re-pattern (str page "$")) "")
-                                          (string/replace #"/*$" ""))))
-                    (History.)))
-        (evt/listen EventType.NAVIGATE #(when (.-isNavigation %)
-                                          (emit [:set-page (.-token %)])
-                                          (r/flush)))
-        (.setEnabled true))
+                     (#{"http:" "https:"} js/location.protocol))
+          h (if html5
+              (doto (Html5History.)
+                (.setUseFragment false)
+                (.setPathPrefix (-> js/location.pathname
+                                    (string/replace
+                                      (re-pattern (str page "$")) "")
+                                    (string/replace #"/*$" ""))))
+              (History.))]
+      (set! history h)
+      (evt/listen history EventType.NAVIGATE
+                  (fn [^js/Event e]
+                    (when (.-isNavigation e)
+                      (emit [:set-page (.-token e)])
+                      (r/flush))))
+      (.setEnabled history true)
       (let [token (.getToken history)
             p (if (and page (not html5) (empty? token))
                 page

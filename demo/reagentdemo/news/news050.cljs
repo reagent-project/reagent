@@ -25,7 +25,7 @@
   [:div
    prompt
    [:input {:value @val
-            :on-change #(reset! val (.-target.value %))}]])
+            :on-change #(reset! val (.. % -target -value))}]])
 
 (defn name-edit [n]
   (let [{:keys [first-name last-name]} @n]

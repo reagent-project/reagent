@@ -311,13 +311,13 @@
         get-initial-state (:getInitialState body)
         construct (:constructor body)
         cmp (fn [props context updater]
-              (this-as this
+              (this-as ^clj this
                 (.call react/Component this props context updater)
                 (when construct
                   (construct this props))
                 (when get-initial-state
                   (set! (.-state this) (get-initial-state this)))
-                (set! (.-cljsMountOrder ^clj this) (batch/next-mount-count))
+                (set! (.-cljsMountOrder this) (batch/next-mount-count))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
@@ -384,7 +384,7 @@
     (as-class comp compiler)))
 
 (defn functional-wrap-render
-  [compiler c]
+  [compiler ^clj c]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
         argv (.-argv c)
@@ -413,7 +413,7 @@
               (error (str "Error rendering component" (comp-name)))))))
       (functional-wrap-render compiler c))))
 
-(defn functional-render [compiler jsprops]
+(defn functional-render [compiler ^clj jsprops]
   (if util/*non-reactive*
     ;; Non-reactive component needs just the render fn and argv
     (functional-do-render compiler jsprops)
@@ -445,7 +445,7 @@
           reagent-state (.-current state-ref)
 
           ;; FIXME: Access cljsRatom using interop forms
-          rat (gobj/get reagent-state "cljsRatom")]
+          rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
       (react/useEffect
         (fn mount []

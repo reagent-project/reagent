@@ -199,7 +199,7 @@
       (gobj/set tag-name-cache x v)
       v)))
 
-(defn native-element [parsed argv first compiler]
+(defn native-element [parsed argv first ^p/Compiler compiler]
   (let [component (.-tag parsed)
         props (nth argv first nil)
         hasprops (or (nil? props) (map? props))

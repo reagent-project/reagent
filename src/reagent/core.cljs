@@ -313,7 +313,7 @@
 
   rswap! works like swap!, except that recursive calls to rswap! on
   the same atom are allowed – and it always returns nil."
-  [a f & args]
+  [^IAtom a f & args]
   {:pre [(satisfies? IAtom a)
          (ifn? f)]}
   (if (.-rswapping a)

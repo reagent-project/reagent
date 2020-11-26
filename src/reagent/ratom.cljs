@@ -7,6 +7,8 @@
             [clojure.set :as s]
             [goog.object :as obj]))
 
+(declare flush!)
+
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
 (defonce ^:private generation 0)
@@ -65,7 +67,7 @@
 
   See also `in-context`"
   [derefed]
-  (when-some [r *ratom-context*]
+  (when-some [^clj r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
         (set! (.-captured r) (array derefed))
@@ -117,18 +119,6 @@
     (set! rea-queue (array))
     (batch/schedule))
   (.push rea-queue r))
-
-(defn flush! []
-  (loop []
-    (let [q rea-queue]
-      (when-not (nil? q)
-        (set! rea-queue nil)
-        (dotimes [i (alength q)]
-          (._queued-run (aget q i)))
-        (recur)))))
-
-(set! batch/ratom-flush flush!)
-
 
 ;;; Atom
 
@@ -512,6 +502,17 @@
   IHash
   (-hash [this] (goog/getUid this)))
 
+(defn flush! []
+  (loop []
+    (let [q rea-queue]
+      (when-not (nil? q)
+        (set! rea-queue nil)
+        (dotimes [i (alength q)]
+          (let [^Reaction r (aget q i)]
+            (._queued-run r)))
+        (recur)))))
+
+(set! batch/ratom-flush flush!)
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
   (let [reaction (->Reaction f nil true false nil nil nil nil)]
@@ -582,14 +583,14 @@
   (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
   IEquiv
-  (-equiv [_ ^clj other]
-          (and (instance? Wrapper other)
-               ;; If either of the wrappers have changed, equality
-               ;; cannot be relied on.
-               (not changed)
-               (not (.-changed other))
-               (= state (.-state other))
-               (= callback (.-callback other))))
+  (-equiv [this ^clj other]
+    (and (instance? Wrapper other)
+         ;; If either of the wrappers have changed, equality
+         ;; cannot be relied on.
+         (not changed)
+         (not (.-changed other))
+         (= state (.-state other))
+         (= callback (.-callback other))))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))

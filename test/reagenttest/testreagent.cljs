@@ -115,45 +115,56 @@
 
 (deftest test-ratom-change
   (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            runs (rv/running)
-            val (r/atom 0)
-            secval (r/atom 0)
-            v1-ran (atom 0)
-            v1 (reaction (swap! v1-ran inc) @val)
-            comp (fn []
-                   (swap! ran inc)
-                   [:div (str "val " @v1 " " @val " " @secval)])]
-        (with-mounted-component [comp]
-          compiler
-          (fn [C div]
-            (r/flush)
-            (is (not= runs (rv/running)))
-            (is (= "val 0 0 0" (.-innerText div)))
-            (is (= 1 @ran))
+    (t/async done
+      ((reduce (fn [next-done compiler]
+                 (fn []
+                   (let [ran (r/atom 0)
+                         runs (rv/running)
+                         val (r/atom 0)
+                         secval (r/atom 0)
+                         v1-ran (atom 0)
+                         v1 (reaction (swap! v1-ran inc) @val)
+                         comp (fn []
+                                (swap! ran inc)
+                                [:div (str "val " @v1 " " @val " " @secval)])]
+                     (u/with-mounted-component-async [comp]
+                       (fn []
+                         (r/next-tick
+                           (fn []
+                             (r/next-tick
+                               (fn []
+                                 (is (= runs (rv/running)))
+                                 (is (= 2 @ran))
+                                 (next-done))))))
+                       compiler
+                       (fn [C div done]
+                         (r/flush)
+                         (is (not= runs (rv/running)))
+                         (is (= "val 0 0 0" (.-innerText div)))
+                         (is (= 1 @ran))
 
-            (reset! secval 1)
-            (reset! secval 0)
-            (reset! val 1)
-            (reset! val 2)
-            (reset! val 1)
-            (is (= 1 @ran))
-            (is (= 1 @v1-ran))
-            (r/flush)
-            (is (= "val 1 1 0" (.-innerText div)))
-            (is (= 2 @ran) "ran once more")
-            (is (= 2 @v1-ran))
+                         (reset! secval 1)
+                         (reset! secval 0)
+                         (reset! val 1)
+                         (reset! val 2)
+                         (reset! val 1)
+                         (is (= 1 @ran))
+                         (is (= 1 @v1-ran))
+                         (r/flush)
+                         (is (= "val 1 1 0" (.-innerText div)))
+                         (is (= 2 @ran) "ran once more")
+                         (is (= 2 @v1-ran))
 
-            ;; should not be rendered
-            (reset! val 1)
-            (is (= 2 @v1-ran))
-            (r/flush)
-            (is (= 2 @v1-ran))
-            (is (= "val 1 1 0" (.-innerText div)))
-            (is (= 2 @ran) "did not run")))
-        (is (= runs (rv/running)))
-        (is (= 2 @ran))))))
+                         ;; should not be rendered
+                         (reset! val 1)
+                         (is (= 2 @v1-ran))
+                         (r/flush)
+                         (is (= 2 @v1-ran))
+                         (is (= "val 1 1 0" (.-innerText div)))
+                         (is (= 2 @ran) "did not run")
+                         (done))))))
+              done
+              test-compilers)))))
 
 (deftest batched-update-test []
   (when r/is-client
@@ -788,44 +799,73 @@
       (is (= "<div>foo</div>" (rstr [c2]))))))
 
 (deftest basic-with-let
-  (doseq [compiler test-compilers]
-    (when r/is-client
-      (let [n1 (atom 0)
-            n2 (atom 0)
-            n3 (atom 0)
-            val (r/atom 0)
-            c (fn []
-                (r/with-let [v (swap! n1 inc)]
-                  (swap! n2 inc)
-                  [:div @val]
-                  (finally
-                    (swap! n3 inc))))]
-        (with-mounted-component [c]
-          compiler
-          (fn [_ div]
-            (is (= [1 1 0] [@n1 @n2 @n3]))
-            (swap! val inc)
-            (is (= [1 1 0] [@n1 @n2 @n3]))
-            (r/flush)
-            (is (= [1 2 0] [@n1 @n2 @n3]))))
-        (is (= [1 2 1] [@n1 @n2 @n3]))))))
+  (when r/is-client
+    (t/async done
+      ((reduce
+        (fn [next-done compiler]
+          (fn []
+            (let [n1 (atom 0)
+                  n2 (atom 0)
+                  n3 (atom 0)
+                  val (r/atom 0)
+                  c (fn []
+                      (r/with-let [v (swap! n1 inc)]
+                        (swap! n2 inc)
+                        [:div @val]
+                        (finally
+                          (swap! n3 inc))))]
+              ;; With functional components,
+              ;; effect cleanup (which calls ratom dispose) happens
+              ;; async after unmount.
+              (u/with-mounted-component-async [c]
+                (fn []
+                  (r/next-tick
+                    (fn []
+                      (r/next-tick
+                        (fn []
+                          (is (= [1 2 1] [@n1 @n2 @n3]))
+                          (next-done))))))
+                compiler
+                (fn [_ div done]
+                  (is (= [1 1 0] [@n1 @n2 @n3]))
+                  (swap! val inc)
+                  (is (= [1 1 0] [@n1 @n2 @n3]))
+                  (r/flush)
+                  (is (= [1 2 0] [@n1 @n2 @n3]))
+                  (done))))))
+        done
+        test-compilers)))))
 
 (deftest with-let-destroy-only
   (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [n1 (atom 0)
-            n2 (atom 0)
-            c (fn []
-                (r/with-let []
-                  (swap! n1 inc)
-                  [:div]
-                  (finally
-                    (swap! n2 inc))))]
-        (with-mounted-component [c]
-          compiler
-          (fn [_ div]
-            (is (= [1 0] [@n1 @n2]))))
-        (is (= [1 1] [@n1 @n2]))))))
+    (t/async done
+      ((reduce
+         (fn [next-done compiler]
+           (fn []
+             (let [n1 (atom 0)
+                   n2 (atom 0)
+                   c (fn []
+                       (r/with-let []
+                         (swap! n1 inc)
+                         [:div]
+                         (finally
+                           (swap! n2 inc))))]
+               (u/with-mounted-component-async [c]
+                 ;; Wait 2 animation frames for
+                 ;; useEffect cleanup to be called.
+                 (fn []
+                   (r/next-tick
+                     (fn []
+                       (r/next-tick
+                         (fn []
+                           (is (= [1 1] [@n1 @n2]))
+                           (next-done))))))
+                 compiler
+                 (fn [_ div done]
+                   (is (= [1 0] [@n1 @n2]))
+                   (done))))))
+         done
+         test-compilers)))))
 
 (deftest with-let-arg
   (when r/is-client
