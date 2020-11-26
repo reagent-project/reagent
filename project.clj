@@ -6,9 +6,9 @@
   :dependencies [;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "16.13.0-0"]
-                 [cljsjs/react-dom "16.13.0-0"]
-                 [cljsjs/react-dom-server "16.13.0-0"]]
+                 [cljsjs/react "17.0.0-0"]
+                 [cljsjs/react-dom "17.0.0-0"]
+                 [cljsjs/react-dom-server "17.0.0-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update default React version to 17.0.1
 - DOM related functions have been removed from `reagent.core` namespace.
     - There is deprecated no-op `render` function on core ns, this will show
     deprecation warning during compilation and throw runtime error about
