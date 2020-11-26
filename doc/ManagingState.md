@@ -74,8 +74,8 @@ Here’s an example that uses event handling with `rswap!`:
 (defn name-edit [id]
   (let [p @(r/track person id)]
 	[:div
-	 [:input {:value (:name p)
-			  :on-change #(emit [:set-name id (.-target.value %)])}]]))
+	 [:input {:value     (:name p)
+		  :on-change #(emit [:set-name id (.-target.value %)])}]]))
 
 (defn edit-fields []
   (let [ids @(r/track person-keys)]
@@ -83,9 +83,9 @@ Here’s an example that uses event handling with `rswap!`:
 	 [name-list]
 	 (for [i ids]
 	   ^{:key i} [name-edit i])
-	 [:input {:type 'button
-			  :value "Add person"
-			  :on-click #(emit [:add-person])}]]))
+	 [:input {:type     'button
+	          :value    "Add person"
+	          :on-click #(emit [:add-person])}]]))
 ```
 
 All events are passed through the emit function, consisting of a trivial application of `rswap!` and some optional logging. This is the only place where application state actually changes – the rest is pure functions.
