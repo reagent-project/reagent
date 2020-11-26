@@ -38,11 +38,12 @@ Differences to Class component implementation:
 but won't support everything that real Component instance would support.
 - A bit slower compared to Class component implementation
 - `useEffect` cleanup function is called asynchronously some time after
-unmounting the component from DOM. This is used to dispose component RAtom,
+unmounting the component from DOM (in React 17). This is used to dispose component RAtom,
 which will affect e.g. `r/with-let` `finally` function being called. Cleanup
 is still called before the component is mounted again. This probably shouldn't
 affect any real use cases, but required waiting two animation frames on
 Reagent tests to assert that the `finally` was ran.
+([More information](https://reactjs.org/blog/2020/08/10/react-v17-rc.html#effect-cleanup-timing))
 - Using `r/wrap` as component parameter seems to in some cases re-render
 components when source atom is changed, even if the value in path didn't
 change. Could be related to how `react/memo` handles changes properties.
