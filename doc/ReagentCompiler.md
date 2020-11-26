@@ -27,8 +27,8 @@ Features:
 - The functions are wrapped in another function, which uses two
 state hooks to store component identity and "update count" - which is used to
 force re-render when Ratoms the component uses are updated.
-- The functions is wrapped in `react/memo` to implement `shouldComponentUpdate`
-logic like previously (component is rendered only if the properties change).
+- The functions is wrapped in `react/memo` to implement logic similar to
+`shouldComponentUpdate` (component is rendered only if the properties change).
 - This implementation passes the same test suite as class components.
 
 Differences to Class component implementation:
@@ -37,6 +37,15 @@ Differences to Class component implementation:
 - `reagent.core/current-component` returns a mocked object that can be passed to `reagent.core/force-update`,
 but won't support everything that real Component instance would support.
 - A bit slower compared to Class component implementation
+- `useEffect` cleanup function is called asynchronously some time after
+unmounting the component from DOM. This is used to dispose component RAtom,
+which will affect e.g. `r/with-let` `finally` function being called. Cleanup
+is still called before the component is mounted again. This probably shouldn't
+affect any real use cases, but required waiting two animation frames on
+Reagent tests to assert that the `finally` was ran.
+- Using `r/wrap` as component parameter seems to in some cases re-render
+components when source atom is changed, even if the value in path didn't
+change. Could be related to how `react/memo` handles changes properties.
 
 ![1.0.0-alpha2 benchmark](benchmark.png)
 

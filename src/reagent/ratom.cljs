@@ -583,14 +583,14 @@
   (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
   IEquiv
-  (-equiv [_ ^clj other]
-          (and (instance? Wrapper other)
-               ;; If either of the wrappers have changed, equality
-               ;; cannot be relied on.
-               (not changed)
-               (not (.-changed other))
-               (= state (.-state other))
-               (= callback (.-callback other))))
+  (-equiv [this ^clj other]
+    (and (instance? Wrapper other)
+         ;; If either of the wrappers have changed, equality
+         ;; cannot be relied on.
+         (not changed)
+         (not (.-changed other))
+         (= state (.-state other))
+         (= callback (.-callback other))))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
