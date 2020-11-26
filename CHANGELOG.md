@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc1 (2020-11-26)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha2...v1.0.0-rc1)**
 
 - Update default React version to 17.0.1
 - DOM related functions have been removed from `reagent.core` namespace.
