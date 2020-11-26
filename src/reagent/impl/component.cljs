@@ -384,7 +384,7 @@
     (as-class comp compiler)))
 
 (defn functional-wrap-render
-  [compiler c]
+  [compiler ^clj c]
   (let [f (.-reagentRender c)
         _ (assert-callable f)
         argv (.-argv c)
@@ -413,7 +413,7 @@
               (error (str "Error rendering component" (comp-name)))))))
       (functional-wrap-render compiler c))))
 
-(defn functional-render [compiler jsprops]
+(defn functional-render [compiler ^clj jsprops]
   (if util/*non-reactive*
     ;; Non-reactive component needs just the render fn and argv
     (functional-do-render compiler jsprops)
@@ -445,7 +445,7 @@
           reagent-state (.-current state-ref)
 
           ;; FIXME: Access cljsRatom using interop forms
-          rat (gobj/get reagent-state "cljsRatom")]
+          rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
       (react/useEffect
         (fn mount []
