@@ -311,13 +311,13 @@
         get-initial-state (:getInitialState body)
         construct (:constructor body)
         cmp (fn [props context updater]
-              (this-as this
+              (this-as ^clj this
                 (.call react/Component this props context updater)
                 (when construct
                   (construct this props))
                 (when get-initial-state
                   (set! (.-state this) (get-initial-state this)))
-                (set! (.-cljsMountOrder ^clj this) (batch/next-mount-count))
+                (set! (.-cljsMountOrder this) (batch/next-mount-count))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
