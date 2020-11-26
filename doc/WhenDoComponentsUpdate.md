@@ -125,7 +125,6 @@ And, finally, a Form-2 parent Component which uses these two child components:
       [:div 
         [greet-number @counter]      ;; notice the @. The prop is an int
         [more-button counter]])))    ;; no @ on counter
-	
 ```
 
 With this setup, answer this question: what rerendering happens each time the `more-button` gets clicked and `counter` gets incremented? 

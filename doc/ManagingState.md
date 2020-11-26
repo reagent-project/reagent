@@ -19,7 +19,7 @@ Reagent provides an implementation of atom that you can create with `reagent/ato
    "The atom " [:code "click-count"] " has value: "
    @click-count ". "
    [:input {:type "button" :value "Click me!"
-			:on-click #(swap! click-count inc)}]])
+            :on-click #(swap! click-count inc)}]])
 ```
 
 ### Mutating a ratom
@@ -62,10 +62,10 @@ Here’s an example that uses event handling with `rswap!`:
 ```clojure
 (defn event-handler [state [event-name id value]]
   (case event-name
-	:set-name   (assoc-in state [:people id :name] value)
-	:add-person (let [new-key (->> state :people keys (apply max) inc)]
-		      (assoc-in state [:people new-key] {:name ""}))
-	state))
+    :set-name   (assoc-in state [:people id :name] value)
+    :add-person (let [new-key (->> state :people keys (apply max) inc)]
+              (assoc-in state [:people new-key] {:name ""}))
+    state))
 
 (defn emit [e]
   ;; (js/console.log "Handling event" (str e))
@@ -73,19 +73,19 @@ Here’s an example that uses event handling with `rswap!`:
 
 (defn name-edit [id]
   (let [p @(r/track person id)]
-	[:div
-	 [:input {:value     (:name p)
-		  :on-change #(emit [:set-name id (.-target.value %)])}]]))
+    [:div
+     [:input {:value     (:name p)
+          :on-change #(emit [:set-name id (.-target.value %)])}]]))
 
 (defn edit-fields []
   (let [ids @(r/track person-keys)]
-	[:div
-	 [name-list]
-	 (for [i ids]
-	   ^{:key i} [name-edit i])
-	 [:input {:type     'button
-	          :value    "Add person"
-	          :on-click #(emit [:add-person])}]]))
+    [:div
+     [name-list]
+     (for [i ids]
+       ^{:key i} [name-edit i])
+     [:input {:type     'button
+              :value    "Add person"
+              :on-click #(emit [:add-person])}]]))
 ```
 
 All events are passed through the emit function, consisting of a trivial application of `rswap!` and some optional logging. This is the only place where application state actually changes – the rest is pure functions.
@@ -228,23 +228,23 @@ Here's an example:
 
 (defn person-keys []
   (-> @(r/track people)
-	  keys
-	  sort))
+      keys
+      sort))
 
 (defn person [id]
   (-> @(r/track people)
-	  (get id)))
+      (get id)))
 
 (defn name-comp [id]
   (let [p @(r/track person id)]
-	[:li
-	 (:name p)]))
+    [:li
+     (:name p)]))
 
 (defn name-list []
   (let [ids @(r/track person-keys)]
-	[:ul
-	 (for [i ids]
-	   ^{:key i} [name-comp i])]))
+    [:ul
+     (for [i ids]
+       ^{:key i} [name-comp i])]))
 ```
 
 Here, the name-list component will only be re-rendered if the keys of the :people map changes. Every name-comp only renders again when needed, etc.
