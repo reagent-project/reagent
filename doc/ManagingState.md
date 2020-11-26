@@ -62,11 +62,9 @@ Here’s an example that uses event handling with `rswap!`:
 ```clojure
 (defn event-handler [state [event-name id value]]
   (case event-name
-	:set-name   (assoc-in state [:people id :name]
-						  value)
+	:set-name   (assoc-in state [:people id :name] value)
 	:add-person (let [new-key (->> state :people keys (apply max) inc)]
-				  (assoc-in state [:people new-key]
-							{:name ""}))
+		      (assoc-in state [:people new-key] {:name ""}))
 	state))
 
 (defn emit [e]
