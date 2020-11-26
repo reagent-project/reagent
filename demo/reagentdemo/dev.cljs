@@ -5,7 +5,7 @@
 
 (enable-console-print!)
 
-(defn init! []
+(defn ^:dev/after-load init! []
   (core/init! (tests/init!)))
 
 (init!)
