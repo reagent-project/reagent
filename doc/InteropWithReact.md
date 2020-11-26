@@ -64,7 +64,7 @@ Hiccup form:
   [(reagent/adapt-react-class FlipMove)
    {:duration 750
     :easing "ease-out"}
-   articles]
+   articles])
 ```
 
 There is also a convenience mechanism `:>` (colon greater-than) that shortens
@@ -75,7 +75,7 @@ this and avoid some parenthesis:
   [:> FlipMove
    {:duration 750
     :easing "ease-out"}
-   articles]
+   articles])
 ```
 
 This is the equivalent JavaScript:
