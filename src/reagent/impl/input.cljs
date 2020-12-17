@@ -99,10 +99,25 @@
         (set! (.-cljsInputLive this) true)
         (set! (.-cljsDOMValue this) value))
       (when-not (.-reagentRefFn this)
-        (set! (.-reagentRefFn this) (fn [el]
-                                      (set! (.-inputEl this) el)
-                                      (when original-ref-fn
-                                        (original-ref-fn el)))))
+        (set! (.-reagentRefFn this)
+              (cond
+                ;; ref fn
+                (fn? original-ref-fn)
+                (fn [el]
+                  (set! (.-inputEl this) el)
+                  (when original-ref-fn
+                    (original-ref-fn el)))
+
+                ;; react/createRef object
+                (and original-ref-fn (.hasOwnProperty original-ref-fn "current"))
+                (fn [el]
+                  (set! (.-inputEl this) el)
+                  (when original-ref-fn
+                    (set! (.-current original-ref-fn) el)))
+
+                :else
+                (fn [el]
+                  (set! (.-inputEl this) el)))))
       (set! (.-cljsRenderedValue this) value)
       (js-delete jsprops "value")
       (set! (.-defaultValue jsprops) value)

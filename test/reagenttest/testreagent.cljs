@@ -1678,3 +1678,29 @@
           (@set-count! 17)
           (is (= "Counts 6 17" (.-innerText div)))
           )))))
+
+(deftest test-input-el-ref
+  (when r/is-client
+    (doseq [compiler test-compilers]
+      (let [ref-1 (atom nil)
+            ref-1-fn #(reset! ref-1 %)
+
+            ref-2 (react/createRef)
+
+            c (fn [x]
+                [:div
+                 [:input
+                  {:ref ref-1-fn
+                   :value nil
+                   :on-change (fn [_])}]
+
+                 [:input
+                  {:ref ref-2
+                   :value nil
+                   :on-change (fn [_])}]])]
+        (with-mounted-component [c]
+          compiler
+          (fn [c div]
+            (is (some? @ref-1))
+            (is (some? (.-current ref-2)))
+            ))))))

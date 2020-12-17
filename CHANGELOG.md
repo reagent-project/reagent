@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-rc1...master)**
+
+- Fix using ref object from `react/createRef` with controlled inputs ([#521](https://github.com/reagent-project/reagent/issues/521))
+
 ## 1.0.0-rc1 (2020-11-26)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-alpha2...v1.0.0-rc1)**
