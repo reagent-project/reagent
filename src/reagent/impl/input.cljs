@@ -105,15 +105,13 @@
                 (fn? original-ref-fn)
                 (fn [el]
                   (set! (.-inputEl this) el)
-                  (when original-ref-fn
-                    (original-ref-fn el)))
+                  (original-ref-fn el))
 
                 ;; react/createRef object
                 (and original-ref-fn (.hasOwnProperty original-ref-fn "current"))
                 (fn [el]
                   (set! (.-inputEl this) el)
-                  (when original-ref-fn
-                    (set! (.-current original-ref-fn) el)))
+                  (set! (.-current original-ref-fn) el))
 
                 :else
                 (fn [el]
