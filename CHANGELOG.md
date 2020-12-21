@@ -36,7 +36,7 @@ props conversion done by `:>`. Hiccup children are automatically
     - There is deprecated no-op `render` function on core ns, this will show
     deprecation warning during compilation and throw runtime error about
     function being moved. This should be easier to debug than just
-    warning about missing var and calling null fn on runtime.
+    warning about missing var and calling null fn on runtime. ([#501](https://github.com/reagent-project/reagent/issues/501))
 - Change RAtom (all types) print format to be readable using ClojureScript reader,
 similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues/439))
     - Old print output: `#<Atom: 0>`
