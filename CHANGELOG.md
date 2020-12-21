@@ -33,6 +33,7 @@ function, and `:r>` (raw) shortcut to use React components, without
 props conversion done by `:>`. Hiccup children are automatically
 converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
 - **DOM related functions have been removed from `reagent.core` namespace.**
+    - `render` and other DOM functions are available in `reagent.dom` namespace.
     - This is to make non-DOM environments (React-native) first class targets with Reagent,
     as requiring `react-dom` causes problems in such environments.
     - There is deprecated no-op `render` function on core ns, this will show
