@@ -137,11 +137,12 @@ There are several ways to use functions as components with Reagent:
 Calling `r/create-element` directly with a ClojureScript function doesn't
 wrap the component in any Reagent wrappers, and will create functional components.
 In this case you need to use `r/as-element` inside the function to convert
-Hiccup-style markup to elements, or just returns React Elements yourself.
-You also can't use Ratoms here, as Ratom implementation requires the component
+Hiccup-style markup to elements, or just return React Elements yourself.
+You also can't use Ratoms here, as Ratom implementation requires that the component
 is wrapped by Reagent.
 
-`:r>` shortcut can be used to create components similar to `r/create-element`.
+`:r>` shortcut can be used to create components similar to `r/create-element`, and the children Hiccup forms
+are converted to React element automatically.
 
 Using `adapt-react-class` or `:>` is also calls `create-element`, but that
 also does automatic conversion of ClojureScript parameters to JS objects,
@@ -154,6 +155,23 @@ New way is to configure Reagent Hiccup-compiler to create functional components:
 where both RAtoms and Hooks work.
 
 ## [Hooks](https://reactjs.org/docs/hooks-intro.html)
+
+```cljs
+;; This is used with :f> so both Hooks and RAtoms work here
+(defn example []
+  (let [[count set-count] (react/useState 0)]
+    [:div
+     [:p "You clicked " count " times"]
+     [:button
+      {:on-click #(set-count inc)}
+      "Click"]])))
+
+(defn root []
+  [:div
+   [:f> example]])
+```
+
+### Pre 1.0 workaround
 
 NOTE: This section still refers to workaround using Hooks inside
 class components, read the previous section to create functional components.
