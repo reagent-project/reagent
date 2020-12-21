@@ -141,12 +141,17 @@ Hiccup-style markup to elements, or just returns React Elements yourself.
 You also can't use Ratoms here, as Ratom implementation requires the component
 is wrapped by Reagent.
 
+`:r>` shortcut can be used to create components similar to `r/create-element`.
+
 Using `adapt-react-class` or `:>` is also calls `create-element`, but that
 also does automatic conversion of ClojureScript parameters to JS objects,
 which isn't usually desired if the component is ClojureScript function.
 
 New way is to configure Reagent Hiccup-compiler to create functional components:
 [Read Compiler documentation](./ReagentCompiler.md)
+
+`:f>` shortcut can be used to create function components from Reagent components (functions),
+where both RAtoms and Hooks work.
 
 ## [Hooks](https://reactjs.org/docs/hooks-intro.html)
 
