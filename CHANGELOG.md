@@ -29,10 +29,13 @@ class components**
     - [Read more](./doc/ReagentCompiler.md)
     - [Check example](./examples/functional-components-and-hooks/src/example/core.cljs)
 - Added `:f>` shortcut to create Function component from ClojureScript
-function.
+function. ([#494](https://github.com/reagent-project/reagent/issues/494))
 - Added `:r>` (raw) shortcut to use React components, without
 props conversion done by `:>`. Hiccup children are automatically
+converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
 - **DOM related functions have been removed from `reagent.core` namespace.**
+    - This is to make non-DOM environments (React-native) first class targets with Reagent,
+    as requiring `react-dom` causes problems in such environments.
     - There is deprecated no-op `render` function on core ns, this will show
     deprecation warning during compilation and throw runtime error about
     function being moved. This should be easier to debug than just
@@ -46,7 +49,7 @@ converted to React element calls. ([#494](https://github.com/reagent-project/rea
 - Replaced `findDOMNode` use in Reagent input workaround with ref, to ensure
 [StrictMode](https://reactjs.org/docs/strict-mode.html) compatibility ([#490](https://reactjs.org/docs/strict-mode.html))
     - Fix using ref object from `react/createRef` with controlled inputs ([#521](https://github.com/reagent-project/reagent/issues/521))
-- Update default React version to 17.0.1
+- Update default React version to 17.0.1 ([#518](https://github.com/reagent-project/reagent/pull/518))
 
 ### Bugfixes
 
