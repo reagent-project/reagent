@@ -76,6 +76,19 @@ Alternatively you can use the [static contextType property](https://reactjs.org/
   container)
 ```
 
+Context value can also be retrieved using `useContext` hook:
+
+```cljs
+(defn show-context []
+  (let [v (react/useContext my-context)]
+    [:p v]))
+
+(rdom/render
+  [:> Provider {:value "bar"}
+   [:f> show-context]]
+  container)
+```
+
 Tests contain example of using old React lifecycle Context API (`context-wrapper` function):
 [tests](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/testreagent.cljs#L1159-L1168)
 

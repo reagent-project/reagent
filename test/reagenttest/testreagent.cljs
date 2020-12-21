@@ -1457,7 +1457,16 @@
                                       (this-as this
                                         (r/as-element [:div "Context: " (.-context this)])))})]
         (is (= "<div>Context: default</div>"
-               (rstr [comp])))))))
+               (rstr [comp])))))
+
+    (testing "useContext hook"
+      (let [comp (fn [v]
+                   (let [v (react/useContext my-context)]
+                     [:div "Context: " v]))]
+        (is (= "<div>Context: foo</div>"
+               (rstr [:r> Provider
+                      #js {:value "foo"}
+                      [:f> comp]])))))))
 
 (deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
   (doseq [compiler test-compilers]
