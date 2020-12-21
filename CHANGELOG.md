@@ -1,10 +1,55 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 (unreleased)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0-rc1...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...master)**
 
-- Fix using ref object from `react/createRef` with controlled inputs ([#521](https://github.com/reagent-project/reagent/issues/521))
+Changes compared to 0.10.0:
+
+### Features and changes
+
+- **Option to render Reagent components as React function components instead of
+class components**
+    - To ensure backwards compatibility by default, Reagent works as previously and
+    by default creates class components.
+    - New Compiler object can be created and passed to functions to control
+    how Reagent converts Hiccup-style markup to React components and classes:
+    `(r/create-compiler {:function-components true})`
+    - This function components implementation supports RAtoms and passes
+    the same test suite as class components, except for a few differences.
+    - Passing this options to `render`, `as-element` and other calls will control how
+    that markup tree will be converted.
+    - `(r/set-default-compiler! compiler)` call can be used to set the default
+    compiler object for all calls.
+    - [Read more](./doc/ReagentCompiler.md)
+    - [Check example](./examples/functional-components-and-hooks/src/example/core.cljs)
+- **DOM related functions have been removed from `reagent.core` namespace.**
+    - There is deprecated no-op `render` function on core ns, this will show
+    deprecation warning during compilation and throw runtime error about
+    function being moved. This should be easier to debug than just
+    warning about missing var and calling null fn on runtime.
+- Change RAtom (all types) print format to be readable using ClojureScript reader,
+similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues/439))
+    - Old print output: `#<Atom: 0>`
+    - New print output: `#object[clojure.ratom.RAtom {:val 0}]`
+    - Still not readable by default, requires custom reader for `object` tag.
+- Added `:f>` shortcut to create Function component from ClojureScript
+function.
+- Added `:r>` (raw) shortcut to use React components, without
+props conversion done by `:>`. Hiccup children are automatically
+converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
+- Replaced `findDOMNode` use in Reagent input workaround with ref, to ensure
+[StrictMode](https://reactjs.org/docs/strict-mode.html) compatibility ([#490](https://reactjs.org/docs/strict-mode.html))
+    - Fix using ref object from `react/createRef` with controlled inputs ([#521](https://github.com/reagent-project/reagent/issues/521))
+- Update default React version to 17.0.1
+
+### Bugfixes
+
+- Fixed merge-props adding `:class` property to result even if no argument
+defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
+- Fix using `:className` property together with keyword class shortcut ([#433](https://github.com/reagent-project/reagent/issues/433))
+- Fix incorrect missing React key warnings with `:>` ([#399](https://github.com/reagent-project/reagent/issues/399))
+- Fix `requestAnimationFrame` call in Firefox extension context ([#438](https://github.com/reagent-project/reagent/issues/438))
 
 ## 1.0.0-rc1 (2020-11-26)
 
