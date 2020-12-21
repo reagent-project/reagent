@@ -4,7 +4,12 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...master)**
 
-Changes compared to 0.10.0:
+Special thanks for this release to [Clojurist Together](https://www.clojuriststogether.org/)
+for funding the work on React function components work and @roman01la for
+ideas on the implementation. Also thanks to everyone who tested the new features
+and reported results.
+
+Changes in this entry are compared to the 0.10.0 release.
 
 ### Features and changes
 
@@ -23,6 +28,10 @@ class components**
     compiler object for all calls.
     - [Read more](./doc/ReagentCompiler.md)
     - [Check example](./examples/functional-components-and-hooks/src/example/core.cljs)
+- Added `:f>` shortcut to create Function component from ClojureScript
+function.
+- Added `:r>` (raw) shortcut to use React components, without
+props conversion done by `:>`. Hiccup children are automatically
 - **DOM related functions have been removed from `reagent.core` namespace.**
     - There is deprecated no-op `render` function on core ns, this will show
     deprecation warning during compilation and throw runtime error about
@@ -33,10 +42,6 @@ similar to normal Atom ([#439](https://github.com/reagent-project/reagent/issues
     - Old print output: `#<Atom: 0>`
     - New print output: `#object[clojure.ratom.RAtom {:val 0}]`
     - Still not readable by default, requires custom reader for `object` tag.
-- Added `:f>` shortcut to create Function component from ClojureScript
-function.
-- Added `:r>` (raw) shortcut to use React components, without
-props conversion done by `:>`. Hiccup children are automatically
 converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
 - Replaced `findDOMNode` use in Reagent input workaround with ref, to ensure
 [StrictMode](https://reactjs.org/docs/strict-mode.html) compatibility ([#490](https://reactjs.org/docs/strict-mode.html))
@@ -46,10 +51,27 @@ converted to React element calls. ([#494](https://github.com/reagent-project/rea
 ### Bugfixes
 
 - Fixed merge-props adding `:class` property to result even if no argument
-defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479))
+defined `:class` ([#479](https://github.com/reagent-project/reagent/pull/479) by @achikin)
 - Fix using `:className` property together with keyword class shortcut ([#433](https://github.com/reagent-project/reagent/issues/433))
 - Fix incorrect missing React key warnings with `:>` ([#399](https://github.com/reagent-project/reagent/issues/399))
 - Fix `requestAnimationFrame` call in Firefox extension context ([#438](https://github.com/reagent-project/reagent/issues/438))
+
+
+### Documentation
+
+- New [react-mde example](./examples/react-mde/) by @vitorqb
+- Documentation fixes and improvements by:
+    - @dominicfreeston
+    - @MokkeMeguru
+    - @lucywang000
+    - @zelark
+    - @davidjameshumphreys
+    - @vgautamm
+    - @bjrnt
+    - @LeifAndersen
+    - @mikew1
+    - @suud
+    - @nahuel
 
 ## 1.0.0-rc1 (2020-11-26)
 
