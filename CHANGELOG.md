@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2020-12-21)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...v1.0.0)**
 
 Special thanks for this release to [Clojurist Together](https://www.clojuriststogether.org/)
 for funding the work on React function components work and @roman01la for
