@@ -29,8 +29,7 @@ class components**
     - [Read more](./doc/ReagentCompiler.md)
     - [Check example](./examples/functional-components-and-hooks/src/example/core.cljs)
 - Added `:f>` shortcut to create Function component from ClojureScript
-function. ([#494](https://github.com/reagent-project/reagent/issues/494))
-- Added `:r>` (raw) shortcut to use React components, without
+function, and `:r>` (raw) shortcut to use React components, without
 props conversion done by `:>`. Hiccup children are automatically
 converted to React element calls. ([#494](https://github.com/reagent-project/reagent/issues/494))
 - **DOM related functions have been removed from `reagent.core` namespace.**
