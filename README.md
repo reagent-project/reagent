@@ -148,7 +148,7 @@ But you can still use them if you want to, either using `reagent.core/create-cla
   (with-meta plain-component
     {:component-did-mount
      (fn [this]
-       (reset! my-html (.-innerHTML (reagent/dom-node this))))}))
+       (reset! my-html (.-innerHTML (rd/dom-node this))))}))
 ```
 
 See the examples directory for more examples.
