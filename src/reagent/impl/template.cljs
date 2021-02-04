@@ -192,7 +192,7 @@
 
 (def tag-name-cache #js {})
 
-(defn cached-parse [x]
+(defn cached-parse [this x _]
   (if-some [s (cache-get tag-name-cache x)]
     s
     (let [v (parse-tag x)]
@@ -252,7 +252,7 @@
         n (name tag)
         pos (.indexOf n ">")]
     (case pos
-      -1 (native-element (cached-parse n) v 1 compiler)
+      -1 (native-element (p/tarse-tag compiler n tag) v 1 compiler)
       0 (assert (= ">" n) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup tag"))
       ;; Support extended hiccup syntax, i.e :div.bar>a.foo
       ;; Apply metadata (e.g. :key) to the outermost element.
@@ -297,10 +297,14 @@
   (let [id (gensym)
         fn-to-element (if (:function-components opts)
                         maybe-function-element
-                        reag-element)]
+                        reag-element)
+        tag-parser (get opts :tag-parser cached-parse)]
+
     (reify p/Compiler
       ;; This is used to as cache key to cache component fns per compiler
       (get-id [this] id)
+      (parse-tag [this tag-name tag-value]
+        (tag-parser this tag-name tag-value))
       (as-element [this x]
         (as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]
