@@ -75,7 +75,7 @@ Here’s an example that uses event handling with `rswap!`:
   (let [p @(r/track person id)]
     [:div
      [:input {:value     (:name p)
-          :on-change #(emit [:set-name id (.-target.value %)])}]]))
+          :on-change #(emit [:set-name id (.. % -target -value)])}]]))
 
 (defn edit-fields []
   (let [ids @(r/track person-keys)]
