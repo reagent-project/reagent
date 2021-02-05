@@ -43,14 +43,14 @@ jobs:
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
-          restore_keys: |
+          restore-keys: |
             ${{ runner.os }}-m2-
       - name: Cache node modules
         uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore_keys: |
+          restore-keys: |
             ${{ runner.os }}-npm-
 
       - name: Install node deps
