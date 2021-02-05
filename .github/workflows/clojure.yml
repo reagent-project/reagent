@@ -18,7 +18,7 @@ jobs:
           - node-npm
           - shadow-cljs-prod
 
-    name: Test ${{ matrix.env }})
+    name: Test ${{ matrix.env }}
 
     runs-on: ubuntu-latest
 
@@ -36,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2.1.2
         with:
-          node-version: 12
+          node-version: 15
       - name: Install node deps
         run: npm ci
       - name: Run tests

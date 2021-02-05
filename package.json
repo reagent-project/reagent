@@ -14,7 +14,7 @@
     "karma": "4.4.1",
     "karma-chrome-launcher": "3.1.0",
     "karma-cljs-test": "0.1.0",
-    "karma-coverage": "https://github.com/karma-runner/karma-coverage.git#55aeead0934a39efbd9db0b575d416ab44cd8a12",
+    "karma-coverage": "2.0.3",
     "karma-junit-reporter": "2.0.1",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "4.0.2",
