@@ -1,0 +1,43 @@
+---
+name: Run tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        env:
+          - browser-cljsjs
+          - browser-cljsjs-prod
+          - browser-npm
+          - browser-npm-prod
+          - bundle
+          - bundle-adv
+          - node-cljsjs
+          - node-npm
+          - shadow-cljs-prod
+
+    name: Test ${{ matrix.env }})
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java ${{ matrix.jdk }}
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 8
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.4
+          cli: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: 12
+      - name: Install node deps
+        run: npm ci
+      - name: Run tests
+        run: ./test-environments/${{ matrix.env }}/test.sh
