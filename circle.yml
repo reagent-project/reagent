@@ -14,7 +14,6 @@ jobs:
           keys:
             - npm-v1-{{ checksum "package.json" }}
             - npm-v1
-      - run: sudo npm install -g karma-cli
       - run: npm install
       - run: ./run-tests.sh lein
       - save_cache:

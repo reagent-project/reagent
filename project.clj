@@ -40,6 +40,8 @@
              :repl true
              :nrepl-port 27397}
 
+  :doo {:paths {:karma "node_modules/.bin/karma"}}
+
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all
   ;; cljs files in source-paths. To ensure unncessary files
