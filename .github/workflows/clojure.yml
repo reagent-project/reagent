@@ -37,7 +37,24 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: 15
+
+      - name: Cache m2
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore_keys: |
+            ${{ runner.os }}-m2-
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore_keys: |
+            ${{ runner.os }}-npm-
+
       - name: Install node deps
         run: npm ci
+
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
