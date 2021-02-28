@@ -1,4 +1,4 @@
-(defproject reagent "1.0.0"
+(defproject reagent "1.0.0-bendyorke"
   :url "http://github.com/reagent-project/reagent"
   :license {:name "MIT"}
   :description "A simple ClojureScript interface to React"
@@ -10,7 +10,8 @@
                  [cljsjs/react-dom "17.0.1-0"]
                  [cljsjs/react-dom-server "17.0.1-0"]]
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[fipp "0.6.23"]
+            [lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
             [lein-codox "0.10.7"]
             [lein-figwheel "0.5.19"]]

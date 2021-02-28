@@ -252,7 +252,7 @@
         n (name tag)
         pos (.indexOf n ">")]
     (case pos
-      -1 (native-element (p/tarse-tag compiler n tag) v 1 compiler)
+      -1 (native-element (p/parse-tag compiler n tag) v 1 compiler)
       0 (assert (= ">" n) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup tag"))
       ;; Support extended hiccup syntax, i.e :div.bar>a.foo
       ;; Apply metadata (e.g. :key) to the outermost element.
