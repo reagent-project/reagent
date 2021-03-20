@@ -110,6 +110,9 @@
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
+  
+(def ns-src-with-rdom (s/syntaxed "(ns example
+  (:require [reagent.dom :as rdom]))"))
 
 (defn intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
@@ -234,7 +237,7 @@
    look like this:"]
 
    [demo-component {:src [:pre
-                          ns-src
+                          ns-src-with-rdom
                           (s/src-of [:simple-component :render-simple])]}]])
 
 (defn performance []
