@@ -5,6 +5,7 @@
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
 
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
+- Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
 
 ## 1.0.0 (2020-12-21)
 

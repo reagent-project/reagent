@@ -207,13 +207,19 @@
                     #js {})
         first-child (+ first (if hasprops 1 0))]
     (if (input/input-component? component)
-      (let [input-class (or (.-reagentInput compiler)
+      (let [;; Also read :key from props map, because
+            ;; input wrapper will not place the key in useful place.
+            react-key (util/get-react-key props)
+            input-class (or (.-reagentInput compiler)
                             (let [x (comp/create-class input/input-spec compiler)]
                               (set! (.-reagentInput compiler) x)
                               x))]
-        (-> [input-class argv component jsprops first-child compiler]
-            (with-meta (meta argv))
-            (->> (p/as-element compiler))))
+        (p/as-element
+          compiler
+          (with-meta [input-class argv component jsprops first-child compiler]
+                     (merge (when react-key
+                              {:key react-key})
+                            (meta argv)))))
       (do
         (when-some [key (-> (meta argv) util/get-react-key)]
           (set! (.-key jsprops) key))

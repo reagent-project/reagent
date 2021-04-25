@@ -1713,3 +1713,10 @@
             (is (some? @ref-1))
             (is (some? (.-current ref-2)))
             ))))))
+
+(deftest test-element-key
+  (is (= "0" (.-key (r/as-element           [:div {:key 0}]))))
+  (is (= "0" (.-key (r/as-element ^{:key 0} [:div]))))
+  (is (= "0" (.-key (r/as-element           [:input {:key 0}]))))
+  (is (= "0" (.-key (r/as-element ^{:key 0} [:input]))))
+  )
