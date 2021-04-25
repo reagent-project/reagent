@@ -43,8 +43,8 @@ Btw, I find it quite impressive that React manages to change 500 divs (12 full s
         start #(reset! start-time (now))
         stop #(reset! render-time (- (now) @start-time))
         timed-f (with-meta f
-                  {:component-will-mount start
-                   :component-will-update start
+                  {:constructor start
+                   :UNSAFE_component-will-update start
                    :component-did-mount stop
                    :component-did-update stop})]
     (fn []
