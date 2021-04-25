@@ -10,7 +10,9 @@
     - Projects using Reagent should declare dependency to React themselves
     using the method they choose (cljsjs packages, npm).
 - Removed additional error logging from Reagent render method wrapper,
-as React logs errors since version 16.
+as React logs errors since version 16. ([#531](https://github.com/reagent-project/reagent/issues/531))
+    - This removes unnecessary "Error rendering component" messages when
+    exception is thrown during render call.
 - Fix `*assert*` check in `with-let` macro
 
 Note: Tests aren't being run against Cljsjs React packages in Node, as there are some
@@ -19,9 +21,6 @@ when running on Node anyway. ([#530](https://github.com/reagent-project/reagent/
 
 ### Bugfixes
 
-([#531](https://github.com/reagent-project/reagent/issues/531))
-    - This removes unnecessary "Error rendering component" messages when
-    exception is thrown during render call.
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
 - Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
 - Fix `with-let` macro calling body after first render, even if
