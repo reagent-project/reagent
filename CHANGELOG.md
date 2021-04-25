@@ -11,7 +11,12 @@ as React logs errors since version 16.
     exception is thrown during render call.
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
 - Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
-- Fix `*assert*` check in `when-let` macro
+- Fix `*assert*` check in `with-let` macro
+- Fix `with-let` macro calling body after first render, even if
+binding value expressions throw errors ([#525](https://github.com/reagent-project/reagent/issues/529))
+    - Now binding value expressions are run again until they succeed,
+    and thus also throw the error for further renders and prevent
+    body being called.
 
 ## 1.0.0 (2020-12-21)
 

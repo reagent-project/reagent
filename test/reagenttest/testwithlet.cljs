@@ -290,10 +290,11 @@
                           n (count a)]
                  [:span (nth a (dec n))])
                (catch :default e
-                 (reset! err e))))
+                 (reset! err (.-message ^js/Error e)))))
         t (track! (fn []
                     @(track f1)))]
-    (is (= "Hello there" (.-message @err)))
+    (is (= "Hello there" @err))
+    (reset! err nil)
     (swap! x inc)
     (flush)
-    (is (= "Hello there" (.-message @err)))))
+    (is (= "Hello there" @err))))
