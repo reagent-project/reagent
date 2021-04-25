@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
+
+- Remove unncessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
+
 ## 1.0.0 (2020-12-21)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...v1.0.0)**
