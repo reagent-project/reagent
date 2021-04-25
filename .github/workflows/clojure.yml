@@ -65,6 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/master' }}
     needs: test
+    environment: build-site
     steps:
       - uses: actions/checkout@v2
       - name: Setup Java
@@ -101,7 +102,7 @@ jobs:
       - name: Build site
         run: ./build-example-site.sh
         env:
-          SITE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_TOKEN: ${{ secrets.SITE_TOKEN }}
 
   update-tagged-docs:
     name: Update docs
@@ -130,4 +131,4 @@ jobs:
       - name: Build docs
         run: ./build-docs.sh
         env:
-          SITE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_TOKEN: ${{ secrets.SITE_TOKEN }}
