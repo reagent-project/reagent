@@ -14,7 +14,7 @@ rm -fr tmp
 if [[ -n $GITHUB_ACTOR ]]; then
     git config --global user.email "14146879+github-actions[bot]@users.noreply.github.com"
     git config --global user.name "github-actions[bot]"
-    git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/reagent-project/reagent-project.github.io.git" tmp
+    git clone "https://${GITHUB_ACTOR}:${SITE_TOKEN}@github.com/reagent-project/reagent-project.github.io.git" tmp
 else
     git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
 fi
