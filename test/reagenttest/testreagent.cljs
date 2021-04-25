@@ -1172,8 +1172,6 @@
                       #js {:render (fn [])})
                     (gobj/extend cmp react/Component)
                     cmp)
-              pkg "reagenttest.testreagent."
-              stack1 (str "in " pkg "comp1")
               rend (fn [x]
                      (with-mounted-component x compiler identity))]
 
@@ -1184,8 +1182,8 @@
                         #(is (thrown-with-msg?
                                :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                                (rend [comp2 [:div. "foo"]]))))))]
-            (is (re-find #"Error rendering component \(in reagenttest.testreagent.comp1\)"
-                         (last (:error e)))))
+            (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                         (first (:error e)))))
 
           (let [e (debug/track-warnings
                     (wrap-capture-window-error
@@ -1193,8 +1191,8 @@
                         #(is (thrown-with-msg?
                                :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                                (rend [comp1 [:div. "foo"]]))))))]
-            (is (re-find #"Error rendering component \(in reagenttest.testreagent.comp1\)"
-                         (last (:error e)))))
+            (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                         (first (:error e)))))
 
           (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
             (is (re-find #"Using native React classes directly"

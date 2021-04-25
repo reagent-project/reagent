@@ -4,6 +4,11 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
 
+- Removed additional error logging from Reagent render method wrapper,
+as React logs errors since version 16.
+([#531](https://github.com/reagent-project/reagent/issues/531))
+    - This removes unnecessary "Error rendering component" messages when
+    exception is thrown during render call.
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
 - Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
 

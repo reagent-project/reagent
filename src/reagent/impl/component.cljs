@@ -114,18 +114,7 @@
 
 (defn do-render [c compiler]
   (binding [*current-component* c]
-    (if (dev?)
-      ;; Log errors, without using try/catch (and mess up call stack)
-      (let [ok (array false)]
-        (try
-          (let [res (wrap-render c compiler)]
-            (aset ok 0 true)
-            res)
-          (finally
-            (when-not (aget ok 0)
-              (error (str "Error rendering component"
-                          (comp-name)))))))
-      (wrap-render c compiler))))
+    (wrap-render c compiler)))
 
 
 ;;; Method wrapping
@@ -401,17 +390,7 @@
 
 (defn functional-do-render [compiler c]
   (binding [*current-component* c]
-    (if (dev?)
-      ;; Log errors, without using try/catch (and mess up call stack)
-      (let [ok (array false)]
-        (try
-          (let [res (functional-wrap-render compiler c)]
-            (aset ok 0 true)
-            res)
-          (finally
-            (when-not (aget ok 0)
-              (error (str "Error rendering component" (comp-name)))))))
-      (functional-wrap-render compiler c))))
+    (functional-wrap-render compiler c)))
 
 (defn functional-render [compiler ^clj jsprops]
   (if util/*non-reactive*
