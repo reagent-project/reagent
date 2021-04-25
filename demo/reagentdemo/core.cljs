@@ -1,5 +1,6 @@
 (ns reagentdemo.core
-  (:require [sitetools.core :as tools :refer [link]]
+  (:require [reagent.core :as r]
+            [sitetools.core :as tools :refer [link]]
             [reagentdemo.intro :as intro]
             [reagentdemo.news :as news]))
 
@@ -17,17 +18,36 @@
 
 (tools/register-page index-page [#'intro/main] title)
 
+(defn error-boundary [& children]
+  (let [error (r/atom nil)]
+    (r/create-class
+      {:constructor (fn [this props])
+       :component-did-catch (fn [this e info])
+       :get-derived-state-from-error (fn [e]
+                                       (reset! error e)
+                                       #js {})
+       :reagent-render (fn [& children]
+                         (if @error
+                           [:div
+                            "Something went wrong."
+                            [:input
+                             {:type "button"
+                              :on-click #(reset! error nil)
+                              :value "Try again"}]]
+                           (into [:<>] children)))})))
+
 (defn demo [& [test-component]]
-  [:div
-   [:div.nav>ul.nav
-    [:li.brand [link {:href index-page} "Reagent:"]]
-    [:li [link {:href index-page} "Intro"]]
-    [:li [link {:href news/url} "News"]]
-    [:li>a github "GitHub"]
-    [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
-   [:div test-component]
-   [tools/main-content]
-   [github-badge]])
+  [error-boundary
+   [:div
+    [:div.nav>ul.nav
+     [:li.brand [link {:href index-page} "Reagent:"]]
+     [:li [link {:href index-page} "Intro"]]
+     [:li [link {:href news/url} "News"]]
+     [:li>a github "GitHub"]
+     [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
+    [:div test-component]
+    [tools/main-content]
+    [github-badge]]])
 
 (defn init! [& [test-component]]
   (tools/start! {:body [#'demo test-component]
