@@ -1,4 +1,5 @@
 {
+  "name": "@reagent-project/reagent",
   "private": true,
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
