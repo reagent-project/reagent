@@ -31,7 +31,14 @@
                                 (if (even? i)
                                   x
                                   (let [j (quot i 2)]
-                                    `(if ~init
+                                    ;; Issue 525
+                                    ;; If binding value is not yet set,
+                                    ;; try setting it again. This should
+                                    ;; also throw errors for each render
+                                    ;; and prevent the body being called
+                                    ;; if bindings throw errors.
+                                    `(if (or ~init
+                                             (not (.hasOwnProperty ~v ~j)))
                                        (interop/unchecked-aset ~v ~j ~x)
                                        (interop/unchecked-aget ~v ~j)))))
                               bindings))

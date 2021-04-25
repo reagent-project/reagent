@@ -274,3 +274,26 @@
     (dispose! t)
     (is (= @destroy 2))
     (is (= runs (running)))))
+
+(deftest with-let-binding-error
+  ;; Issue 525
+  ;; Test to ensure that with-let will throw from binding form
+  ;; for further render calls, instead of only for the first.
+  (let [x (r/atom 0)
+        err (atom nil)
+        f1 (fn []
+             (try
+               ;; Deref first, else ratom deref isn't registered
+               (with-let [_ @x
+                          a [1]
+                          _ (throw (js/Error. "Hello there"))
+                          n (count a)]
+                 [:span (nth a (dec n))])
+               (catch :default e
+                 (reset! err e))))
+        t (track! (fn []
+                    @(track f1)))]
+    (is (= "Hello there" (.-message @err)))
+    (swap! x inc)
+    (flush)
+    (is (= "Hello there" (.-message @err)))))
