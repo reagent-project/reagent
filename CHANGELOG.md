@@ -4,26 +4,37 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
 
+### Features and changes
+
 - **BREAKING:** Removed dependencies to Cljsjs React packages and removed `deps.cljs` file ([#537](https://github.com/reagent-project/reagent/issues/537))
     - Projects using Reagent should declare dependency to React themselves
     using the method they choose (cljsjs packages, npm).
 - Removed additional error logging from Reagent render method wrapper,
 as React logs errors since version 16.
+- Fix `*assert*` check in `with-let` macro
+
+Note: Tests aren't being run against Cljsjs React packages in Node, as there are some
+strange problems with that environment. It is better to use npm React
+when running on Node anyway. ([#530](https://github.com/reagent-project/reagent/issues/530))
+
+### Bugfixes
+
 ([#531](https://github.com/reagent-project/reagent/issues/531))
     - This removes unnecessary "Error rendering component" messages when
     exception is thrown during render call.
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
 - Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
-- Fix `*assert*` check in `with-let` macro
 - Fix `with-let` macro calling body after first render, even if
 binding value expressions throw errors ([#525](https://github.com/reagent-project/reagent/issues/529))
     - Now binding value expressions are run again until they succeed,
     and thus also throw the error for further renders and prevent
     body being called.
 
-Note: Tests aren't being run against Cljsjs libs in Node, as there are some
-strange problems with that environment. It is better to use npm React
-when running on Node anyway. ([#530](https://github.com/reagent-project/reagent/issues/530))
+### Documentation
+
+- Documentation fixes and improvements by:
+    - @oakmac
+    - @chancerussell
 
 ## 1.0.0 (2020-12-21)
 
