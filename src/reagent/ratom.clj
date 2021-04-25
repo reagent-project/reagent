@@ -22,6 +22,10 @@
   (let [v (gensym "with-let")
         k (keyword v)
         init (gensym "init")
+        ;; V is a reaction, which holds a JS array.
+        ;; If the array is empty, initialize values and store to the
+        ;; array, using binding index % 2 to access the array.
+        ;; After init, the bindings are just bound to the values in the array.
         bs (into [init `(zero? (alength ~v))]
                  (map-indexed (fn [i x]
                                 (if (even? i)
@@ -37,12 +41,14 @@
                             [(butlast body) `(fn [] ~@(rest fin))]
                             [body nil]))
         add-destroy (when destroy
-                      `(let [destroy# ~destroy]
-                         (if (reagent.ratom/reactive?)
-                           (when (nil? (.-destroy ~v))
-                             (set! (.-destroy ~v) destroy#))
-                           (destroy#))))
-        asserting (if *assert* true false)]
+                      (list
+                        `(let [destroy# ~destroy]
+                           (if (reagent.ratom/reactive?)
+                             (when (nil? (.-destroy ~v))
+                               (set! (.-destroy ~v) destroy#))
+                             (destroy#)))))
+        asserting (if *assert* true false)
+        res (gensym "res")]
     `(let [~v (reagent.ratom/with-let-values ~k)]
        ~(when asserting
           `(when-some [^clj c# reagent.ratom/*ratom-context*]
@@ -50,7 +56,6 @@
                (d/error "Warning: The same with-let is being used more "
                         "than once in the same reactive context."))
              (set! (.-generation ~v) (.-ratomGeneration c#))))
-       (let ~bs
-         (let [res# (do ~@forms)]
-           ~add-destroy
-           res#)))))
+       (let ~(into bs [res `(do ~@forms)])
+         ~@add-destroy
+         ~res))))
