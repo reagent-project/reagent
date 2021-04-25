@@ -4,7 +4,7 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
 
-- **BREAKING:** Removed dependencies to Cljsjs React packages and removed `deps.cljs` file
+- **BREAKING:** Removed dependencies to Cljsjs React packages and removed `deps.cljs` file ([#537](https://github.com/reagent-project/reagent/issues/537))
     - Projects using Reagent should declare dependency to React themselves
     using the method they choose (cljsjs packages, npm).
 - Removed additional error logging from Reagent render method wrapper,
