@@ -12,7 +12,11 @@ fi
 lein codox
 
 rm -fr tmp
-git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+if [[ -n $GITHUB_ACTOR ]]; then
+    git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com:reagent-project/reagent-project.github.io.git" tmp
+else
+    git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+fi
 
 mkdir -p "tmp/docs/$TAG/"
 cp -r target/doc/* "tmp/docs/$TAG/"

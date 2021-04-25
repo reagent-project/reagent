@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Java ${{ matrix.jdk }}
+      - name: Setup Java
         uses: actions/setup-java@v1.4.3
         with:
           java-version: 8
@@ -58,3 +58,68 @@ jobs:
 
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
+
+  update-site:
+    name: Update site
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 8
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.4
+          cli: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: 15
+
+      - name: Cache m2
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Install node deps
+        run: npm ci
+      - name: Build site
+        run: ./build-example-site.sh
+
+  update-tagged-docs:
+    name: Update docs
+    if: ${{ startsWith(github.ref,  'refs/tags/') }}
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 8
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.4
+          cli: latest
+      - name: Cache m2
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+      - name: Build docs
+        run: ./build-docs.sh
