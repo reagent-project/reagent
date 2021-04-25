@@ -44,12 +44,12 @@
                            (destroy#))))
         asserting (if *assert* true false)]
     `(let [~v (reagent.ratom/with-let-values ~k)]
-       (when ~asserting
-         (when-some [^clj c# reagent.ratom/*ratom-context*]
-           (when (== (.-generation ~v) (.-ratomGeneration c#))
-             (d/error "Warning: The same with-let is being used more "
-                      "than once in the same reactive context."))
-           (set! (.-generation ~v) (.-ratomGeneration c#))))
+       ~(when asserting
+          `(when-some [^clj c# reagent.ratom/*ratom-context*]
+             (when (== (.-generation ~v) (.-ratomGeneration c#))
+               (d/error "Warning: The same with-let is being used more "
+                        "than once in the same reactive context."))
+             (set! (.-generation ~v) (.-ratomGeneration c#))))
        (let ~bs
          (let [res# (do ~@forms)]
            ~add-destroy

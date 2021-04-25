@@ -11,6 +11,7 @@ as React logs errors since version 16.
     exception is thrown during render call.
 - Remove unnecessary return value after throw from deprecated `render` function ([#533](https://github.com/reagent-project/reagent/issues/533))
 - Read `:key` from props map for `:input` elements ([#529](https://github.com/reagent-project/reagent/issues/529))
+- Fix `*assert*` check in `when-let` macro
 
 ## 1.0.0 (2020-12-21)
 
