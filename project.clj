@@ -116,7 +116,7 @@
                 :aot-cache true}}
 
     {:id "node-test"
-     :source-paths ["test/reagenttest/runtests.cljs"]
+     :source-paths ["test"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -129,7 +129,7 @@
                 :checked-arrays :warn}}
 
     {:id "node-test-npm"
-     :source-paths ["test/reagenttest/runtests.cljs"]
+     :source-paths ["test"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
