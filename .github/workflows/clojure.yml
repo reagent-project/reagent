@@ -101,6 +101,7 @@ jobs:
 
   update-tagged-docs:
     name: Update docs
+    runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref,  'refs/tags/') }}
     needs: test
     steps:
