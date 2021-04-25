@@ -15,6 +15,10 @@ SUMMARY="$blue##\n## SUMMARY\n##$reset\n\n"
 TOOL=$1
 
 for env in test-environments/*; do
+    if [[ ! -f $env/test.sh ]]; then
+        continue
+    fi
+
     name=$(basename "$env")
 
     if [[ -n $TOOL ]]; then

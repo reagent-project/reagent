@@ -3,24 +3,24 @@
   "dependencies": {
     "@cljs-oss/module-deps": "1.1.1",
     "prop-types": "15.7.2",
-    "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
   },
   "scripts": {
     "start": "lein figwheel client-npm"
   },
   "devDependencies": {
-    "gzip-size-cli": "3.0.0",
     "karma": "4.4.1",
     "karma-chrome-launcher": "3.1.0",
+    "karma-cli": "2.0.0",
     "karma-cljs-test": "0.1.0",
-    "karma-coverage": "https://github.com/karma-runner/karma-coverage.git#55aeead0934a39efbd9db0b575d416ab44cd8a12",
+    "karma-coverage": "2.0.3",
     "karma-junit-reporter": "2.0.1",
-    "karma-sourcemap-loader": "^0.3.7",
+    "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "4.0.2",
     "md5-file": "4.0.0",
     "shadow-cljs": "2.11.8",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack": "4.42.1",
+    "webpack-cli": "3.3.11"
   }
 }

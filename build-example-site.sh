@@ -11,7 +11,11 @@ node target/cljsbuild/prerender/main.js target/cljsbuild/prod-npm/public/
 lein codox
 
 rm -fr tmp
-git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+if [[ -n $GITHUB_ACTOR ]]; then
+    git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com:reagent-project/reagent-project.github.io.git" tmp
+else
+    git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+fi
 
 # Remove everything to ensure old files are removed
 rm -fr tmp/*

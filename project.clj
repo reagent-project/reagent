@@ -6,9 +6,9 @@
   :dependencies [;; If :npm-deps enabled, these are used only for externs.
                  ;; Without direct react dependency, other packages,
                  ;; like react-leaflet might have closer dependency to a other version.
-                 [cljsjs/react "17.0.1-0"]
-                 [cljsjs/react-dom "17.0.1-0"]
-                 [cljsjs/react-dom-server "17.0.1-0"]]
+                 [cljsjs/react "17.0.2-0"]
+                 [cljsjs/react-dom "17.0.2-0"]
+                 [cljsjs/react-dom-server "17.0.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.11"]
@@ -39,6 +39,8 @@
              :css-dirs ["site/public/css"]
              :repl true
              :nrepl-port 27397}
+
+  :doo {:paths {:karma "npx karma"}}
 
   ;; No profiles and merging - just manual configuration for each build type.
   ;; For :optimization :none ClojureScript compiler will compile all
@@ -114,7 +116,7 @@
                 :aot-cache true}}
 
     {:id "node-test"
-     :source-paths ["test/reagenttest/runtests.cljs"]
+     :source-paths ["test"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
@@ -127,7 +129,7 @@
                 :checked-arrays :warn}}
 
     {:id "node-test-npm"
-     :source-paths ["test/reagenttest/runtests.cljs"]
+     :source-paths ["test"]
      :watch-paths ["src" "test"]
      :compiler {:main "reagenttest.runtests"
                 :target :nodejs
