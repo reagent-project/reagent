@@ -21,6 +21,10 @@ binding value expressions throw errors ([#525](https://github.com/reagent-projec
     and thus also throw the error for further renders and prevent
     body being called.
 
+Note: Tests aren't being run against Cljsjs libs in Node, as there are some
+strange problems with that environment. It is better to use npm React
+when running on Node anyway. ([#530](https://github.com/reagent-project/reagent/issues/530))
+
 ## 1.0.0 (2020-12-21)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v0.10.0...v1.0.0)**
