@@ -22,10 +22,10 @@
           :source-paths ["src"]
           :doc-paths []}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
-                                  [org.clojure/clojurescript "1.10.753"]
-                                  [figwheel "0.5.19"]
-                                  [figwheel-sidecar "0.5.19"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.3"]
+                                  [org.clojure/clojurescript "1.10.844"]
+                                  [figwheel "0.5.20"]
+                                  [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.7.2-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
