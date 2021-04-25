@@ -14,7 +14,7 @@ jobs:
           - browser-npm-prod
           - bundle
           - bundle-adv
-          - node-cljsjs
+          # - node-cljsjs
           - node-npm
           - shadow-cljs-prod
 
