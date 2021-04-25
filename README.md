@@ -1,6 +1,6 @@
 <img src="logo/logo-text.png" width="264px" alt="Reagent">
 
-[![CircleCI](https://circleci.com/gh/reagent-project/reagent.svg?style=svg)](https://circleci.com/gh/reagent-project/reagent)
+[![Run tests](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml/badge.svg)](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml)
 [![Clojars Project](https://img.shields.io/clojars/v/reagent.svg)](https://clojars.org/reagent)
 [![codecov](https://codecov.io/gh/reagent-project/reagent/branch/master/graph/badge.svg)](https://codecov.io/gh/reagent-project/reagent)
 [![cljdoc badge](https://cljdoc.org/badge/reagent/reagent)](https://cljdoc.org/d/reagent/reagent/CURRENT)
