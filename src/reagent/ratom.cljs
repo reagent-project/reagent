@@ -44,7 +44,7 @@
     (f)))
 
 (defn- deref-capture
-  "Returns `(in-context f r)`.  Calls `_update-watching` on r with any
+  "Returns `(in-context r f)`.  Calls `_update-watching` on r with any
   `deref`ed atoms captured during `in-context`, if any differ from the
   `watching` field of r.  Clears the `dirty?` flag on r.
 
