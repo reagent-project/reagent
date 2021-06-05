@@ -29,10 +29,11 @@
         start (rv/atom 0)
         sv (reaction @start)
         comp (reaction @sv (+ 2 @sv))
-        c2 (reaction (inc @comp))
+        ;; Also test reaction macro from reagent.core
+        c2 (r/reaction (inc @comp))
         count (rv/atom 0)
         out (rv/atom 0)
-        res (reaction
+        res (r/reaction
              (swap! count inc)
              @sv @c2 @comp)
         const (ar (fn []

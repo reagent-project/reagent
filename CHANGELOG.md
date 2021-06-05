@@ -14,6 +14,7 @@ as React logs errors since version 16. ([#531](https://github.com/reagent-projec
     - This removes unnecessary "Error rendering component" messages when
     exception is thrown during render call.
 - Fix `*assert*` check in `with-let` macro
+- Add `reaction` macro to `reagent.core` (same as one in `reagent.ratom`)
 
 Note: Tests aren't being run against Cljsjs React packages in Node, as there are some
 strange problems with that environment. It is better to use npm React

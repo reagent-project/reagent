@@ -3,6 +3,8 @@
   (:require [reagent.debug :as d]
             [reagent.interop :as interop]))
 
+;; Note: this macro is duplicated in reagent.core,
+;; with a docstring.
 (defmacro reaction [& body]
   `(reagent.ratom/make-reaction
     (fn [] ~@body)))
