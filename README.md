@@ -39,9 +39,21 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
 
-This is all you need to do if you want the standard version of React. If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide `react` and `react-dom` namespaces (by creating `.cljs` files with just `ns` form, or by adding your own `:foreign-libs` entries).
+And provide React using either npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
-    [reagent "0.x.x" :exclusions [cljsjs/react cljsjs/react-dom]]
+```
+npm i react react-dom
+```
+
+or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
+
+```
+[cljsjs/react "17.0.2-0"]
+[cljsjs/react-dom "17.0.2-0"]
+```
+
+Note: Reagent is tested against React 17, but should be compatible with other
+versions.
 
 ## Examples
 
