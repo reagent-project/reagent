@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2021-06-05)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...v1.1.0)**
 
 ### Features and changes
 
@@ -17,7 +17,7 @@ as React logs errors since version 16. ([#531](https://github.com/reagent-projec
 - Add `reaction` macro to `reagent.core` (same as one in `reagent.ratom`)
 - Add `parse-tag` method to Compiler protocol, and `parse-tag` option to
 `create-compiler` function. This can be used to customize how e.g. class names are
-parsed from the Hiccup element keywords.
+parsed from the Hiccup element keywords. ([#532](https://github.com/reagent-project/reagent/pull/532) by @bendyorke)
 
 Note: Tests aren't being run against Cljsjs React packages in Node, as there are some
 strange problems with that environment. It is better to use npm React
@@ -38,6 +38,7 @@ binding value expressions throw errors ([#525](https://github.com/reagent-projec
 - Documentation fixes and improvements by:
     - @oakmac
     - @chancerussell
+    - @green-coder
 
 ## 1.0.0 (2020-12-21)
 
