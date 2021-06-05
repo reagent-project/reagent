@@ -304,13 +304,13 @@
         fn-to-element (if (:function-components opts)
                         maybe-function-element
                         reag-element)
-        tag-parser (get opts :tag-parser cached-parse)]
+        parse-fn (get opts :parse-tag cached-parse)]
 
     (reify p/Compiler
       ;; This is used to as cache key to cache component fns per compiler
       (get-id [this] id)
       (parse-tag [this tag-name tag-value]
-        (tag-parser this tag-name tag-value))
+        (parse-fn this tag-name tag-value))
       (as-element [this x]
         (as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]

@@ -15,6 +15,9 @@ as React logs errors since version 16. ([#531](https://github.com/reagent-projec
     exception is thrown during render call.
 - Fix `*assert*` check in `with-let` macro
 - Add `reaction` macro to `reagent.core` (same as one in `reagent.ratom`)
+- Add `parse-tag` method to Compiler protocol, and `parse-tag` option to
+`create-compiler` function. This can be used to customize how e.g. class names are
+parsed from the Hiccup element keywords.
 
 Note: Tests aren't being run against Cljsjs React packages in Node, as there are some
 strange problems with that environment. It is better to use npm React
