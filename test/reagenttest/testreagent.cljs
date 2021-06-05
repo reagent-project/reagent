@@ -1718,3 +1718,35 @@
   (is (= "0" (.-key (r/as-element           [:input {:key 0}]))))
   (is (= "0" (.-key (r/as-element ^{:key 0} [:input]))))
   )
+
+;; Note: you still pretty much need to access the impl.template namespace to
+;; implement your own parse-tag
+(defn parse-tag [hiccup-tag]
+  (let [[tag id className] (->> hiccup-tag name (re-matches tmpl/re-tag) next)
+        ;; For testing, prefix namy class names with foo_
+        className (when-not (nil? className)
+                    (->> (string/split className #"\.")
+                         (map (fn [s] (str "foo_" s)))
+                         (string/join " ")))]
+    (assert tag (str "Invalid tag: '" hiccup-tag "'" (comp/comp-name)))
+    (tmpl/->HiccupTag tag
+                      id
+                      className
+                      ;; Custom element names must contain hyphen
+                      ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
+                      (not= -1 (.indexOf tag "-")))))
+
+(def tag-name-cache #js {})
+
+(defn cached-parse [this x _]
+  (if-some [s (tmpl/cache-get tag-name-cache x)]
+    s
+    (let [v (parse-tag x)]
+      (gobj/set tag-name-cache x v)
+      v)))
+
+(deftest parse-tag-test
+  (let [compiler (r/create-compiler {:parse-tag cached-parse})]
+    (gobj/clear tag-name-cache)
+    (is (= "<div class=\"foo_asd foo_xyz bar\"></div>"
+           (as-string [:div.asd.xyz {:class "bar"}] compiler)))))
