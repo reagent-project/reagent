@@ -11,17 +11,17 @@
     "start": "lein figwheel client-npm"
   },
   "devDependencies": {
-    "karma": "4.4.1",
+    "karma": "6.3.3",
     "karma-chrome-launcher": "3.1.0",
     "karma-cli": "2.0.0",
     "karma-cljs-test": "0.1.0",
     "karma-coverage": "2.0.3",
     "karma-junit-reporter": "2.0.1",
-    "karma-sourcemap-loader": "0.3.7",
-    "karma-webpack": "4.0.2",
-    "md5-file": "4.0.0",
-    "shadow-cljs": "2.12.5",
-    "webpack": "4.42.1",
-    "webpack-cli": "3.3.11"
+    "karma-sourcemap-loader": "0.3.8",
+    "karma-webpack": "5.0.0",
+    "md5-file": "5.0.0",
+    "shadow-cljs": "2.14.3",
+    "webpack": "5.38.1",
+    "webpack-cli": "4.7.0"
   }
 }
