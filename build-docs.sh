@@ -2,10 +2,10 @@
 
 set -e
 
-TAG=$CIRCLE_TAG
+TAG=${GITHUB_REF/refs\/tags\//}
 
 if [[ -z $TAG ]]; then
-    echo "Set CIRCLE_TAG"
+    echo "Set TAG"
     exit 1
 fi
 
