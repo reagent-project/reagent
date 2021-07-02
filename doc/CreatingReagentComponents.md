@@ -232,7 +232,7 @@ Leaving out the `:display-name` entry.  If you leave it out, Reagent and React h
 
 Above I used the terms `Form-1`, `Form-2` and `Form-3`, but there's actually only one kind of component. It is just that there's **3 different ways to create a component**. 
 
-At the end of the day, no matter how it is created, a component will end up with a render function and some life-cycle methods.  A component created via `Form-1` has the same basic structure as one created via `Form-3` because underneath they are all [just React components](https://betweentwoparens.com/what-the-reagent-component).
+At the end of the day, no matter how it is created, a component will end up with a render function and some life-cycle methods.  A component created via `Form-1` has the same basic structure as one created via `Form-3` because underneath they are all [just React components](https://betweentwoparens.com/blog/what-the-reagent-component!/).
 
 ## Appendix A - Lifting the Lid Slightly
 
