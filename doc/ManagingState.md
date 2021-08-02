@@ -180,7 +180,7 @@ Reactions are very useful when
 * You want the component to use some transformed value of `ratom`
 
 Here's an example:
-```
+```clojure
  (def app-state (reagent/atom {:state-var-1 {:var-a 2
                                              :var-b 3}
                                :state-var-2 {:var-a 7
@@ -200,7 +200,7 @@ Here's an example:
 The below example uses `reagent.ratom/reaction` macro, which provides syntactic sugar compared to 
 using plain `make-reaction`:
 
-```
+```clojure
 (let [username (reagent/atom "")
       password (reagent/atom "")
       fields-populated? (reagent.ratom/reaction (every? not-empty [@username @password]))]
