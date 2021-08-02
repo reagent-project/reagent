@@ -300,7 +300,7 @@
         :else x))
 
 (defn create-compiler [opts]
-  (let [id (gensym)
+  (let [id (gensym "reagent-compiler")
         fn-to-element (if (:function-components opts)
                         maybe-function-element
                         reag-element)
