@@ -8,6 +8,7 @@
             ["@material-ui/icons" :as mui-icons]
             ["@material-ui/lab" :refer [Autocomplete]]
             [goog.object :as gobj]
+            ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
 
 (set! *warn-on-infer* true)
@@ -53,6 +54,8 @@
 
                                                             :else
                                                             input-component))
+                  ;; FIXME: Internal fn should not be used
+                  ;; clj->js is not enough as prop on-change -> onChange, class -> classNames etc should be handled
                   rtpl/convert-prop-value)]
     (apply r/create-element mui/TextField props (map r/as-element children))))
 

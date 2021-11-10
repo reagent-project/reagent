@@ -10,6 +10,7 @@
             ["react-mde" :default ReactMde]
             ["react-markdown" :as ReactMarkdown]
             [react :as react]
+            ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
 
 
@@ -81,6 +82,7 @@
 (defn react-mde
   "Wrapper around ReactMde using our custom textarea-component"
   [props]
+  ;; FIXME: Internal fn should not be used
   (let [props (rtpl/convert-prop-value (assoc props :text-area-component textarea-component))]
     (r/create-element ReactMde props)))
 
