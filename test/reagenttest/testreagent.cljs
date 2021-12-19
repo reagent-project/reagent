@@ -1604,12 +1604,54 @@
             (r/flush)
             (is (= 3 @render))))))))
 
+(defn ^:functional f1
+  [x]
+  [:span "Hello " x])
+
+(defn f2
+  {:functional true}
+  [x]
+  [:span "Hello " x])
+
+(defn f3
+  [x]
+  [:span "Hello " x])
+(set! (.-functional ^clj f3) true)
+
+; (js/console.log f1 (pr-str (meta f1)) (pr-str (meta #'f1)))
+; (js/console.log f2 (pr-str (meta f2)) (pr-str (meta #'f2)))
+
 (deftest functional-component-poc-simple
   (when r/is-client
     (let [c (fn [x]
-              [:span "Hello " x])]
+              [:span "Hello " x])
+          f0 (with-meta c {:functional true})]
         (testing ":f>"
           (with-mounted-component [:f> c "foo"]
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "with-meta"
+          (with-mounted-component [f0 "foo"]
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "defn symbol meta"
+          (with-mounted-component [#'f1 "foo"]
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "defn fn meta"
+          (with-mounted-component [#'f2 "foo"]
+            (fn [c div]
+              (is (nil? c) "Render returns nil for stateless components")
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "fn property"
+          (with-mounted-component [f3 "foo"]
             (fn [c div]
               (is (nil? c) "Render returns nil for stateless components")
               (is (= "Hello foo" (.-innerText div))))))
