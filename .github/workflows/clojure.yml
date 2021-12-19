@@ -74,7 +74,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 8
-          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
