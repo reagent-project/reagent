@@ -31,30 +31,17 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 8
+          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          lein: 2.9.4
+          lein: 2.9.8
           cli: latest
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 16
-
-      - name: Cache m2
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          cache: 'npm'
 
       - name: Install node deps
         run: npm ci
@@ -79,30 +66,18 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 8
+          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          lein: 2.9.4
+          lein: 2.9.8
           cli: latest
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 16
+          cache: 'npm'
 
-      - name: Cache m2
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
       - name: Install node deps
         run: npm ci
       - name: Build site
@@ -122,18 +97,12 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 8
+          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          lein: 2.9.4
+          lein: 2.9.8
           cli: latest
-      - name: Cache m2
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
       - name: Build docs
         run: ./build-docs.sh
         env:
