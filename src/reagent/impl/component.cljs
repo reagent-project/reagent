@@ -329,7 +329,8 @@
       (set! (.-cljs$lang$ctorStr cmp) display-name)
       (set! (.-cljs$lang$ctorPrWriter cmp)
             (fn [this writer opt]
-              (cljs.core/-write writer display-name))))
+              (cljs.core/-write writer display-name)))
+      (js/Object.defineProperty cmp "name" #js {:value display-name :writable false}))
 
     (set! (.-cljs$lang$type cmp) true)
     (set! (.. cmp -prototype -constructor) cmp)
@@ -470,7 +471,9 @@
   ;; Or not currently - the memo wrap is required.
   (or (cached-react-class compiler tag)
       (let [f (fn [jsprops] (functional-render compiler jsprops))
-            _ (set! (.-displayName f) (util/fun-name tag))
+            display-name (util/fun-name tag)
+            _ (set! (.-displayName f) display-name)
+            _ (js/Object.defineProperty f "name" #js {:value display-name :writable false})
             f (react/memo f functional-render-memo-fn)]
         (cache-react-class compiler tag f)
         f)))
