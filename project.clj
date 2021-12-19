@@ -32,7 +32,7 @@
 
   :clean-targets ^{:protect false} [:target-path :compile-path "out"]
 
-  :repl-options {:init (do (require '[figwheel-sidecar.repl-api :refer :all]))}
+  :repl-options {:init (require '[figwheel-sidecar.repl-api :refer :all])}
 
   :figwheel {:http-server-root "public" ;; assumes "resources"
              :css-dirs ["site/public/css"]
