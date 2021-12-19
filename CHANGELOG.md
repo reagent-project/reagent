@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.1.0...master)**
+
+### Features and changes
+
+- Add name property to function and class components created by Reagent,
+this should add real function names to React component stacks on Error boundaries
+and errors on the console. ([#549](https://github.com/reagent-project/reagent/pull/549))
+
 ## 1.1.0 (2021-06-05)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.0.0...v1.1.0)**

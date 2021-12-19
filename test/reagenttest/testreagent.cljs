@@ -1236,12 +1236,10 @@
                  (r/flush)
                  (is (= "Test error" (.-message @error)))
                  (is (re-find #"Something went wrong\." (.-innerHTML div)))
-                 ;; FIXME: React.memo messes this up
-                 #_
                  (if (dev?)
-                   (is (re-find #"\n    in reagenttest.testreagent.comp1 \(created by reagenttest.testreagent.comp2\)\n    in reagenttest.testreagent.comp2 \(created by reagent[0-9]+\)\n    in reagent[0-9]+ \(created by reagenttest.testreagent.error_boundary\)\n    in reagenttest.testreagent.error_boundary"
+                   (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)$"
                                 (.-componentStack ^js @info)))
-                   (is (re-find #"\n    in .+\n    in .+\n    in reagent[0-9]+\n    in .+"
+                   (is (re-find #"^\n    at reagent[0-9]+. \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at .+ \([^)]*\)$"
                                 (.-componentStack ^js @info))))))))))))
 
 (deftest test-dom-node
