@@ -1,27 +1,40 @@
 (ns reagent.dom
-  (:require [react-dom :as react-dom]
+  (:require ["react" :as react]
+            ["react-dom" :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
-            [reagent.impl.input :as input]
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]))
 
 (defonce ^:private roots (atom {}))
 
+;; Note: Reagent is storing one root and wrapper component per
+;; container DOM node.
+
 (defn- unmount-comp [container]
-  (swap! roots dissoc container)
-  (react-dom/unmountComponentAtNode container))
+  (let [[_comp root] (get @roots container)]
+    (swap! roots dissoc container)
+    (.unmount root)))
 
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
-    (react-dom/render (comp) container
-      (fn []
-        (binding [util/*always-update* false]
-          (swap! roots assoc container comp)
-          (batch/flush-after-render)
-          (if (some? callback)
-            (callback)))))))
+    (let [[comp root] (or (get @roots container)
+                          (let [root (react-dom/createRoot container)
+                                ;; Wrapper component for useEffect to get
+                                ;; callback after component has been mounted.
+                                comp (fn render-comp-lifecycle []
+                                       (react/useEffect (fn []
+                                                          (binding [util/*always-update* false]
+                                                            (batch/flush-after-render)
+                                                            (if (some? callback)
+                                                              (callback))
+                                                            js/undefined))
+                                                        #js [])
+                                       (comp))]
+                            (swap! roots assoc container [comp root])
+                            [comp root]))]
+      (.render root (react/createElement comp)))))
 
 (defn- re-render-component [comp container]
   (render-comp comp container nil))
@@ -38,11 +51,15 @@
    (render comp container tmpl/default-compiler))
   ([comp container callback-or-compiler]
    (ratom/flush!)
-   (let [[compiler callback] (if (fn? callback-or-compiler)
+   (let [[compiler callback] (cond
+                               (map? callback-or-compiler)
+                               [(:compiler callback-or-compiler) (:callback callback-or-compiler)]
+
+                               (fn? callback-or-compiler)
                                [tmpl/default-compiler callback-or-compiler]
-                               ;; TODO: Callback option doesn't make sense now that
-                               ;; val is compiler object, not map.
-                               [callback-or-compiler (:callback callback-or-compiler)])
+
+                               :else
+                               [callback-or-compiler nil])
          f (fn []
              (p/as-element compiler (if (fn? comp) (comp) comp)))]
      (render-comp f container callback))))
@@ -69,6 +86,6 @@
   of indirection, for example by using `(render [#'foo])` instead."
   []
   (ratom/flush!)
-  (doseq [[container comp] @roots]
+  (doseq [[container [comp _root]] @roots]
     (re-render-component comp container))
   (batch/flush-after-render))

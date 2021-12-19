@@ -24,9 +24,9 @@
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.7.2-0"]
 
-                                  [cljsjs/react "17.0.2-0"]
-                                  [cljsjs/react-dom "17.0.2-0"]
-                                  [cljsjs/react-dom-server "17.0.2-0"]]
+                                  [cljsjs/react "18.0.0-rc.0-0"]
+                                  [cljsjs/react-dom "18.0.0-rc.0-0"]
+                                  [cljsjs/react-dom-server "18.0.0-rc.0-0"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 

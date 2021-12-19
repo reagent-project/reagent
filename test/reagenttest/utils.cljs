@@ -10,10 +10,13 @@
    (when r/is-client
      (let [div (.createElement js/document "div")]
        (try
-         (let [c (if compiler
-                   (rdom/render comp div compiler)
-                   (rdom/render comp div))]
-           (f c div))
+         (let [f #(f nil div)
+               ;; TODO: Make render return the root.
+               _root (if compiler
+                       (rdom/render comp div {:compiler compiler
+                                              :callback f})
+                       (rdom/render comp div f))]
+           nil)
          (finally
            (rdom/unmount-component-at-node div)
            (r/flush)))))))
@@ -24,13 +27,15 @@
   ([comp done compiler f]
    (when r/is-client
      (let [div (.createElement js/document "div")
-           c (if compiler
-               (rdom/render comp div compiler)
-               (rdom/render comp div))]
-       (f c div (fn []
-                  (rdom/unmount-component-at-node div)
-                  (r/flush)
-                  (done)))))))
+           f #(f nil div (fn []
+                           (rdom/unmount-component-at-node div)
+                           (r/flush)
+                           (done)))
+           _root (if compiler
+                   (rdom/render comp div {:compiler compiler
+                                          :callback f})
+                   (rdom/render comp div f))]
+       nil))))
 
 (defn run-fns-after-render [& fs]
   ((reduce (fn [cb f]

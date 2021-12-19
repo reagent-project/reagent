@@ -22,3 +22,5 @@
    (ratom/flush!)
    (binding [util/*non-reactive* true]
      (dom-server/renderToStaticMarkup (p/as-element compiler component)))))
+
+;; TODO: renderToPipeableStream
