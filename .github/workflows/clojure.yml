@@ -115,12 +115,21 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 8
-          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
           lein: 2.9.8
           cli: latest
+
+      # setup-java cache only looks at pom.xml for the key
+      - name: Cache m2
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
       - name: Build docs
         run: ./build-docs.sh
         env:
