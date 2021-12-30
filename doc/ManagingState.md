@@ -117,8 +117,8 @@ Cursors are created with `reagent/cursor`, which takes a ratom and a keypath (li
 ```clojure
 ;; First create a ratom
 (def state (reagent/atom {:foo {:bar "BAR"}
-                                :baz "BAZ"
-                                :quux "QUUX"}))
+                          :baz "BAZ"
+                          :quux "QUUX"}))
 ;; Now create a cursor
 (def bar-cursor (reagent/cursor state [:foo :bar]))
 
