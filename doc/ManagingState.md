@@ -271,3 +271,9 @@ For example, given this function:
 ```
 
 you could use `(defonce logger (r/track! log-app-state))` to monitor changes to app-state. `log-app-state` would continue to run until you stop it, using `(r/dispose! logger)`.
+
+Note that you can also replace this example code with one call to `run!` for a similar effect.
+```clojure
+(reagent.ratom/run!
+ (prn @app-state))
+ ```
