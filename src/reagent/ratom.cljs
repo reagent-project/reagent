@@ -323,7 +323,7 @@
                (pr-str src)
                " while attempting to get path: "
                (pr-str path)))
-  (->RCursor src path nil nil nil))
+  (->RCursor src path nil nil nil nil))
 
 
 ;;; with-let support
