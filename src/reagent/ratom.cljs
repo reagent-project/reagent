@@ -246,7 +246,7 @@
 ;;; cursor
 
 (deftype RCursor [ratom path ^:mutable reaction
-                  ^:mutable state ^:mutable watches]
+                  ^:mutable state ^:mutable watches meta]
   IAtom
   IReactiveAtom
 
@@ -296,10 +296,16 @@
   (-swap! [a f x y]      (-reset! a (f (._peek a) x y)))
   (-swap! [a f x y more] (-reset! a (apply f (._peek a) x y more)))
 
+  IWithMeta
+  (-with-meta [_ new-meta] (RCursor. ratom path reaction
+                                     state watches new-meta))
+
+  IMeta
+  (-meta [_] meta)
+
   IPrintWithWriter
   (-pr-writer [a w opts] (pr-atom a w opts "RCursor" {:val (-deref a)
                                                       :path path}))
-
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
   (-add-watch [this key f]        (add-w this key f))
