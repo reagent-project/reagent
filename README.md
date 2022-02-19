@@ -23,17 +23,42 @@ Reagent provides a way to write efficient React components using (almost) nothin
     * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
     * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
-### Usage
+## Getting Started
 
-To create a new Reagent project using [Leiningen](http://leiningen.org/) template simply run:
+__Pre-requisite:__ Install [Leiningen](http://leiningen.org/) if you haven't already
+
+To create a new Reagent project, run:
 
     lein new reagent myproject
+
+<details>
+<summary>Don't need a Clojure backend?</summary>
 
 If you wish to only create the assets for ClojureScript without a Clojure backend then do the following instead:
 
     lein new reagent-frontend myproject
 
-This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template).
+</details>
+
+This will setup a new Reagent project with some reasonable defaults. See the [reagent-template project](https://github.com/reagent-project/reagent-template) for the different options you can configure.
+
+To run the project for the first time:
+
+```
+cd myproject
+npm install
+npx shadow-cljs watch app
+```
+
+Now open your web browser to: http://localhost:3000
+
+And you should see:
+
+![screenshot](doc/reagent-screenshot.png)
+
+Congratulations! You are now ready to start hacking. See the [Examples](#examples) below for an introduction.
+
+### In An Existing Project
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
