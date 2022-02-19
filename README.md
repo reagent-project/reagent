@@ -188,7 +188,7 @@ But you can still use them if you want to, either using `reagent.core/create-cla
        (reset! my-html (.-innerHTML (rd/dom-node this))))}))
 ```
 
-See the examples directory for more examples.
+See the [examples](./examples) directory for more examples.
 
 
 ## Performance
