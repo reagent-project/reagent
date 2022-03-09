@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 (2022-03-09)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v1.1.0...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v1.1.0...v1.1.1)**
 
 ### Features and changes
 
