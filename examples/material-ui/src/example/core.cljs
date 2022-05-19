@@ -1,12 +1,13 @@
 (ns example.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            ;; Scoped names require Cljs 1.10.439
-            ["@material-ui/core" :as mui]
-            ["@material-ui/core/styles" :refer [createMuiTheme withStyles]]
-            ["@material-ui/core/colors" :as mui-colors]
-            ["@material-ui/icons" :as mui-icons]
-            ["@material-ui/lab" :refer [Autocomplete]]
+            ["react" :as react]
+            ["@mui/material" :as mui]
+            ["@mui/material/styles" :refer [ThemeProvider createTheme]]
+            ["@mui/styles" :refer [withStyles]]
+            ["@mui/material/colors/red" :default mui-red]
+            ["@mui/icons-material" :as mui-icons]
+            ; ["@mui/lab/Autocomplete" :as Autocomplete]
             [goog.object :as gobj]
             ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
@@ -20,19 +21,23 @@
 
 ;; TextField cursor fix:
 
+;; For some reason the new MUI doesn't pass ref in the props,
+;; but we can get it using forwardRef?
+;; This is someone incovenient as we need to convert props to Cljs
+;; but reactify-component would also do that.
 (def ^:private input-component
-  (r/reactify-component
-    (fn [props]
-      [:input (-> props
-                  (assoc :ref (:inputRef props))
-                  (dissoc :inputRef))])))
+  (react/forwardRef
+    (fn [props ref]
+      (r/as-element
+        [:input (-> (js->clj props :keywordize-keys true)
+                    (assoc :ref ref))]))))
 
 (def ^:private textarea-component
-  (r/reactify-component
-    (fn [props]
-      [:textarea (-> props
-                     (assoc :ref (:inputRef props))
-                     (dissoc :inputRef))])))
+  (react/forwardRef
+    (fn [props ref]
+      (r/as-element
+        [:textarea (-> (js->clj props :keywordize-keys true)
+                       (assoc :ref ref))]))))
 
 ;; To fix cursor jumping when controlled input value is changed,
 ;; use wrapper input element created by Reagent instead of
@@ -62,8 +67,8 @@
 ;; Example
 
 (def custom-theme
-  (createMuiTheme
-    #js {:palette #js {:primary #js {:main (gobj/get (.-red ^js/Mui.Colors mui-colors) 100)}}}))
+  (createTheme
+    #js {:palette #js {:primary #js {:main (gobj/get mui-red 100)}}}))
 
 (defn custom-styles [^js/Mui.Theme theme]
   #js {:button #js {:margin (.spacing theme 1)}
@@ -74,10 +79,12 @@
 (def with-custom-styles (withStyles custom-styles))
 
 (defonce text-state (r/atom "foobar"))
+(defonce select-state (r/atom ""))
 
 (defn autocomplete-example []
   [:> mui/Grid
    {:item true}
+   #_
    [:> Autocomplete {:options ["foo" "bar" "foobar"]
                      :style {:width 300}
                      ;; Note that the function parameter is a JS Object!
@@ -130,7 +137,8 @@
       :class (.-textField classes)
       :on-change (fn [e]
                    (reset! text-state (event-value e)))
-      :inputRef #(js/console.log "input-ref" %)}]]
+      :inputRef (fn [e]
+                  (js/console.log "input-ref" e))}]]
 
    [:> mui/Grid {:item true}
     [text-field
@@ -147,13 +155,13 @@
 
    [:> mui/Grid {:item true}
     [text-field
-     {:value @text-state
+     {:value @select-state
       :label "Select"
       :placeholder "Placeholder"
       :helper-text "Helper text"
       :class (.-textField classes)
       :on-change (fn [e]
-                   (reset! text-state (event-value e)))
+                   (reset! select-state (event-value e)))
       :select true}
      [:> mui/MenuItem
       {:value 1}
@@ -193,7 +201,7 @@
   ;; fragment
   [:<>
    [:> mui/CssBaseline]
-   [:> mui/MuiThemeProvider
+   [:> ThemeProvider
     {:theme custom-theme}
     [:> mui/Grid
      {:container true
