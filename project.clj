@@ -63,6 +63,17 @@
                 :checked-arrays :warn
                 :infer-externs true}}
 
+    {:id "bench"
+     :source-paths ["src"]
+     :watch-paths ["src"]
+     :compiler {:parallel-build true
+                :optimizations :advanced
+                :main "reagent.bench"
+                :output-dir "target/cljsbuild/bench/public/js/out"
+                :output-to "target/cljsbuild/bench/public/js/main.js"
+                :npm-deps false
+                :asset-path "js/out"}}
+
     {:id "client-npm"
      :source-paths ["demo"]
      :watch-paths ["src" "demo" "test"]
