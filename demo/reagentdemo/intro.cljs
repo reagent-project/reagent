@@ -156,7 +156,7 @@
       as well have been called as a normal Clojure function instead of
       as a Reagent component, i.e with parenthesis instead of square
       brackets. The only difference would have been performance, since
-      ”real” Reagent components are only re-rendered when their data
+      “real” Reagent components are only re-rendered when their data
       have changed. More advanced components though (see below) must
       be called with square brackets."]
 
