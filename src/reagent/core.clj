@@ -12,7 +12,7 @@
 (defmacro reaction
   "Creates Reaction from the body, returns a derefable
   containing the result of the body. If the body derefs
-  reactive values (Reagent atons, track, etc), the body
+  reactive values (Reagent atoms, track, etc), the body
   will run again and the value of the Reaction is updated.
 
   New Reaction is created everytime reaction is called,
