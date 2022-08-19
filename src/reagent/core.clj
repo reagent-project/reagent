@@ -19,7 +19,7 @@
   so caller needs to take care that new reaction isn't created
   e.g. every component render, by using with-let, form-2 or form-3
   components or other solutions. Consider using reagent.core/track,
-  for function that caches the derafable value, and can thus be safely
+  for function that caches the derefable value, and can thus be safely
   used in e.g. render function safely."
   [& body]
   `(reagent.ratom/make-reaction
