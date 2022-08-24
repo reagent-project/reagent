@@ -16,7 +16,6 @@ Reagent provides a way to write efficient React components using (almost) nothin
   * **Documentation, next release: [API docs](http://reagent-project.github.io/docs/master/), [Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
   * **Community discussion and support channels**
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
-    * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
   * **Commercial video material**
     * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT), [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
     * [Learn Re-frame Free](https://www.jacekschae.com/learn-re-frame-free/tycit?coupon=REAGENT), [Learn Re-frame Pro](https://www.jacekschae.com/learn-re-frame-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
