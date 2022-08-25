@@ -132,11 +132,24 @@
            (set! (.-displayName f) "foobar")
            (util/fun-name f)))) )
 
+(defn foo [m]
+  [:h1])
+
 (deftest react-key-from-vec-test
   (is (= 1 (util/react-key-from-vec ^{:key 1} [:foo "bar"])))
   (is (= 1 (util/react-key-from-vec [:foo {:key 1} "bar"])))
   (is (= 1 (util/react-key-from-vec [:> "div" {:key 1} "bar"])))
   (is (= 1 (util/react-key-from-vec [:f> "div" {:key 1} "bar"])))
   (is (= 1 (util/react-key-from-vec [:r> "div" #js {:key 1} "bar"])))
+
+  ;; TODO: What should happen in this case?
+  (is (= 1 (util/react-key-from-vec [foo {:key 1}])))
+
   (is (= nil (util/react-key-from-vec [:r> "div" nil "bar"])))
-  )
+
+  (testing "false as key"
+    (is (= false (util/react-key-from-vec ^{:key false} [:foo "bar"])))
+    (is (= false (util/react-key-from-vec [:foo {:key false} "bar"])))
+    (is (= false (util/react-key-from-vec [:> "div" {:key false} "bar"])))
+    (is (= false (util/react-key-from-vec [:f> "div" {:key false} "bar"])))
+    (is (= false (util/react-key-from-vec [:r> "div" #js {:key false} "bar"])))))
