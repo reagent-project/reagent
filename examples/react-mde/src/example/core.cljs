@@ -7,16 +7,16 @@
   wrapper."
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            ["react-mde" :default ReactMde]
+            ["react-mde$default" :as ReactMde]
             ["react-markdown" :as ReactMarkdown]
             [react :as react]
             ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
 
 
-;; 
+;;
 ;; Constants and helpers
-;; 
+;;
 (def common-style {:width "700px" :margin "60px auto"})
 
 (defn render-markdown
@@ -29,9 +29,9 @@
        [:> ReactMarkdown {:source source}])))))
 
 
-;; 
+;;
 ;; Two broken examples that won't work properly.
-;; 
+;;
 (defn without-any-fix
   "Renders a ReactMde component without any fix for textarea component."
   []
@@ -65,9 +65,9 @@
        [:div "Value: " (:value @state)]])))
 
 
-;; 
+;;
 ;; Real working example
-;; 
+;;
 (def textarea-component
   "This is a trick needed so that the `textarea` component used by the `ReactMde` works.
   1. Use reagent's custom `textarea` component, instead of a plain `textarea`.

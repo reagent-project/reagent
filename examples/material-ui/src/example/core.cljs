@@ -5,7 +5,7 @@
             ["@mui/material" :as mui]
             ["@mui/material/styles" :refer [ThemeProvider createTheme]]
             ["@mui/styles" :refer [withStyles]]
-            ["@mui/material/colors/red" :default mui-red]
+            ["@mui/material/colors/red$default" :as mui-red]
             ["@mui/icons-material" :as mui-icons]
             ; ["@mui/lab/Autocomplete" :as Autocomplete]
             [goog.object :as gobj]
