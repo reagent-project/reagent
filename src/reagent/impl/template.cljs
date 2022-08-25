@@ -155,14 +155,6 @@
                  ;; https://www.w3.org/TR/custom-elements/#custom-elements-core-concepts
                  (not= -1 (.indexOf tag "-")))))
 
-(defn reag-element [tag v compiler]
-  (let [c (comp/as-class tag compiler)
-        jsprops #js {}]
-    (set! (.-argv jsprops) v)
-    (when-some [key (util/react-key-from-vec v)]
-      (set! (.-key jsprops) key))
-    (react/createElement c jsprops)))
-
 (defn function-element [tag v first-arg compiler]
   (let [jsprops #js {}]
     (set! (.-reagentRender jsprops) tag)
@@ -171,6 +163,17 @@
     (when-some [key (util/react-key-from-vec v)]
       (set! (.-key jsprops) key))
     (react/createElement (comp/functional-render-fn compiler tag) jsprops)))
+
+(defn reag-element [^clj tag v compiler]
+  (if (or (:functional (meta tag))
+          (.-functional tag))
+    (function-element tag v 1 compiler)
+    (let [c (comp/as-class tag compiler)
+          jsprops #js {}]
+      (set! (.-argv jsprops) v)
+      (when-some [key (util/react-key-from-vec v)]
+        (set! (.-key jsprops) key))
+      (react/createElement c jsprops))))
 
 (defn maybe-function-element
   "If given tag is a Class, use it as a class,
