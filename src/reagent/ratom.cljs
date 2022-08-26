@@ -391,14 +391,13 @@
       (-deref this)))
 
   (_handle-change [this sender oldval newval]
-    (when-not (or (identical? oldval newval)
-                  dirty?)
-      (if (nil? auto-run)
-        (do
-          (set! dirty? true)
-          (rea-enqueue this))
-        (if (true? auto-run)
-          (._run this false)
+    (when-not dirty?
+      ;; Use `identical?` to determine equality from input changes.
+      (when-not (identical? oldval newval)
+        (case auto-run
+          nil (do (set! dirty? true)
+                  (rea-enqueue this))
+          true (._run this false)
           (auto-run this)))))
 
   (_update-watching [this derefed]
@@ -423,18 +422,21 @@
         (set! caught e)
         (set! dirty? false))))
 
+  (_set-state [this oldstate newstate]
+    (set! state newstate)
+    (when watches
+      ;; Use = to determine equality from reactions, since
+      ;; they are likely to produce new data structures.
+      (when-not (= oldstate newstate)
+        (notify-w this oldstate newstate))))
+
   (_run [this check]
     (let [oldstate state
           res (if check
                 (._try-capture this f)
                 (deref-capture f this))]
       (when-not nocache?
-        (set! state res)
-        ;; Use = to determine equality from reactions, since
-        ;; they are likely to produce new data structures.
-        (when-not (or (nil? watches)
-                      (= oldstate res))
-          (notify-w this oldstate res)))
+        (._set-state this oldstate res))
       res))
 
   (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
@@ -456,19 +458,13 @@
   (-deref [this]
     (when-some [e caught]
       (throw e))
-    (let [non-reactive (nil? *ratom-context*)]
-      (when non-reactive
-        (flush!))
-      (if (and non-reactive (nil? auto-run))
-        (when dirty?
-          (let [oldstate state]
-            (set! state (f))
-            (when-not (or (nil? watches) (= oldstate state))
-              (notify-w this oldstate state))))
-        (do
-          (notify-deref-watcher! this)
-          (when dirty?
-            (._run this false)))))
+    (notify-deref-watcher! this)
+    (when-not (reactive?)
+      (flush!))
+    (when dirty?
+      (if (or (reactive?) auto-run)
+        (._run this false)
+        (._set-state this state (f))))
     state)
 
   IDisposable
