@@ -457,18 +457,17 @@
     (when-some [e caught]
       (throw e))
     (let [non-reactive (nil? *ratom-context*)]
-      (when non-reactive
-        (flush!))
-      (if (and non-reactive (nil? auto-run))
-        (when dirty?
+      (if non-reactive
+        (flush!)
+        (notify-deref-watcher! this))
+      (when dirty?
+        (if (and non-reactive (nil? auto-run))
+          ;; like "_run" but skips deref-capture
           (let [oldstate state]
             (set! state (f))
             (when-not (or (nil? watches) (= oldstate state))
-              (notify-w this oldstate state))))
-        (do
-          (notify-deref-watcher! this)
-          (when dirty?
-            (._run this false)))))
+              (notify-w this oldstate state)))
+          (._run this false))))
     state)
 
   IDisposable
