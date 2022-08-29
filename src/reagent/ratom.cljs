@@ -391,14 +391,13 @@
       (-deref this)))
 
   (_handle-change [this sender oldval newval]
-    (when-not (or (identical? oldval newval)
-                  dirty?)
-      (if (nil? auto-run)
-        (do
-          (set! dirty? true)
-          (rea-enqueue this))
-        (if (true? auto-run)
-          (._run this false)
+    (when-not dirty?
+      ;; Use `identical?` to determine equality from input changes.
+      (when-not (identical? oldval newval)
+        (case auto-run
+          nil (do (set! dirty? true)
+                  (rea-enqueue this))
+          true (._run this false)
           (auto-run this)))))
 
   (_update-watching [this derefed]
