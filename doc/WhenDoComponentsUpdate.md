@@ -174,15 +174,21 @@ For `props`,  `=` is used to determine if a new value have changed with regard t
 
 For ratoms, `identical?` is used (on the value inside the ratom) to determine if a new value has changed with regard to an old value. 
 
+For reactions (cursors/tracks), `=` is used to determine if a new value has changed with regard to an old value.
+
 So, it is only when values are deemed to have "changed", that a re-run is triggered, but the inputs use different definitions of "changed".  This can be confusing. 
 
 The `identical?` version is very fast. It is just a single reference check.
 
 The `=` version is more accurate, more intuitive, but potentially more expensive. Although, as I'm writing this I notice that `=` uses `identical?` [when it can](https://github.com/clojure/clojurescript/blob/1b7390450243693d0b24e8d3ad085c6da4eef204/src/main/cljs/cljs/core.cljs#L1108-L1124).
 
-**Update:**
+**Technical details**:
 
-> As of Reagent 0.6.0, ratoms use `=` (instead of `identical?`) is to determine if a new value is different to an old value. So, `ratoms` and `props` now have the same `changed?` semantics. 
+> A reagent component wraps a `Reaction` object around its render function, calling `add-watch` on all its dependent ratoms and Reactions.
+> A Reaction object ignores any watch notification if its value is `identical?` to its old value.
+> But a Reaction object itself will not send a watch notification to other Reactions if its own new value is strictly `=` to its old value.
+>
+> Thus, for whatever reason, a Reaction uses `identical?` on inbound values, but `=` on outbound values.
 
 ### Efficient Re-renders
 
