@@ -304,6 +304,9 @@
         fn-to-element (if (:function-components opts)
                         maybe-function-element
                         reag-element)
+        fn-to-component (if (:function-components opts)
+                          comp/as-component-functional
+                          comp/as-component)
         parse-fn (get opts :parse-tag cached-parse)]
 
     (reify p/Compiler
@@ -314,7 +317,9 @@
       (as-element [this x]
         (as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]
-        (make-element this argv component jsprops first-child)))))
+        (make-element this argv component jsprops first-child))
+      (as-component [this tag]
+        (fn-to-component this tag fn-to-element)))))
 
 (def default-compiler* (create-compiler {}))
 (def ^:dynamic default-compiler default-compiler*)

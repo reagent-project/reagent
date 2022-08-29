@@ -347,31 +347,51 @@
   (gobj/set c (p/get-id compiler) constructor)
   constructor)
 
-(defn fn-to-class [compiler f]
-  (assert-callable f)
-  (warn-unless (not (and (react-class? f)
-                         (not (reagent-class? f))))
-               "Using native React classes directly in Hiccup forms "
-               "is not supported. Use create-element or "
-               "adapt-react-class instead: " (or (util/fun-name f)
-                                                 f)
-               (comp-name))
-  (if (reagent-class? f)
-    (cache-react-class compiler f f)
-    (let [spec (meta f)
-          withrender (assoc spec :reagent-render f)
-          res (create-class withrender compiler)]
-      (cache-react-class compiler f res))))
-
-(defn as-class [tag compiler]
+(defn as-component [compiler tag]
   (if-some [cached-class (cached-react-class compiler tag)]
     cached-class
-    (fn-to-class compiler tag)))
+    (do
+      (assert-callable tag)
+      (warn-unless (not (and (react-class? tag)
+                             (not (reagent-class? tag))))
+                   "Using native React classes directly in Hiccup forms "
+                   "is not supported. Use create-element or "
+                   "adapt-react-class instead: " (or (util/fun-name tag)
+                                                     tag)
+                   (comp-name))
+      (if (reagent-class? tag)
+        (cache-react-class compiler tag tag)
+        (let [spec (meta tag)
+              withrender (assoc spec :reagent-render tag)
+              res (create-class withrender compiler)]
+          (cache-react-class compiler tag res))))))
+
+(declare functional-render-fn)
+
+(defn as-component-functional [compiler tag]
+  (if-some [cached-class (cached-react-class compiler tag)]
+    cached-class
+    (do
+      (js/console.log "as-component-functional")
+      (assert-callable tag)
+      (warn-unless (not (and (react-class? tag)
+                             (not (reagent-class? tag))))
+                   "Using native React classes directly in Hiccup forms "
+                   "is not supported. Use create-element or "
+                   "adapt-react-class instead: " (or (util/fun-name tag)
+                                                     tag)
+                   (comp-name))
+      (if (reagent-class? tag)
+        (cache-react-class compiler tag tag)
+        (let [res (fn [js-props]
+                    (p/as-element compiler [tag js-props]))]
+          (js/console.log "foo" tag)
+          (cache-react-class compiler tag res))))))
 
 (defn reactify-component [comp compiler]
   (if (react-class? comp)
     comp
-    (as-class comp compiler)))
+    (p/as-component compiler comp)))
 
 (defn functional-wrap-render
   [compiler ^clj c]

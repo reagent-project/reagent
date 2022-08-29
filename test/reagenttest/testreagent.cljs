@@ -1748,3 +1748,19 @@
     (gobj/clear tag-name-cache)
     (is (= "<div class=\"foo_asd foo_xyz bar\"></div>"
            (as-string [:div.asd.xyz {:class "bar"}] compiler)))))
+
+(deftest functional-component-reactify-component
+  (when r/is-client
+    (let [set-count! (atom nil)
+          c (fn [{:keys [x]}]
+              (let [[c set-count] (react/useState x)]
+                (reset! set-count! set-count)
+                [:span "Count " c]))
+          react-cmp (r/reactify-component c functional-compiler)]
+      (with-mounted-component [:r> react-cmp #js {:x 1}]
+        functional-compiler
+        (fn [c div]
+          (is (nil? c) "Render returns nil for stateless components")
+          (is (= "Count 5" (.-innerText div)))
+          (@set-count! 6)
+          (is (= "Count 6" (.-innerText div))))))))
