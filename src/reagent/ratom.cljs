@@ -459,8 +459,8 @@
   (-deref [this]
     (when-some [e caught]
       (throw e))
-    (if (reactive?)
-      (notify-deref-watcher! this)
+    (notify-deref-watcher! this)
+    (when-not (reactive?)
       (flush!))
     (when dirty?
       (if (or (reactive?) auto-run)
