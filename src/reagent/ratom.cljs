@@ -423,18 +423,21 @@
         (set! caught e)
         (set! dirty? false))))
 
+  (_set-state-and-notify [this oldstate newstate]
+    (set! state newstate)
+    (when watches
+      ;; Use = to determine equality from reactions, since
+      ;; they are likely to produce new data structures.
+      (when-not (= oldstate newstate)
+        (notify-w this oldstate newstate))))
+
   (_run [this check]
     (let [oldstate state
           res (if check
                 (._try-capture this f)
                 (deref-capture f this))]
       (when-not nocache?
-        (set! state res)
-        ;; Use = to determine equality from reactions, since
-        ;; they are likely to produce new data structures.
-        (when-not (or (nil? watches)
-                      (= oldstate res))
-          (notify-w this oldstate res)))
+        (._set-state-and-notify this oldstate res))
       res))
 
   (_set-opts [this {:keys [auto-run on-set on-dispose no-cache]}]
@@ -462,11 +465,9 @@
     (when dirty?
       (if (or (reactive?) auto-run)
         (._run this false)
-        ;; like "_run" but skips deref-capture
-        (let [oldstate state]
-          (set! state (f))
-          (when-not (or (nil? watches) (= oldstate state))
-            (notify-w this oldstate state)))))
+        (let [oldstate state
+              newstate (f)]
+          (._set-state-and-notify this oldstate newstate))))
     state)
 
   IDisposable
