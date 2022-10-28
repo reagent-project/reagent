@@ -1,6 +1,7 @@
 (ns reagent.dom
   (:require ["react" :as react]
             ["react-dom" :as react-dom]
+            ["react-dom/client" :as react-dom-client]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]
@@ -20,7 +21,7 @@
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
     (let [[comp root] (or (get @roots container)
-                          (let [root (react-dom/createRoot container)
+                          (let [root (react-dom-client/createRoot container)
                                 ;; Wrapper component for useEffect to get
                                 ;; callback after component has been mounted.
                                 comp (fn render-comp-lifecycle []
