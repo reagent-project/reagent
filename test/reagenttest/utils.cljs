@@ -1,5 +1,6 @@
 (ns reagenttest.utils
-  (:require [reagent.core :as r]
+  (:require ["react" :as react]
+            [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.impl.template :as tmpl]))
 
@@ -10,7 +11,7 @@
    (when r/is-client
      (let [div (.createElement js/document "div")]
        (try
-         (let [f #(f nil div)
+         (let [f #(f div)
                ;; TODO: Make render return the root.
                _root (if compiler
                        (rdom/render comp div {:compiler compiler
@@ -27,10 +28,10 @@
   ([comp done compiler f]
    (when r/is-client
      (let [div (.createElement js/document "div")
-           f #(f nil div (fn []
-                           (rdom/unmount-component-at-node div)
-                           (r/flush)
-                           (done)))
+           f #(f div (fn []
+                       (rdom/unmount-component-at-node div)
+                       (r/flush)
+                       (done)))
            _root (if compiler
                    (rdom/render comp div {:compiler compiler
                                           :callback f})

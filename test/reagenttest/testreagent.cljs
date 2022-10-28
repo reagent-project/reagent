@@ -52,7 +52,7 @@
                             [:div "div in really-simple"])]
         (with-mounted-component [really-simple nil nil]
           compiler
-          (fn [c div]
+          (fn [div]
             (swap! ran inc)
             (is (= "div in really-simple" (.-innerText div)))
             (r/flush)
@@ -77,7 +77,7 @@
                         [:div (str "hi " (:foo props) ".")]))})]
         (with-mounted-component [comp {:foo "you"} 1]
           compiler
-          (fn [C div]
+          (fn [div]
             (swap! ran inc)
             (is (= "hi you." (.-innerText div)))))))))
 
@@ -96,7 +96,7 @@
                         [:div (str "hi " (:foo (r/state this)))]))})]
         (with-mounted-component [comp]
           compiler
-          (fn [C div]
+          (fn [div]
             (swap! ran inc)
             (is (= "hi initial" (.-innerText div)))
 
@@ -136,7 +136,7 @@
                                  (is (= 2 @ran))
                                  (next-done))))))
                        compiler
-                       (fn [C div done]
+                       (fn [div done]
                          (r/flush)
                          (is (not= runs (rv/running)))
                          (is (= "val 0 0 0" (.-innerText div)))
@@ -181,7 +181,7 @@
                   [c2 {:val @v1}]])]
         (with-mounted-component [c1]
           compiler
-          (fn [c div]
+          (fn [div]
             (r/flush)
             (is (= 2 @ran))
             (swap! v2 inc)
@@ -216,7 +216,7 @@
                                            (:foo (r/state this)))])))]
         (with-mounted-component [really-simple nil nil]
           compiler
-          (fn [c div]
+          (fn [div]
             (swap! ran inc)
             (is (= "this is foobar" (.-innerText div)))
             (is (= 2 @ran))))))))
@@ -237,7 +237,7 @@
                      [:div "child-foo" [child @child-props]])]
         (with-mounted-component [parent nil nil]
           compiler
-          (fn [c div]
+          (fn [div]
             (r/flush)
             (is (= 1 @child-ran))
             (is (= "child-foo" (.-innerText div)))
@@ -297,7 +297,7 @@
                             [:div (str "state=" @state)])]
         (with-mounted-component [really-simple nil nil]
           compiler
-          (fn [c div]
+          (fn [div]
             (is (= 1 @ran))
             (is (= "state=0" (.-innerText div)))
             (reset! state 1)
@@ -442,7 +442,7 @@
             parent (fn [] [comp @prop 1])]
         (with-mounted-component [parent]
           compiler
-          (fn [C div]
+          (fn [div]
             (swap! ran inc)
             (is (= "hi you." (.-innerText div)))
             (is (= 1 @top-ran))
@@ -472,7 +472,7 @@
           parent (fn [] [comp @prop 1])]
       (with-mounted-component [parent]
         compiler
-        (fn [C div]
+        (fn [div]
           (swap! ran inc)
           (is (= "hi you." (.-innerText div)))
           (is (= 1 @top-ran))
@@ -585,7 +585,7 @@
                  (r/as-element [:div "a" (.-children props)]))]
       (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
                                [:p "bar"]]
-        (fn [c div]
+        (fn [div]
           (is (= {:bar "x"} (gobj/get @p "foo")))
           (is (= "<div>a<p>bar</p></div>" (.-innerHTML div))))))))
 
@@ -597,7 +597,7 @@
                                      (list
                                       [:> "div" {:key 1} "a"]
                                       [:> "div" {:key 2} "b"])]
-              (fn [c div])))]
+              (fn [div])))]
       (is (empty? (:warn w))))
 
   (let [w (debug/track-warnings
@@ -605,7 +605,7 @@
                                      (list
                                       [:r> "div" #js {:key 1} "a"]
                                       [:r> "div" #js {:key 2} "b"])]
-              (fn [c div])))]
+              (fn [div])))]
       (is (empty? (:warn w))))
 
   (let [f (fn [props c]
@@ -615,7 +615,7 @@
                                      (list
                                       [:f> f {:key 1} "a"]
                                       [:f> f {:key 2} "b"])]
-              (fn [c div])))]
+              (fn [div])))]
       (is (empty? (:warn w)))))
 
 (deftest test-reactize-component
@@ -658,7 +658,7 @@
           w (debug/track-warnings
               #(with-mounted-component [c]
                  compiler
-                 (fn [c div])))]
+                 (fn [div])))]
       (is (empty? (:warn w))))
 
     (when r/is-client
@@ -672,7 +672,7 @@
                   (wrap-capture-console-error
                     #(with-mounted-component [c]
                        compiler
-                       (fn [c div]))))]
+                       (fn [div]))))]
           (if (dev?)
             (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
                          (first (:warn w))))))))))
@@ -698,7 +698,7 @@
                   (for [k [1 2]]
                     ^{:key k} [:div>div "a"])])]
       (with-mounted-component [comp]
-        (fn [c div]
+        (fn [div]
           ;; Just make sure this doesn't print a debug message
           )))))
 
@@ -756,7 +756,7 @@
              (swap! comps assoc :c3 (r/current-component))
              [:div "" (reset! spy @(r/track t1))])]
     (with-mounted-component [c2]
-      (fn [c div]
+      (fn [div]
         (is (= {:v1 1 :v2 1} @v))
 
         (r/force-update (:c2 @comps))
@@ -768,7 +768,7 @@
         (r/force-update (:c2 @comps) true)
         (is (= {:v1 3 :v2 3} @v))))
     (with-mounted-component [c3]
-      (fn [c]
+      (fn [div]
         (is (= 0 @spy))
         (swap! state inc)
         (is (= 0 @spy))
@@ -783,7 +783,7 @@
                                         (reset! a (comp/component-name c))
                                         [:div]))})]
     (with-mounted-component [tc]
-      (fn [c]
+      (fn [div]
         (is (seq @a))
         (is (re-find #"atestcomponent" @a) "component-path should work")))))
 
@@ -824,7 +824,7 @@
                           (is (= [1 2 1] [@n1 @n2 @n3]))
                           (next-done))))))
                 compiler
-                (fn [_ div done]
+                (fn [div done]
                   (is (= [1 1 0] [@n1 @n2 @n3]))
                   (swap! val inc)
                   (is (= [1 1 0] [@n1 @n2 @n3]))
@@ -859,7 +859,7 @@
                            (is (= [1 1] [@n1 @n2]))
                            (next-done))))))
                  compiler
-                 (fn [_ div done]
+                 (fn [div done]
                    (is (= [1 0] [@n1 @n2]))
                    (done))))))
          done
@@ -879,7 +879,7 @@
                   [f @s]))]
         (with-mounted-component [c]
           compiler
-          (fn [_ div]
+          (fn [div]
             (is (= "foo" @a))
             (reset! s "bar")
             (r/flush)
@@ -958,7 +958,7 @@
                (apply vector @comp @arg))
           cnative (fn []
                     (into [:> @comp] @arg))
-          check (fn []
+          check (fn [_div]
                   (is (= {:at 1 :args [@t]}
                          (:initial-state @res)))
                   (is (= {:at 2 :args [@t]}
@@ -988,7 +988,7 @@
         (reset! comp (with-meta render2 ls))
         (reset! arg defarg)
         (reset! n1 0)
-        (with-mounted-component [c2] check)
+        (with-mounted-component [c2] compiler check)
         ; (is (= {:at 10 :args [@t]}
         ;        (:will-unmount @res)))
         ))))
@@ -1060,7 +1060,7 @@
           comp (atom c1)
           cnative (fn []
                     (into [:> @comp] @arg))
-          check (fn []
+          check (fn [div]
                   (is (= {:at 1 :args [@t]}
                          (:initial-state @res)))
                   (is (= {:at 2 :args [@t]}
@@ -1172,7 +1172,7 @@
                     (gobj/extend cmp react/Component)
                     cmp)
               rend (fn [x]
-                     (with-mounted-component x compiler identity))]
+                     (with-mounted-component x compiler (fn [div])))]
 
           ;; Error is orginally caused by comp1, so only that is shown in the error
           (let [e (debug/track-warnings
@@ -1231,7 +1231,7 @@
           (wrap-capture-console-error
             #(with-mounted-component [error-boundary [comp2]]
                compiler
-               (fn [c div]
+               (fn [div]
                  (r/flush)
                  (is (= "Test error" (.-message @error)))
                  (is (re-find #"Something went wrong\." (.-innerHTML div)))
@@ -1253,7 +1253,7 @@
                     (reset! node (rdom/dom-node this)))})]
       (with-mounted-component [comp]
         compiler
-        (fn [c div]
+        (fn [div]
           (is (= "foobar" (.-innerHTML @ref)))
           (is (= "foobar" (.-innerHTML @node)))
           (is (identical? @ref @node)))))))
@@ -1290,7 +1290,7 @@
                    [:div {:ref #(reset! node %)} @state]))]
       (with-mounted-component [comp]
         compiler
-        (fn [c div]
+        (fn [div]
           (is (= 1 @spy))
           (swap! state inc)
           (is (= 1 @spy))
@@ -1359,7 +1359,7 @@
 
 (deftest context-test
   (with-mounted-component [context-wrapper [context-child]]
-    (fn [c div]
+    (fn [div]
       (is (= "parent,child,bar"
              (.-innerText div))))))
 
@@ -1479,7 +1479,7 @@
         (let [e (debug/track-warnings
                   #(with-mounted-component [component]
                      compiler
-                     (fn [c div]
+                     (fn [div]
                        (reset! prop (sorted-map 1 2))
                        (try
                          (r/flush)
@@ -1511,7 +1511,7 @@
                         [pure-component {:value @prop}])]
         (with-mounted-component [component]
           compiler
-          (fn [c div]
+          (fn [div]
             (is (= "Value foo" (.-innerText div)))
             (swap! prop inc)
             (r/flush)
@@ -1539,7 +1539,7 @@
           (wrap-capture-console-error
           #(with-mounted-component [component [bad-component]]
              compiler
-             (fn [c div]
+             (fn [div]
                (is (= "Ok" (.-innerText div)))
                (swap! prop inc)
                (r/flush)
@@ -1566,7 +1566,7 @@
                           [component {:value @prop}])]
         (with-mounted-component [component-2]
           compiler
-          (fn [c div]
+          (fn [div]
             ;; Attach to DOM to get real height value
             (.appendChild js/document.body div)
             (is (= "foo" (.-innerText div)))
@@ -1592,7 +1592,7 @@
                 [b])]
         (with-mounted-component [c]
           compiler
-          (fn [c div]
+          (fn [div]
             (is (= 1 @render))
             (reset! val 1)
             (r/flush)
@@ -1607,23 +1607,20 @@
               [:span "Hello " x])]
         (testing ":f>"
           (with-mounted-component [:f> c "foo"]
-            (fn [c div]
-              (is (nil? c) "Render returns nil for stateless components")
+            (fn [div]
               (is (= "Hello foo" (.-innerText div))))))
 
         (testing "compiler options"
           (with-mounted-component [c "foo"]
             functional-compiler
-            (fn [c div]
-              (is (nil? c) "Render returns nil for stateless components")
+            (fn [div]
               (is (= "Hello foo" (.-innerText div))))))
 
         (testing "setting default compiler"
           (try
            (r/set-default-compiler! functional-compiler)
            (with-mounted-component [c "foo"] nil
-             (fn [c div]
-               (is (nil? c) "Render returns nil for stateless components")
+             (fn [div]
                (is (= "Hello foo" (.-innerText div)))))
            (finally
             (r/set-default-compiler! nil)))))))
@@ -1640,8 +1637,7 @@
                 [:span "Count " c]))]
       (with-mounted-component [c 5]
         functional-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
+        (fn [div]
           (is (= "Count 5" (.-innerText div)))
           (@set-count! 6)
           (is (= "Count 6" (.-innerText div))))))))
@@ -1653,8 +1649,7 @@
               [:span "Count " @count])]
       (with-mounted-component [c 5]
         functional-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
+        (fn [div]
           (is (= "Count 5" (.-innerText div)))
           (reset! count 6)
           (r/flush)
@@ -1673,8 +1668,7 @@
                 [:span "Counts " @r-count " " c]))]
       (with-mounted-component [c 15]
         functional-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
+        (fn [div]
           (is (= "Counts 3 15" (.-innerText div)))
           (reset! r-count 6)
           (r/flush)
@@ -1704,7 +1698,7 @@
                    :on-change (fn [_])}]])]
         (with-mounted-component [c]
           compiler
-          (fn [c div]
+          (fn [div]
             (is (some? @ref-1))
             (is (some? (.-current ref-2)))
             ))))))

@@ -103,7 +103,7 @@
   (when r/is-client
     (t/async done
       ((reduce
-         (fn [next-done compiler]
+         (fn [done compiler]
            (fn []
              (let [state (r/atom {:foo {:bar {:foobar 1}}})
                    ran (r/atom 0)
@@ -118,13 +118,20 @@
                    parent (fn []
                             [child (r/wrap (:foo @state)
                                            swap! state assoc :foo)])]
-               (u/with-mounted-component-async [parent] next-done compiler
-                 (fn [c div done]
+               (u/with-mounted-component-async [parent] done compiler
+                 (fn [div done]
+                   ;; On first render, parent -> child -> grand-child
+                   ;; grand-child render fn sets grand-state atom to
+                   ;; r/wrap instance from the child.
+                   ;; grand-children should render when the r/wrap
+                   ;; instance is updated, i.e. state ratom [:foo :bar] path.
                    (u/run-fns-after-render
                      (fn []
                        (is (= 1 @ran))
                        (is (= "value:1:" (.-innerText div)))
 
+                       ;; Update state [:foo :bar] to {:foobar 2} through
+                       ;; two r/wrap.
                        (reset! @grand-state {:foobar 2}))
                      (fn []
                        (is (= {:foo {:bar {:foobar 2}}} @state))
@@ -173,7 +180,7 @@
   (when r/is-client
     (t/async done
       ((reduce
-         (fn [next-done compiler]
+         (fn [done compiler]
            (fn []
              (let [state (r/atom {:a {:v 1}
                                   :b {:v 2}})
@@ -186,8 +193,8 @@
                           [:div
                            [derefer (r/cursor state [:a]) a-count]
                            [derefer (r/cursor state [:b]) b-count]])]
-               (u/with-mounted-component-async [comp] next-done compiler
-                 (fn [c div done]
+               (u/with-mounted-component-async [comp] done compiler
+                 (fn [div done]
                    (u/run-fns-after-render
                      (fn []
                        (is (= 1 @a-count))
@@ -233,7 +240,7 @@
                  [derefer bc]])]
      (with-mounted-component [comp]
        compiler
-       (fn [c div]
+       (fn [div]
          (is (= 1 @a-count))
          (is (= 1 @b-count))
 
