@@ -5,9 +5,9 @@
 
   :dependencies []
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11"]
-            [lein-codox "0.10.7"]
+            [lein-codox "0.10.8"]
             [lein-figwheel "0.5.20"]]
 
   :source-paths ["src"]
@@ -17,8 +17,8 @@
           :source-paths ["src"]
           :doc-paths []}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.3"]
-                                  [org.clojure/clojurescript "1.10.896"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.11.1"]
+                                  [org.clojure/clojurescript "1.11.60"]
                                   [figwheel "0.5.20"]
                                   [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]

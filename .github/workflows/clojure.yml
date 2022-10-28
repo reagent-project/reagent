@@ -27,19 +27,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: 8
+          distribution: 'adopt'
+          java-version: 17
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          lein: 2.9.8
+          lein: 2.9.10
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: lts/hydrogen
           cache: 'npm'
 
       # setup-java cache only looks at pom.xml for the key
@@ -70,19 +70,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: 8
+          distribution: 'adopt'
+          java-version: 17
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
           lein: 2.9.8
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: lts/hydrogen
           cache: 'npm'
 
       # setup-java cache only looks at pom.xml for the key
