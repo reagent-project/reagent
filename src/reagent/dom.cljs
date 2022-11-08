@@ -1,30 +1,44 @@
 (ns reagent.dom
-  (:require [react-dom :as react-dom]
+  (:require ["react" :as react]
+            ["react-dom" :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.input :as input]
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
-            [reagent.ratom :as ratom]))
+            [reagent.ratom :as ratom]
+            [goog.object :as gobj]))
 
 (defonce ^:private roots (atom {}))
 
 (defn- unmount-comp [container]
-  (swap! roots dissoc container)
-  (react-dom/unmountComponentAtNode container))
+  (let [root (get @roots container)]
+    (swap! roots dissoc container)
+    (.unmount root)))
+
+(defn- reagent-root [^js js-props]
+  (let [comp (gobj/get js-props "comp")
+        callback (gobj/get js-props "callback")]
+    (react/useEffect (fn []
+                       (binding [util/*always-update* false]
+                         (batch/flush-after-render)
+                         (when (some? callback)
+                           (callback))
+                         js/undefined)))
+    (binding [util/*always-update* true]
+      (comp))))
 
 (defn- render-comp [comp container callback]
-  (binding [util/*always-update* true]
-    (react-dom/render (comp) container
-      (fn []
-        (binding [util/*always-update* false]
-          (swap! roots assoc container comp)
-          (batch/flush-after-render)
-          (if (some? callback)
-            (callback)))))))
-
-(defn- re-render-component [comp container]
-  (render-comp comp container nil))
+  (let [root (reify Object
+               (unmount [_this]
+                 (react-dom/unmountComponentAtNode container))
+               (render [_this]
+                 (react-dom/render
+                   (react/createElement reagent-root #js {:callback callback
+                                                          :comp comp})
+                   container)))]
+    (swap! roots assoc container root)
+    (.render root)))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be
@@ -61,6 +75,7 @@
   [this]
   (react-dom/findDOMNode this))
 
+;; TODO: Mark deprecated
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
   probably only useful in a development environment, when you want to
@@ -73,6 +88,6 @@
   of indirection, for example by using `(render [#'foo])` instead."
   []
   (ratom/flush!)
-  (doseq [[container comp] @roots]
-    (re-render-component comp container))
+  (doseq [[container root] @roots]
+    (.render root))
   (batch/flush-after-render))

@@ -56,10 +56,8 @@
             (swap! ran inc)
             (is (= "div in really-simple" (.-innerText div)))
             (r/flush)
-            (is (= 2 @ran))
-            (rdom/force-update-all)
-            (is (= 3 @ran))))
-        (is (= 3 @ran))))))
+            (is (= 2 @ran))))
+        (is (= 2 @ran))))))
 
 (deftest test-simple-callback
   (when r/is-client
@@ -281,10 +279,7 @@
 
             (reset! child-props {:on-change (r/partial f1)})
             (r/flush)
-            (is (= 7 @child-ran))
-
-            (rdom/force-update-all)
-            (is (= 8 @child-ran))))))))
+            (is (= 7 @child-ran))))))))
 
 (deftest dirty-test
   (when r/is-client
@@ -1237,9 +1232,9 @@
                  (is (= "Test error" (.-message @error)))
                  (is (re-find #"Something went wrong\." (.-innerHTML div)))
                  (if (dev?)
-                   (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)$"
+                   (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
                                 (.-componentStack ^js @info)))
-                   (is (re-find #"^\n    at reagent[0-9]+. \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at .+ \([^)]*\)$"
+                   (is (re-find #"^\n    at reagent[0-9]+. \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at .+ \([^)]*\)"
                                 (.-componentStack ^js @info))))))))))))
 
 (deftest test-dom-node
@@ -1292,6 +1287,7 @@
       (with-mounted-component [comp]
         compiler
         (fn [c div]
+          (r/flush)
           (is (= 1 @spy))
           (swap! state inc)
           (is (= 1 @spy))

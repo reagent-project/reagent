@@ -125,7 +125,9 @@
                        (is (= 1 @ran))
                        (is (= "value:1:" (.-innerText div)))
 
-                       (reset! @grand-state {:foobar 2}))
+                       (reset! @grand-state {:foobar 2})
+                       ;; Not sure why this fixes this.
+                       (r/flush))
                      (fn []
                        (is (= {:foo {:bar {:foobar 2}}} @state))
                        (is (= 2 @ran))
