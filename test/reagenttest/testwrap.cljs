@@ -102,79 +102,74 @@
 (deftest test-wrap
   (when r/is-client
     (t/async done
-      ((reduce
-         (fn [done compiler]
-           (fn []
-             (let [state (r/atom {:foo {:bar {:foobar 1}}})
-                   ran (r/atom 0)
-                   grand-state (clojure.core/atom nil)
-                   grand-child (fn [v]
-                                 (swap! ran inc)
-                                 (reset! grand-state v)
-                                 [:div (str "value:" (:foobar @v) ":")])
-                   child (fn [v]
-                           [grand-child (r/wrap (:bar @v)
-                                                swap! v assoc :bar)])
-                   parent (fn []
-                            [child (r/wrap (:foo @state)
-                                           swap! state assoc :foo)])]
-               (u/with-mounted-component-async [parent] done compiler
-                 (fn [div done]
-                   ;; On first render, parent -> child -> grand-child
-                   ;; grand-child render fn sets grand-state atom to
-                   ;; r/wrap instance from the child.
-                   ;; grand-children should render when the r/wrap
-                   ;; instance is updated, i.e. state ratom [:foo :bar] path.
-                   (u/run-fns-after-render
-                     (fn []
-                       (is (= 1 @ran))
-                       (is (= "value:1:" (.-innerText div)))
+      (u/test-compilers
+        (fn [compiler]
+          (let [state (r/atom {:foo {:bar {:foobar 1}}})
+                ran (r/atom 0)
+                grand-state (clojure.core/atom nil)
+                grand-child (fn [v]
+                              (swap! ran inc)
+                              (reset! grand-state v)
+                              [:div (str "value:" (:foobar @v) ":")])
+                child (fn [v]
+                        [grand-child (r/wrap (:bar @v)
+                                             swap! v assoc :bar)])
+                parent (fn []
+                         [child (r/wrap (:foo @state)
+                                        swap! state assoc :foo)])]
+            (u/with-component
+              [parent]
+              compiler
+              (fn [div]
+                ;; On first render, parent -> child -> grand-child
+                ;; grand-child render fn sets grand-state atom to
+                ;; r/wrap instance from the child.
+                ;; grand-children should render when the r/wrap
+                ;; instance is updated, i.e. state ratom [:foo :bar] path.
 
-                       ;; Update state [:foo :bar] to {:foobar 2} through
-                       ;; two r/wrap.
-                       (reset! @grand-state {:foobar 2}))
-                     (fn []
-                       (is (= {:foo {:bar {:foobar 2}}} @state))
-                       (is (= 2 @ran))
-                       (is (= "value:2:" (.-innerText div)))
-
-                       (swap! state update-in [:foo :bar] assoc :foobar 3))
-                     (fn []
-                       (is (= 3 @ran))
-                       (is (= "value:3:" (.-innerText div)))
-                       (reset! state {:foo {:bar {:foobar 3}}
-                                      :foo1 {}}))
-                     (fn []
-                      (is (= 3 @ran))
-                      (reset! @grand-state {:foobar 3}))
-                    (fn []
-                      ; (is (= 3 @ran))
-                      (is (= "value:3:" (.-innerText div)))
-
-                      (reset! state {:foo {:bar {:foobar 2}}
-                                     :foo2 {}}))
-                    (fn []
-                      ; (is (= 4 @ran))
-                      (is (= "value:2:" (.-innerText div)))
-
-                      (reset! @grand-state {:foobar 2}))
-                    (fn []
-                      ; (is (= 5 @ran))
-                      (is (= "value:2:" (.-innerText div)))
-
-                      (reset! state {:foo {:bar {:foobar 4}}})
-                      (reset! @grand-state {:foobar 4}))
-                    (fn []
-                      ; (is (= 6 @ran))
-                      (is (= "value:4:" (.-innerText div)))
-
-                      (reset! @grand-state {:foobar 4}))
-                    (fn []
-                      ; (is (= 7 @ran))
-                      (is (= "value:4:" (.-innerText div))))
-                    done))))))
-        done
-        test-compilers)))))
+                (is (= 1 @ran))
+                (is (= "value:1:" (.-innerText div)))
+                (-> (u/act ;; Update state [:foo :bar] to {:foobar 2} through
+                           ;; two r/wrap.
+                           (reset! @grand-state {:foobar 2}))
+                    (.then (fn []
+                             (is (= {:foo {:bar {:foobar 2}}} @state))
+                             (is (= 2 @ran))
+                             (is (= "value:2:" (.-innerText div)))
+                             (u/act (swap! state update-in [:foo :bar] assoc :foobar 3))))
+                    (.then (fn []
+                             (is (= 3 @ran))
+                             (is (= "value:3:" (.-innerText div)))
+                             (u/act (reset! state {:foo {:bar {:foobar 3}}
+                                                     :foo1 {}}))))
+                    (.then (fn []
+                             (is (= 3 @ran))
+                             (u/act ;; TODO: This will trigger render in functional compiler,
+                                    ;; so rest of the tests on ran check for +1 values.
+                                    (reset! @grand-state {:foobar 3}))))
+                    (.then (fn []
+                             (is (contains? #{3 4} @ran))
+                             (is (= "value:3:" (.-innerText div)))
+                             (u/act (reset! state {:foo {:bar {:foobar 2}}
+                                                   :foo2 {}}))))
+                    (.then (fn []
+                             (is (contains? #{4 5} @ran))
+                             (is (= "value:2:" (.-innerText div)))
+                             (u/act (reset! @grand-state {:foobar 2}))))
+                    (.then (fn []
+                             (is (contains? #{5 6} @ran))
+                             (is (= "value:2:" (.-innerText div)))
+                             (u/act (reset! state {:foo {:bar {:foobar 4}}})
+                                    (reset! @grand-state {:foobar 4}))))
+                    (.then (fn []
+                             (is (contains? #{6 7} @ran))
+                             (is (= "value:4:" (.-innerText div)))
+                             (u/act (reset! @grand-state {:foobar 4}))))
+                    (.then (fn []
+                             (is (contains? #{7 8} @ran))
+                             (is (= "value:4:" (.-innerText div)))
+                             (done)))
+                    )))))))))
 
 (deftest test-cursor
   (when r/is-client
@@ -221,8 +216,9 @@
          test-compilers)))))
 
 (deftest test-fn-cursor
- (doseq [compiler test-compilers]
-   (let [state (r/atom {:a {:v 1}
+ (u/test-compilers
+   (fn [compiler]
+     (let [state (r/atom {:a {:v 1}
                         :b {:v 2}})
          statec (r/cursor state [])
          a-count (r/atom 0)
@@ -241,7 +237,7 @@
      (with-mounted-component [comp]
        compiler
        (fn [div]
-         (is (= 1 @a-count))
+         (is (= 0 @a-count))
          (is (= 1 @b-count))
 
          (swap! state update-in [:a :v] inc)
@@ -260,4 +256,4 @@
          (reset! state {:a {:v 3} :b {:v 2}})
          (r/flush)
          (is (= 3 @a-count))
-         (is (= 3 @b-count)))))))
+         (is (= 3 @b-count))))))))

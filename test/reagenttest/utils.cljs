@@ -1,6 +1,7 @@
 (ns reagenttest.utils
-  (:require ["react" :as react]
-            ["react-dom/test-utils" :as react-test]
+  (:require-macros reagenttest.utils)
+  (:require ["react-dom/test-utils" :as react-test]
+            [clojure.test :as t :refer [testing]]
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.impl.template :as tmpl]))
@@ -18,7 +19,7 @@
           :else
           (apply original-console-error args))))
 
-(defn act
+(defn act*
   "Run f to trigger Reagent updates,
   will return Promise which will resolve after
   Reagent and React render."
@@ -72,12 +73,18 @@
                    (rdom/render comp div f))]
        nil))))
 
-;; Regular cljs.test/testing doesn't keep context during async processes.
-(defn async-testing [message done f]
-  (t/update-current-env! [:testing-contexts] conj message)
-  (f (fn []
-       (t/update-current-env! [:testing-contexts] rest)
-       (done))))
+(defn with-component
+  "Returns a Promise which is resolved after the check-fn is ready.
+  Check fn should also return a Promise."
+  [comp compiler check-fn]
+  (let [div (.createElement js/document "div")]
+    (js/Promise. (fn [resolve]
+                   (rdom/render
+                     comp div
+                     {:compiler compiler
+                      :callback (fn after-render []
+                                  (-> (check-fn div)
+                                      (.then (fn [] (resolve)))))})))))
 
 (defn run-fns-after-render [& fs]
   ((reduce (fn [cb f]
@@ -86,3 +93,28 @@
                                  (f)
                                  (cb)))))
            (reverse fs))))
+
+(defn testing*
+  [message f]
+  (t/update-current-env! [:testing-contexts] conj message)
+  (.then (f)
+         (fn []
+           (t/update-current-env! [:testing-contexts] rest))))
+
+
+;; Test against both compilers
+
+(def functional-compiler (r/create-compiler {:function-components true}))
+
+(def compilers
+  [["default" tmpl/default-compiler*]
+   ["functional" functional-compiler]])
+
+(defn test-compilers
+  [test-fn]
+  (reduce (fn [p [compiler-name compiler]]
+            (.then p (fn []
+                       (testing (str "Compiler: " compiler-name)
+                         (test-fn compiler)))))
+          (js/Promise. (fn [resolve] (resolve)))
+          compilers))

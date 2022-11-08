@@ -1,7 +1,7 @@
 (ns reagent.dom
-  (:require ["react" :as react]
+  (:require ; ["react" :as react]
             ["react-dom" :as react-dom]
-            ["react-dom/client" :as react-dom-client]
+            ; ["react-dom/client" :as react-dom-client]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]
@@ -14,10 +14,26 @@
 ;; container DOM node.
 
 (defn- unmount-comp [container]
+  (swap! roots dissoc container)
+  (react-dom/unmountComponentAtNode container))
+
+#_
+(defn- unmount-comp [container]
   (let [[_comp root] (get @roots container)]
     (swap! roots dissoc container)
     (.unmount root)))
 
+(defn- render-comp [comp container callback]
+  (binding [util/*always-update* true]
+    (react-dom/render (comp) container
+      (fn []
+        (binding [util/*always-update* false]
+          (swap! roots assoc container comp)
+          (batch/flush-after-render)
+          (if (some? callback)
+            (callback)))))))
+
+#_
 (defn- render-comp [comp container callback]
   (binding [util/*always-update* true]
     (let [[comp root] (or (get @roots container)
@@ -87,6 +103,9 @@
   of indirection, for example by using `(render [#'foo])` instead."
   []
   (ratom/flush!)
+  (doseq [[container comp] @roots]
+    (re-render-component comp container))
+  #_
   (doseq [[container [comp _root]] @roots]
     (re-render-component comp container))
   (batch/flush-after-render))

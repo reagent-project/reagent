@@ -6,6 +6,16 @@
            :asset-path "/js"
            :modules {:main {:entries [reagentdemo.dev]}}
            :devtools {:ignore-warnings true}}
+  :client-18 {:target :browser
+              :output-dir "target/shadow-cljs/client/public/js"
+              :asset-path "/js"
+              :modules {:main {:entries [reagentdemo.dev]}}
+              :devtools {:ignore-warnings true}
+              :js-options {:resolve {"react" {:target :npm
+                                              :require "react-18"}
+                                     "react-dom" {:target :npm
+                                                  :require "react-dom-18"}}}}
+
   :test {:target :karma
          :output-to "target/shadow-cljs/resources/public/js/karma.js"
          :output-dir "target/shadow-cljs/resources/public/js"
