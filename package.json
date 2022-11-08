@@ -20,7 +20,7 @@
     "karma-sourcemap-loader": "0.3.8",
     "karma-webpack": "5.0.0",
     "md5-file": "5.0.0",
-    "shadow-cljs": "2.20.7.8",
+    "shadow-cljs": "2.20.7",
     "webpack": "5.65.0",
     "webpack-cli": "4.9.1"
   }
