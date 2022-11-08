@@ -38,11 +38,15 @@
    (render comp container tmpl/default-compiler))
   ([comp container callback-or-compiler]
    (ratom/flush!)
-   (let [[compiler callback] (if (fn? callback-or-compiler)
+   (let [[compiler callback] (cond
+                               (map? callback-or-compiler)
+                               [(:compiler callback-or-compiler) (:callback callback-or-compiler)]
+
+                               (fn? callback-or-compiler)
                                [tmpl/default-compiler callback-or-compiler]
-                               ;; TODO: Callback option doesn't make sense now that
-                               ;; val is compiler object, not map.
-                               [callback-or-compiler (:callback callback-or-compiler)])
+
+                               :else
+                               [callback-or-compiler nil])
          f (fn []
              (p/as-element compiler (if (fn? comp) (comp) comp)))]
      (render-comp f container callback))))
