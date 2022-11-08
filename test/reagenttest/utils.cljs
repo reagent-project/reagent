@@ -72,6 +72,13 @@
                    (rdom/render comp div f))]
        nil))))
 
+;; Regular cljs.test/testing doesn't keep context during async processes.
+(defn async-testing [message done f]
+  (t/update-current-env! [:testing-contexts] conj message)
+  (f (fn []
+       (t/update-current-env! [:testing-contexts] rest)
+       (done))))
+
 (defn run-fns-after-render [& fs]
   ((reduce (fn [cb f]
              (fn []
