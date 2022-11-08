@@ -28,7 +28,7 @@
                                        (react/useEffect (fn []
                                                           (binding [util/*always-update* false]
                                                             (batch/flush-after-render)
-                                                            (if (some? callback)
+                                                            (when (some? callback)
                                                               (callback))
                                                             js/undefined))
                                                         #js [])
