@@ -43,264 +43,256 @@
   [tmpl/default-compiler*
    functional-compiler])
 
-(deftest really-simple-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            really-simple (fn []
-                            (swap! ran inc)
-                            [:div "div in really-simple"])]
-        (with-mounted-component [really-simple nil nil]
-          compiler
-          (fn [c div]
-            (swap! ran inc)
-            (is (= "div in really-simple" (.-innerText div)))
-            (r/flush)
-            (is (= 2 @ran))))
-        (is (= 2 @ran))))))
+(deftest ^:dom really-simple-test
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          really-simple (fn []
+                          (swap! ran inc)
+                          [:div "div in really-simple"])]
+      (with-mounted-component [really-simple nil nil]
+        compiler
+        (fn [c div]
+          (swap! ran inc)
+          (is (= "div in really-simple" (.-innerText div)))
+          (r/flush)
+          (is (= 2 @ran))))
+      (is (= 2 @ran)))))
 
-(deftest test-simple-callback
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            comp (r/create-class
-                   {:component-did-mount #(swap! ran inc)
-                    :render
-                    (fn [this]
-                      (let [props (r/props this)]
-                        (is (map? props))
-                        (is (= props ((r/argv this) 1)))
-                        (is (= 1 (first (r/children this))))
-                        (is (= 1 (count (r/children this))))
-                        (swap! ran inc)
-                        [:div (str "hi " (:foo props) ".")]))})]
-        (with-mounted-component [comp {:foo "you"} 1]
-          compiler
-          (fn [C div]
-            (swap! ran inc)
-            (is (= "hi you." (.-innerText div)))))
-        (is (= 3 @ran))))))
+(deftest ^:dom test-simple-callback
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          comp (r/create-class
+                 {:component-did-mount #(swap! ran inc)
+                  :render
+                  (fn [this]
+                    (let [props (r/props this)]
+                      (is (map? props))
+                      (is (= props ((r/argv this) 1)))
+                      (is (= 1 (first (r/children this))))
+                      (is (= 1 (count (r/children this))))
+                      (swap! ran inc)
+                      [:div (str "hi " (:foo props) ".")]))})]
+      (with-mounted-component [comp {:foo "you"} 1]
+        compiler
+        (fn [C div]
+          (swap! ran inc)
+          (is (= "hi you." (.-innerText div)))))
+      (is (= 3 @ran)))))
 
-(deftest test-state-change
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            self (r/atom nil)
-            comp (r/create-class
-                   {:get-initial-state (fn [] {:foo "initial"})
-                    :reagent-render
-                    (fn []
-                      (let [this (r/current-component)]
-                        (reset! self this)
-                        (swap! ran inc)
-                        [:div (str "hi " (:foo (r/state this)))]))})]
-        (with-mounted-component [comp]
-          compiler
-          (fn [C div]
-            (swap! ran inc)
-            (is (= "hi initial" (.-innerText div)))
+(deftest ^:dom test-state-change
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          self (r/atom nil)
+          comp (r/create-class
+                 {:get-initial-state (fn [] {:foo "initial"})
+                  :reagent-render
+                  (fn []
+                    (let [this (r/current-component)]
+                      (reset! self this)
+                      (swap! ran inc)
+                      [:div (str "hi " (:foo (r/state this)))]))})]
+      (with-mounted-component [comp]
+        compiler
+        (fn [C div]
+          (swap! ran inc)
+          (is (= "hi initial" (.-innerText div)))
 
-            (r/replace-state @self {:foo "there"})
-            (r/state @self)
+          (r/replace-state @self {:foo "there"})
+          (r/state @self)
 
-            (r/flush)
-            (is (= "hi there" (.-innerText div)))
+          (r/flush)
+          (is (= "hi there" (.-innerText div)))
 
-            (r/set-state @self {:foo "you"})
-            (r/flush)
-            (is (= "hi you" (.-innerText div)))))
-        (is (= 4 @ran))))))
+          (r/set-state @self {:foo "you"})
+          (r/flush)
+          (is (= "hi you" (.-innerText div)))))
+      (is (= 4 @ran)))))
 
-(deftest test-ratom-change
-  (when r/is-client
-    (t/async done
-      ((reduce (fn [next-done compiler]
-                 (fn []
-                   (let [ran (r/atom 0)
-                         runs (rv/running)
-                         val (r/atom 0)
-                         secval (r/atom 0)
-                         v1-ran (atom 0)
-                         v1 (reaction (swap! v1-ran inc) @val)
-                         comp (fn []
-                                (swap! ran inc)
-                                [:div (str "val " @v1 " " @val " " @secval)])]
-                     (u/with-mounted-component-async [comp]
-                       (fn []
-                         (r/next-tick
-                           (fn []
-                             (r/next-tick
-                               (fn []
-                                 (is (= runs (rv/running)))
-                                 (is (= 2 @ran))
-                                 (next-done))))))
-                       compiler
-                       (fn [C div done]
-                         (r/flush)
-                         (is (not= runs (rv/running)))
-                         (is (= "val 0 0 0" (.-innerText div)))
-                         (is (= 1 @ran))
-
-                         (reset! secval 1)
-                         (reset! secval 0)
-                         (reset! val 1)
-                         (reset! val 2)
-                         (reset! val 1)
-                         (is (= 1 @ran))
-                         (is (= 1 @v1-ran))
-                         (r/flush)
-                         (is (= "val 1 1 0" (.-innerText div)))
-                         (is (= 2 @ran) "ran once more")
-                         (is (= 2 @v1-ran))
-
-                         ;; should not be rendered
-                         (reset! val 1)
-                         (is (= 2 @v1-ran))
-                         (r/flush)
-                         (is (= 2 @v1-ran))
-                         (is (= "val 1 1 0" (.-innerText div)))
-                         (is (= 2 @ran) "did not run")
-                         (done))))))
-              done
-              test-compilers)))))
-
-(deftest batched-update-test []
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            v1 (r/atom 0)
-            v2 (r/atom 0)
-            c2 (fn [{val :val}]
-                 (swap! ran inc)
-                 (is (= val @v1))
-                 [:div @v2])
-            c1 (fn []
-                 (swap! ran inc)
-                 [:div @v1
-                  [c2 {:val @v1}]])]
-        (with-mounted-component [c1]
-          compiler
-          (fn [c div]
-            (r/flush)
-            (is (= 2 @ran))
-            (swap! v2 inc)
-            (is (= 2 @ran))
-            (r/flush)
-            (is (= 3 @ran))
-            (swap! v1 inc)
-            (r/flush)
-            (is (= 5 @ran))
-            ;; TODO: Failing on optimized build
-            ; (swap! v2 inc)
-            ; (swap! v1 inc)
-            ; (r/flush)
-            ; (is (= 7 @ran))
-            ; (swap! v1 inc)
-            ; (swap! v1 inc)
-            ; (swap! v2 inc)
-            ; (r/flush)
-            ; (is (= 9 @ran))
-            ))))))
-
-(deftest init-state-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            really-simple (fn []
-                            (let [this (r/current-component)]
+(deftest ^:dom test-ratom-change
+  (t/async done
+    ((reduce (fn [next-done compiler]
+               (fn []
+                 (let [ran (r/atom 0)
+                       runs (rv/running)
+                       val (r/atom 0)
+                       secval (r/atom 0)
+                       v1-ran (atom 0)
+                       v1 (reaction (swap! v1-ran inc) @val)
+                       comp (fn []
                               (swap! ran inc)
-                              (r/set-state this {:foo "foobar"})
-                              (fn []
-                                [:div (str "this is "
-                                           (:foo (r/state this)))])))]
-        (with-mounted-component [really-simple nil nil]
-          compiler
-          (fn [c div]
-            (swap! ran inc)
-            (is (= "this is foobar" (.-innerText div)))))
-        (is (= 2 @ran))))))
+                              [:div (str "val " @v1 " " @val " " @secval)])]
+                   (u/with-mounted-component-async [comp]
+                     (fn []
+                       (r/next-tick
+                         (fn []
+                           (r/next-tick
+                             (fn []
+                               (is (= runs (rv/running)))
+                               (is (= 2 @ran))
+                               (next-done))))))
+                     compiler
+                     (fn [C div done]
+                       (r/flush)
+                       (is (not= runs (rv/running)))
+                       (is (= "val 0 0 0" (.-innerText div)))
+                       (is (= 1 @ran))
 
-(deftest should-update-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [parent-ran (r/atom 0)
-            child-ran (r/atom 0)
-            child-props (r/atom nil)
-            f (fn [])
-            f1 (fn [])
-            child (fn [p]
-                    (swap! child-ran inc)
-                    [:div (:val p)])
-            parent (fn []
-                     (swap! parent-ran inc)
-                     [:div "child-foo" [child @child-props]])]
-        (with-mounted-component [parent nil nil]
-          compiler
-          (fn [c div]
-            (r/flush)
-            (is (= 1 @child-ran))
-            (is (= "child-foo" (.-innerText div)))
+                       (reset! secval 1)
+                       (reset! secval 0)
+                       (reset! val 1)
+                       (reset! val 2)
+                       (reset! val 1)
+                       (is (= 1 @ran))
+                       (is (= 1 @v1-ran))
+                       (r/flush)
+                       (is (= "val 1 1 0" (.-innerText div)))
+                       (is (= 2 @ran) "ran once more")
+                       (is (= 2 @v1-ran))
 
-            (reset! child-props {:style {:display :none}})
-            (r/flush)
-            (is (= 2 @child-ran))
+                       ;; should not be rendered
+                       (reset! val 1)
+                       (is (= 2 @v1-ran))
+                       (r/flush)
+                       (is (= 2 @v1-ran))
+                       (is (= "val 1 1 0" (.-innerText div)))
+                       (is (= 2 @ran) "did not run")
+                       (done))))))
+             done
+             test-compilers))))
 
-            (reset! child-props {:style {:display :none}})
-            (r/flush)
-            (is (= 2 @child-ran) "keyw is equal")
+(deftest ^:dom batched-update-test []
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          v1 (r/atom 0)
+          v2 (r/atom 0)
+          c2 (fn [{val :val}]
+               (swap! ran inc)
+               (is (= val @v1))
+               [:div @v2])
+          c1 (fn []
+               (swap! ran inc)
+               [:div @v1
+                [c2 {:val @v1}]])]
+      (with-mounted-component [c1]
+        compiler
+        (fn [c div]
+          (r/flush)
+          (is (= 2 @ran))
+          (swap! v2 inc)
+          (is (= 2 @ran))
+          (r/flush)
+          (is (= 3 @ran))
+          (swap! v1 inc)
+          (r/flush)
+          (is (= 5 @ran))
+          ;; TODO: Failing on optimized build
+          ; (swap! v2 inc)
+          ; (swap! v1 inc)
+          ; (r/flush)
+          ; (is (= 7 @ran))
+          ; (swap! v1 inc)
+          ; (swap! v1 inc)
+          ; (swap! v2 inc)
+          ; (r/flush)
+          ; (is (= 9 @ran))
+          )))))
 
-            (reset! child-props {:class :foo}) (r/flush)
-            (r/flush)
-            (is (= 3 @child-ran))
-
-            (reset! child-props {:class :foo}) (r/flush)
-            (r/flush)
-            (is (= 3 @child-ran))
-
-            (reset! child-props {:class 'foo})
-            (r/flush)
-            (is (= 4 @child-ran) "symbols are different from keyw")
-
-            (reset! child-props {:class 'foo})
-            (r/flush)
-            (is (= 4 @child-ran) "symbols are equal")
-
-            (reset! child-props {:style {:color 'red}})
-            (r/flush)
-            (is (= 5 @child-ran))
-
-            (reset! child-props {:on-change (r/partial f)})
-            (r/flush)
-            (is (= 6 @child-ran))
-
-            (reset! child-props {:on-change (r/partial f)})
-            (r/flush)
-            (is (= 6 @child-ran))
-
-            (reset! child-props {:on-change (r/partial f1)})
-            (r/flush)
-            (is (= 7 @child-ran))))))))
-
-(deftest dirty-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            state (r/atom 0)
-            really-simple (fn []
+(deftest ^:dom init-state-test
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          really-simple (fn []
+                          (let [this (r/current-component)]
                             (swap! ran inc)
-                            (if (= 1 @state)
-                              (reset! state 3))
-                            [:div (str "state=" @state)])]
-        (with-mounted-component [really-simple nil nil]
-          compiler
-          (fn [c div]
-            (is (= 1 @ran))
-            (is (= "state=0" (.-innerText div)))
-            (reset! state 1)
-            (r/flush)
-            (is (= 2 @ran))
-            (is (= "state=3" (.-innerText div)))))
-        (is (= 2 @ran))))))
+                            (r/set-state this {:foo "foobar"})
+                            (fn []
+                              [:div (str "this is "
+                                         (:foo (r/state this)))])))]
+      (with-mounted-component [really-simple nil nil]
+        compiler
+        (fn [c div]
+          (swap! ran inc)
+          (is (= "this is foobar" (.-innerText div)))))
+      (is (= 2 @ran)))))
+
+(deftest ^:dom should-update-test
+  (doseq [compiler test-compilers]
+    (let [parent-ran (r/atom 0)
+          child-ran (r/atom 0)
+          child-props (r/atom nil)
+          f (fn [])
+          f1 (fn [])
+          child (fn [p]
+                  (swap! child-ran inc)
+                  [:div (:val p)])
+          parent (fn []
+                   (swap! parent-ran inc)
+                   [:div "child-foo" [child @child-props]])]
+      (with-mounted-component [parent nil nil]
+        compiler
+        (fn [c div]
+          (r/flush)
+          (is (= 1 @child-ran))
+          (is (= "child-foo" (.-innerText div)))
+
+          (reset! child-props {:style {:display :none}})
+          (r/flush)
+          (is (= 2 @child-ran))
+
+          (reset! child-props {:style {:display :none}})
+          (r/flush)
+          (is (= 2 @child-ran) "keyw is equal")
+
+          (reset! child-props {:class :foo}) (r/flush)
+          (r/flush)
+          (is (= 3 @child-ran))
+
+          (reset! child-props {:class :foo}) (r/flush)
+          (r/flush)
+          (is (= 3 @child-ran))
+
+          (reset! child-props {:class 'foo})
+          (r/flush)
+          (is (= 4 @child-ran) "symbols are different from keyw")
+
+          (reset! child-props {:class 'foo})
+          (r/flush)
+          (is (= 4 @child-ran) "symbols are equal")
+
+          (reset! child-props {:style {:color 'red}})
+          (r/flush)
+          (is (= 5 @child-ran))
+
+          (reset! child-props {:on-change (r/partial f)})
+          (r/flush)
+          (is (= 6 @child-ran))
+
+          (reset! child-props {:on-change (r/partial f)})
+          (r/flush)
+          (is (= 6 @child-ran))
+
+          (reset! child-props {:on-change (r/partial f1)})
+          (r/flush)
+          (is (= 7 @child-ran)))))))
+
+(deftest ^:dom dirty-test
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          state (r/atom 0)
+          really-simple (fn []
+                          (swap! ran inc)
+                          (if (= 1 @state)
+                            (reset! state 3))
+                          [:div (str "state=" @state)])]
+      (with-mounted-component [really-simple nil nil]
+        compiler
+        (fn [c div]
+          (is (= 1 @ran))
+          (is (= "state=0" (.-innerText div)))
+          (reset! state 1)
+          (r/flush)
+          (is (= 2 @ran))
+          (is (= "state=3" (.-innerText div)))))
+      (is (= 2 @ran)))))
 
 (defn as-string [comp compiler]
   (server/render-to-static-markup comp compiler))
@@ -417,54 +409,23 @@
            (rstr [:div.bar {:dangerously-set-inner-HTML
                             {:__html "<p>foobar</p>"}}] compiler)))))
 
-(deftest test-return-class
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ran (r/atom 0)
-            top-ran (r/atom 0)
-            comp (fn []
-                   (swap! top-ran inc)
-                   (r/create-class
-                     {:component-did-mount #(swap! ran inc)
-                      :render
-                      (fn [this]
-                        (let [props (r/props this)]
-                          (is (map? props))
-                          (is (= props ((r/argv this) 1)))
-                          (is (= 1 (first (r/children this))))
-                          (is (= 1 (count (r/children this))))
-                          (swap! ran inc)
-                          [:div (str "hi " (:foo props) ".")]))}))
-            prop (r/atom {:foo "you"})
-            parent (fn [] [comp @prop 1])]
-        (with-mounted-component [parent]
-          compiler
-          (fn [C div]
-            (swap! ran inc)
-            (is (= "hi you." (.-innerText div)))
-            (is (= 1 @top-ran))
-            (is (= 3 @ran))
-
-            (swap! prop assoc :foo "me")
-            (r/flush)
-            (is (= "hi me." (.-innerText div)))
-            (is (= 1 @top-ran))
-            (is (= 4 @ran))))))))
-
-(deftest test-return-class-fn
-  (when r/is-client
-    (doseq [compiler test-compilers]
+(deftest ^:dom test-return-class
+  (doseq [compiler test-compilers]
     (let [ran (r/atom 0)
           top-ran (r/atom 0)
           comp (fn []
                  (swap! top-ran inc)
                  (r/create-class
-                  {:component-did-mount #(swap! ran inc)
-                   :reagent-render
-                   (fn [p a]
-                     (is (= 1 a))
-                     (swap! ran inc)
-                     [:div (str "hi " (:foo p) ".")])}))
+                   {:component-did-mount #(swap! ran inc)
+                    :render
+                    (fn [this]
+                      (let [props (r/props this)]
+                        (is (map? props))
+                        (is (= props ((r/argv this) 1)))
+                        (is (= 1 (first (r/children this))))
+                        (is (= 1 (count (r/children this))))
+                        (swap! ran inc)
+                        [:div (str "hi " (:foo props) ".")]))}))
           prop (r/atom {:foo "you"})
           parent (fn [] [comp @prop 1])]
       (with-mounted-component [parent]
@@ -479,7 +440,36 @@
           (r/flush)
           (is (= "hi me." (.-innerText div)))
           (is (= 1 @top-ran))
-          (is (= 4 @ran))))))))
+          (is (= 4 @ran)))))))
+
+(deftest ^:dom test-return-class-fn
+  (doseq [compiler test-compilers]
+    (let [ran (r/atom 0)
+          top-ran (r/atom 0)
+          comp (fn []
+                 (swap! top-ran inc)
+                 (r/create-class
+                   {:component-did-mount #(swap! ran inc)
+                    :reagent-render
+                    (fn [p a]
+                      (is (= 1 a))
+                      (swap! ran inc)
+                      [:div (str "hi " (:foo p) ".")])}))
+          prop (r/atom {:foo "you"})
+          parent (fn [] [comp @prop 1])]
+      (with-mounted-component [parent]
+        compiler
+        (fn [C div]
+          (swap! ran inc)
+          (is (= "hi you." (.-innerText div)))
+          (is (= 1 @top-ran))
+          (is (= 3 @ran))
+
+          (swap! prop assoc :foo "me")
+          (r/flush)
+          (is (= "hi me." (.-innerText div)))
+          (is (= 1 @top-ran))
+          (is (= 4 @ran)))))))
 
 (deftest test-create-element
   (doseq [compiler test-compilers]
@@ -574,19 +564,18 @@
       (is (= (rstr [:div "a" "b" [:div "c"]])
              (rstr [:> d2 "a" "b" [:div "c"]]))))))
 
-(deftest create-element-shortcut-test
-  (when r/is-client
-    (let [p (atom nil)
-          comp (fn [props]
-                 (reset! p props)
-                 (r/as-element [:div "a" (.-children props)]))]
-      (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
-                               [:p "bar"]]
-        (fn [c div]
-          (is (= {:bar "x"} (gobj/get @p "foo")))
-          (is (= "<div>a<p>bar</p></div>" (.-innerHTML div))))))))
+(deftest ^:dom create-element-shortcut-test
+  (let [p (atom nil)
+        comp (fn [props]
+               (reset! p props)
+               (r/as-element [:div "a" (.-children props)]))]
+    (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
+                             [:p "bar"]]
+      (fn [c div]
+        (is (= {:bar "x"} (gobj/get @p "foo")))
+        (is (= "<div>a<p>bar</p></div>" (.-innerHTML div)))))))
 
-(deftest shortcut-key-warning
+(deftest ^:dom shortcut-key-warning
   ;; TODO: Test create-element with key prop
 
   (let [w (debug/track-warnings
@@ -643,7 +632,7 @@
              (rstr [:p "p:a" [:b "b"] [:i "i"]])))
       (is (= nil @a)))))
 
-(deftest test-keys
+(deftest ^:dom test-keys
   (doseq [compiler test-compilers]
     (let [a nil ;; (r/atom "a")
           c (fn key-tester []
@@ -658,21 +647,20 @@
                  (fn [c div])))]
       (is (empty? (:warn w))))
 
-    (when r/is-client
-      (testing "Check warning text can be produced even if hiccup contains function literals"
-        (let [c (fn key-tester []
-                  [:div
-                   (for [i (range 3)]
-                     ^{:key nil}
-                     [:button {:on-click #(js/console.log %)}])])
-              w (debug/track-warnings
-                  (wrap-capture-console-error
-                    #(with-mounted-component [c]
-                       compiler
-                       (fn [c div]))))]
-          (if (dev?)
-            (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
-                         (first (:warn w))))))))))
+    (testing "Check warning text can be produced even if hiccup contains function literals"
+      (let [c (fn key-tester []
+                [:div
+                 (for [i (range 3)]
+                   ^{:key nil}
+                   [:button {:on-click #(js/console.log %)}])])
+            w (debug/track-warnings
+                (wrap-capture-console-error
+                  #(with-mounted-component [c]
+                     compiler
+                     (fn [c div]))))]
+        (if (dev?)
+          (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
+                       (first (:warn w)))))))))
 
 (deftest test-extended-syntax
   (doseq [compiler test-compilers
@@ -688,16 +676,15 @@
     (is (= (rstr [:div [:p.bar.foo [:a.foobar {:href "href"} "xy"]]])
            (rstr [:div>p.bar.foo>a.foobar {:href "href"} "xy"])))))
 
-(deftest extended-syntax-metadata
-  (when r/is-client
-    (let [comp (fn []
-                 [:div
-                  (for [k [1 2]]
-                    ^{:key k} [:div>div "a"])])]
-      (with-mounted-component [comp]
-        (fn [c div]
-          ;; Just make sure this doesn't print a debug message
-          )))))
+(deftest ^:dom extended-syntax-metadata
+  (let [comp (fn []
+               [:div
+                (for [k [1 2]]
+                  ^{:key k} [:div>div "a"])])]
+    (with-mounted-component [comp]
+      (fn [c div]
+        ;; Just make sure this doesn't print a debug message
+        ))))
 
 (deftest test-class-from-collection
   (doseq [compiler test-compilers
@@ -734,7 +721,7 @@
       (is (= (rstr [:p {:class "a b"}])
              (rstr [:p {:class [:a :b false nil]}]))))))
 
-(deftest test-force-update
+(deftest ^:dom test-force-update
   (let [v (atom {:v1 0
                  :v2 0})
         comps (atom {})
@@ -772,7 +759,7 @@
         (r/force-update (:c3 @comps))
         (is (= 1 @spy))))))
 
-(deftest test-component-path
+(deftest ^:dom test-component-path
   (let [a (atom nil)
         tc (r/create-class {:display-name "atestcomponent"
                             :render (fn []
@@ -793,94 +780,91 @@
                [c1 (sorted-map 1 "foo" 2 "bar")])]
       (is (= "<div>foo</div>" (rstr [c2]))))))
 
-(deftest basic-with-let
-  (when r/is-client
-    (t/async done
-      ((reduce
-        (fn [next-done compiler]
-          (fn []
-            (let [n1 (atom 0)
-                  n2 (atom 0)
-                  n3 (atom 0)
-                  val (r/atom 0)
-                  c (fn []
-                      (r/with-let [v (swap! n1 inc)]
-                        (swap! n2 inc)
-                        [:div @val]
-                        (finally
-                          (swap! n3 inc))))]
-              ;; With functional components,
-              ;; effect cleanup (which calls ratom dispose) happens
-              ;; async after unmount.
-              (u/with-mounted-component-async [c]
-                (fn []
-                  (r/next-tick
-                    (fn []
-                      (r/next-tick
-                        (fn []
-                          (is (= [1 2 1] [@n1 @n2 @n3]))
-                          (next-done))))))
-                compiler
-                (fn [_ div done]
-                  (is (= [1 1 0] [@n1 @n2 @n3]))
-                  (swap! val inc)
-                  (is (= [1 1 0] [@n1 @n2 @n3]))
-                  (r/flush)
-                  (is (= [1 2 0] [@n1 @n2 @n3]))
-                  (done))))))
-        done
-        test-compilers)))))
+(deftest ^:dom basic-with-let
+  (t/async done
+    ((reduce
+       (fn [next-done compiler]
+         (fn []
+           (let [n1 (atom 0)
+                 n2 (atom 0)
+                 n3 (atom 0)
+                 val (r/atom 0)
+                 c (fn []
+                     (r/with-let [v (swap! n1 inc)]
+                       (swap! n2 inc)
+                       [:div @val]
+                       (finally
+                         (swap! n3 inc))))]
+             ;; With functional components,
+             ;; effect cleanup (which calls ratom dispose) happens
+             ;; async after unmount.
+             (u/with-mounted-component-async [c]
+               (fn []
+                 (r/next-tick
+                   (fn []
+                     (r/next-tick
+                       (fn []
+                         (is (= [1 2 1] [@n1 @n2 @n3]))
+                         (next-done))))))
+               compiler
+               (fn [_ div done]
+                 (is (= [1 1 0] [@n1 @n2 @n3]))
+                 (swap! val inc)
+                 (is (= [1 1 0] [@n1 @n2 @n3]))
+                 (r/flush)
+                 (is (= [1 2 0] [@n1 @n2 @n3]))
+                 (done))))))
+       done
+       test-compilers))))
 
-(deftest with-let-destroy-only
-  (when r/is-client
-    (t/async done
-      ((reduce
-         (fn [next-done compiler]
-           (fn []
-             (let [n1 (atom 0)
-                   n2 (atom 0)
-                   c (fn []
-                       (r/with-let []
-                         (swap! n1 inc)
-                         [:div]
-                         (finally
-                           (swap! n2 inc))))]
-               (u/with-mounted-component-async [c]
-                 ;; Wait 2 animation frames for
-                 ;; useEffect cleanup to be called.
-                 (fn []
-                   (r/next-tick
-                     (fn []
-                       (r/next-tick
-                         (fn []
-                           (is (= [1 1] [@n1 @n2]))
-                           (next-done))))))
-                 compiler
-                 (fn [_ div done]
-                   (is (= [1 0] [@n1 @n2]))
-                   (done))))))
-         done
-         test-compilers)))))
+(deftest ^:dom with-let-destroy-only
+  (t/async done
+    ((reduce
+       (fn [next-done compiler]
+         (fn []
+           (let [n1 (atom 0)
+                 n2 (atom 0)
+                 c (fn []
+                     (r/with-let []
+                       (swap! n1 inc)
+                       [:div]
+                       (finally
+                         (swap! n2 inc))))]
+             (u/with-mounted-component-async [c]
+               ;; Wait 2 animation frames for
+               ;; useEffect cleanup to be called.
+               (fn []
+                 (r/next-tick
+                   (fn []
+                     (r/next-tick
+                       (fn []
+                         (is (= [1 1] [@n1 @n2]))
+                         (next-done))))))
+               compiler
+               (fn [_ div done]
+                 (is (= [1 0] [@n1 @n2]))
+                 (done))))))
+       done
+       test-compilers))))
 
-(deftest with-let-arg
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [a (atom 0)
-            s (r/atom "foo")
-            f (fn [x]
-                (r/with-let []
-                  (reset! a x)
-                  [:div x]))
-            c (fn []
-                (r/with-let []
-                  [f @s]))]
-        (with-mounted-component [c]
-          compiler
-          (fn [_ div]
-            (is (= "foo" @a))
-            (reset! s "bar")
-            (r/flush)
-            (is (= "bar" @a))))))))
+(deftest ^:dom with-let-arg
+  (doseq [compiler test-compilers]
+    (let [a (atom 0)
+          s (r/atom "foo")
+          f (fn [x]
+              (r/with-let []
+                (reset! a x)
+                [:div x]))
+          c (fn []
+              (r/with-let []
+                [f @s]))]
+      (with-mounted-component [c]
+        compiler
+        (fn [_ div]
+          (is (= "foo" @a))
+          (reset! s "bar")
+          (r/flush)
+          (is (= "bar" @a)))))))
 
 (deftest with-let-non-reactive
   (doseq [compiler test-compilers]
@@ -897,7 +881,7 @@
       (is (= (rstr [c]) (rstr [:div 1])))
       (is (= [1 1 1] [@n1 @n2 @n3])))))
 
-(deftest lifecycle
+(deftest ^:dom lifecycle
   (doseq [compiler test-compilers]
     (let [n1 (atom 0)
           t (atom 0)
@@ -977,20 +961,19 @@
                          (:render @res)))
                   (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
                          (:did-update @res))))]
-      (when r/is-client
-        (with-mounted-component [c2] compiler check)
-        (is (= {:at 10 :args [@t]}
-               (:will-unmount @res)))
+      (with-mounted-component [c2] compiler check)
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res)))
 
-        (reset! comp (with-meta render2 ls))
-        (reset! arg defarg)
-        (reset! n1 0)
-        (with-mounted-component [c2] check)
-        (is (= {:at 10 :args [@t]}
-               (:will-unmount @res)))))))
+      (reset! comp (with-meta render2 ls))
+      (reset! arg defarg)
+      (reset! n1 0)
+      (with-mounted-component [c2] check)
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res))))))
 
 
-(deftest lifecycle-native
+(deftest ^:dom lifecycle-native
   (doseq [compiler test-compilers]
     (let [n1 (atom 0)
           t (atom 0)
@@ -1090,10 +1073,9 @@
                          [this oldv] :args} a]
                     (is (= 9 at))
                     (is (= [@comp @oldprops] oldv))))]
-      (when r/is-client
-        (with-mounted-component [cnative] compiler check)
+      (with-mounted-component [cnative] compiler check)
         (is (= {:at 10 :args [@t]}
-               (:will-unmount @res)))))))
+               (:will-unmount @res))))))
 
 (defn foo []
   [:div])
@@ -1119,7 +1101,7 @@
           (finally
             (.removeListener process "uncaughtException" l)))))))
 
-(deftest test-err-messages
+(deftest ^:dom test-err-messages
   (when (dev?)
     (doseq [compiler test-compilers
             :let [rstr #(rstr % compiler)]]
@@ -1148,62 +1130,61 @@
       (is (thrown-with-msg?
             :default #"Invalid tag: 'p.'"
             (rstr [:p.])))
-      (when r/is-client
-        (let [comp1 (fn comp1 [x]
-                      x)
-              comp2 (fn comp2 [x]
-                      [comp1 x])
-              comp3 (fn comp3 []
-                      (r/with-let [a (r/atom "foo")]
-                        [:div (for [i (range 0 1)]
-                                ^{:key i} [:p @a])]))
-              comp4 (fn comp4 []
-                      (for [i (range 0 1)]
-                        [:p "foo"]))
-              nat (let [cmp (fn [])]
-                    (gobj/extend
-                      (.-prototype cmp)
-                      (.-prototype react/Component)
-                      #js {:render (fn [])})
-                    (gobj/extend cmp react/Component)
-                    cmp)
-              rend (fn [x]
-                     (with-mounted-component x compiler identity))]
+      (let [comp1 (fn comp1 [x]
+                    x)
+            comp2 (fn comp2 [x]
+                    [comp1 x])
+            comp3 (fn comp3 []
+                    (r/with-let [a (r/atom "foo")]
+                      [:div (for [i (range 0 1)]
+                              ^{:key i} [:p @a])]))
+            comp4 (fn comp4 []
+                    (for [i (range 0 1)]
+                      [:p "foo"]))
+            nat (let [cmp (fn [])]
+                  (gobj/extend
+                    (.-prototype cmp)
+                    (.-prototype react/Component)
+                    #js {:render (fn [])})
+                  (gobj/extend cmp react/Component)
+                  cmp)
+            rend (fn [x]
+                   (with-mounted-component x compiler identity))]
 
-          ;; Error is orginally caused by comp1, so only that is shown in the error
-          (let [e (debug/track-warnings
-                    (wrap-capture-window-error
-                      (wrap-capture-console-error
-                        #(is (thrown-with-msg?
-                               :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                               (rend [comp2 [:div. "foo"]]))))))]
-            (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                         (first (:error e)))))
+        ;; Error is orginally caused by comp1, so only that is shown in the error
+        (let [e (debug/track-warnings
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                             (rend [comp2 [:div. "foo"]]))))))]
+          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                       (first (:error e)))))
 
-          (let [e (debug/track-warnings
-                    (wrap-capture-window-error
-                      (wrap-capture-console-error
-                        #(is (thrown-with-msg?
-                               :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                               (rend [comp1 [:div. "foo"]]))))))]
-            (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                         (first (:error e)))))
+        (let [e (debug/track-warnings
+                  (wrap-capture-window-error
+                    (wrap-capture-console-error
+                      #(is (thrown-with-msg?
+                             :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                             (rend [comp1 [:div. "foo"]]))))))]
+          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                       (first (:error e)))))
 
-          (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
-            (is (re-find #"Using native React classes directly"
-                         (-> e :warn first))))
+        (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
+          (is (re-find #"Using native React classes directly"
+                       (-> e :warn first))))
 
-          (let [e (debug/track-warnings
-                    #(rend [comp3]))]
-            (is (re-find #"Reactive deref not supported"
-                         (-> e :warn first))))
+        (let [e (debug/track-warnings
+                  #(rend [comp3]))]
+          (is (re-find #"Reactive deref not supported"
+                       (-> e :warn first))))
 
-          (let [e (debug/track-warnings
-                    #(r/as-element (comp4) compiler))]
-            (is (re-find #"Every element in a seq should have a unique :key"
-                         (-> e :warn first)))))))))
+        (let [e (debug/track-warnings
+                  #(r/as-element (comp4) compiler))]
+          (is (re-find #"Every element in a seq should have a unique :key"
+                       (-> e :warn first))))))))
 
-(deftest test-error-boundary
+(deftest ^:dom test-error-boundary
   (doseq [compiler test-compilers]
     (let [error (r/atom nil)
           info (r/atom nil)
@@ -1237,7 +1218,7 @@
                    (is (re-find #"^\n    at reagent[0-9]+. \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at .+ \([^)]*\)"
                                 (.-componentStack ^js @info))))))))))))
 
-(deftest test-dom-node
+(deftest ^:dom test-dom-node
   (doseq [compiler test-compilers]
     (let [node (atom nil)
           ref (atom nil)
@@ -1268,7 +1249,7 @@
     (is (= "<p>#object[reagent.ratom.RAtom {:val 1}]</p>"
            (rstr [:p (r/atom 1)])))))
 
-(deftest test-after-render
+(deftest ^:dom test-after-render
   (doseq [compiler test-compilers]
     (let [spy (atom 0)
           val (atom 0)
@@ -1327,12 +1308,14 @@
           :let [rstr #(rstr % compiler)]]
     (testing "entity numbers can be unescaped always"
       (is (= "<i> </i>"
-             (rstr [:i (gstr/unescapeEntities "&#160;")]))))
+             (rstr [:i (gstr/unescapeEntities "&#160;")]))))))
 
-    (when r/is-client
-      (testing "When DOM is available, all named entities can be unescaped"
-        (is (= "<i> </i>"
-               (rstr [:i (gstr/unescapeEntities "&nbsp;")])))))))
+(deftest ^:dom html-entities-dom
+  (doseq [compiler test-compilers
+          :let [rstr #(rstr % compiler)]]
+    (testing "When DOM is available, all named entities can be unescaped"
+      (is (= "<i> </i>"
+             (rstr [:i (gstr/unescapeEntities "&nbsp;")]))))))
 
 (defn context-wrapper []
   (r/create-class
@@ -1354,7 +1337,7 @@
                          ;; React extern handles context name.
                          [:div "child," (gobj/get (.-context this) "foo")]))}))
 
-(deftest context-test
+(deftest ^:dom context-test
   (with-mounted-component [context-wrapper [context-child]]
     (fn [c div]
       (is (= "parent,child,bar"
@@ -1460,7 +1443,7 @@
                       #js {:value "foo"}
                       [:f> comp]])))))))
 
-(deftest on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
+(deftest ^:dom on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
   (doseq [compiler test-compilers]
     (let [prop (r/atom {:todos 1})
           component-was-updated (atom false)
@@ -1472,7 +1455,7 @@
           component (fn []
                       [component-class @prop])]
 
-      (when (and r/is-client (dev?))
+      (when (dev?)
         (let [e (debug/track-warnings
                   #(with-mounted-component [component]
                      compiler
@@ -1488,223 +1471,214 @@
           (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
                        (first (:warn e)))))))))
 
-(deftest get-derived-state-from-props-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [prop (r/atom 0)
-            ;; Usually one can use Cljs object as React state. However,
-            ;; getDerivedStateFromProps implementation in React uses
-            ;; Object.assign to merge current state and partial state returned
-            ;; from the method, so the state has to be plain old object.
-            pure-component (r/create-class
-                             {:constructor (fn [this]
-                                             (set! (.-state this) #js {}))
-                              :get-derived-state-from-props (fn [props state]
-                                                              ;; "Expensive" calculation based on the props
-                                                              #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
-                              :render (fn [this]
-                                        (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
-            component (fn []
-                        [pure-component {:value @prop}])]
-        (with-mounted-component [component]
-          compiler
-          (fn [c div]
-            (is (= "Value foo" (.-innerText div)))
-            (swap! prop inc)
-            (r/flush)
-            (is (= "Value foo foo" (.-innerText div)))))))))
+(deftest ^:dom get-derived-state-from-props-test
+  (doseq [compiler test-compilers]
+    (let [prop (r/atom 0)
+          ;; Usually one can use Cljs object as React state. However,
+          ;; getDerivedStateFromProps implementation in React uses
+          ;; Object.assign to merge current state and partial state returned
+          ;; from the method, so the state has to be plain old object.
+          pure-component (r/create-class
+                           {:constructor (fn [this]
+                                           (set! (.-state this) #js {}))
+                            :get-derived-state-from-props (fn [props state]
+                                                            ;; "Expensive" calculation based on the props
+                                                            #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
+                            :render (fn [this]
+                                      (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
+          component (fn []
+                      [pure-component {:value @prop}])]
+      (with-mounted-component [component]
+        compiler
+        (fn [c div]
+          (is (= "Value foo" (.-innerText div)))
+          (swap! prop inc)
+          (r/flush)
+          (is (= "Value foo foo" (.-innerText div))))))))
 
-(deftest get-derived-state-from-error-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [prop (r/atom 0)
-            component (r/create-class
-                        {:constructor (fn [this props]
-                                        (set! (.-state this) #js {:hasError false}))
-                         :get-derived-state-from-error (fn [error]
-                                                         #js {:hasError true})
-                         :component-did-catch (fn [this e info])
-                         :render (fn [^js/React.Component this]
-                                   (r/as-element (if (.-hasError (.-state this))
-                                                   [:p "Error"]
-                                                   (into [:<>] (r/children this)))))})
-            bad-component (fn []
-                            (if (= 0 @prop)
-                              [:div "Ok"]
-                              (throw (js/Error. "foo"))))]
-        (wrap-capture-window-error
-          (wrap-capture-console-error
+(deftest ^:dom get-derived-state-from-error-test
+  (doseq [compiler test-compilers]
+    (let [prop (r/atom 0)
+          component (r/create-class
+                      {:constructor (fn [this props]
+                                      (set! (.-state this) #js {:hasError false}))
+                       :get-derived-state-from-error (fn [error]
+                                                       #js {:hasError true})
+                       :component-did-catch (fn [this e info])
+                       :render (fn [^js/React.Component this]
+                                 (r/as-element (if (.-hasError (.-state this))
+                                                 [:p "Error"]
+                                                 (into [:<>] (r/children this)))))})
+          bad-component (fn []
+                          (if (= 0 @prop)
+                            [:div "Ok"]
+                            (throw (js/Error. "foo"))))]
+      (wrap-capture-window-error
+        (wrap-capture-console-error
           #(with-mounted-component [component [bad-component]]
              compiler
              (fn [c div]
                (is (= "Ok" (.-innerText div)))
                (swap! prop inc)
                (r/flush)
-               (is (= "Error" (.-innerText div)))))))))))
+               (is (= "Error" (.-innerText div))))))))))
 
-(deftest get-snapshot-before-update-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ref (react/createRef)
-            prop (r/atom 0)
-            did-update (atom nil)
-            component (r/create-class
-                        {:get-snapshot-before-update (fn [this [_ prev-props] prev-state]
-                                                       {:height (.. ref -current -scrollHeight)})
-                         :component-did-update (fn [this [_ prev-props] prev-state snapshot]
-                                                 (reset! did-update snapshot))
-                         :render (fn [this]
-                                   (r/as-element
-                                     [:div
-                                      {:ref ref
-                                       :style {:height "20px"}}
-                                      "foo"]))})
-            component-2 (fn []
-                          [component {:value @prop}])]
-        (with-mounted-component [component-2]
-          compiler
-          (fn [c div]
-            ;; Attach to DOM to get real height value
-            (.appendChild js/document.body div)
-            (is (= "foo" (.-innerText div)))
-            (swap! prop inc)
-            (r/flush)
-            (is (= {:height 20} @did-update))
-            (.removeChild js/document.body div)))))))
-
-(deftest issue-462-test
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [val (r/atom 0)
-            render (atom 0)
-            a (fn issue-462-a [nr]
-                (swap! render inc)
-                [:h1 "Value " nr])
-            b (fn issue-462-b []
-                [:div
-                 ^{:key @val}
-                 [a @val]])
-            c (fn issue-462-c []
-                ^{:key @val}
-                [b])]
-        (with-mounted-component [c]
-          compiler
-          (fn [c div]
-            (is (= 1 @render))
-            (reset! val 1)
-            (r/flush)
-            (is (= 2 @render))
-            (reset! val 0)
-            (r/flush)
-            (is (= 3 @render))))))))
-
-(deftest functional-component-poc-simple
-  (when r/is-client
-    (let [c (fn [x]
-              [:span "Hello " x])]
-        (testing ":f>"
-          (with-mounted-component [:f> c "foo"]
-            (fn [c div]
-              (is (nil? c) "Render returns nil for stateless components")
-              (is (= "Hello foo" (.-innerText div))))))
-
-        (testing "compiler options"
-          (with-mounted-component [c "foo"]
-            functional-compiler
-            (fn [c div]
-              (is (nil? c) "Render returns nil for stateless components")
-              (is (= "Hello foo" (.-innerText div))))))
-
-        (testing "setting default compiler"
-          (try
-           (r/set-default-compiler! functional-compiler)
-           (with-mounted-component [c "foo"] nil
-             (fn [c div]
-               (is (nil? c) "Render returns nil for stateless components")
-               (is (= "Hello foo" (.-innerText div)))))
-           (finally
-            (r/set-default-compiler! nil)))))))
-
-(deftest functional-component-poc-state-hook
-  (when r/is-client
-    (let [;; Probably not the best idea to keep
-          ;; refernce to state hook update fn, but
-          ;; works for testing.
-          set-count! (atom nil)
-          c (fn [x]
-              (let [[c set-count] (react/useState x)]
-                (reset! set-count! set-count)
-                [:span "Count " c]))]
-      (with-mounted-component [c 5]
-        functional-compiler
+(deftest ^:dom get-snapshot-before-update-test
+  (doseq [compiler test-compilers]
+    (let [ref (react/createRef)
+          prop (r/atom 0)
+          did-update (atom nil)
+          component (r/create-class
+                      {:get-snapshot-before-update (fn [this [_ prev-props] prev-state]
+                                                     {:height (.. ref -current -scrollHeight)})
+                       :component-did-update (fn [this [_ prev-props] prev-state snapshot]
+                                               (reset! did-update snapshot))
+                       :render (fn [this]
+                                 (r/as-element
+                                   [:div
+                                    {:ref ref
+                                     :style {:height "20px"}}
+                                    "foo"]))})
+          component-2 (fn []
+                        [component {:value @prop}])]
+      (with-mounted-component [component-2]
+        compiler
         (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Count 5" (.-innerText div)))
-          (@set-count! 6)
-          (is (= "Count 6" (.-innerText div))))))))
-
-(deftest functional-component-poc-ratom
-  (when r/is-client
-    (let [count (r/atom 5)
-          c (fn [x]
-              [:span "Count " @count])]
-      (with-mounted-component [c 5]
-        functional-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Count 5" (.-innerText div)))
-          (reset! count 6)
+          ;; Attach to DOM to get real height value
+          (.appendChild js/document.body div)
+          (is (= "foo" (.-innerText div)))
+          (swap! prop inc)
           (r/flush)
-          (is (= "Count 6" (.-innerText div)))
-          ;; TODO: Test that component RAtom is disposed
-          )))))
+          (is (= {:height 20} @did-update))
+          (.removeChild js/document.body div))))))
 
+(deftest ^:dom issue-462-test
+  (doseq [compiler test-compilers]
+    (let [val (r/atom 0)
+          render (atom 0)
+          a (fn issue-462-a [nr]
+              (swap! render inc)
+              [:h1 "Value " nr])
+          b (fn issue-462-b []
+              [:div
+               ^{:key @val}
+               [a @val]])
+          c (fn issue-462-c []
+              ^{:key @val}
+              [b])]
+      (with-mounted-component [c]
+        compiler
+        (fn [c div]
+          (is (= 1 @render))
+          (reset! val 1)
+          (r/flush)
+          (is (= 2 @render))
+          (reset! val 0)
+          (r/flush)
+          (is (= 3 @render)))))))
 
-(deftest functional-component-poc-ratom-state-hook
-  (when r/is-client
-    (let [r-count (r/atom 3)
-          set-count! (atom nil)
-          c (fn [x]
-              (let [[c set-count] (react/useState x)]
-                (reset! set-count! set-count)
-                [:span "Counts " @r-count " " c]))]
-      (with-mounted-component [c 15]
+(deftest ^:dom functional-component-poc-simple
+  (let [c (fn [x]
+            [:span "Hello " x])]
+    (testing ":f>"
+      (with-mounted-component [:f> c "foo"]
+        (fn [c div]
+          (is (nil? c) "Render returns nil for stateless components")
+          (is (= "Hello foo" (.-innerText div))))))
+
+    (testing "compiler options"
+      (with-mounted-component [c "foo"]
         functional-compiler
         (fn [c div]
           (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Counts 3 15" (.-innerText div)))
-          (reset! r-count 6)
-          (r/flush)
-          (is (= "Counts 6 15" (.-innerText div)))
-          (@set-count! 17)
-          (is (= "Counts 6 17" (.-innerText div)))
-          )))))
+          (is (= "Hello foo" (.-innerText div))))))
 
-(deftest test-input-el-ref
-  (when r/is-client
-    (doseq [compiler test-compilers]
-      (let [ref-1 (atom nil)
-            ref-1-fn #(reset! ref-1 %)
-
-            ref-2 (react/createRef)
-
-            c (fn [x]
-                [:div
-                 [:input
-                  {:ref ref-1-fn
-                   :value nil
-                   :on-change (fn [_])}]
-
-                 [:input
-                  {:ref ref-2
-                   :value nil
-                   :on-change (fn [_])}]])]
-        (with-mounted-component [c]
-          compiler
+    (testing "setting default compiler"
+      (try
+        (r/set-default-compiler! functional-compiler)
+        (with-mounted-component [c "foo"] nil
           (fn [c div]
-            (is (some? @ref-1))
-            (is (some? (.-current ref-2)))
-            ))))))
+            (is (nil? c) "Render returns nil for stateless components")
+            (is (= "Hello foo" (.-innerText div)))))
+        (finally
+          (r/set-default-compiler! nil))))))
+
+(deftest ^:dom functional-component-poc-state-hook
+  (let [;; Probably not the best idea to keep
+        ;; refernce to state hook update fn, but
+        ;; works for testing.
+        set-count! (atom nil)
+        c (fn [x]
+            (let [[c set-count] (react/useState x)]
+              (reset! set-count! set-count)
+              [:span "Count " c]))]
+    (with-mounted-component [c 5]
+      functional-compiler
+      (fn [c div]
+        (is (nil? c) "Render returns nil for stateless components")
+        (is (= "Count 5" (.-innerText div)))
+        (@set-count! 6)
+        (is (= "Count 6" (.-innerText div)))))))
+
+(deftest ^:dom functional-component-poc-ratom
+  (let [count (r/atom 5)
+        c (fn [x]
+            [:span "Count " @count])]
+    (with-mounted-component [c 5]
+      functional-compiler
+      (fn [c div]
+        (is (nil? c) "Render returns nil for stateless components")
+        (is (= "Count 5" (.-innerText div)))
+        (reset! count 6)
+        (r/flush)
+        (is (= "Count 6" (.-innerText div)))
+        ;; TODO: Test that component RAtom is disposed
+        ))))
+
+
+(deftest ^:dom functional-component-poc-ratom-state-hook
+  (let [r-count (r/atom 3)
+        set-count! (atom nil)
+        c (fn [x]
+            (let [[c set-count] (react/useState x)]
+              (reset! set-count! set-count)
+              [:span "Counts " @r-count " " c]))]
+    (with-mounted-component [c 15]
+      functional-compiler
+      (fn [c div]
+        (is (nil? c) "Render returns nil for stateless components")
+        (is (= "Counts 3 15" (.-innerText div)))
+        (reset! r-count 6)
+        (r/flush)
+        (is (= "Counts 6 15" (.-innerText div)))
+        (@set-count! 17)
+        (is (= "Counts 6 17" (.-innerText div)))
+        ))))
+
+(deftest ^:dom test-input-el-ref
+  (doseq [compiler test-compilers]
+    (let [ref-1 (atom nil)
+          ref-1-fn #(reset! ref-1 %)
+
+          ref-2 (react/createRef)
+
+          c (fn [x]
+              [:div
+               [:input
+                {:ref ref-1-fn
+                 :value nil
+                 :on-change (fn [_])}]
+
+               [:input
+                {:ref ref-2
+                 :value nil
+                 :on-change (fn [_])}]])]
+      (with-mounted-component [c]
+        compiler
+        (fn [c div]
+          (is (some? @ref-1))
+          (is (some? (.-current ref-2)))
+          )))))
 
 (deftest test-element-key
   (is (= "0" (.-key (r/as-element           [:div {:key 0}]))))

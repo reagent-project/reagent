@@ -138,7 +138,8 @@
                 :output-to "target/cljsbuild/node-test-npm/main.js"
                 :npm-deps true
                 :aot-cache true
-                :checked-arrays :warn}}
+                :checked-arrays :warn
+                :closure-defines {"reagenttest.runtests.DOM_TESTS" false}}}
 
     ;; With :advanched source-paths doesn't matter that much as
     ;; Cljs compiler will only read :main file.

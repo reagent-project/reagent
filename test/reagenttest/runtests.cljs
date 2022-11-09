@@ -62,6 +62,26 @@
     (run-tests)
     [#'test-output-mini]))
 
+;; From cognitect-labs/test-runner.
+;; Will modify test vars based on filter-fn, based on
+;; the metadata on test vars, so that
+;; test run in cljs.test will not see ignored test vars.
+(defn filter-vars! [ns-syms filter-fn]
+  (doseq [ns-sym ns-syms]
+    (doseq [[_ var] ns-sym]
+      (when (:test (meta var))
+        (when (not (filter-fn var))
+          (set! (.-cljs$lang$test @var) nil))))))
+
+(goog-define ^boolean DOM_TESTS true)
+
+(when (false? DOM_TESTS)
+  (js/console.log "DOM tests disabled")
+  ;; Filter vars on namespaces using ^:dom metadata on test vars.
+  (filter-vars! [(ns-publics 'reagenttest.testreagent)
+                 (ns-publics 'reagenttest.testwrap)]
+                (fn [var] (not (:dom (meta var))))))
+
 ;; Macro which sets *main-cli-fn*
 (doo/doo-all-tests #"(reagenttest\.test.*|reagent\..*-test)")
 
