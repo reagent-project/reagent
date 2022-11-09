@@ -1,14 +1,7 @@
 (ns reagenttest.testwrap
   (:require [clojure.test :as t :refer-macros [is deftest]]
             [reagent.core :as r]
-            [reagent.impl.template :as tmpl]
             [reagenttest.utils :as u :refer [with-mounted-component]]))
-
-(def functional-compiler (r/create-compiler {:function-components true}))
-
-(def test-compilers
-  [tmpl/class-compiler
-   functional-compiler])
 
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
@@ -99,156 +92,152 @@
            (swap! b inc)))
     (is (= 24 @a @b))))
 
-(deftest ^:dom test-wrap
-  (t/async done
-    ((reduce
-       (fn [next-done compiler]
-         (fn []
-           (let [state (r/atom {:foo {:bar {:foobar 1}}})
-                 ran (r/atom 0)
-                 grand-state (clojure.core/atom nil)
-                 grand-child (fn [v]
-                               (swap! ran inc)
-                               (reset! grand-state v)
-                               [:div (str "value:" (:foobar @v) ":")])
-                 child (fn [v]
-                         [grand-child (r/wrap (:bar @v)
-                                              swap! v assoc :bar)])
-                 parent (fn []
-                          [child (r/wrap (:foo @state)
-                                         swap! state assoc :foo)])]
-             (u/with-mounted-component-async [parent] next-done compiler
-               (fn [c div done]
-                 (u/run-fns-after-render
-                   (fn []
-                     (is (= 1 @ran))
-                     (is (= "value:1:" (.-innerText div)))
+(u/deftest ^:dom test-wrap
+  (let [compiler u/*test-compiler*
+        state (r/atom {:foo {:bar {:foobar 1}}})
+        ran (r/atom 0)
+        grand-state (clojure.core/atom nil)
+        grand-child (fn [v]
+                      (swap! ran inc)
+                      (reset! grand-state v)
+                      [:div (str "value:" (:foobar @v) ":")])
+        child (fn [v]
+                [grand-child (r/wrap (:bar @v)
+                                     swap! v assoc :bar)])
+        parent (fn []
+                 [child (r/wrap (:foo @state)
+                                swap! state assoc :foo)])]
+    (t/async done
+      (u/with-mounted-component-async
+        [parent]
+        done
+        compiler
+        (fn [c div done]
+          (u/run-fns-after-render
+            (fn []
+              (is (= 1 @ran))
+              (is (= "value:1:" (.-innerText div)))
 
-                     (reset! @grand-state {:foobar 2})
-                     ;; Not sure why this fixes this.
-                     (r/flush))
-                   (fn []
-                     (is (= {:foo {:bar {:foobar 2}}} @state))
-                     (is (= 2 @ran))
-                     (is (= "value:2:" (.-innerText div)))
+              (reset! @grand-state {:foobar 2})
+              ;; Not sure why this fixes this.
+              (r/flush))
+            (fn []
+              (is (= {:foo {:bar {:foobar 2}}} @state))
+              (is (= 2 @ran))
+              (is (= "value:2:" (.-innerText div)))
 
-                     (swap! state update-in [:foo :bar] assoc :foobar 3))
-                   (fn []
-                     (is (= 3 @ran))
-                     (is (= "value:3:" (.-innerText div)))
-                     (reset! state {:foo {:bar {:foobar 3}}
-                                    :foo1 {}}))
-                   (fn []
-                     (is (= 3 @ran))
-                     (reset! @grand-state {:foobar 3}))
-                   (fn []
-                     ; (is (= 3 @ran))
-                     (is (= "value:3:" (.-innerText div)))
+              (swap! state update-in [:foo :bar] assoc :foobar 3))
+            (fn []
+              (is (= 3 @ran))
+              (is (= "value:3:" (.-innerText div)))
+              (reset! state {:foo {:bar {:foobar 3}}
+                             :foo1 {}}))
+            (fn []
+              (is (= 3 @ran))
+              (reset! @grand-state {:foobar 3}))
+            (fn []
+              ; (is (= 3 @ran))
+              (is (= "value:3:" (.-innerText div)))
 
-                     (reset! state {:foo {:bar {:foobar 2}}
-                                    :foo2 {}}))
-                   (fn []
-                     ; (is (= 4 @ran))
-                     (is (= "value:2:" (.-innerText div)))
+              (reset! state {:foo {:bar {:foobar 2}}
+                             :foo2 {}}))
+            (fn []
+              ; (is (= 4 @ran))
+              (is (= "value:2:" (.-innerText div)))
 
-                     (reset! @grand-state {:foobar 2}))
-                   (fn []
-                     ; (is (= 5 @ran))
-                     (is (= "value:2:" (.-innerText div)))
+              (reset! @grand-state {:foobar 2}))
+            (fn []
+              ; (is (= 5 @ran))
+              (is (= "value:2:" (.-innerText div)))
 
-                     (reset! state {:foo {:bar {:foobar 4}}})
-                     (reset! @grand-state {:foobar 4}))
-                   (fn []
-                     ; (is (= 6 @ran))
-                     (is (= "value:4:" (.-innerText div)))
+              (reset! state {:foo {:bar {:foobar 4}}})
+              (reset! @grand-state {:foobar 4}))
+            (fn []
+              ; (is (= 6 @ran))
+              (is (= "value:4:" (.-innerText div)))
 
-                     (reset! @grand-state {:foobar 4}))
-                   (fn []
-                     ; (is (= 7 @ran))
-                     (is (= "value:4:" (.-innerText div))))
-                   done))))))
-       done
-       test-compilers))))
+              (reset! @grand-state {:foobar 4}))
+            (fn []
+              ; (is (= 7 @ran))
+              (is (= "value:4:" (.-innerText div))))
+            done))))))
 
-(deftest ^:dom test-cursor
-  (t/async done
-    ((reduce
-       (fn [next-done compiler]
-         (fn []
-           (let [state (r/atom {:a {:v 1}
-                                :b {:v 2}})
-                 a-count (r/atom 0)
-                 b-count (r/atom 0)
-                 derefer (fn derefer [cur count]
-                           (swap! count inc)
-                           [:div "" @cur])
-                 comp (fn test-cursor []
-                        [:div
-                         [derefer (r/cursor state [:a]) a-count]
-                         [derefer (r/cursor state [:b]) b-count]])]
-             (u/with-mounted-component-async [comp] next-done compiler
-               (fn [c div done]
-                 (u/run-fns-after-render
-                   (fn []
-                     (is (= 1 @a-count))
-                     (is (= 1 @b-count))
+(u/deftest ^:dom test-cursor
+  (let [compiler u/*test-compiler*
+        state (r/atom {:a {:v 1}
+                       :b {:v 2}})
+        a-count (r/atom 0)
+        b-count (r/atom 0)
+        derefer (fn derefer [cur count]
+                  (swap! count inc)
+                  [:div "" @cur])
+        comp (fn test-cursor []
+               [:div
+                [derefer (r/cursor state [:a]) a-count]
+                [derefer (r/cursor state [:b]) b-count]])]
+    (t/async done
+      (u/with-mounted-component-async
+        [comp]
+        done
+        compiler
+        (fn [c div done]
+          (u/run-fns-after-render
+            (fn []
+              (is (= 1 @a-count))
+              (is (= 1 @b-count))
 
 
-                     (swap! state update-in [:a :v] inc)
-                     (is (= 1 @a-count)))
-                   (fn []
-                     (is (= 2 @a-count))
-                     (is (= 1 @b-count))
+              (swap! state update-in [:a :v] inc)
+              (is (= 1 @a-count)))
+            (fn []
+              (is (= 2 @a-count))
+              (is (= 1 @b-count))
 
-                     (reset! state {:a {:v 2} :b {:v 2}}))
-                   (fn []
-                     (is (= 2 @a-count))
-                     (is (= 1 @b-count))
+              (reset! state {:a {:v 2} :b {:v 2}}))
+            (fn []
+              (is (= 2 @a-count))
+              (is (= 1 @b-count))
 
-                     (reset! state {:a {:v 3} :b {:v 2}}))
-                   (fn []
-                     (is (= 3 @a-count))
-                     (is (= 1 @b-count)))
-                   done))))))
-       done
-       test-compilers))))
+              (reset! state {:a {:v 3} :b {:v 2}}))
+            (fn []
+              (is (= 3 @a-count))
+              (is (= 1 @b-count)))
+            done))))))
 
-(deftest ^:dom test-fn-cursor
- (doseq [compiler test-compilers]
-   (let [state (r/atom {:a {:v 1}
-                        :b {:v 2}})
-         statec (r/cursor state [])
-         a-count (r/atom 0)
-         b-count (r/atom 0)
-         derefer (fn derefer [cur count]
-                   [:div "" @cur])
-         f (fn [[x y]] (swap! y inc) (get-in @statec x))
-         ac (r/cursor f [[:a] a-count])
-         bc (r/cursor f [[:b] b-count])
-         comp (fn test-cursor []
-                [:div
-                 [derefer ac]
-                 [derefer bc]])]
-     (with-mounted-component [comp]
-       compiler
-       (fn [c div]
-         (is (= 1 @a-count))
-         (is (= 1 @b-count))
+(u/deftest ^:dom test-fn-cursor
+  (let [state (r/atom {:a {:v 1}
+                       :b {:v 2}})
+        statec (r/cursor state [])
+        a-count (r/atom 0)
+        b-count (r/atom 0)
+        derefer (fn derefer [cur count]
+                  [:div "" @cur])
+        f (fn [[x y]] (swap! y inc) (get-in @statec x))
+        ac (r/cursor f [[:a] a-count])
+        bc (r/cursor f [[:b] b-count])
+        comp (fn test-cursor []
+               [:div
+                [derefer ac]
+                [derefer bc]])]
+    (with-mounted-component [comp]
+      (fn [c div]
+        (is (= 1 @a-count))
+        (is (= 1 @b-count))
 
-         (swap! state update-in [:a :v] inc)
-         (is (= 1 @a-count))
-         (is (= 1 @b-count))
+        (swap! state update-in [:a :v] inc)
+        (is (= 1 @a-count))
+        (is (= 1 @b-count))
 
-         (r/flush)
-         (is (= 2 @a-count))
-         (is (= 2 @b-count))
+        (r/flush)
+        (is (= 2 @a-count))
+        (is (= 2 @b-count))
 
-         (reset! state {:a {:v 2} :b {:v 2}})
-         (r/flush)
-         (is (= 2 @a-count))
-         (is (= 2 @b-count))
+        (reset! state {:a {:v 2} :b {:v 2}})
+        (r/flush)
+        (is (= 2 @a-count))
+        (is (= 2 @b-count))
 
-         (reset! state {:a {:v 3} :b {:v 2}})
-         (r/flush)
-       (is (= 3 @a-count))
-       (is (= 3 @b-count)))))))
+        (reset! state {:a {:v 3} :b {:v 2}})
+        (r/flush)
+        (is (= 3 @a-count))
+        (is (= 3 @b-count))))))
