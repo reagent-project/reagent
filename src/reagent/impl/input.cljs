@@ -15,12 +15,15 @@
 
 (declare input-component-set-value)
 
+(def ^:dynamic *force-set-dom-value* false)
+
 (defn input-node-set-value
   [node rendered-value dom-value ^clj component {:keys [on-write]}]
-  (if-not (and (identical? node (.-activeElement js/document))
-            (has-selection-api? (.-type node))
-            (string? rendered-value)
-            (string? dom-value))
+  (if (or (not (and (identical? node (.-activeElement js/document))
+                    (has-selection-api? (.-type node))
+                    (string? rendered-value)
+                    (string? dom-value)))
+          *force-set-dom-value*)
     ;; just set the value, no need to worry about a cursor
     (do
       (set! (.-cljsDOMValue component) rendered-value)
@@ -51,8 +54,14 @@
     ;; all the scenarios you have handle.
     (let [node-value (.-value node)]
       (if (not= node-value dom-value)
-        ;; IE has not notified us of the change yet, so check again later
-        (batch/do-after-render #(input-component-set-value component))
+        ;; IE has not notified us of the change yet, so check again later.
+        ;; Issue #566: Also setup force flag, so that cljsDOMValue will be set
+        ;; to dom elements current value, even if the input is activeElement.
+        ;; This fixes cases where input is focused from the code, before React
+        ;; render is called and input-component-set-value and
+        ;; input-node-set-value would be called infinitely.
+        (batch/do-after-render #(binding [*force-set-dom-value* true]
+                                  (input-component-set-value component)))
         (let [existing-offset-from-end (- (count node-value)
                                          (.-selectionStart node))
               new-cursor-offset        (- (count rendered-value)
