@@ -216,18 +216,25 @@
   (when (map? x)
     (try-get-react-key x)))
 
+;; NOTE: :r>/raw-element doesn't call this
+;; NOTE: :>/native-element doesn't call this
+;; But for both cases expand-seq-dev will use this for the dev time no-key
+;; warning.
+
 (defn react-key-from-vec [v]
   ;; Meta is a map always and is safe to read
-  (or (:key (meta v))
-      (get-react-key (nth v 1 nil))
-      ;; :> is a special case because properties map is the first
-      ;; element of the vector.
-      ;; TODO: Instead of checking all places for the props, select correct
-      ;; prosp value before this is called.
+  (let [k (:key (meta v))]
+    (if (some? k)
+      k
       (case (nth v 0 nil)
+        ;; Handle special cases where properties map isn't the second children of the vector.
+        ;; Third item is Clj props map.
         (:> :f>) (get-react-key (nth v 2 nil))
+        ;; Third item is the JS props object
         :r> (some-> (nth v 2 nil) (.-key))
-        nil)))
+        ;; Regular html element or such, second item is Clj props map.
+        ;; TODO: This is also called for component use, though the key won't be used?
+        (get-react-key (nth v 1 nil))))))
 
 ;; Error messages
 
