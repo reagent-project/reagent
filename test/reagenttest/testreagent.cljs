@@ -1113,7 +1113,8 @@
                (if (dev?)
                  (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
                               (.-componentStack ^js @info)))
-                 (is (re-find #"^\n    at reagent[0-9]+. \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at .+ \([^)]*\)"
+                 ;; Names are completely manged on adv compilation
+                 (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
                               (.-componentStack ^js @info)))))))))))
 
 (u/deftest ^:dom test-dom-node
