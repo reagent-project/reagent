@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.1.1...master)**
+
+### Features and changes
+
+- Update React to version 18
+    - `reagent.dom/render` continues to use old `ReactDOM.render`
+    - All old test cases are still using React 17 mode
+- Add new `reagent.dom.client` namespace for `createRoot` and related helpers.
+    - One new test case is using this and testing Reagent with the new React batching.
+- Deprecate `reagent.dom/dom-node` and `reagent.dom/force-update-all`
+
 ## 1.1.1 (2022-03-09)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.1.0...v1.1.1)**
