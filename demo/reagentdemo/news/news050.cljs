@@ -12,7 +12,7 @@
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
-(def cel-link "http://facebook.github.io/react/docs/top-level-api.html#react.createelement")
+(def cel-link "https://reactjs.org/docs/react-api.html#createelement")
 
 (def figwheel-link "https://github.com/bhauman/lein-figwheel")
 

@@ -34,7 +34,7 @@ Notes:
    4. On the `:video` component there's a `:ref` callback function which establishes the state in `!video`.  You can attach a ref callback to any of the Hiccup elements.
    5. Thereafter, `@!video` is used with the `:button's` `:on-click` to manipulate the `video` DOM methods.
    6. For full notes [read Paulus' blog post](https://presumably.de/reagent-mysteries-part-3-manipulating-the-dom.html)
-   7. For more background on callback refs, see [React's documentation](https://facebook.github.io/react/docs/more-about-refs.html)
+   7. For more background on callback refs, see [React's documentation](https://reactjs.org/docs/refs-and-the-dom.html)
 
 ***
 

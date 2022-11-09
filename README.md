@@ -6,7 +6,7 @@
 [![cljdoc badge](https://cljdoc.org/badge/reagent/reagent)](https://cljdoc.org/d/reagent/reagent/CURRENT)
 [![project chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C0620C0C8)
 
-A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](http://facebook.github.io/react/).
+A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](https://reactjs.org/).
 
 Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
