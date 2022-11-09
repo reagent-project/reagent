@@ -71,10 +71,10 @@
 
 (defn dom-node
   "Returns the root DOM node of a mounted component."
+  {:deprecated "1.2.0"}
   [this]
   (react-dom/findDOMNode this))
 
-;; TODO: Mark deprecated
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
   probably only useful in a development environment, when you want to
@@ -85,6 +85,7 @@
   functions are passed by value, and not by reference, in
   ClojureScript). To get around this you'll have to introduce a layer
   of indirection, for example by using `(render [#'foo])` instead."
+  {:deprecated "1.2.0"}
   []
   (ratom/flush!)
   (doseq [[container root] @roots]

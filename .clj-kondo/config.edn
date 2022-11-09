@@ -1,5 +1,7 @@
 {:lint-as {reagent.core/with-let clojure.core/let
            reagenttest.utils/deftest clojure.test/deftest}
  :linters {:unused-binding {:level :off}
-           :if {:level :off}
-           :unused-referred-var {:exclude {cljs.test [deftest testing is]}}}}
+           :missing-else-branch {:level :off}
+           :unused-referred-var {:exclude {cljs.test [deftest testing is]}}
+           ;; Example namespaces use clashing names now
+           :redefined-var {:level :off}}}

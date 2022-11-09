@@ -1,10 +1,26 @@
 (ns reagenttest.utils
   (:require-macros reagenttest.utils)
-  (:require [reagent.core :as r]
+  (:require ["react-dom/test-utils" :as react-test]
+            [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
             [reagent.debug :as debug]
             [reagent.impl.template :as tmpl]))
+
+;; Silence ReactDOM.render warning
+(defonce original-console-error (.-error js/console))
+
+(set! (.-error js/console)
+      (fn [& [first-arg :as args]]
+        (cond
+          (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18.")
+          nil
+
+          (.startsWith first-arg "Warning: The current testing environment is not configured to support")
+          nil
+
+          :else
+          (apply original-console-error args))))
 
 ;; The code from deftest macro will refer to these
 (def class-compiler tmpl/class-compiler)
@@ -83,3 +99,30 @@
           (f)
           (finally
             (.removeListener process "uncaughtException" l)))))))
+
+;; FIXME: Not useful, this isn't usable with production React.
+(defn act*
+  "Run f to trigger Reagent updates,
+  will return Promise which will resolve after
+  Reagent and React render."
+  [f]
+  ;; async act doesn't return a real promise (with chainable then),
+  ;; so wrap it.
+  (js/Promise.
+    (fn [resolve reject]
+      (try
+        (.then (react-test/act
+                 (fn reagent-act-callback []
+                   ;; React act callback should return something "thenable" to use
+                   ;; async act.
+                   (let [p (js/Promise. (fn [resolve _reject]
+                                          (r/after-render (fn reagent-act-after-reagent-flush []
+                                                            (js/console.log "after render")
+                                                            (resolve)))))]
+                     (js/console.log "act call")
+                     (f)
+                     p)))
+               resolve
+               reject)
+        (catch :default e
+          (reject e))))))

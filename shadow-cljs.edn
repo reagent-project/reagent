@@ -5,7 +5,8 @@
            :output-dir "target/shadow-cljs/client/public/js"
            :asset-path "/js"
            :modules {:main {:entries [reagentdemo.dev]}}
-           :devtools {:ignore-warnings true}}
+           :devtools {:ignore-warnings true}
+           :compiler-options {:warnings {:fn-deprecated false}}}
   :test {:target :karma
          :output-to "target/shadow-cljs/resources/public/js/karma.js"
          :output-dir "target/shadow-cljs/resources/public/js"
