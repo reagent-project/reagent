@@ -14,7 +14,8 @@
   (when *assert*
     `(when reagent.debug.has-console
        (.warn (if reagent.debug.tracking
-                reagent.debug.track-console js/console)
+                reagent.debug.track-console
+                js/console)
               (str "Warning: " ~@forms)))))
 
 (defmacro warn-unless
@@ -29,7 +30,8 @@
   (when *assert*
     `(when reagent.debug.has-console
        (.error (if reagent.debug.tracking
-                 reagent.debug.track-console js/console)
+                 reagent.debug.track-console
+                 js/console)
                (str ~@forms)))))
 
 (defmacro println

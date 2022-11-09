@@ -3,6 +3,7 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
+            [reagent.debug :as debug]
             [reagent.impl.template :as tmpl]))
 
 ;; The code from deftest macro will refer to these
@@ -47,3 +48,38 @@
                                  (f)
                                  (cb)))))
            (reverse fs))))
+
+;; For testing logged errors and warnings
+
+(defn log-error [& f]
+  (debug/error (apply str f)))
+
+(defn wrap-capture-console-error [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (try
+        (f)
+        (finally
+          (set! js/console.error org))))))
+
+(defn wrap-capture-window-error [f]
+  (if (exists? js/window)
+    (fn []
+      (let [org js/console.onerror]
+        (set! js/window.onerror (fn [e]
+                                  (log-error e)
+                                  true))
+        (try
+          (f)
+          (finally
+            (set! js/window.onerror org)))))
+    (fn []
+      (let [process (js/require "process")
+            l (fn [e]
+                (log-error e))]
+        (.on process "uncaughtException" l)
+        (try
+          (f)
+          (finally
+            (.removeListener process "uncaughtException" l)))))))

@@ -20,18 +20,6 @@
                  :after  (fn []
                            (set! rv/debug false))})
 
-(defn log-error [& f]
-  (debug/error (apply str f)))
-
-(defn wrap-capture-console-error [f]
-  (fn []
-    (let [org js/console.error]
-      (set! js/console.error log-error)
-      (try
-        (f)
-        (finally
-          (set! js/console.error org))))))
-
 (u/deftest ^:dom really-simple-test
   (let [ran (r/atom 0)
         really-simple (fn []
@@ -605,7 +593,7 @@
                  ^{:key nil}
                  [:button {:on-click #(js/console.log %)}])])
           w (debug/track-warnings
-              (wrap-capture-console-error
+              (u/wrap-capture-console-error
                 #(with-mounted-component [c]
                    (fn [c div]))))]
       (if (dev?)
@@ -1012,27 +1000,6 @@
 (defn foo []
   [:div])
 
-(defn wrap-capture-window-error [f]
-  (if (exists? js/window)
-    (fn []
-      (let [org js/console.onerror]
-        (set! js/window.onerror (fn [e]
-                                  (log-error e)
-                                  true))
-        (try
-          (f)
-          (finally
-            (set! js/window.onerror org)))))
-    (fn []
-      (let [process (js/require "process")
-            l (fn [e]
-                (log-error e))]
-        (.on process "uncaughtException" l)
-        (try
-          (f)
-          (finally
-            (.removeListener process "uncaughtException" l)))))))
-
 (u/deftest ^:dom test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -1053,7 +1020,7 @@
     ;; NOTE: browser-npm uses production cjs bundle for now which only shows
     ;; the minified error
     (debug/track-warnings
-      (wrap-capture-console-error
+      (u/wrap-capture-console-error
         #(is (thrown-with-msg?
                :default #"(Element type is invalid:|Minified React error)"
                (as-string [:> [:div]])))))
@@ -1086,8 +1053,8 @@
 
       ;; Error is orginally caused by comp1, so only that is shown in the error
       (let [e (debug/track-warnings
-                (wrap-capture-window-error
-                  (wrap-capture-console-error
+                (u/wrap-capture-window-error
+                  (u/wrap-capture-console-error
                     #(is (thrown-with-msg?
                            :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                            (rend [comp2 [:div. "foo"]]))))))]
@@ -1095,8 +1062,8 @@
                      (first (:error e)))))
 
       (let [e (debug/track-warnings
-                (wrap-capture-window-error
-                  (wrap-capture-console-error
+                (u/wrap-capture-window-error
+                  (u/wrap-capture-console-error
                     #(is (thrown-with-msg?
                            :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                            (rend [comp1 [:div. "foo"]]))))))]
@@ -1136,8 +1103,8 @@
         comp2 (fn comp2 []
                 [comp1])]
     (debug/track-warnings
-      (wrap-capture-window-error
-        (wrap-capture-console-error
+      (u/wrap-capture-window-error
+        (u/wrap-capture-console-error
           #(with-mounted-component [error-boundary [comp2]]
              (fn [c div]
                (r/flush)
@@ -1398,8 +1365,8 @@
                         (if (= 0 @prop)
                           [:div "Ok"]
                           (throw (js/Error. "foo"))))]
-    (wrap-capture-window-error
-      (wrap-capture-console-error
+    (u/wrap-capture-window-error
+      (u/wrap-capture-console-error
         #(with-mounted-component [component [bad-component]]
            (fn [c div]
              (is (= "Ok" (.-innerText div)))
