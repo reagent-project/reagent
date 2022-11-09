@@ -27,11 +27,8 @@
                         [:div "div in really-simple"])]
     (with-mounted-component [really-simple nil nil]
       (fn [c div]
-        (swap! ran inc)
-        (is (= "div in really-simple" (.-innerText div)))
-        (r/flush)
-        (is (= 2 @ran))))
-    (is (= 2 @ran))))
+        (is (= 1 @ran))
+        (is (= "div in really-simple" (.-innerText div)))))))
 
 (u/deftest ^:dom test-simple-callback
   (let [ran (r/atom 0)
@@ -49,8 +46,8 @@
     (with-mounted-component [comp {:foo "you"} 1]
       (fn [C div]
         (swap! ran inc)
-        (is (= "hi you." (.-innerText div)))))
-    (is (= 3 @ran))))
+        (is (= "hi you." (.-innerText div)))
+        (is (= 3 @ran))))))
 
 (u/deftest ^:dom test-state-change
   (let [ran (r/atom 0)
