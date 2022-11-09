@@ -116,7 +116,7 @@
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
-    (set! rea-queue (array))
+    (set! rea-queue #js [])
     (batch/schedule))
   (.push rea-queue r))
 
@@ -328,8 +328,8 @@
 
 (defn with-let-values [key]
   (if-some [c *ratom-context*]
-    (cached-reaction array c key nil with-let-destroy)
-    (array)))
+    (cached-reaction (fn [] #js []) c key nil with-let-destroy)
+    #js []))
 
 
 ;;;; reaction

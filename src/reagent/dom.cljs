@@ -3,7 +3,6 @@
             ["react-dom" :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
-            [reagent.impl.input :as input]
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
@@ -49,7 +48,7 @@
 
   Returns the mounted component instance."
   ([comp container]
-   (render comp container tmpl/default-compiler))
+   (render comp container tmpl/*current-default-compiler*))
   ([comp container callback-or-compiler]
    (ratom/flush!)
    (let [[compiler callback] (cond
@@ -57,7 +56,7 @@
                                [(:compiler callback-or-compiler) (:callback callback-or-compiler)]
 
                                (fn? callback-or-compiler)
-                               [tmpl/default-compiler callback-or-compiler]
+                               [tmpl/*current-default-compiler* callback-or-compiler]
 
                                :else
                                [callback-or-compiler nil])

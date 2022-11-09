@@ -60,17 +60,17 @@
 
   (queue-render [this c]
     (when (nil? (.-componentQueue this))
-      (set! (.-componentQueue this) (array)))
+      (set! (.-componentQueue this) #js []))
     (enqueue this (.-componentQueue this) c))
 
   (add-before-flush [this f]
     (when (nil? (.-beforeFlush this))
-      (set! (.-beforeFlush this) (array)))
+      (set! (.-beforeFlush this) #js []))
     (enqueue this (.-beforeFlush this) f))
 
   (add-after-render [this f]
     (when (nil? (.-afterRender this))
-      (set! (.-afterRender this) (array)))
+      (set! (.-afterRender this) #js []))
     (enqueue this (.-afterRender this) f))
 
   (run-queues [this]

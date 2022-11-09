@@ -5,7 +5,7 @@
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dev? warn error warn-unless assert-callable]]))
+            [reagent.debug :refer-macros [dev? warn warn-unless assert-callable]]))
 
 (declare ^:dynamic *current-component*)
 

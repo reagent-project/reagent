@@ -8,7 +8,7 @@
 (defn render-to-string
   "Turns a component into an HTML string."
   ([component]
-   (render-to-string component tmpl/default-compiler))
+   (render-to-string component tmpl/*current-default-compiler*))
   ([component compiler]
    (ratom/flush!)
    (binding [util/*non-reactive* true]
@@ -17,7 +17,7 @@
 (defn render-to-static-markup
   "Turns a component into an HTML string, without data-react-id attributes, etc."
   ([component]
-   (render-to-static-markup component tmpl/default-compiler))
+   (render-to-static-markup component tmpl/*current-default-compiler*))
   ([component compiler]
    (ratom/flush!)
    (binding [util/*non-reactive* true]

@@ -453,7 +453,7 @@
         rstate (reaction (:val @state))
         r1 (run!
             (when (= @rstate 13)
-              (throw (ex-info "fail" nil))))]
+              (throw (js/Error. "fail"))))]
     (swap! state assoc :val 13)
     (is (thrown? :default
                  (r/flush)))

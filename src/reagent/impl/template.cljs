@@ -3,7 +3,6 @@
             [clojure.string :as string]
             [reagent.impl.util :as util :refer [named?]]
             [reagent.impl.component :as comp]
-            [reagent.impl.batching :as batch]
             [reagent.impl.input :as input]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
@@ -316,8 +315,8 @@
       (make-element [this argv component jsprops first-child]
         (make-element this argv component jsprops first-child)))))
 
-(def default-compiler* (create-compiler {}))
-(def ^:dynamic default-compiler default-compiler*)
+(def class-compiler (create-compiler {}))
+(def ^:dynamic *current-default-compiler* class-compiler)
 
 (defn set-default-compiler! [compiler]
-  (set! default-compiler compiler))
+  (set! *current-default-compiler* compiler))

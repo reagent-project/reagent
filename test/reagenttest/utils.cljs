@@ -5,7 +5,7 @@
 
 (defn with-mounted-component
   ([comp f]
-   (with-mounted-component comp tmpl/default-compiler f))
+   (with-mounted-component comp tmpl/class-compiler f))
   ([comp compiler f]
    (let [div (.createElement js/document "div")]
      (try

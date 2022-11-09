@@ -40,7 +40,7 @@
 (def functional-compiler (r/create-compiler {:function-components true}))
 
 (def test-compilers
-  [tmpl/default-compiler*
+  [tmpl/class-compiler
    functional-compiler])
 
 (deftest ^:dom really-simple-test

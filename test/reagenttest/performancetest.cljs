@@ -20,7 +20,7 @@
   (js/performance.mark "class-start")
   ; (simple-benchmark [x [hello-world-component]] (p/as-element tmpl/default-compiler* x) 100000)
   (dotimes [i 100000]
-    (p/as-element tmpl/default-compiler* [hello-world-component]))
+    (p/as-element tmpl/class-compiler [hello-world-component]))
   (js/performance.mark "class-end")
   (js/console.log (js/performance.measure "class" "class-start" "class-end")))
 
