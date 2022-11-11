@@ -13,10 +13,10 @@
 (set! (.-error js/console)
       (fn [& [first-arg :as args]]
         (cond
-          (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18.")
+          (and (string? first-arg) (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18."))
           nil
 
-          (.startsWith first-arg "Warning: The current testing environment is not configured to support")
+          (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
           nil
 
           :else
