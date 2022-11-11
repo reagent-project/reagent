@@ -1,6 +1,7 @@
 (ns todomvc.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
+            ["react" :as react]
             [clojure.string :as str]))
 
 (defonce todos (r/atom (sorted-map)))
@@ -26,29 +27,42 @@
                 (add-todo "Allow any arguments to component functions")
                 (complete-all true)))
 
-(defn todo-input [{:keys [title on-save on-stop]}]
-  (let [val (r/atom title)
-        stop #(do (reset! val "")
-                  (if on-stop (on-stop)))
-        save #(let [v (-> @val str str/trim)]
-                (if-not (empty? v) (on-save v))
-                (stop))]
+(defn todo-input [{:keys [title on-save on-stop input-ref]}]
+  (let [val (r/atom title)]
     (fn [{:keys [id class placeholder]}]
-      [:input {:type "text" :value @val
-               :id id :class class :placeholder placeholder
-               :on-blur save
-               :on-change #(reset! val (-> % .-target .-value))
-               :on-key-down #(case (.-which %)
-                               13 (save)
-                               27 (stop)
-                               nil)}])))
+      (let [stop (fn [_e]
+                   (reset! val "")
+                   (when on-stop (on-stop)))
+            save (fn [e]
+                   (let [v (-> @val str str/trim)]
+                     (when-not (empty? v)
+                       (on-save v))
+                     (stop e)))]
+        [:input {:type "text"
+                 :value @val
+                 :ref input-ref
+                 :id id
+                 :class class
+                 :placeholder placeholder
+                 :on-blur save
+                 :on-change (fn [e]
+                              (reset! val (-> e .-target .-value)))
+                 :on-key-down (fn [e]
+                                (case (.-which e)
+                                  13 (save e)
+                                  27 (stop e)
+                                  nil))}]))))
 
-(def todo-edit (with-meta todo-input
-                 {:component-did-mount #(.focus (rdom/dom-node %))}))
+(defn todo-edit [props]
+  (let [ref (react/useRef)]
+    (react/useEffect (fn []
+                       (.focus (.-current ref))
+                       js/undefined))
+    [todo-input (assoc props :input-ref ref)]))
 
 (defn todo-stats [{:keys [filt active done]}]
   (let [props-for (fn [name]
-                    {:class (if (= name @filt) "selected")
+                    {:class (when (= name @filt) "selected")
                      :on-click #(reset! filt name)})]
     [:div
      [:span#todo-count
@@ -64,19 +78,25 @@
 (defn todo-item []
   (let [editing (r/atom false)]
     (fn [{:keys [id done title]}]
-      [:li {:class (str (if done "completed ")
-                        (if @editing "editing"))}
+      [:li
+       {:class [(when done "completed ")
+                (when @editing "editing")]}
        [:div.view
-        [:input.toggle {:type "checkbox" :checked done
-                        :on-change #(toggle id)}]
-        [:label {:on-double-click #(reset! editing true)} title]
+        [:input.toggle
+         {:type "checkbox"
+          :checked done
+          :on-change #(toggle id)}]
+        [:label
+         {:on-double-click #(reset! editing true)}
+         title]
         [:button.destroy {:on-click #(delete id)}]]
        (when @editing
-         [todo-edit {:class "edit" :title title
-                     :on-save #(save id %)
-                     :on-stop #(reset! editing false)}])])))
+         [:f> todo-edit {:class "edit"
+                         :title title
+                         :on-save #(save id %)
+                         :on-stop #(reset! editing false)}])])))
 
-(defn todo-app [props]
+(defn todo-app []
   (let [filt (r/atom :all)]
     (fn []
       (let [items (vals @todos)

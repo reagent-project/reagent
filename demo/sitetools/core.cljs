@@ -1,14 +1,19 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
+            ["react" :as react]
             [reagent.core :as r]
-            [reagent.dom :as rdom])
+            [reagent.dom :as rdom]
+            [reagent.dom.client :as rdomc])
   (:import goog.History
            [goog.history Html5History EventType]))
 
 ;;; Configuration
 
 (declare main-content)
+
+(defonce root
+  (rdomc/create-root (js/document.getElementById "main-content")))
 
 (defonce config (r/atom {:body [#'main-content]
                          :pages {"/index.html" {:content [:div]
@@ -17,7 +22,7 @@
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"
-                         :main-div "main-content"
+                         :react-root root
                          :default-title ""}))
 
 (defonce history nil)
@@ -109,6 +114,7 @@
     (let [page-conf (when (exists? js/pageConfig)
                       (js->clj js/pageConfig :keywordize-keys true))
           conf (swap! config merge page-conf)
-          {:keys [page-path body main-div]} conf]
+          {:keys [page-path body react-root]} conf]
       (init-history page-path)
-      (rdom/render body (js/document.getElementById main-div)))))
+      ;; Enable StrictMode to warn about e.g. findDOMNode
+      (rdomc/render react-root [:> react/StrictMode {} body]))))

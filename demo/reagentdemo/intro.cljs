@@ -110,7 +110,7 @@
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
-  
+
 (def ns-src-with-rdom (s/syntaxed "(ns example
   (:require [reagent.dom :as rdom]))"))
 

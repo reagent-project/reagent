@@ -25,7 +25,7 @@
     (str path "?" (subs h 0 6))))
 
 (defn html-template [{:keys [title body-html page-conf
-                             js-file css-file main-div
+                             js-file css-file
                              js-resource-path site-dir]}]
   (server/render-to-static-markup
     [:html
@@ -39,7 +39,7 @@
       [:title title]]
      [:body
       [:div
-       {:id main-div}
+       {:id "main-content"}
        (danger :div body-html)]
       (danger :script (str "var pageConfig = "
                            (-> page-conf clj->js js/JSON.stringify)))
