@@ -12,9 +12,6 @@
 
 (declare main-content)
 
-(defonce root
-  (rdomc/create-root (js/document.getElementById "main-content")))
-
 (defonce config (r/atom {:body [#'main-content]
                          :pages {"/index.html" {:content [:div]
                                                 :title ""}}
@@ -22,7 +19,7 @@
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
                          :js-file "js/main.js"
-                         :react-root root
+                         :main-div "main-content"
                          :default-title ""}))
 
 (defonce history nil)
@@ -108,13 +105,27 @@
 
 ;;; Main entry points
 
+(defonce react-root (atom nil))
+
 (defn start! [site-config]
   (swap! config merge site-config)
   (when r/is-client
     (let [page-conf (when (exists? js/pageConfig)
                       (js->clj js/pageConfig :keywordize-keys true))
           conf (swap! config merge page-conf)
-          {:keys [page-path body react-root]} conf]
+          {:keys [page-path body main-div]} conf
+          el [:> react/StrictMode {} body]]
+
       (init-history page-path)
-      ;; Enable StrictMode to warn about e.g. findDOMNode
-      (rdomc/render react-root [:> react/StrictMode {} body]))))
+
+      (when-not @react-root
+        (reset! react-root
+                (if (:hydrate page-conf)
+                  (do
+                    (js/console.log "hydrate root")
+                    (rdomc/hydrate-root (js/document.getElementById main-div) el))
+                  (rdomc/create-root (js/document.getElementById main-div)))))
+
+      (when-not (:hydrate page-conf)
+        ;; Enable StrictMode to warn about e.g. findDOMNode
+        (rdomc/render @react-root el)))))

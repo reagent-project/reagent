@@ -1,16 +1,11 @@
 (ns sitetools.prerender
   (:require [reagentdemo.core :as demo]
             [clojure.string :as string]
-            [goog.events :as evt]
-            [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.debug :refer [log]]
             [sitetools.core :as tools]
-
-            ;; Node libs
             [path :as path]
             [md5-file :as md5-file]
-            [path :as path]
             [fs :as fs]))
 
 (defn base [page]
@@ -25,7 +20,7 @@
     (str path "?" (subs h 0 6))))
 
 (defn html-template [{:keys [title body-html page-conf
-                             js-file css-file
+                             js-file css-file main-div
                              js-resource-path site-dir]}]
   (server/render-to-static-markup
     [:html
@@ -39,10 +34,11 @@
       [:title title]]
      [:body
       [:div
-       {:id "main-content"}
-       (danger :div body-html)]
-      (danger :script (str "var pageConfig = "
-                           (-> page-conf clj->js js/JSON.stringify)))
+       {:id main-div
+        :dangerouslySetInnerHTML {:__html body-html}}]
+      [:script
+       {:dangerouslySetInnerHTML {:__html (str "var pageConfig = "
+                                               (-> page-conf clj->js js/JSON.stringify))}}]
       [:script {:src (add-cache-buster js-resource-path js-file)
                 :type "text/javascript"}]]]))
 
@@ -53,7 +49,8 @@
         bhtml (server/render-to-string b)]
     (str "<!doctype html>\n"
          (html-template (assoc conf
-                               :page-conf {:page-path page-path}
+                               :page-conf {:page-path page-path
+                                           :hydrate true}
                                :body-html bhtml)))))
 
 (defn mkdirs [f]

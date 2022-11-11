@@ -168,7 +168,14 @@
                 :closure-warnings {:global-this :off}
                 :npm-deps true
                 :aot-cache true
-                :language-out :es5}}
+                :language-out :es5
+                ;; For debug
+                :pseudo-names true
+                ;; Testing with React development version
+                :process-shim false
+                :preloads [process.env]
+                :closure-defines {process.env.NODE_ENV "development"}
+                }}
 
     {:id "prod-test"
      :source-paths ["test"]
