@@ -18,6 +18,8 @@
   (.unmount root))
 
 (defn- reagent-root [^js js-props]
+  ;; This will flush initial r/after-render callbacks.
+  ;; Later that queue will be flushed on Reagent render-loop.
   (let [el (gobj/get js-props "comp")]
     (react/useEffect (fn []
                        (binding [util/*always-update* false]
@@ -37,3 +39,11 @@
          ;; render, and handles the *always-update* binding correctly?
          comp (fn [] (p/as-element compiler el))]
      (.render root (react/createElement reagent-root #js {:comp comp})))))
+
+(defn hydrate-root
+  ([container el]
+   (hydrate-root container el nil))
+  ([container el {:keys [compiler on-recoverable-error identifier-prefix]
+                  :or {compiler tmpl/*current-default-compiler*}}]
+   (let [comp (fn [] (p/as-element compiler el))]
+     (react-dom-client/hydrateRoot container (react/createElement reagent-root #js {:comp comp})))))
