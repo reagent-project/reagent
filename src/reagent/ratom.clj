@@ -21,7 +21,7 @@
   (assert (vector? bindings)
           (str "with-let bindings must be a vector, not "
                (pr-str bindings)))
-  (let [v (gensym "with-let")
+  (let [v (with-meta (gensym "with-let") {:tag 'clj})
         k (keyword v)
         init (gensym "init")
         ;; V is a reaction, which holds a JS array.
