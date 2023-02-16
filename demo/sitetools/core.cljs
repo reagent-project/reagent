@@ -13,7 +13,8 @@
 (declare main-content)
 
 (defonce root
-  (rdomc/create-root (js/document.getElementById "main-content")))
+  ;; Init only on use, this ns is loaded for SSR build also
+  (delay (rdomc/create-root (js/document.getElementById "main-content"))))
 
 (defonce config (r/atom {:body [#'main-content]
                          :pages {"/index.html" {:content [:div]
@@ -117,4 +118,4 @@
           {:keys [page-path body react-root]} conf]
       (init-history page-path)
       ;; Enable StrictMode to warn about e.g. findDOMNode
-      (rdomc/render react-root [:> react/StrictMode {} body]))))
+      (rdomc/render @react-root [:> react/StrictMode {} body]))))
