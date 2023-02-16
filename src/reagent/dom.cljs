@@ -1,43 +1,29 @@
 (ns reagent.dom
-  (:require ["react" :as react]
-            ["react-dom" :as react-dom]
+  (:require [react-dom :as react-dom]
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
-            [reagent.ratom :as ratom]
-            [goog.object :as gobj]))
+            [reagent.ratom :as ratom]))
 
 (defonce ^:private roots (atom {}))
 
 (defn- unmount-comp [container]
-  (let [root (get @roots container)]
-    (swap! roots dissoc container)
-    (.unmount root)))
-
-(defn- reagent-root [^js js-props]
-  (let [comp (gobj/get js-props "comp")
-        callback (gobj/get js-props "callback")]
-    (react/useEffect (fn []
-                       (binding [util/*always-update* false]
-                         (batch/flush-after-render)
-                         (when (some? callback)
-                           (callback))
-                         js/undefined)))
-    (binding [util/*always-update* true]
-      (comp))))
+  (swap! roots dissoc container)
+  (react-dom/unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
-  (let [root (reify Object
-               (unmount [_this]
-                 (react-dom/unmountComponentAtNode container))
-               (render [_this]
-                 (react-dom/render
-                   (react/createElement reagent-root #js {:callback callback
-                                                          :comp comp})
-                   container)))]
-    (swap! roots assoc container root)
-    (.render root)))
+  (binding [util/*always-update* true]
+    (react-dom/render (comp) container
+      (fn []
+        (binding [util/*always-update* false]
+          (swap! roots assoc container comp)
+          (batch/flush-after-render)
+          (if (some? callback)
+            (callback)))))))
+
+(defn- re-render-component [comp container]
+  (render-comp comp container nil))
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be
@@ -88,6 +74,6 @@
   {:deprecated "1.2.0"}
   []
   (ratom/flush!)
-  (doseq [[container root] @roots]
-    (.render root))
+  (doseq [[container comp] @roots]
+    (re-render-component comp container))
   (batch/flush-after-render))
