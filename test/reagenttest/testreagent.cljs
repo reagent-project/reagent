@@ -1568,43 +1568,44 @@
              compiler)))))
 
 (deftest ^:dom react-18-test
-  (let [div (.createElement js/document "div")
-        root (rdomc/create-root div)
-        i (r/atom 0)
-        ran (atom 0)
-        test-wrap (fn [check-fn el]
-                    (react/useEffect (fn []
-                                       (check-fn)
-                                       js/undefined)
-                                     #js [])
-                    el)
-        really-simple (fn []
-                        (swap! ran inc)
-                        [:div "foo " @i])]
-    (u/async
-      ;; TODO: Create helper to render to div and check after initial render
-      ;; is done.
-      (js/Promise.
-        (fn [resolve reject]
-          (rdomc/render
-            root
-            [:f> test-wrap
-             (fn []
-               (is (= "foo 0" (.-innerText div)))
-               (is (= 1 @ran))
+  (when (>= (js/parseInt react/version) 18)
+    (let [div (.createElement js/document "div")
+          root (rdomc/create-root div)
+          i (r/atom 0)
+          ran (atom 0)
+          test-wrap (fn [check-fn el]
+                      (react/useEffect (fn []
+                                         (check-fn)
+                                         js/undefined)
+                                       #js [])
+                      el)
+          really-simple (fn []
+                          (swap! ran inc)
+                          [:div "foo " @i])]
+      (u/async
+        ;; TODO: Create helper to render to div and check after initial render
+        ;; is done.
+        (js/Promise.
+          (fn [resolve reject]
+            (rdomc/render
+              root
+              [:f> test-wrap
+               (fn []
+                 (is (= "foo 0" (.-innerText div)))
+                 (is (= 1 @ran))
 
-               (swap! i inc)
+                 (swap! i inc)
 
-               ;; Wait for Reagent to flush ratom queue.
-               (r/after-render
-                 (fn []
-                   ;; NOTE: React act isn't usable as it isn't available on production bundles.
-                   ;; Wait 16ms, this is probably enough for
-                   ;; React to render the results.
-                   (js/setTimeout (fn []
-                                    (is (= "foo 1" (.-innerText div)))
-                                    (is (= 2 @ran))
-                                    (resolve))
-                                  16))))
-             [really-simple]]
-            u/fn-compiler))))))
+                 ;; Wait for Reagent to flush ratom queue.
+                 (r/after-render
+                   (fn []
+                     ;; NOTE: React act isn't usable as it isn't available on production bundles.
+                     ;; Wait 16ms, this is probably enough for
+                     ;; React to render the results.
+                     (js/setTimeout (fn []
+                                      (is (= "foo 1" (.-innerText div)))
+                                      (is (= 2 @ran))
+                                      (resolve))
+                                    16))))
+               [really-simple]]
+              u/fn-compiler)))))))

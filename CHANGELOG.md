@@ -6,12 +6,20 @@
 
 ### Features and changes
 
-- Update React to version 18
-    - `reagent.dom/render` continues to use old `ReactDOM.render`
-    - All old test cases are still using React 17 mode
-- Add new `reagent.dom.client` namespace for `createRoot` and related helpers.
+- *Experimental* React 18 support
+    - `reagent.dom/render` continues to use old `ReactDOM.render` and you can
+      continue using React 17 like before.
+    - **Reagent test suite is still running against React 17 compatibility mode**
+- New `reagent.dom.client` namespace for React 18 `createRoot` API and related helpers.
     - One new test case is using this and testing Reagent with the new React batching.
 - Deprecate `reagent.dom/dom-node` and `reagent.dom/force-update-all`
+
+### Bugfixes
+
+- Fix shadow-cljs inference warning with `with-let` ([#585](https://github.com/reagent-project/reagent/issues/585))
+- Avoid infinite look in `reagent.impl.input` if inputs gets focus immediately after
+  value was set ([#566](https://github.com/reagent-project/reagent/issues/566))
+- Avoid missing React key warning when using `false` as the key value ([#569](https://github.com/reagent-project/reagent/issues/569))
 
 ## 1.1.1 (2022-03-09)
 
