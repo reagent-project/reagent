@@ -80,4 +80,4 @@ calling `as-element` with their own Compiler to ensure compatibility.
 
 ## Examples
 
-[emotion](examples/emotion/src/example/compiler.cljs)
+[emotion](../examples/emotion/src/example/compiler.cljs)
