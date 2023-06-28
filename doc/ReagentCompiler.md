@@ -77,3 +77,7 @@ Open questions:
 
 - Will this cause problems for libraries? Do the libraries have to start
 calling `as-element` with their own Compiler to ensure compatibility.
+
+## Examples
+
+[emotion](examples/emotion/src/example/compiler.cljs)
