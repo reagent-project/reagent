@@ -1,11 +1,11 @@
 (ns example.core
-  (:require [reagent.core :as r]
+  (:require [reagent.context :as r.context]
+            [reagent.core :as r]
             [reagent.dom :as rdom]
-            [react :as react]
             [goog.object :as gobj]))
 
 
-(defonce my-context (react/createContext "default"))
+(defonce my-context (r.context/make-context "my-context" "default"))
 
 (def Provider (.-Provider my-context))
 (def Consumer (.-Consumer my-context))
@@ -16,6 +16,18 @@
      (r/as-element [:div "Context: " (pr-str v)]))])
 
 (defn root []
+  ;; When using the pure Clojure wrappers, the value is passed as is.
+  [:div
+   [r.context/provider {:value {:foo :bar} ;; The value here can be anything, does not need to be a map
+                        :context my-context}
+    [r.context/consumer {:context my-context}
+     (fn [{:keys [foo]}]
+       [:div ":foo is a keyword: " (pr-str foo)])]
+
+    ;; The `with-context` macro cuts away some boilerplate from the above
+    (r.context/with-context [{:keys [foo]} my-context]
+      [:div "From the macro: " (pr-str foo)])]]
+
   ;; Provider takes props with single property, value
   ;; :< or adapt-react-class converts the Cljs properties
   ;; map to JS object for the Provider component.
