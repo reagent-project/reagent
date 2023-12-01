@@ -1375,12 +1375,20 @@
         (u/act (reset! val 0))
         (is (= 3 @render))))))
 
+(r/defc test-1 [x]
+  [:span "Hello " x])
+
 (deftest ^:dom functional-component-poc-simple
   (let [c (fn [x]
             [:span "Hello " x])]
     (u/async
       (testing ":f>"
         (u/with-render [div [:f> c "foo"]]
+          {:compiler u/class-compiler}
+          (is (= "Hello foo" (.-innerText div)))))
+
+      (testing "defc"
+        (u/with-render [div [test-1 "foo"]]
           {:compiler u/class-compiler}
           (is (= "Hello foo" (.-innerText div)))))
 
@@ -1442,6 +1450,21 @@
         (is (= "Counts 6 15" (.-innerText div)))
         (u/act (@set-count! 17))
         (is (= "Counts 6 17" (.-innerText div)))))))
+
+(r/defc test-2
+  "doc-1"
+  ([a] (test-2 a "x"))
+  ([a b]
+   (let [[v set-v] (react/useState 1)]
+     [:div "Hello " a " " b " " v])))
+
+(deftest ^:dom defc-component
+  (is (= "doc-1" (:doc (meta #'test-2))))
+
+  (u/async
+    (u/with-render [div [test-2 "foo"]]
+      {:compiler u/class-compiler}
+      (is (= "Hello foo x 1" (.-innerText div))))))
 
 (u/deftest ^:dom test-input-el-ref
   (let [ref-1 (atom nil)
