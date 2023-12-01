@@ -6,44 +6,44 @@
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))
 
-(defn simple-component []
+(r/defc simple-component []
   [:div
    [:p "I am a component!"]
    [:p.someclass
     "I have " [:strong "bold"]
     [:span {:style {:color "red"}} " and red "] "text."]])
 
-(defn simple-parent []
+(r/defc simple-parent []
   [:div
    [:p "I include simple-component."]
    [simple-component]])
 
-(defn hello-component [name]
+(r/defc hello-component [name]
   [:p "Hello, " name "!"])
 
-(defn say-hello []
+(r/defc say-hello []
   [hello-component "world"])
 
-(defn lister [items]
+(r/defc lister [items]
   [:ul
    (for [item items]
      ^{:key item} [:li "Item " item])])
 
-(defn lister-user []
+(r/defc lister-user []
   [:div
    "Here is a list:"
    [lister (range 3)]])
 
 (def click-count (r/atom 0))
 
-(defn counting-component []
+(r/defc counting-component []
   [:div
    "The atom " [:code "click-count"] " has value: "
    @click-count ". "
    [:input {:type "button" :value "Click me!"
             :on-click #(swap! click-count inc)}]])
 
-(defn atom-input [value]
+(r/defc atom-input [value]
   [:input {:type "text"
            :value @value
            :on-change #(reset! value (-> % .-target .-value))}])
@@ -62,7 +62,7 @@
       [:div
        "Seconds Elapsed: " @seconds-elapsed])))
 
-(defn render-simple []
+(r/defc render-simple []
   (rdom/render
     [simple-component]
     (.-body js/document)))
@@ -75,7 +75,7 @@
 
 (def bmi-data (r/atom (calc-bmi {:height 180 :weight 80})))
 
-(defn slider [param value min max invalidates]
+(r/defc slider [param value min max invalidates]
   [:input {:type "range" :value value :min min :max max
            :style {:width "100%"}
            :on-change (fn [e]
@@ -87,7 +87,7 @@
                                      (dissoc invalidates)
                                      calc-bmi)))))}])
 
-(defn bmi-component []
+(r/defc bmi-component []
   (let [{:keys [weight height bmi]} @bmi-data
         [color diagnose] (cond
                           (< bmi 18.5) ["orange" "underweight"]
@@ -114,7 +114,7 @@
 (def ns-src-with-rdom (s/syntaxed "(ns example
   (:require [reagent.dom :as rdom]))"))
 
-(defn intro []
+(r/defc intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
         react {:href "https://reactjs.org/"}
@@ -176,7 +176,7 @@
      is a map). See React’s " [:a react-keys "documentation"] "
      for more info."]]))
 
-(defn managing-state []
+(r/defc managing-state []
   [:div.demo-text
    [:h2 "Managing state in Reagent"]
 
@@ -224,7 +224,7 @@
    component is updated when your data changes. Reagent assumes by
    default that two objects are equal if they are the same object."]])
 
-(defn essential-api []
+(r/defc essential-api []
   [:div.demo-text
    [:h2 "Essential API"]
 
@@ -240,7 +240,7 @@
                           ns-src-with-rdom
                           (s/src-of [:simple-component :render-simple])]}]])
 
-(defn performance []
+(r/defc performance []
   [:div.demo-text
    [:h2 "Performance"]
 
@@ -285,7 +285,7 @@
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 
-(defn bmi-demo []
+(r/defc bmi-demo []
   [:div.demo-text
    [:h2 "Putting it all together"]
 
@@ -301,7 +301,7 @@
                           (s/src-of [:calc-bmi :bmi-data :slider
                                      :bmi-component])]}]])
 
-(defn complete-simple-demo []
+(r/defc complete-simple-demo []
   [:div.demo-text
    [:h2 "Complete demo"]
 
@@ -313,7 +313,7 @@
                     :complete true
                     :src (s/src-of nil "simpleexample/core.cljs")}]])
 
-(defn todomvc-demo []
+(r/defc todomvc-demo []
   [:div.demo-text
    [:h2 "Todomvc"]
 
