@@ -16,6 +16,19 @@ As described below, reagent provides a number of extensions and conveniences to 
 2. If the second element is a map, it represents the attributes to the element. The attribute map may be omitted.
 3. Any additional elements must either be Hiccup vectors representing child nodes or string literals representing child text nodes.
 
+### Creating non standard HTML attributes
+
+While standard HTML attributes are passed as `:keywords`, if you need a non standard one, use a string key:
+
+```clojure
+[:span {"custom-attribute" "value"}]
+```
+Will result in:
+
+```html
+<span custom-attribute="value"></span>
+```
+
 ## Special treatment of `nil` child nodes
 
 Reagent and React ignore nil nodes, which allow conditional logic in Hiccup forms:
