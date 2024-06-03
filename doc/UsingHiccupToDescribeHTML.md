@@ -42,6 +42,19 @@ The `:style` attribute can be written a string or as a map. The following two ar
 
 The map form is the same as [React's style attribute](https://reactjs.org/docs/dom-elements.html#style), except that when using the map form of the style attribute, the keys should be the same as the CSS attribute as shown in the example above (not in camel case as is required JavaScript).
 
+### CSS custom properties styntax
+
+To create an element with a CSS custom property like this:
+
+```html
+<span style="--custom-property: value"></span>
+```
+Use a string as a key for the `:style` map:
+
+```clojure
+[:span {:style {"--custom-property" "value"}}]
+```
+
 ## Special interpretation of `class` attribute
 
 In JavaScript, `class` is a reserved keyword, so React uses the `className` to specify class attibutes. Reagent just uses `class`.
