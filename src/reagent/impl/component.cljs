@@ -477,3 +477,8 @@
             f (react/memo f functional-render-memo-fn)]
         (cache-react-class compiler tag f)
         f)))
+
+;; defc impl
+
+(defn memo [f]
+  (react/memo f functional-render-memo-fn))
