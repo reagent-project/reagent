@@ -343,7 +343,8 @@
   f will be called just after any queued renders in the next animation
   frame (and even if no renders actually occur)."
   [f]
-  (batch/do-after-render f))
+  (batch/do-after-render f)
+  nil)
 
 (defn partial
   "Works just like clojure.core/partial, but the result can be compared with ="
