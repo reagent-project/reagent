@@ -2,7 +2,7 @@
 
 Reagent uses async rendering which causes problems with controlled inputs. If
 the input element is created directly by Reagent (i.e. `[:input ...]` in hiccup), [a
-workaround](https://github.com/reagent-project/reagent/blob/master/src/reagent/impl/template.cljs#L132-L238)
+workaround](https://github.com/reagent-project/reagent/blob/master/src/reagent/impl/input.cljs)
 can be applied, but if the input is created by JS library (i.e. JSX `<input>`
 or React `create-element`), Reagent doesn't see
 the element so the workaround can't be applied.
