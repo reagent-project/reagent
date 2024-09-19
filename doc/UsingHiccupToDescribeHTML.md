@@ -69,7 +69,7 @@ Use a string as a key for the `:style` map:
 ```
 
 NOTE: This is due to how Reagent turns keywords as map keys to Object
-properties with conversion from snake-case to camelCase, which React
+properties with conversion from kebab-case to camelCase, which React
 also uses with CSS properties (vs. regular CSS). It could be possible
 to change the implementation to skip the case-conversion for properties
 starting with `--` but it isn't implemented now.

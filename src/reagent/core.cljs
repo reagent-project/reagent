@@ -94,7 +94,7 @@
   Everything is optional, except either :reagent-render or :render.
 
   Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
-  and can be provided in snake-case or camelCase.
+  and can be provided in kebab-case or camelCase.
 
   State can be initialized using constructor, which matches React.Component class,
   or using getInitialState which matches old React createClass function and is

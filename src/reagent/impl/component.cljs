@@ -285,7 +285,7 @@
   "Creates JS class based on provided Clojure map.
 
   Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
-  and can be provided in snake-case or camelCase.
+  and can be provided in kebab-case or camelCase.
   Constructor function is defined using key `:getInitialState`.
 
   React built-in static methods or properties are automatically defined as statics."
