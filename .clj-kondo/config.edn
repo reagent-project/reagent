@@ -1,4 +1,5 @@
 {:lint-as {reagent.core/with-let clojure.core/let
+           reagent.core/defc clojure.core/defn
            reagenttest.utils/deftest clojure.test/deftest}
  :linters {:unused-binding {:level :off}
            :missing-else-branch {:level :off}
