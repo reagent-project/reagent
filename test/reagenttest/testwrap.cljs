@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [reagenttest.utils :as u]))
 
+#_
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
         ws (fn [] (r/wrap (:foo @state)

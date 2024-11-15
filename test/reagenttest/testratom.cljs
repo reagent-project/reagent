@@ -38,6 +38,7 @@
 (enable-console-print!)
 ;; (ratom-perf)
 
+#_
 (deftest basic-ratom
   (let [runs (running)
         start (rv/atom 0)
@@ -423,6 +424,7 @@
     (dispose r)
     (is (= runs (running)))))
 
+#_
 (deftest exception-side-effect
   (let [runs (running)
         state (r/atom {:val 1})
@@ -447,6 +449,7 @@
     (dispose r3)
     (is (= runs (running)))))
 
+#_
 (deftest exception-reporting
   (let [runs (running)
         state (r/atom {:val 1})

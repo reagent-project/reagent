@@ -56,6 +56,8 @@
        [:p "Change it here: " [atom-input val]]])))
 
 (defn timer-component []
+  ;; FIXME: For some reason these timeouts trigger multiple
+  ;; renders and each render triggers a new timeout.
   (let [seconds-elapsed (r/atom 0)]
     (fn []
       (js/setTimeout #(swap! seconds-elapsed inc) 1000)

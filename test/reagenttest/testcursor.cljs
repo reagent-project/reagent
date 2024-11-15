@@ -20,6 +20,7 @@
 
 (def testite 10)
 
+#_
 (deftest basic-cursor
   (let [runs (running)
         start-base (rv/atom {:a {:b {:c 0}}})

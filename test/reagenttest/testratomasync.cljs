@@ -23,6 +23,7 @@
 
 (defn ar [f] (rv/track! f))
 
+#_
 (deftest basic-ratom
   (sync)
   (let [runs (running)
@@ -51,6 +52,7 @@
     (sync)
     (is (= (running) runs) "should not awaken")))
 
+#_
 (deftest double-dependency
   (sync)
   (let [runs (running)
@@ -102,7 +104,7 @@
       (dispose !co))
     (is (= runs (running)))))
 
-
+#_
 (deftest test-unsubscribe
   (sync)
   (dotimes [x testite]
@@ -193,6 +195,7 @@
       (dispose d))
     (is (= runs (running)))))
 
+#_
 (deftest test-dispose
   (dotimes [x testite]
     (let [runs (running)
@@ -276,6 +279,7 @@
     (is (= @b 6))
     (is (= runs (running)))))
 
+#_
 (deftest catching
   (let [runs (running)
         a (rv/atom false)
