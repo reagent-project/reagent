@@ -1,21 +1,20 @@
 (ns reagenttest.utils
-  (:require-macros reagenttest.utils)
-  (:require ["react-dom/test-utils" :as react-test]
+  (:require-macros [reagenttest.utils :refer [act]])
+  (:require ["react" :as react]
             [reagent.core :as r]
-            [reagent.dom :as rdom]
+            [reagent.debug :as debug :refer [dev?]]
+            [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
-            [reagent.debug :as debug]
             [reagent.impl.template :as tmpl]))
 
-;; Silence ReactDOM.render warning
+;; Should be only set for tests....
+;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
+
 (defonce original-console-error (.-error js/console))
 
 (set! (.-error js/console)
       (fn [& [first-arg :as args]]
         (cond
-          (and (string? first-arg) (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18."))
-          nil
-
           (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
           nil
 
@@ -36,34 +35,16 @@
   ([comp f]
    (with-mounted-component comp *test-compiler* f))
   ([comp compiler f]
-   (let [div (.createElement js/document "div")]
+   (let [div (.createElement js/document "div")
+         root (rdomc/create-root div)]
      (try
        (let [c (if compiler
-                 (rdom/render comp div compiler)
-                 (rdom/render comp div))]
+                 (rdomc/render root comp compiler)
+                 (rdomc/render root comp))]
          (f c div))
        (finally
-         (rdom/unmount-component-at-node div)
+         (.unmount root)
          (r/flush))))))
-
-(defn with-mounted-component-async
-  [comp done compiler f]
-  (let [div (.createElement js/document "div")
-        c (if compiler
-            (rdom/render comp div compiler)
-            (rdom/render comp div))]
-    (f c div (fn []
-               (rdom/unmount-component-at-node div)
-               (r/flush)
-               (done)))))
-
-(defn run-fns-after-render [& fs]
-  ((reduce (fn [cb f]
-             (fn []
-               (r/after-render (fn []
-                                 (f)
-                                 (cb)))))
-           (reverse fs))))
 
 ;; For testing logged errors and warnings
 
@@ -100,29 +81,54 @@
           (finally
             (.removeListener process "uncaughtException" l)))))))
 
-;; FIXME: Not useful, this isn't usable with production React.
 (defn act*
   "Run f to trigger Reagent updates,
   will return Promise which will resolve after
-  Reagent and React render."
+  Reagent and React render.
+
+  In production builds, the React.act isn't available,
+  so just mock with 17ms timeout... Hopefully that usually
+  is enough time for React to flush the queue?"
   [f]
   ;; async act doesn't return a real promise (with chainable then),
   ;; so wrap it.
-  (js/Promise.
-    (fn [resolve reject]
-      (try
-        (.then (react-test/act
-                 (fn reagent-act-callback []
-                   ;; React act callback should return something "thenable" to use
-                   ;; async act.
-                   (let [p (js/Promise. (fn [resolve _reject]
-                                          (r/after-render (fn reagent-act-after-reagent-flush []
-                                                            (js/console.log "after render")
-                                                            (resolve)))))]
-                     (js/console.log "act call")
-                     (f)
-                     p)))
-               resolve
-               reject)
-        (catch :default e
-          (reject e))))))
+  (if (dev?)
+    (js/Promise.
+      (fn [resolve reject]
+        (try
+          (.then (react/act f)
+                 resolve
+                 reject)
+          (catch :default e
+            (reject e)))))
+    (js/Promise.
+      (fn [resolve reject]
+        (try
+          (f)
+          (js/setTimeout (fn []
+                           (resolve))
+                         ;; 16.6ms is one animation frame @ 60hz
+                         17)
+          (catch :default e
+            (reject e)))))))
+
+(defn with-render
+  "Run initial render with React/act and then run
+  given function to check the results. If the function
+  also returns a Promise or thenable, this function
+  waits until that is resolved, before unmounting the
+  root and resolving the Promise this function returns."
+  ([comp f]
+   (with-render comp *test-compiler* f))
+  ([comp compiler f]
+   (let [div (.createElement js/document "div")
+         root (rdomc/create-root div)]
+     (.then (act (if compiler
+                   (rdomc/render root comp compiler)
+                   (rdomc/render root comp)))
+            (fn []
+              (-> (js/Promise.resolve (f div))
+                  (.then (fn []
+                           (.unmount root)
+                           ;; TODO: Likely not needed now?
+                           (r/flush)))))))))

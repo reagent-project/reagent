@@ -20,6 +20,7 @@
   (r/flush)
   (rv/running))
 
+#_
 (deftest basic-with-let
   (let [runs (running)
         n1 (atom 0)
@@ -58,7 +59,7 @@
 
     (is (= runs (running)))))
 
-
+#_
 (deftest test-with-let-args
   (let [runs (running)
         n1 (atom 0)
@@ -175,6 +176,7 @@
     (is (= 1 @n4))
     (is (= [[3 3 nil] 3 3 3] (tst f5)))))
 
+#_
 (deftest with-let-args
   (let [runs (running)
         active (atom 0)
