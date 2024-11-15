@@ -103,11 +103,14 @@
             (reject e)))))
     (js/Promise.
       (fn [resolve reject]
-        (f)
-        (js/setTimeout (fn []
-                         (resolve))
-                       ;; 16.6ms is one animation frame @ 60hz
-                       17)))))
+        (try
+          (f)
+          (js/setTimeout (fn []
+                           (resolve))
+                         ;; 16.6ms is one animation frame @ 60hz
+                         17)
+          (catch :default e
+            (reject e)))))))
 
 (defn with-render
   "Run initial render with React/act and then run

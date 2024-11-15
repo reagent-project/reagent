@@ -23,6 +23,7 @@
                                   [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]
                                   [cljsjs/prop-types "15.7.2-0"]
+                                  [funcool/promsesa "11.0.678"]
 
                                   [cljsjs/react "18.3.1-1"]
                                   [cljsjs/react-dom "18.3.1-1"]

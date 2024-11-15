@@ -13,7 +13,8 @@
             [clojure.string :as string]
             [goog.string :as gstr]
             [goog.object :as gobj]
-            [prop-types :as prop-types]))
+            [prop-types :as prop-types]
+            [promesa.core :as p]))
 
 (t/use-fixtures :once
                 {:before (fn []
@@ -54,7 +55,6 @@
           (is (= "hi you." (.-innerText div)))
           (is (= 3 @ran)))))))
 
-#_
 (u/deftest ^:dom test-state-change
   (let [ran (r/atom 0)
         self (r/atom nil)
@@ -66,71 +66,72 @@
                     (reset! self this)
                     (swap! ran inc)
                     [:div (str "hi " (:foo (r/state this)))]))})]
-    (with-mounted-component [comp]
-      (fn [C div]
-        (swap! ran inc)
-        (is (= "hi initial" (.-innerText div)))
+    (u/async
+      (p/do
+        (u/with-render
+          [comp]
+          (fn [div]
+            (p/do
+              (swap! ran inc)
+              (is (= "hi initial" (.-innerText div)))
 
-        (r/replace-state @self {:foo "there"})
-        (r/state @self)
+              (u/act (r/replace-state @self {:foo "there"}))
+              ;; (r/state @self)
 
-        (r/flush)
-        (is (= "hi there" (.-innerText div)))
+              ;; (r/flush)
+              (is (= "hi there" (.-innerText div)))
 
-        (r/set-state @self {:foo "you"})
-        (r/flush)
-        (is (= "hi you" (.-innerText div)))))
-    (is (= 4 @ran))))
+              (u/act (r/set-state @self {:foo "you"}))
+              ;; (r/flush)
+              (is (= "hi you" (.-innerText div))))))
+        (is (= 4 @ran))))))
 
-#_
 (u/deftest ^:dom test-ratom-change
   (let [compiler u/*test-compiler*
         ran (r/atom 0)
         runs (rv/running)
         val (r/atom 0)
         secval (r/atom 0)
-        v1-ran (atom 0)
-        v1 (reaction (swap! v1-ran inc) @val)
+        reaction-ran (atom 0)
+        v1 (reaction (swap! reaction-ran inc) @val)
         comp (fn []
                (swap! ran inc)
                [:div (str "val " @v1 " " @val " " @secval)])]
-    (t/async done
-      (u/with-mounted-component-async [comp]
-        (fn []
-          (r/next-tick
-            (fn []
-              (r/next-tick
-                (fn []
-                  (is (= runs (rv/running)))
-                  (is (= 2 @ran))
-                  (done))))))
-        compiler
-        (fn [C div done]
-          (r/flush)
-          (is (not= runs (rv/running)))
-          (is (= "val 0 0 0" (.-innerText div)))
-          (is (= 1 @ran))
+    (u/async
+      (p/do
+        (u/with-render
+          [comp]
+          compiler
+          (fn [div]
+            ;; (r/flush)
+            (is (not= runs (rv/running)))
+            (is (= "val 0 0 0" (.-innerText div)))
+            (is (= 1 @ran))
 
-          (reset! secval 1)
-          (reset! secval 0)
-          (reset! val 1)
-          (reset! val 2)
-          (reset! val 1)
-          (is (= 1 @ran))
-          (is (= 1 @v1-ran))
-          (r/flush)
-          (is (= "val 1 1 0" (.-innerText div)))
-          (is (= 2 @ran) "ran once more")
-          (is (= 2 @v1-ran))
+            (u/act
+              (reset! secval 1)
+              (reset! secval 0)
+              (reset! val 1)
+              (reset! val 2)
+              (reset! val 1))
 
-          ;; should not be rendered
-          (reset! val 1)
-          (is (= 2 @v1-ran))
-          (r/flush)
-          (is (= 2 @v1-ran))
-          (is (= "val 1 1 0" (.-innerText div)))
-          (is (= 2 @ran) "did not run")
-          (done))))))
+            ;; (r/flush)
+            (is (= "val 1 1 0" (.-innerText div)))
+            (is (= 2 @ran) "ran once more")
+            ;; NOTE: OKAY Here is a problem:
+            ;; reactions are now being run for each input ratom change because we don't have the queue anymore!
+            (is (= 2 @reaction-ran))
+
+            ;; should not be rendered
+            (u/act (reset! val 1))
+            (is (= 2 @reaction-ran))
+            ;; (r/flush)
+            (is (= 2 @reaction-ran))
+            (is (= "val 1 1 0" (.-innerText div)))
+            (is (= 2 @ran) "did not run")))
+
+        (is (= runs (rv/running)))
+        (is (= 2 @ran))))))
 
 #_
 (u/deftest ^:dom batched-update-test []
@@ -1461,32 +1462,31 @@
   (let [c (fn [x]
             [:span "Hello " x])]
     (u/async
-      (-> (testing ":f>"
+      (p/do
+        (testing ":f>"
+          (u/with-render
+            [:f> c "foo"]
+            u/class-compiler
+            (fn [div]
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "compiler options"
+          (u/with-render
+            [c "foo"]
+            u/fn-compiler
+            (fn [div]
+              (is (= "Hello foo" (.-innerText div))))))
+
+        (testing "setting default compiler"
+          (try
+            (r/set-default-compiler! u/fn-compiler)
             (u/with-render
-              [:f> c "foo"]
-              u/class-compiler
+              [c "foo"]
+              nil
               (fn [div]
-                (is (= "Hello foo" (.-innerText div))))))
-
-          (.then (fn []
-                   (testing "compiler options"
-                     (u/with-render
-                       [c "foo"]
-                       u/fn-compiler
-                       (fn [div]
-                         (is (= "Hello foo" (.-innerText div))))))))
-
-          (.then (fn []
-                   (testing "setting default compiler"
-                     (try
-                       (r/set-default-compiler! u/fn-compiler)
-                       (u/with-render
-                         [c "foo"]
-                         nil
-                         (fn [div]
-                           (is (= "Hello foo" (.-innerText div)))))
-                       (finally
-                         (r/set-default-compiler! nil))))))))))
+                (is (= "Hello foo" (.-innerText div)))))
+            (finally
+              (r/set-default-compiler! nil))))))))
 
 #_
 (deftest ^:dom functional-component-poc-state-hook
@@ -1515,14 +1515,12 @@
         [c 5]
         u/fn-compiler
         (fn [div]
-          (is (= "Count 5" (.-innerText div)))
-          ;; Need to run operations (ratom changes) inside act block, to ensure react will register
-          ;; the resulting operations and we can run the check after react is done with render.
-          (-> (u/act
-                (reset! count 6))
-              (.then (fn []
-                       ;; TODO: Test that component RAtom is disposed
-                       (is (= "Count 6" (.-innerText div)))))))))))
+          (p/do
+            (is (= "Count 5" (.-innerText div)))
+            (u/act (reset! count 6))
+
+            ;; TODO: Test that component RAtom is disposed
+            (is (= "Count 6" (.-innerText div)))))))))
 
 #_
 (deftest ^:dom functional-component-poc-ratom-state-hook
