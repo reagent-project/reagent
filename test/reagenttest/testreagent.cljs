@@ -21,16 +21,18 @@
                  :after  (fn []
                            (set! rv/debug false))})
 
-#_
 (u/deftest ^:dom really-simple-test
   (let [ran (r/atom 0)
         really-simple (fn []
                         (swap! ran inc)
                         [:div "div in really-simple"])]
-    (with-mounted-component [really-simple nil nil]
-      (fn [c div]
-        (is (= 1 @ran))
-        (is (= "div in really-simple" (.-innerText div)))))))
+    (u/async
+      (u/with-render
+        [really-simple nil nil]
+        (fn [div done]
+          (is (= 1 @ran))
+          (is (= "div in really-simple" (.-innerText div)))
+          (js/Promise.resolve nil))))))
 
 #_
 (u/deftest ^:dom test-simple-callback
@@ -1455,33 +1457,38 @@
         (r/flush)
         (is (= 3 @render))))))
 
-#_
 (deftest ^:dom functional-component-poc-simple
   (let [c (fn [x]
             [:span "Hello " x])]
-    (testing ":f>"
-      (with-mounted-component [:f> c "foo"]
-        u/class-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Hello foo" (.-innerText div))))))
+    (u/async
+      (-> (testing ":f>"
+            (u/with-render
+              [:f> c "foo"]
+              u/class-compiler
+              (fn [div]
+                (is (= "Hello foo" (.-innerText div)))
+                (js/Promise.resolve nil))))
 
-    (testing "compiler options"
-      (with-mounted-component [c "foo"]
-        u/fn-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Hello foo" (.-innerText div))))))
+          (.then (fn []
+                   (testing "compiler options"
+                     (u/with-render
+                       [c "foo"]
+                       u/fn-compiler
+                       (fn [div]
+                         (is (= "Hello foo" (.-innerText div)))
+                         (js/Promise.resolve nil))))))
 
-    (testing "setting default compiler"
-      (try
-        (r/set-default-compiler! u/fn-compiler)
-        (with-mounted-component [c "foo"] nil
-          (fn [c div]
-            (is (nil? c) "Render returns nil for stateless components")
-            (is (= "Hello foo" (.-innerText div)))))
-        (finally
-          (r/set-default-compiler! nil))))))
+          (.then (fn []
+                   (testing "setting default compiler"
+                     (try
+                       (r/set-default-compiler! u/fn-compiler)
+                       (u/with-render
+                         [c "foo"] nil
+                         (fn [div]
+                           (is (= "Hello foo" (.-innerText div)))
+                           (js/Promise.resolve nil)))
+                       (finally
+                         (r/set-default-compiler! nil))))))))))
 
 #_
 (deftest ^:dom functional-component-poc-state-hook
@@ -1501,21 +1508,23 @@
         (@set-count! 6)
         (is (= "Count 6" (.-innerText div)))))))
 
-#_
 (deftest ^:dom functional-component-poc-ratom
   (let [count (r/atom 5)
         c (fn [x]
             [:span "Count " @count])]
-    (with-mounted-component [c 5]
-      u/fn-compiler
-      (fn [c div]
-        (is (nil? c) "Render returns nil for stateless components")
-        (is (= "Count 5" (.-innerText div)))
-        (reset! count 6)
-        (r/flush)
-        (is (= "Count 6" (.-innerText div)))
-        ;; TODO: Test that component RAtom is disposed
-        ))))
+    (u/async
+      (u/with-render
+        [c 5]
+        u/fn-compiler
+        (fn [div]
+          (is (= "Count 5" (.-innerText div)))
+          ;; Need to run operations (ratom changes) inside act block, to ensure react will register
+          ;; the resulting operations and we can run the check after react is done with render.
+          (-> (u/act
+                (reset! count 6))
+              (.then (fn []
+                       ;; TODO: Test that component RAtom is disposed
+                       (is (= "Count 6" (.-innerText div)))))))))))
 
 #_
 (deftest ^:dom functional-component-poc-ratom-state-hook
@@ -1602,7 +1611,6 @@
              [:div.asd.xyz {:class "bar"}]
              compiler)))))
 
-#_
 (deftest ^:dom react-18-test
   (when (>= (js/parseInt react/version) 18)
     (let [div (.createElement js/document "div")

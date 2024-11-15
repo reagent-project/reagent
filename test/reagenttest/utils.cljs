@@ -104,7 +104,6 @@
           (finally
             (.removeListener process "uncaughtException" l)))))))
 
-;; FIXME: Not useful, this isn't usable with production React.
 (defn act*
   "Run f to trigger Reagent updates,
   will return Promise which will resolve after
@@ -115,18 +114,28 @@
   (js/Promise.
     (fn [resolve reject]
       (try
-        (.then (react-test/act
-                 (fn reagent-act-callback []
-                   ;; React act callback should return something "thenable" to use
-                   ;; async act.
-                   (let [p (js/Promise. (fn [resolve _reject]
-                                          (r/after-render (fn reagent-act-after-reagent-flush []
-                                                            (js/console.log "after render")
-                                                            (resolve)))))]
-                     (js/console.log "act call")
-                     (f)
-                     p)))
+        (.then (react/act f)
                resolve
                reject)
         (catch :default e
           (reject e))))))
+
+(defn with-render
+  "Run initial render with React/act and then run
+  given function to check the results. The function
+  should also return a Promise so we can wait until
+  it is done before cleanup and resolving the
+  Promise with function returns."
+  ([comp f]
+   (with-render comp *test-compiler* f))
+  ([comp compiler f]
+   (let [div (.createElement js/document "div")
+         root (rdomc/create-root div)]
+     (.then (act (if compiler
+                   (rdomc/render root comp compiler)
+                   (rdomc/render root comp)))
+            (fn []
+              (-> (f div)
+                  (.then (fn []
+                           (.unmount root)
+                           (r/flush)))))))))
