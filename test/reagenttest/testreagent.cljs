@@ -31,10 +31,8 @@
         [really-simple nil nil]
         (fn [div done]
           (is (= 1 @ran))
-          (is (= "div in really-simple" (.-innerText div)))
-          (js/Promise.resolve nil))))))
+          (is (= "div in really-simple" (.-innerText div))))))))
 
-#_
 (u/deftest ^:dom test-simple-callback
   (let [ran (r/atom 0)
         comp (r/create-class
@@ -48,11 +46,13 @@
                     (is (= 1 (count (r/children this))))
                     (swap! ran inc)
                     [:div (str "hi " (:foo props) ".")]))})]
-    (with-mounted-component [comp {:foo "you"} 1]
-      (fn [C div]
-        (swap! ran inc)
-        (is (= "hi you." (.-innerText div)))
-        (is (= 3 @ran))))))
+    (u/async
+      (u/with-render
+        [comp {:foo "you"} 1]
+        (fn [div]
+          (swap! ran inc)
+          (is (= "hi you." (.-innerText div)))
+          (is (= 3 @ran)))))))
 
 #_
 (u/deftest ^:dom test-state-change
@@ -1466,8 +1466,7 @@
               [:f> c "foo"]
               u/class-compiler
               (fn [div]
-                (is (= "Hello foo" (.-innerText div)))
-                (js/Promise.resolve nil))))
+                (is (= "Hello foo" (.-innerText div))))))
 
           (.then (fn []
                    (testing "compiler options"
@@ -1475,18 +1474,17 @@
                        [c "foo"]
                        u/fn-compiler
                        (fn [div]
-                         (is (= "Hello foo" (.-innerText div)))
-                         (js/Promise.resolve nil))))))
+                         (is (= "Hello foo" (.-innerText div))))))))
 
           (.then (fn []
                    (testing "setting default compiler"
                      (try
                        (r/set-default-compiler! u/fn-compiler)
                        (u/with-render
-                         [c "foo"] nil
+                         [c "foo"]
+                         nil
                          (fn [div]
-                           (is (= "Hello foo" (.-innerText div)))
-                           (js/Promise.resolve nil)))
+                           (is (= "Hello foo" (.-innerText div)))))
                        (finally
                          (r/set-default-compiler! nil))))))))))
 

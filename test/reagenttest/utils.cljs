@@ -7,15 +7,14 @@
             [reagent.dom.server :as server]
             [reagent.impl.template :as tmpl]))
 
-;; Silence ReactDOM.render warning
+;; Should be only set for tests....
+;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
+
 (defonce original-console-error (.-error js/console))
 
 (set! (.-error js/console)
       (fn [& [first-arg :as args]]
         (cond
-          (and (string? first-arg) (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18."))
-          nil
-
           (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
           nil
 
@@ -46,27 +45,6 @@
        (finally
          (.unmount root)
          (r/flush))))))
-
-(defn with-mounted-component-async
-  [comp done compiler f]
-  (let [div (.createElement js/document "div")
-        root (rdomc/create-root div)
-        c (if compiler
-            (rdomc/render root comp compiler)
-            (rdomc/render root comp))]
-    (js/console.log "mount" (pr-str comp))
-    (f c div (fn []
-               (.unmount root)
-               (r/flush)
-               (done)))))
-
-(defn run-fns-after-render [& fs]
-  ((reduce (fn [cb f]
-             (fn []
-               (r/after-render (fn []
-                                 (f)
-                                 (cb)))))
-           (reverse fs))))
 
 ;; For testing logged errors and warnings
 
@@ -125,19 +103,18 @@
             (reject e)))))
     (js/Promise.
       (fn [resolve reject]
-        (try
-          (f)
-          (js/setTimeout (fn []
-                           (resolve))
-                         ;; 16.6ms is one animation frame @ 60hz
-                         17))))))
+        (f)
+        (js/setTimeout (fn []
+                         (resolve))
+                       ;; 16.6ms is one animation frame @ 60hz
+                       17)))))
 
 (defn with-render
   "Run initial render with React/act and then run
-  given function to check the results. The function
-  should also return a Promise so we can wait until
-  it is done before cleanup and resolving the
-  Promise with function returns."
+  given function to check the results. If the function
+  also returns a Promise or thenable, this function
+  waits until that is resolved, before unmounting the
+  root and resolving the Promise this function returns."
   ([comp f]
    (with-render comp *test-compiler* f))
   ([comp compiler f]
@@ -147,7 +124,8 @@
                    (rdomc/render root comp compiler)
                    (rdomc/render root comp)))
             (fn []
-              (-> (f div)
+              (-> (js/Promise.resolve (f div))
                   (.then (fn []
                            (.unmount root)
+                           ;; TODO: Likely not needed now?
                            (r/flush)))))))))

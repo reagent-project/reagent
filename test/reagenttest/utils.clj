@@ -6,19 +6,19 @@
      (cljs.test/deftest
        ~(with-meta (symbol (str (name test-name) "--class"))
                    (meta test-name))
-       (binding [*test-compiler* class-compiler
-                 *test-compiler-name* "class"]
+       (binding [reagenttest.utils/*test-compiler* class-compiler
+                 reagenttest.utils/*test-compiler-name* "class"]
          ~@body))
      (cljs.test/deftest
        ~(with-meta (symbol (str (name test-name) "--fn"))
                    (meta test-name))
-       (binding [*test-compiler* fn-compiler
-                 *test-compiler-name* "fn"]
+       (binding [reagenttest.utils/*test-compiler* fn-compiler
+                 reagenttest.utils/*test-compiler-name* "fn"]
          ~@body))))
 
 (defmacro act
   [& body]
-  `(act* (fn [] ~@body)))
+  `(reagenttest.utils/act* (fn [] ~@body)))
 
 ;; Inspired by
 ;; https://github.com/henryw374/Cljs-Async-Timeout-Tests/blob/master/src/widdindustries/timeout_test.cljc
