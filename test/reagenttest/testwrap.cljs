@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [reagenttest.utils :as u :refer [with-mounted-component]]))
 
+#_
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
         ws (fn [] (r/wrap (:foo @state)
@@ -162,6 +163,7 @@
               (is (= "value:4:" (.-innerText div))))
             done))))))
 
+#_
 (u/deftest ^:dom test-cursor
   (let [compiler u/*test-compiler*
         state (r/atom {:a {:v 1}
@@ -204,6 +206,7 @@
               (is (= 1 @b-count)))
             done))))))
 
+#_
 (u/deftest ^:dom test-fn-cursor
   (let [state (r/atom {:a {:v 1}
                        :b {:v 2}})

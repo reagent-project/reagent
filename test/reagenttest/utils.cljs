@@ -55,6 +55,7 @@
         c (if compiler
             (rdomc/render root comp compiler)
             (rdomc/render root comp))]
+    (js/console.log "mount" (pr-str comp))
     (f c div (fn []
                (.unmount root)
                (r/flush)

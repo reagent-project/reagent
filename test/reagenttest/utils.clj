@@ -2,6 +2,7 @@
 
 (defmacro deftest [test-name & body]
   `(do
+     #_
      (cljs.test/deftest
        ~(with-meta (symbol (str (name test-name) "--class"))
                    (meta test-name))

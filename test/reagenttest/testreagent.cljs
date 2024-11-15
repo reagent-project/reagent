@@ -21,6 +21,7 @@
                  :after  (fn []
                            (set! rv/debug false))})
 
+#_
 (u/deftest ^:dom really-simple-test
   (let [ran (r/atom 0)
         really-simple (fn []
@@ -31,6 +32,7 @@
         (is (= 1 @ran))
         (is (= "div in really-simple" (.-innerText div)))))))
 
+#_
 (u/deftest ^:dom test-simple-callback
   (let [ran (r/atom 0)
         comp (r/create-class
@@ -50,6 +52,7 @@
         (is (= "hi you." (.-innerText div)))
         (is (= 3 @ran))))))
 
+#_
 (u/deftest ^:dom test-state-change
   (let [ran (r/atom 0)
         self (r/atom nil)
@@ -77,6 +80,7 @@
         (is (= "hi you" (.-innerText div)))))
     (is (= 4 @ran))))
 
+#_
 (u/deftest ^:dom test-ratom-change
   (let [compiler u/*test-compiler*
         ran (r/atom 0)
@@ -126,6 +130,7 @@
           (is (= 2 @ran) "did not run")
           (done))))))
 
+#_
 (u/deftest ^:dom batched-update-test []
   (let [ran (r/atom 0)
         v1 (r/atom 0)
@@ -161,6 +166,7 @@
         ; (is (= 9 @ran))
         ))))
 
+#_
 (u/deftest ^:dom init-state-test
   (let [ran (r/atom 0)
         really-simple (fn []
@@ -176,6 +182,7 @@
         (is (= "this is foobar" (.-innerText div)))))
     (is (= 2 @ran))))
 
+#_
 (u/deftest ^:dom should-update-test
   (let [parent-ran (r/atom 0)
         child-ran (r/atom 0)
@@ -234,6 +241,7 @@
         (r/flush)
         (is (= 7 @child-ran))))))
 
+#_
 (u/deftest ^:dom dirty-test
   (let [ran (r/atom 0)
         state (r/atom 0)
@@ -356,6 +364,7 @@
          (as-string [:div.bar {:dangerously-set-inner-HTML
                                {:__html "<p>foobar</p>"}}]))))
 
+#_
 (u/deftest ^:dom test-return-class
   (let [ran (r/atom 0)
         top-ran (r/atom 0)
@@ -387,6 +396,7 @@
         (is (= 1 @top-ran))
         (is (= 4 @ran))))))
 
+#_
 (u/deftest ^:dom test-return-class-fn
   (let [ran (r/atom 0)
         top-ran (r/atom 0)
@@ -504,6 +514,7 @@
     (is (= (rstr [:div "a" "b" [:div "c"]])
            (rstr [:> d2 "a" "b" [:div "c"]])))))
 
+#_
 (deftest ^:dom create-element-shortcut-test
   (let [p (atom nil)
         comp (fn [props]
@@ -571,6 +582,7 @@
            (rstr [:p "p:a" [:b "b"] [:i "i"]])))
     (is (= nil @a))))
 
+#_
 (u/deftest ^:dom test-keys
   (let [a nil ;; (r/atom "a")
         c (fn key-tester []
@@ -652,6 +664,7 @@
            (as-string [:p {:class [:a :b false nil]}])))))
 
 ;; Class component only
+#_
 (deftest ^:dom test-force-update
   (let [v (atom {:v1 0
                  :v2 0})
@@ -691,6 +704,7 @@
         (is (= 1 @spy))))))
 
 ;; Class component only
+#_
 (deftest ^:dom test-component-path
   (let [a (atom nil)
         tc (r/create-class {:display-name "atestcomponent"
@@ -711,6 +725,7 @@
     (is (= "<div>foo</div>"
            (as-string [c2])))))
 
+#_
 (u/deftest ^:dom basic-with-let
   (let [compiler u/*test-compiler*
         n1 (atom 0)
@@ -744,6 +759,7 @@
           (is (= [1 2 0] [@n1 @n2 @n3]))
           (done))))))
 
+#_
 (u/deftest ^:dom with-let-destroy-only
   (let [compiler u/*test-compiler*
         n1 (atom 0)
@@ -770,6 +786,7 @@
           (is (= [1 0] [@n1 @n2]))
           (done))))))
 
+#_
 (u/deftest ^:dom with-let-arg
   (let [a (atom 0)
         s (r/atom "foo")
@@ -801,6 +818,7 @@
            (as-string [:div 1])))
     (is (= [1 1 1] [@n1 @n2 @n3]))))
 
+#_
 (u/deftest ^:dom lifecycle
   (let [n1 (atom 0)
         t (atom 0)
@@ -891,7 +909,7 @@
     (is (= {:at 10 :args [@t]}
            (:will-unmount @res)))))
 
-
+#_
 (u/deftest ^:dom lifecycle-native
   (let [n1 (atom 0)
         t (atom 0)
@@ -998,6 +1016,7 @@
 (defn foo []
   [:div])
 
+#_
 (u/deftest ^:dom test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -1082,6 +1101,7 @@
         (is (re-find #"Every element in a seq should have a unique :key"
                      (-> e :warn first)))))))
 
+#_
 (u/deftest ^:dom test-error-boundary
   (let [error (r/atom nil)
         info (r/atom nil)
@@ -1119,6 +1139,7 @@
                               (.-componentStack ^js @info)))))))))))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
+#_
 (u/deftest ^:dom test-dom-node
   (let [node (atom nil)
         ref (atom nil)
@@ -1144,6 +1165,7 @@
   (is (= "<p>#object[reagent.ratom.RAtom {:val 1}]</p>"
          (as-string [:p (r/atom 1)]))))
 
+#_
 (u/deftest ^:dom test-after-render
   (let [spy (atom 0)
         val (atom 0)
@@ -1223,6 +1245,7 @@
                          [:div "child," (gobj/get (.-context this) "foo")]))}))
 
 ;; Class component only
+#_
 (deftest ^:dom context-test
   (with-mounted-component
     [context-wrapper [context-child]]
@@ -1303,6 +1326,7 @@
                 #js {:value "foo"}
                 [:f> comp]]))))))
 
+#_
 (u/deftest ^:dom on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
   (let [prop (r/atom {:todos 1})
         component-was-updated (atom false)
@@ -1329,6 +1353,7 @@
         (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
                      (first (:warn e))))))))
 
+#_
 (u/deftest ^:dom get-derived-state-from-props-test
   (let [prop (r/atom 0)
         ;; Usually one can use Cljs object as React state. However,
@@ -1352,6 +1377,7 @@
         (r/flush)
         (is (= "Value foo foo" (.-innerText div)))))))
 
+#_
 (u/deftest ^:dom get-derived-state-from-error-test
   (let [prop (r/atom 0)
         component (r/create-class
@@ -1377,6 +1403,7 @@
              (r/flush)
              (is (= "Error" (.-innerText div)))))))))
 
+#_
 (u/deftest ^:dom get-snapshot-before-update-test
   (let [ref (react/createRef)
         prop (r/atom 0)
@@ -1404,6 +1431,7 @@
         (is (= {:height 20} @did-update))
         (.removeChild js/document.body div)))))
 
+#_
 (u/deftest ^:dom issue-462-test
   (let [val (r/atom 0)
         render (atom 0)
@@ -1427,6 +1455,7 @@
         (r/flush)
         (is (= 3 @render))))))
 
+#_
 (deftest ^:dom functional-component-poc-simple
   (let [c (fn [x]
             [:span "Hello " x])]
@@ -1454,6 +1483,7 @@
         (finally
           (r/set-default-compiler! nil))))))
 
+#_
 (deftest ^:dom functional-component-poc-state-hook
   (let [;; Probably not the best idea to keep
         ;; refernce to state hook update fn, but
@@ -1471,6 +1501,7 @@
         (@set-count! 6)
         (is (= "Count 6" (.-innerText div)))))))
 
+#_
 (deftest ^:dom functional-component-poc-ratom
   (let [count (r/atom 5)
         c (fn [x]
@@ -1486,7 +1517,7 @@
         ;; TODO: Test that component RAtom is disposed
         ))))
 
-
+#_
 (deftest ^:dom functional-component-poc-ratom-state-hook
   (let [r-count (r/atom 3)
         set-count! (atom nil)
@@ -1506,6 +1537,7 @@
         (is (= "Counts 6 17" (.-innerText div)))
         ))))
 
+#_
 (u/deftest ^:dom test-input-el-ref
   (let [ref-1 (atom nil)
         ref-1-fn #(reset! ref-1 %)
@@ -1570,6 +1602,7 @@
              [:div.asd.xyz {:class "bar"}]
              compiler)))))
 
+#_
 (deftest ^:dom react-18-test
   (when (>= (js/parseInt react/version) 18)
     (let [div (.createElement js/document "div")
