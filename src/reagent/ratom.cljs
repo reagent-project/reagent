@@ -116,9 +116,9 @@
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
-    (set! rea-queue #js [])
-    (batch/schedule))
-  (.push rea-queue r))
+    (set! rea-queue #js []))
+  (.push rea-queue r)
+  (batch/schedule))
 
 ;;; Atom
 

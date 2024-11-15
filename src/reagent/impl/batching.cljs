@@ -1,7 +1,6 @@
 (ns reagent.impl.batching
   (:refer-clojure :exclude [flush])
-  (:require [reagent.debug :refer-macros [assert-some]]
-            [reagent.impl.util :refer [is-client]]))
+  (:require [reagent.debug :refer-macros [assert-some]]))
 
 ;;; Update batching
 
@@ -10,19 +9,8 @@
 (defn next-mount-count []
   (set! mount-count (inc mount-count)))
 
-(defn fake-raf [f]
-  (js/setTimeout f 16))
-
-(def next-tick
-  (if-not is-client
-    fake-raf
-    (let [w js/window]
-      (.bind (or (.-requestAnimationFrame w)
-                 (.-webkitRequestAnimationFrame w)
-                 (.-mozRequestAnimationFrame w)
-                 (.-msRequestAnimationFrame w)
-                 fake-raf)
-             w))))
+(defn next-tick [f]
+  (f))
 
 (defn compare-mount-order
   [^clj c1 ^clj c2]

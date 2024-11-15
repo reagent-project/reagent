@@ -5,6 +5,7 @@
             [reagent.debug :as debug]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
+            [reagent.dom.client :as rdomc]
             [reagent.impl.template :as tmpl]))
 
 ;; Should be only set for tests....
