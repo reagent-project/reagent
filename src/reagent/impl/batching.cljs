@@ -98,7 +98,7 @@
     (.flush-render this)
     (.flush-after-render this)))
 
-(defonce render-queue (->RenderQueue false))
+(def render-queue (->RenderQueue false))
 
 (defn flush []
   (.flush-queues render-queue))
