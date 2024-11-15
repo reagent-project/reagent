@@ -2,7 +2,7 @@
   (:require-macros [reagenttest.utils :refer [act]])
   (:require ["react" :as react]
             [reagent.core :as r]
-            [reagent.debug :as debug]
+            [reagent.debug :as debug :refer [dev?]]
             [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
             [reagent.impl.template :as tmpl]))
@@ -106,18 +106,31 @@
 (defn act*
   "Run f to trigger Reagent updates,
   will return Promise which will resolve after
-  Reagent and React render."
+  Reagent and React render.
+
+  In production builds, the React.act isn't available,
+  so just mock with 17ms timeout... Hopefully that usually
+  is enough time for React to flush the queue?"
   [f]
   ;; async act doesn't return a real promise (with chainable then),
   ;; so wrap it.
-  (js/Promise.
-    (fn [resolve reject]
-      (try
-        (.then (react/act f)
-               resolve
-               reject)
-        (catch :default e
-          (reject e))))))
+  (if (dev?)
+    (js/Promise.
+      (fn [resolve reject]
+        (try
+          (.then (react/act f)
+                 resolve
+                 reject)
+          (catch :default e
+            (reject e)))))
+    (js/Promise.
+      (fn [resolve reject]
+        (try
+          (f)
+          (js/setTimeout (fn []
+                           (resolve))
+                         ;; 16.6ms is one animation frame @ 60hz
+                         17))))))
 
 (defn with-render
   "Run initial render with React/act and then run

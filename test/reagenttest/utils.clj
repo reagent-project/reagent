@@ -50,9 +50,11 @@
                         (done#)))
                (.catch (fn [e#]
                          (js/clearTimeout timeout#)
+                         (js/console.error "Promise failed in async macro" e#)
                          (cljs.test/is (not e#))
                          (done#))))
            (catch js/Error e#
              (js/clearTimeout timeout#)
+             (js/console.error "Error in async macro" e#)
              (cljs.test/is (not e#))
              (done#)))))))
