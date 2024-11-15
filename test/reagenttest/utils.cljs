@@ -1,11 +1,10 @@
 (ns reagenttest.utils
-  (:require-macros reagenttest.utils)
-  (:require ["react-dom/test-utils" :as react-test]
+  (:require-macros [reagenttest.utils :refer [act]])
+  (:require ["react" :as react]
             [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [reagent.dom.server :as server]
-            [reagent.dom.client :as rdomc]
             [reagent.debug :as debug]
+            [reagent.dom.client :as rdomc]
+            [reagent.dom.server :as server]
             [reagent.impl.template :as tmpl]))
 
 ;; Silence ReactDOM.render warning

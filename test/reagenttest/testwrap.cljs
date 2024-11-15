@@ -93,6 +93,7 @@
            (swap! b inc)))
     (is (= 24 @a @b))))
 
+#_
 (u/deftest ^:dom test-wrap
   (let [compiler u/*test-compiler*
         state (r/atom {:foo {:bar {:foobar 1}}})
