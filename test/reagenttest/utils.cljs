@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
+            [reagent.dom.client :as rdomc]
             [reagent.debug :as debug]
             [reagent.impl.template :as tmpl]))
 
@@ -36,24 +37,26 @@
   ([comp f]
    (with-mounted-component comp *test-compiler* f))
   ([comp compiler f]
-   (let [div (.createElement js/document "div")]
+   (let [div (.createElement js/document "div")
+         root (rdomc/create-root div)]
      (try
        (let [c (if compiler
-                 (rdom/render comp div compiler)
-                 (rdom/render comp div))]
+                 (rdomc/render root comp compiler)
+                 (rdomc/render root comp))]
          (f c div))
        (finally
-         (rdom/unmount-component-at-node div)
+         (.unmount root)
          (r/flush))))))
 
 (defn with-mounted-component-async
   [comp done compiler f]
   (let [div (.createElement js/document "div")
+        root (rdomc/create-root div)
         c (if compiler
-            (rdom/render comp div compiler)
-            (rdom/render comp div))]
+            (rdomc/render root comp compiler)
+            (rdomc/render root comp))]
     (f c div (fn []
-               (rdom/unmount-component-at-node div)
+               (.unmount root)
                (r/flush)
                (done)))))
 
