@@ -22,11 +22,11 @@
                                   [figwheel "0.5.20"]
                                   [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]
-                                  [cljsjs/prop-types "15.7.2-0"]
+                                  [cljsjs/prop-types "15.8.1-0"]
 
-                                  [cljsjs/react "18.2.0-1"]
-                                  [cljsjs/react-dom "18.2.0-1"]
-                                  [cljsjs/react-dom-server "18.2.0-1"]]
+                                  [cljsjs/react "18.3.1-1"]
+                                  [cljsjs/react-dom "18.3.1-1"]
+                                  [cljsjs/react-dom-server "18.3.1-1"]]
                    :source-paths ["demo" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src"]
                    :resource-paths ["site" "target/cljsbuild/client" "target/cljsbuild/client-npm"]}}
 
