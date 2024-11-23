@@ -1,5 +1,6 @@
 {:lint-as {reagent.core/with-let clojure.core/let
-           reagenttest.utils/deftest clojure.test/deftest}
+           reagenttest.utils/deftest clojure.test/deftest
+           reagenttest.utils/with-render clojure.core/let}
  :linters {:unused-binding {:level :off}
            :missing-else-branch {:level :off}
            :unused-referred-var {:exclude {cljs.test [deftest testing is]}}

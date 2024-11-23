@@ -1,11 +1,15 @@
 (ns reagenttest.utils
   (:require-macros reagenttest.utils)
-  (:require ["react-dom/test-utils" :as react-test]
+  (:require [promesa.core :as p]
+            [react :as react]
             [reagent.core :as r]
+            [reagent.debug :as debug :refer [dev?]]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
-            [reagent.debug :as debug]
             [reagent.impl.template :as tmpl]))
+
+;; Should be only set for tests....
+;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
 
 ;; Silence ReactDOM.render warning
 (defonce original-console-error (.-error js/console))
@@ -70,6 +74,8 @@
 (defn log-error [& f]
   (debug/error (apply str f)))
 
+;; "Regular versions"
+
 (defn wrap-capture-console-error [f]
   (fn []
     (let [org js/console.error]
@@ -100,29 +106,84 @@
           (finally
             (.removeListener process "uncaughtException" l)))))))
 
-;; FIXME: Not useful, this isn't usable with production React.
+;; Promise versions
+
+(defn wrap-capture-console-error-promise [f]
+  (fn []
+    (let [org js/console.error]
+      (set! js/console.error log-error)
+      (-> (f)
+          (p/finally
+            (fn []
+              (set! js/console.error org)))))))
+
+(defn track-warnings-promise [f]
+  (set! debug/tracking true)
+  (reset! debug/warnings nil)
+  (-> (f)
+      (p/then (fn []
+                @debug/warnings))
+      (p/finally
+        (fn []
+          (reset! debug/warnings nil)
+          (set! debug/tracking false)))))
+
+(defn wrap-capture-window-error-promise [f]
+  (if (exists? js/window)
+    (fn []
+      (let [org js/console.onerror]
+        (set! js/window.onerror (fn [e]
+                                  (log-error e)
+                                  true))
+        (-> (f)
+            (p/finally
+              (fn [] (set! js/window.onerror org))))))
+    (fn []
+      (let [process (js/require "process")
+            l (fn [e]
+                (log-error e))]
+        (.on process "uncaughtException" l)
+        (-> (f)
+            (p/finally
+              (fn [] (.removeListener process "uncaughtException" l))))))))
+
 (defn act*
   "Run f to trigger Reagent updates,
   will return Promise which will resolve after
   Reagent and React render."
   [f]
-  ;; async act doesn't return a real promise (with chainable then),
-  ;; so wrap it.
-  (js/Promise.
-    (fn [resolve reject]
-      (try
-        (.then (react-test/act
-                 (fn reagent-act-callback []
-                   ;; React act callback should return something "thenable" to use
-                   ;; async act.
-                   (let [p (js/Promise. (fn [resolve _reject]
-                                          (r/after-render (fn reagent-act-after-reagent-flush []
-                                                            (js/console.log "after render")
-                                                            (resolve)))))]
-                     (js/console.log "act call")
-                     (f)
-                     p)))
-               resolve
-               reject)
-        (catch :default e
-          (reject e))))))
+  (let [p (p/deferred)]
+    (f)
+    (r/flush)
+    (r/after-render (fn []
+                      (p/resolve! p)))
+    p))
+
+(defn with-render*
+  "Render the given component to a DOM node,
+  after the the component is mounted to DOM,
+  run the given function and wait for the Promise
+  returned from the function to be resolved
+  before unmounting the component from DOM."
+  ([comp f]
+   (with-render* comp *test-compiler* f))
+  ([comp compiler f]
+   (let [div (.createElement js/document "div")
+         p (p/deferred)
+         callback (fn []
+                    (p/resolve! p))]
+     (if compiler
+       (rdom/render comp div {:compiler compiler
+                              :callback callback})
+       (rdom/render comp div callback))
+     (.then p
+            (fn []
+              (-> (js/Promise.resolve (f div))
+                  (.then (fn []
+                           (rdom/unmount-component-at-node div)
+                           ;; Need to wait for reagent tick after unmount
+                           ;; for the ratom watches to be removed?
+                           (let [p (p/deferred)]
+                             (r/next-tick (fn []
+                                            (p/resolve! p)))
+                             p)))))))))
