@@ -25,9 +25,9 @@ jobs:
       ENV: ${{ matrix.env }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
           java-version: 17
@@ -37,14 +37,14 @@ jobs:
           lein: 2.9.10
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: lts/hydrogen
           cache: 'npm'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
@@ -57,7 +57,7 @@ jobs:
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v5
         with:
           env_vars: ENV
 
@@ -68,9 +68,9 @@ jobs:
     needs: test
     environment: build-site
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
           java-version: 17
@@ -80,14 +80,14 @@ jobs:
           lein: 2.9.8
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: lts/hydrogen
           cache: 'npm'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
@@ -108,9 +108,9 @@ jobs:
     if: ${{ startsWith(github.ref,  'refs/tags/') }}
     needs: test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 8
@@ -122,7 +122,7 @@ jobs:
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
@@ -131,5 +131,6 @@ jobs:
 
       - name: Build docs
         run: ./build-docs.sh
+        # Fine grained personal access token, 366 days expiry, only contents rw permission to the site repo
         env:
           SITE_TOKEN: ${{ secrets.SITE_TOKEN }}
