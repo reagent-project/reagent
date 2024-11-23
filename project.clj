@@ -17,8 +17,8 @@
           :source-paths ["src"]
           :doc-paths []}
 
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.11.1"]
-                                  [org.clojure/clojurescript "1.11.60"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.0"]
+                                  [org.clojure/clojurescript "1.11.132"]
                                   [figwheel "0.5.20"]
                                   [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]
