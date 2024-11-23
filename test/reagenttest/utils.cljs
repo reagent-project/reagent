@@ -1,9 +1,8 @@
 (ns reagenttest.utils
   (:require-macros reagenttest.utils)
   (:require [promesa.core :as p]
-            [react :as react]
             [reagent.core :as r]
-            [reagent.debug :as debug :refer [dev?]]
+            [reagent.debug :as debug]
             [reagent.dom :as rdom]
             [reagent.dom.server :as server]
             [reagent.impl.template :as tmpl]))
@@ -36,39 +35,6 @@
 (defn as-string [comp]
   (server/render-to-static-markup comp *test-compiler*))
 
-(defn with-mounted-component
-  ([comp f]
-   (with-mounted-component comp *test-compiler* f))
-  ([comp compiler f]
-   (let [div (.createElement js/document "div")]
-     (try
-       (let [c (if compiler
-                 (rdom/render comp div compiler)
-                 (rdom/render comp div))]
-         (f c div))
-       (finally
-         (rdom/unmount-component-at-node div)
-         (r/flush))))))
-
-(defn with-mounted-component-async
-  [comp done compiler f]
-  (let [div (.createElement js/document "div")
-        c (if compiler
-            (rdom/render comp div compiler)
-            (rdom/render comp div))]
-    (f c div (fn []
-               (rdom/unmount-component-at-node div)
-               (r/flush)
-               (done)))))
-
-(defn run-fns-after-render [& fs]
-  ((reduce (fn [cb f]
-             (fn []
-               (r/after-render (fn []
-                                 (f)
-                                 (cb)))))
-           (reverse fs))))
-
 ;; For testing logged errors and warnings
 
 (defn log-error [& f]
@@ -84,27 +50,6 @@
         (f)
         (finally
           (set! js/console.error org))))))
-
-(defn wrap-capture-window-error [f]
-  (if (exists? js/window)
-    (fn []
-      (let [org js/console.onerror]
-        (set! js/window.onerror (fn [e]
-                                  (log-error e)
-                                  true))
-        (try
-          (f)
-          (finally
-            (set! js/window.onerror org)))))
-    (fn []
-      (let [process (js/require "process")
-            l (fn [e]
-                (log-error e))]
-        (.on process "uncaughtException" l)
-        (try
-          (f)
-          (finally
-            (.removeListener process "uncaughtException" l)))))))
 
 ;; Promise versions
 
