@@ -1202,20 +1202,19 @@
     (is (= "<i> </i>"
            (as-string [:i (gstr/unescapeEntities "&nbsp;")])))))
 
-(defn context-wrapper []
-  (r/create-class
-    {:get-child-context (fn []
-                          (this-as this
-                            #js {:foo "bar"}))
-     :child-context-types #js {:foo prop-types/string.isRequired}
-     :reagent-render (fn [child]
-                       [:div
-                        "parent,"
-                        child])}))
+(def Foo (react/createContext))
+(def FooProvider (.-Provider Foo))
+
+(defn context-wrapper [child]
+  [:r> FooProvider
+   #js {:value #js {:foo "bar"}}
+   [:div
+    "parent,"
+    child]])
 
 (defn context-child []
   (r/create-class
-    {:context-types #js {:foo prop-types/string.isRequired}
+    {:context-type Foo
      :reagent-render (fn []
                        (let [this (r/current-component)]
                          ;; Context property name is not mangled, so need to  use gobj/get to access property by string name
