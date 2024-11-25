@@ -51,46 +51,31 @@
         (finally
           (set! js/console.error org))))))
 
-;; Promise versions
-
-(defn wrap-capture-console-error-promise [f]
-  (fn []
-    (let [org js/console.error]
-      (set! js/console.error log-error)
-      (-> (f)
-          (p/finally
-            (fn []
-              (set! js/console.error org)))))))
-
-(defn track-warnings-promise [f]
-  (set! debug/tracking true)
-  (reset! debug/warnings nil)
-  (-> (f)
-      (p/then (fn []
-                @debug/warnings))
-      (p/finally
-        (fn []
-          (reset! debug/warnings nil)
-          (set! debug/tracking false)))))
-
-(defn wrap-capture-window-error-promise [f]
-  (if (exists? js/window)
+(defn init-capture []
+  (let [org-console js/console.error
+        org-window js/window.onerror
+        l (fn [e]
+            (log-error e))]
+    ;; console.error
+    (set! js/console.error log-error)
+    ;; reagent.debug
+    (set! debug/tracking true)
+    (reset! debug/warnings nil)
+    ;; window.error
+    (if (exists? js/window)
+      (set! js/window.onerror (fn [e]
+                                (log-error e)
+                                true))
+      (let [process (js/require "process")]
+        (.on process "uncaughtException" l)))
     (fn []
-      (let [org js/console.onerror]
-        (set! js/window.onerror (fn [e]
-                                  (log-error e)
-                                  true))
-        (-> (f)
-            (p/finally
-              (fn [] (set! js/window.onerror org))))))
-    (fn []
-      (let [process (js/require "process")
-            l (fn [e]
-                (log-error e))]
-        (.on process "uncaughtException" l)
-        (-> (f)
-            (p/finally
-              (fn [] (.removeListener process "uncaughtException" l))))))))
+      (set! js/console.error org-console)
+      (reset! debug/warnings nil)
+      (set! debug/tracking false)
+      (if (exists? js/window)
+        (set! js/window.onerror org-window)
+        (let [process (js/require "process")]
+          (.removeListener process "uncaughtException" l))))))
 
 (defn act*
   "Run f to trigger Reagent updates,
@@ -104,6 +89,8 @@
                       (p/resolve! p)))
     p))
 
+(def ^:dynamic *render-error* nil)
+
 (defn with-render*
   "Render the given component to a DOM node,
   after the the component is mounted to DOM,
@@ -112,23 +99,44 @@
   before unmounting the component from DOM."
   ([comp f]
    (with-render* comp *test-compiler* f))
-  ([comp compiler f]
+  ([comp options f]
    (let [div (.createElement js/document "div")
-         p (p/deferred)
+         first-render (p/deferred)
          callback (fn []
-                    (p/resolve! p))]
-     (if compiler
-       (rdom/render comp div {:compiler compiler
-                              :callback callback})
-       (rdom/render comp div callback))
-     (.then p
-            (fn []
-              (-> (js/Promise.resolve (f div))
-                  (.then (fn []
-                           (rdom/unmount-component-at-node div)
-                           ;; Need to wait for reagent tick after unmount
-                           ;; for the ratom watches to be removed?
-                           (let [p (p/deferred)]
-                             (r/next-tick (fn []
-                                            (p/resolve! p)))
-                             p)))))))))
+                    (p/resolve! first-render))
+         compiler (:compiler options)
+         restore-error-handlers (when (:capture-errors options)
+                                  (init-capture))
+         ;; Magic setup to make exception from render available to the
+         ;; with-render body.
+         render-error (atom nil)]
+     (try
+       (if compiler
+         (rdom/render comp div {:compiler compiler
+                                :callback callback})
+         (rdom/render comp div callback))
+       (catch :default e
+         (reset! render-error e)
+         nil))
+     (-> first-render
+         ;; The callback is called even if render throws an error,
+         ;; so this is always resolved.
+         (p/then (fn []
+                   (p/do
+                     (set! *render-error* @render-error)
+                     (f div)
+                     (set! *render-error* nil))))
+         ;; If f throws more errors, just ignore them?
+         ;; Not sure if this makes sense.
+         (p/catch (fn [] nil))
+         (p/then (fn []
+                   (rdom/unmount-component-at-node div)
+                   ;; Need to wait for reagent tick after unmount
+                   ;; for the ratom watches to be removed?
+                   (let [ratoms-cleaned (p/deferred)]
+                     (r/next-tick (fn []
+                                    (p/resolve! ratoms-cleaned)))
+                     ratoms-cleaned)))
+         (p/finally (fn []
+                      (when restore-error-handlers
+                        (restore-error-handlers))))))))

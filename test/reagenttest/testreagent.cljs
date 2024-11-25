@@ -22,7 +22,7 @@
                            (set! rv/debug false))})
 
 (u/deftest ^:dom really-simple-test
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         really-simple (fn []
                         (swap! ran inc)
                         [:div "div in really-simple"])]
@@ -32,7 +32,7 @@
         (is (= "div in really-simple" (.-innerText div)))))))
 
 (u/deftest ^:dom test-simple-callback
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         comp (r/create-class
                {:component-did-mount #(swap! ran inc)
                 :render
@@ -46,13 +46,12 @@
                     [:div (str "hi " (:foo props) ".")]))})]
     (u/async
       (u/with-render [div [comp {:foo "you"} 1]]
-        ;; FIXME: Why?
-        (swap! ran inc)
         (is (= "hi you." (.-innerText div)))
-        (is (= 3 @ran))))))
+        ;; 1 from render, 1 from component did mount
+        (is (= 2 @ran))))))
 
 (u/deftest ^:dom test-state-change
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         self (r/atom nil)
         comp (r/create-class
                {:get-initial-state (fn [] {:foo "initial"})
@@ -77,7 +76,7 @@
 
 (u/deftest ^:dom test-ratom-change
   (let [compiler u/*test-compiler*
-        ran (r/atom 0)
+        ran (atom 0)
         runs (rv/running)
         val (r/atom 0)
         secval (r/atom 0)
@@ -131,8 +130,6 @@
       (u/with-render [div [c1]]
         (is (= 2 @ran))
         (u/act (swap! v2 inc))
-        ;; FIXME: ???
-        ;; (is (= 2 @ran))
         (is (= 3 @ran))
         (u/act (swap! v1 inc))
         (is (= 5 @ran))
@@ -149,7 +146,7 @@
         ))))
 
 (u/deftest ^:dom init-state-test
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         really-simple (fn []
                         (let [this (r/current-component)]
                           (swap! ran inc)
@@ -334,20 +331,18 @@
         parent (fn [] [comp @prop 1])]
     (u/async
       (u/with-render [div [parent]]
-        ;; FIXME: Why?
-        (swap! ran inc)
         (is (= "hi you." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 3 @ran))
+        (is (= 2 @ran))
 
         (u/act (swap! prop assoc :foo "me"))
         (is (= "hi me." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 4 @ran))))))
+        (is (= 3 @ran))))))
 
 (u/deftest ^:dom test-return-class-fn
-  (let [ran (r/atom 0)
-        top-ran (r/atom 0)
+  (let [ran (atom 0)
+        top-ran (atom 0)
         comp (fn []
                (swap! top-ran inc)
                (r/create-class
@@ -361,16 +356,14 @@
         parent (fn [] [comp @prop 1])]
     (u/async
       (u/with-render [div [parent]]
-        ;; FIXME: Why?
-        (swap! ran inc)
         (is (= "hi you." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 3 @ran))
+        (is (= 2 @ran))
 
         (u/act (swap! prop assoc :foo "me"))
         (is (= "hi me." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 4 @ran))))))
+        (is (= 3 @ran))))))
 
 (u/deftest test-create-element
   (let [ae r/as-element
@@ -478,31 +471,28 @@
   ;; TODO: Test create-element with key prop
 
   (u/async
-    (p/let [w (u/track-warnings-promise
-                #(u/with-render [div [:div
-                                      (list
-                                        [:> "div" {:key 1} "a"]
-                                        [:> "div" {:key 2} "b"])]]
-                   nil))]
-      (is (empty? (:warn w))))
+    (u/with-render [div [:div
+                         (list
+                           [:> "div" {:key 1} "a"]
+                           [:> "div" {:key 2} "b"])]]
+      {:capture-errors true}
+      (is (empty? (:warn @reagent.debug/warnings))))
 
-    (p/let [w (u/track-warnings-promise
-                #(u/with-render [div [:div
-                                      (list
-                                        [:r> "div" #js {:key 1} "a"]
-                                        [:r> "div" #js {:key 2} "b"])]]
-                   nil))]
-      (is (empty? (:warn w))))
+    (u/with-render [div [:div
+                         (list
+                           [:r> "div" #js {:key 1} "a"]
+                           [:r> "div" #js {:key 2} "b"])]]
+      {:capture-errors true}
+      (is (empty? (:warn @reagent.debug/warnings))))
 
-    (p/let [f (fn [props c]
-                [:div props c])
-            w (u/track-warnings-promise
-                #(u/with-render [div [:div
-                                      (list
-                                        [:f> f {:key 1} "a"]
-                                        [:f> f {:key 2} "b"])]]
-                   nil))]
-      (is (empty? (:warn w))))))
+    (let [f (fn [props c]
+              [:div props c])]
+      (u/with-render [div [:div
+                           (list
+                             [:f> f {:key 1} "a"]
+                             [:f> f {:key 2} "b"])]]
+        {:capture-errors true}
+        (is (empty? (:warn @reagent.debug/warnings)))))))
 
 (u/deftest test-reactize-component
   (let [ae r/as-element
@@ -539,27 +529,22 @@
                  (for [i (range 3)]
                    ^{:key i} [:p i (some-> a deref)])
                  (for [i (range 3)]
-                   [:p {:key i} i (some-> a deref)])])
-            w (u/track-warnings-promise
-                (fn []
-                  (u/with-render [_div [c]]
-                    nil)))]
-      (is (empty? (:warn w))))
+                   [:p {:key i} i (some-> a deref)])])]
+      (u/with-render [_div [c]]
+        {:capture-errors true}
+        (is (empty? (:warn @reagent.debug/warnings)))))
 
     (testing "Check warning text can be produced even if hiccup contains function literals"
       (p/let [c (fn key-tester []
                   [:div
                    (for [i (range 3)]
                      ^{:key nil}
-                     [:button {:on-click #(js/console.log %)}])])
-              w (u/track-warnings-promise
-                  (u/wrap-capture-console-error-promise
-                    (fn []
-                      (u/with-render [_div [c]]
-                        nil))))]
-        (if (dev?)
-          (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
-                       (first (:warn w)))))))))
+                     [:button {:on-click #(js/console.log %)}])])]
+        (u/with-render [_div [c]]
+          {:capture-errors true}
+          (when (dev?)
+            (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
+                         (first (:warn @reagent.debug/warnings))))))))))
 
 (u/deftest test-extended-syntax
   (is (= "<p><b>foo</b></p>"
@@ -993,43 +978,29 @@
 
       (u/async
         ;; Error is orginally caused by comp1, so only that is shown in the error
-        ;; FIXME:
-        #_
-        (p/let [e (u/track-warnings-promise
-                    (u/wrap-capture-window-error-promise
-                      (u/wrap-capture-console-error-promise
-                        (fn []
-                          (is (thrown-with-msg?
-                                :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                                (-> (u/with-render [div [comp2 [:div. "foo"]]]
-                                      nil)
-                                    (p/catch (fn [_e] nil)))))))))]
+        (u/with-render [div [comp2 [:div. "foo"]]]
+          {:capture-errors true}
+          ;; The render call itself throws the exception
+          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
           (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error e)))))
+                       (first (:error @reagent.debug/warnings))))
+          nil)
 
-        ;; FIXME:
-        #_
-        (p/let [e (u/track-warnings-promise
-                    (u/wrap-capture-window-error-promise
-                      (u/wrap-capture-console-error-promise
-                        (fn []
-                          (is (thrown-with-msg?
-                                :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                                (-> (u/with-render [div [comp1 [:div. "foo"]]]
-                                      nil)
-                                    (p/catch (fn [_e] nil)))))))))]
+        (u/with-render [div [comp1 [:div. "foo"]]]
+          {:capture-errors true}
+          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
           (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error e)))))
+                       (first (:error @reagent.debug/warnings))))
+          nil)
 
         (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
           (is (re-find #"Using native React classes directly"
                        (-> e :warn first))))
 
-        (p/let [e (u/track-warnings-promise
-                    #(u/with-render [div [comp3]]
-                       nil))]
+        (u/with-render [div [comp3]]
+          {:capture-errors true}
           (is (re-find #"Reactive deref not supported"
-                       (-> e :warn first))))
+                       (-> @reagent.debug/warnings :warn first))))
 
         (let [e (debug/track-warnings
                   #(r/as-element (comp4) compiler))]
@@ -1055,21 +1026,19 @@
         comp2 (fn comp2 []
                 [comp1])]
     (u/async
-      (u/track-warnings-promise
-        (u/wrap-capture-window-error-promise
-          (u/wrap-capture-console-error-promise
-            #(u/with-render [div [error-boundary [comp2]]]
-               (is (= "Test error" (.-message @error)))
-               (is (re-find #"Something went wrong\." (.-innerHTML div)))
-               (if (dev?)
-                 ;; FIXME: Firefox formats the stack traces differently, and perhaps there is a real problem that
-                 ;; the component function names aren't being used correctly, and all components are named "cmp"?
-                 (when-not (.. js/navigator -userAgent toLowerCase (includes "firefox"))
-                   (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
-                                (.-componentStack ^js @info))))
-                 ;; Names are completely manged on adv compilation
-                 (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
-                              (.-componentStack ^js @info)))))))))))
+      (u/with-render [div [error-boundary [comp2]]]
+        {:capture-errors true}
+        (is (= "Test error" (.-message @error)))
+        (is (re-find #"Something went wrong\." (.-innerHTML div)))
+        (if (dev?)
+          ;; FIXME: Firefox formats the stack traces differently, and perhaps there is a real problem that
+          ;; the component function names aren't being used correctly, and all components are named "cmp"?
+          (when-not (.. js/navigator -userAgent toLowerCase (includes "firefox"))
+            (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
+                         (.-componentStack ^js @info))))
+          ;; Names are completely manged on adv compilation
+          (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
+                       (.-componentStack ^js @info))))))))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
 (u/deftest ^:dom test-dom-node
@@ -1103,7 +1072,9 @@
         exp (atom 0)
         node (atom nil)
         state (r/atom 0)
+        component-instance (atom nil)
         comp (fn []
+               (reset! component-instance (r/current-component))
                (let [old @spy]
                  (r/after-render
                    (fn []
@@ -1111,28 +1082,39 @@
                      (swap! spy inc)))
                  (is (= @spy old))
                  (is (= @exp @val))
-                 [:div {:ref #(reset! node %)} @state]))]
+                 [:div
+                  {:ref #(reset! node %)}
+                  @state]))]
     (u/async
       (u/with-render [div [comp]]
-        ;; FIXME: Rewrite this to use act?
+        ;; after-render was already called after the initial render
+        (is (= 1 @spy))
 
-        (is (= 1 @spy))
-        (swap! state inc)
-        (is (= 1 @spy))
+        (u/act (swap! state inc))
+
+        (is (= 2 @spy))
+
+        ;; Update some non reactive values
         (r/next-tick #(swap! val inc))
         (reset! exp 1)
-        (is (= 0 @val))
-        (r/flush)
+
+        ;; After waiting for render, the next-tick update has also happened
+        (u/act nil)
+
         (is (= 1 @val))
         (is (= 2 @spy))
-        ;; FIXME: c is nil because render call doesn't return anything
-        ; (r/force-update c)
-        ; (is (= 3 @spy))
-        ; (r/next-tick #(reset! spy 0))
-        ; (is (= 3 @spy))
-        ; (r/flush)
-        ; (is (= 0 @spy))
-        )
+
+        ;; Now if we force render directly, spy is also updated from after-render callback
+        (r/force-update @component-instance)
+        (is (= 3 @spy))
+
+        ;; next-tick callback isn't called right away,
+        (r/next-tick #(reset! spy 0))
+        (is (= 3 @spy))
+
+        ;; the update is run when waiting for the component to finish rendering
+        (u/act nil)
+        (is (= 0 @spy)))
       (is (= nil @node)))))
 
 (u/deftest style-property-names-are-camel-cased
@@ -1266,18 +1248,18 @@
 
     (u/async
       (when (dev?)
-        (p/let [e (u/track-warnings-promise
-                    #(u/with-render [div [component]]
-                       (u/act (reset! prop (sorted-map 1 2)))
-                       ; (try
-                       ;   (r/flush)
-                       ;   (catch :default e
-                       ;     (reset! error-thrown-after-updating-props true)))
+        (u/with-render [div [component]]
+          {:capture-errors true}
+          (u/act (reset! prop (sorted-map 1 2)))
+          ; (try
+          ;   (r/flush)
+          ;   (catch :default e
+          ;     (reset! error-thrown-after-updating-props true)))
 
-                       (is (not @component-was-updated))
-                       (is (not @error-thrown-after-updating-props))))]
+          (is (not @component-was-updated))
+          (is (not @error-thrown-after-updating-props))
           (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
-                       (first (:warn e)))))))))
+                       (first (:warn @reagent.debug/warnings)))))))))
 
 (u/deftest ^:dom get-derived-state-from-props-test
   (let [prop (r/atom 0)
@@ -1317,14 +1299,12 @@
                         (if (= 0 @prop)
                           [:div "Ok"]
                           (throw (js/Error. "foo"))))]
-    ;; FIXME: These assertions aren't being run?
     (u/async
-      (u/wrap-capture-window-error-promise
-        (u/wrap-capture-console-error-promise
-          #(u/with-render [div [component [bad-component]]]
-             (is (= "Ok" (.-innerText div)))
-             (u/act (swap! prop inc))
-             (is (= "Error" (.-innerText div)))))))))
+      (u/with-render [div [component [bad-component]]]
+        {:capture-errors true}
+        (is (= "Ok" (.-innerText div)))
+        (u/act (swap! prop inc))
+        (is (= "Error" (.-innerText div)))))))
 
 (u/deftest ^:dom get-snapshot-before-update-test
   (let [ref (react/createRef)

@@ -95,8 +95,8 @@
 (u/deftest ^:dom test-wrap
   (let [compiler u/*test-compiler*
         state (r/atom {:foo {:bar {:foobar 1}}})
-        ran (r/atom 0)
-        grand-state (clojure.core/atom nil)
+        ran (atom 0)
+        grand-state (atom nil)
         grand-child (fn [v]
                       (swap! ran inc)
                       (reset! grand-state v)

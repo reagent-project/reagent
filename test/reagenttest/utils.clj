@@ -62,4 +62,4 @@
   (let [[opts body] (if (map? (first body))
                       [(first body) (rest body)]
                       [nil body])]
-    `(reagenttest.utils/with-render* ~comp ~(:compiler opts) (fn [~sym] (promesa.core/do ~@body)))))
+    `(reagenttest.utils/with-render* ~comp ~opts (fn [~sym] (promesa.core/do ~@body)))))
