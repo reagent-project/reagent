@@ -1,7 +1,7 @@
 (ns reagenttest.testwrap
   (:require [clojure.test :as t :refer-macros [is deftest]]
             [reagent.core :as r]
-            [reagenttest.utils :as u :refer [with-mounted-component]]))
+            [reagenttest.utils :as u]))
 
 (deftest test-wrap-basic
   (let [state (r/atom {:foo 1})
@@ -95,8 +95,8 @@
 (u/deftest ^:dom test-wrap
   (let [compiler u/*test-compiler*
         state (r/atom {:foo {:bar {:foobar 1}}})
-        ran (r/atom 0)
-        grand-state (clojure.core/atom nil)
+        ran (atom 0)
+        grand-state (atom nil)
         grand-child (fn [v]
                       (swap! ran inc)
                       (reset! grand-state v)
@@ -107,60 +107,56 @@
         parent (fn []
                  [child (r/wrap (:foo @state)
                                 swap! state assoc :foo)])]
-    (t/async done
-      (u/with-mounted-component-async
-        [parent]
-        done
-        compiler
-        (fn [c div done]
-          (u/run-fns-after-render
-            (fn []
-              (is (= 1 @ran))
-              (is (= "value:1:" (.-innerText div)))
+    (u/async
+      (u/with-render [div [parent]]
+        {:compiler compiler}
+        (is (= 1 @ran))
+        (is (= "value:1:" (.-innerText div)))
 
-              (reset! @grand-state {:foobar 2})
-              ;; Not sure why this fixes this.
-              (r/flush))
-            (fn []
-              (is (= {:foo {:bar {:foobar 2}}} @state))
-              (is (= 2 @ran))
-              (is (= "value:2:" (.-innerText div)))
+        (u/act (reset! @grand-state {:foobar 2}))
 
-              (swap! state update-in [:foo :bar] assoc :foobar 3))
-            (fn []
-              (is (= 3 @ran))
-              (is (= "value:3:" (.-innerText div)))
-              (reset! state {:foo {:bar {:foobar 3}}
-                             :foo1 {}}))
-            (fn []
-              (is (= 3 @ran))
-              (reset! @grand-state {:foobar 3}))
-            (fn []
-              ; (is (= 3 @ran))
-              (is (= "value:3:" (.-innerText div)))
+        (is (= {:foo {:bar {:foobar 2}}} @state))
+        (is (= 2 @ran))
+        (is (= "value:2:" (.-innerText div)))
 
-              (reset! state {:foo {:bar {:foobar 2}}
-                             :foo2 {}}))
-            (fn []
-              ; (is (= 4 @ran))
-              (is (= "value:2:" (.-innerText div)))
+        (u/act (swap! state update-in [:foo :bar] assoc :foobar 3))
 
-              (reset! @grand-state {:foobar 2}))
-            (fn []
-              ; (is (= 5 @ran))
-              (is (= "value:2:" (.-innerText div)))
+        (is (= 3 @ran))
+        (is (= "value:3:" (.-innerText div)))
 
-              (reset! state {:foo {:bar {:foobar 4}}})
-              (reset! @grand-state {:foobar 4}))
-            (fn []
-              ; (is (= 6 @ran))
-              (is (= "value:4:" (.-innerText div)))
+        (u/act (reset! state {:foo {:bar {:foobar 3}}
+                       :foo1 {}}))
 
-              (reset! @grand-state {:foobar 4}))
-            (fn []
-              ; (is (= 7 @ran))
-              (is (= "value:4:" (.-innerText div))))
-            done))))))
+        (is (= 3 @ran))
+
+        (u/act (reset! @grand-state {:foobar 3}))
+
+        ; (is (= 3 @ran))
+        (is (= "value:3:" (.-innerText div)))
+
+        (u/act (reset! state {:foo {:bar {:foobar 2}}
+                              :foo2 {}}))
+
+        ; (is (= 4 @ran))
+        (is (= "value:2:" (.-innerText div)))
+
+        (u/act (reset! @grand-state {:foobar 2}))
+
+        ; (is (= 5 @ran))
+        (is (= "value:2:" (.-innerText div)))
+
+        (u/act (reset! state {:foo {:bar {:foobar 4}}})
+               (reset! @grand-state {:foobar 4}))
+
+        ; (is (= 6 @ran))
+        (is (= "value:4:" (.-innerText div)))
+
+        (u/act (reset! @grand-state {:foobar 4}))
+
+        ; (is (= 7 @ran))
+        (is (= "value:4:" (.-innerText div)))
+
+        ))))
 
 (u/deftest ^:dom test-cursor
   (let [compiler u/*test-compiler*
@@ -175,34 +171,26 @@
                [:div
                 [derefer (r/cursor state [:a]) a-count]
                 [derefer (r/cursor state [:b]) b-count]])]
-    (t/async done
-      (u/with-mounted-component-async
-        [comp]
-        done
-        compiler
-        (fn [c div done]
-          (u/run-fns-after-render
-            (fn []
-              (is (= 1 @a-count))
-              (is (= 1 @b-count))
+    (u/async
+      (u/with-render [div [comp]]
+        {:compiler compiler}
+        (is (= 1 @a-count))
+        (is (= 1 @b-count))
 
+        (u/act (swap! state update-in [:a :v] inc))
 
-              (swap! state update-in [:a :v] inc)
-              (is (= 1 @a-count)))
-            (fn []
-              (is (= 2 @a-count))
-              (is (= 1 @b-count))
+        (is (= 2 @a-count))
+        (is (= 1 @b-count))
 
-              (reset! state {:a {:v 2} :b {:v 2}}))
-            (fn []
-              (is (= 2 @a-count))
-              (is (= 1 @b-count))
+        (u/act (reset! state {:a {:v 2} :b {:v 2}}))
 
-              (reset! state {:a {:v 3} :b {:v 2}}))
-            (fn []
-              (is (= 3 @a-count))
-              (is (= 1 @b-count)))
-            done))))))
+        (is (= 2 @a-count))
+        (is (= 1 @b-count))
+
+        (u/act (reset! state {:a {:v 3} :b {:v 2}}))
+
+        (is (= 3 @a-count))
+        (is (= 1 @b-count))))))
 
 (u/deftest ^:dom test-fn-cursor
   (let [state (r/atom {:a {:v 1}
@@ -219,25 +207,22 @@
                [:div
                 [derefer ac]
                 [derefer bc]])]
-    (with-mounted-component [comp]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [comp]]
         (is (= 1 @a-count))
         (is (= 1 @b-count))
 
-        (swap! state update-in [:a :v] inc)
-        (is (= 1 @a-count))
-        (is (= 1 @b-count))
+        (u/act (swap! state update-in [:a :v] inc))
 
-        (r/flush)
         (is (= 2 @a-count))
         (is (= 2 @b-count))
 
-        (reset! state {:a {:v 2} :b {:v 2}})
-        (r/flush)
+        (u/act (reset! state {:a {:v 2} :b {:v 2}}))
+
         (is (= 2 @a-count))
         (is (= 2 @b-count))
 
-        (reset! state {:a {:v 3} :b {:v 2}})
-        (r/flush)
+        (u/act (reset! state {:a {:v 3} :b {:v 2}}))
+
         (is (= 3 @a-count))
         (is (= 3 @b-count))))))

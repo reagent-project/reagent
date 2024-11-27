@@ -14,4 +14,5 @@
          :source-map true
          :compiler-options {:infer-externs :auto}
          :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}}
- :dependencies [[doo "0.1.11"]]}
+ :dependencies [[doo "0.1.11"]
+                [funcool/promesa "11.0.678"]]}

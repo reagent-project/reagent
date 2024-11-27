@@ -1,19 +1,19 @@
 (ns reagenttest.testreagent
-  (:require [clojure.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.string :as string]
+            [clojure.test :as t :refer-macros [is deftest testing]]
+            [goog.object :as gobj]
+            [goog.string :as gstr]
+            [promesa.core :as p]
             [react :as react]
-            [reagent.ratom :as rv :refer [reaction]]
-            [reagent.debug :as debug :refer [dev?]]
             [reagent.core :as r]
+            [reagent.debug :as debug :refer [dev?]]
             [reagent.dom :as rdom]
             [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
             [reagent.impl.template :as tmpl]
-            [reagenttest.utils :as u :refer [with-mounted-component as-string]]
-            [clojure.string :as string]
-            [goog.string :as gstr]
-            [goog.object :as gobj]
-            [prop-types :as prop-types]))
+            [reagent.ratom :as rv :refer [reaction]]
+            [reagenttest.utils :as u :refer [as-string]]))
 
 (t/use-fixtures :once
                 {:before (fn []
@@ -22,17 +22,17 @@
                            (set! rv/debug false))})
 
 (u/deftest ^:dom really-simple-test
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         really-simple (fn []
                         (swap! ran inc)
                         [:div "div in really-simple"])]
-    (with-mounted-component [really-simple nil nil]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [really-simple nil nil]]
         (is (= 1 @ran))
         (is (= "div in really-simple" (.-innerText div)))))))
 
 (u/deftest ^:dom test-simple-callback
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         comp (r/create-class
                {:component-did-mount #(swap! ran inc)
                 :render
@@ -44,14 +44,14 @@
                     (is (= 1 (count (r/children this))))
                     (swap! ran inc)
                     [:div (str "hi " (:foo props) ".")]))})]
-    (with-mounted-component [comp {:foo "you"} 1]
-      (fn [C div]
-        (swap! ran inc)
+    (u/async
+      (u/with-render [div [comp {:foo "you"} 1]]
         (is (= "hi you." (.-innerText div)))
-        (is (= 3 @ran))))))
+        ;; 1 from render, 1 from component did mount
+        (is (= 2 @ran))))))
 
 (u/deftest ^:dom test-state-change
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         self (r/atom nil)
         comp (r/create-class
                {:get-initial-state (fn [] {:foo "initial"})
@@ -61,73 +61,61 @@
                     (reset! self this)
                     (swap! ran inc)
                     [:div (str "hi " (:foo (r/state this)))]))})]
-    (with-mounted-component [comp]
-      (fn [C div]
+    (u/async
+      (u/with-render [div [comp]]
         (swap! ran inc)
         (is (= "hi initial" (.-innerText div)))
 
-        (r/replace-state @self {:foo "there"})
-        (r/state @self)
+        (u/act (r/replace-state @self {:foo "there"}))
 
-        (r/flush)
         (is (= "hi there" (.-innerText div)))
 
-        (r/set-state @self {:foo "you"})
-        (r/flush)
-        (is (= "hi you" (.-innerText div)))))
-    (is (= 4 @ran))))
+        (u/act (r/set-state @self {:foo "you"}))
+        (is (= "hi you" (.-innerText div))))
+      (is (= 4 @ran)))))
 
 (u/deftest ^:dom test-ratom-change
   (let [compiler u/*test-compiler*
-        ran (r/atom 0)
+        ran (atom 0)
         runs (rv/running)
         val (r/atom 0)
         secval (r/atom 0)
-        v1-ran (atom 0)
-        v1 (reaction (swap! v1-ran inc) @val)
+        reaction-ran (atom 0)
+        v1 (reaction (swap! reaction-ran inc) @val)
         comp (fn []
                (swap! ran inc)
                [:div (str "val " @v1 " " @val " " @secval)])]
-    (t/async done
-      (u/with-mounted-component-async [comp]
-        (fn []
-          (r/next-tick
-            (fn []
-              (r/next-tick
-                (fn []
-                  (is (= runs (rv/running)))
-                  (is (= 2 @ran))
-                  (done))))))
-        compiler
-        (fn [C div done]
-          (r/flush)
-          (is (not= runs (rv/running)))
-          (is (= "val 0 0 0" (.-innerText div)))
-          (is (= 1 @ran))
+    (u/async
+      (u/with-render [div [comp]]
+        {:compiler compiler}
 
+        (is (not= runs (rv/running)))
+        (is (= "val 0 0 0" (.-innerText div)))
+        (is (= 1 @ran))
+
+        (u/act
           (reset! secval 1)
           (reset! secval 0)
           (reset! val 1)
           (reset! val 2)
-          (reset! val 1)
-          (is (= 1 @ran))
-          (is (= 1 @v1-ran))
-          (r/flush)
-          (is (= "val 1 1 0" (.-innerText div)))
-          (is (= 2 @ran) "ran once more")
-          (is (= 2 @v1-ran))
+          (reset! val 1))
 
-          ;; should not be rendered
-          (reset! val 1)
-          (is (= 2 @v1-ran))
-          (r/flush)
-          (is (= 2 @v1-ran))
-          (is (= "val 1 1 0" (.-innerText div)))
-          (is (= 2 @ran) "did not run")
-          (done))))))
+        (is (= "val 1 1 0" (.-innerText div)))
+        (is (= 2 @ran) "ran once more")
+        (is (= 2 @reaction-ran))
+
+        ;; should not be rendered
+        (u/act (reset! val 1))
+        (is (= 2 @reaction-ran))
+        (is (= 2 @reaction-ran))
+        (is (= "val 1 1 0" (.-innerText div)))
+        (is (= 2 @ran) "did not run"))
+
+      (is (= runs (rv/running)))
+      (is (= 2 @ran)))))
 
 (u/deftest ^:dom batched-update-test []
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         v1 (r/atom 0)
         v2 (r/atom 0)
         c2 (fn [{val :val}]
@@ -138,16 +126,12 @@
              (swap! ran inc)
              [:div @v1
               [c2 {:val @v1}]])]
-    (with-mounted-component [c1]
-      (fn [c div]
-        (r/flush)
+    (u/async
+      (u/with-render [div [c1]]
         (is (= 2 @ran))
-        (swap! v2 inc)
-        (is (= 2 @ran))
-        (r/flush)
+        (u/act (swap! v2 inc))
         (is (= 3 @ran))
-        (swap! v1 inc)
-        (r/flush)
+        (u/act (swap! v1 inc))
         (is (= 5 @ran))
         ;; TODO: Failing on optimized build
         ; (swap! v2 inc)
@@ -162,7 +146,7 @@
         ))))
 
 (u/deftest ^:dom init-state-test
-  (let [ran (r/atom 0)
+  (let [ran (atom 0)
         really-simple (fn []
                         (let [this (r/current-component)]
                           (swap! ran inc)
@@ -170,15 +154,15 @@
                           (fn []
                             [:div (str "this is "
                                        (:foo (r/state this)))])))]
-    (with-mounted-component [really-simple nil nil]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [really-simple nil nil]]
         (swap! ran inc)
-        (is (= "this is foobar" (.-innerText div)))))
-    (is (= 2 @ran))))
+        (is (= "this is foobar" (.-innerText div))))
+      (is (= 2 @ran)))))
 
 (u/deftest ^:dom should-update-test
-  (let [parent-ran (r/atom 0)
-        child-ran (r/atom 0)
+  (let [parent-ran (atom 0)
+        child-ran (atom 0)
         child-props (r/atom nil)
         f (fn [])
         f1 (fn [])
@@ -188,69 +172,40 @@
         parent (fn []
                  (swap! parent-ran inc)
                  [:div "child-foo" [child @child-props]])]
-    (with-mounted-component [parent nil nil]
-      (fn [c div]
-        (r/flush)
+    (u/async
+      (u/with-render [div [parent nil nil]]
         (is (= 1 @child-ran))
         (is (= "child-foo" (.-innerText div)))
 
-        (reset! child-props {:style {:display :none}})
-        (r/flush)
+        (u/act (reset! child-props {:style {:display :none}}))
         (is (= 2 @child-ran))
 
-        (reset! child-props {:style {:display :none}})
-        (r/flush)
+        (u/act (reset! child-props {:style {:display :none}}))
         (is (= 2 @child-ran) "keyw is equal")
 
-        (reset! child-props {:class :foo}) (r/flush)
-        (r/flush)
+        (u/act (reset! child-props {:class :foo})) (r/flush)
         (is (= 3 @child-ran))
 
-        (reset! child-props {:class :foo}) (r/flush)
-        (r/flush)
+        (u/act (reset! child-props {:class :foo})) (r/flush)
         (is (= 3 @child-ran))
 
-        (reset! child-props {:class 'foo})
-        (r/flush)
+        (u/act (reset! child-props {:class 'foo}))
         (is (= 4 @child-ran) "symbols are different from keyw")
 
-        (reset! child-props {:class 'foo})
-        (r/flush)
+        (u/act (reset! child-props {:class 'foo}))
         (is (= 4 @child-ran) "symbols are equal")
 
-        (reset! child-props {:style {:color 'red}})
-        (r/flush)
+        (u/act (reset! child-props {:style {:color 'red}}))
         (is (= 5 @child-ran))
 
-        (reset! child-props {:on-change (r/partial f)})
-        (r/flush)
+        (u/act (reset! child-props {:on-change (r/partial f)}))
         (is (= 6 @child-ran))
 
-        (reset! child-props {:on-change (r/partial f)})
-        (r/flush)
+        (u/act (reset! child-props {:on-change (r/partial f)}))
         (is (= 6 @child-ran))
 
-        (reset! child-props {:on-change (r/partial f1)})
-        (r/flush)
+        (u/act (reset! child-props {:on-change (r/partial f1)}))
         (is (= 7 @child-ran))))))
-
-(u/deftest ^:dom dirty-test
-  (let [ran (r/atom 0)
-        state (r/atom 0)
-        really-simple (fn []
-                        (swap! ran inc)
-                        (if (= 1 @state)
-                          (reset! state 3))
-                        [:div (str "state=" @state)])]
-    (with-mounted-component [really-simple nil nil]
-      (fn [c div]
-        (is (= 1 @ran))
-        (is (= "state=0" (.-innerText div)))
-        (reset! state 1)
-        (r/flush)
-        (is (= 2 @ran))
-        (is (= "state=3" (.-innerText div)))))
-    (is (= 2 @ran))))
 
 (u/deftest to-string-test []
   (let [comp (fn [props]
@@ -357,8 +312,8 @@
                                {:__html "<p>foobar</p>"}}]))))
 
 (u/deftest ^:dom test-return-class
-  (let [ran (r/atom 0)
-        top-ran (r/atom 0)
+  (let [ran (atom 0)
+        top-ran (atom 0)
         comp (fn []
                (swap! top-ran inc)
                (r/create-class
@@ -374,22 +329,20 @@
                       [:div (str "hi " (:foo props) ".")]))}))
         prop (r/atom {:foo "you"})
         parent (fn [] [comp @prop 1])]
-    (with-mounted-component [parent]
-      (fn [C div]
-        (swap! ran inc)
+    (u/async
+      (u/with-render [div [parent]]
         (is (= "hi you." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 3 @ran))
+        (is (= 2 @ran))
 
-        (swap! prop assoc :foo "me")
-        (r/flush)
+        (u/act (swap! prop assoc :foo "me"))
         (is (= "hi me." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 4 @ran))))))
+        (is (= 3 @ran))))))
 
 (u/deftest ^:dom test-return-class-fn
-  (let [ran (r/atom 0)
-        top-ran (r/atom 0)
+  (let [ran (atom 0)
+        top-ran (atom 0)
         comp (fn []
                (swap! top-ran inc)
                (r/create-class
@@ -401,18 +354,16 @@
                     [:div (str "hi " (:foo p) ".")])}))
         prop (r/atom {:foo "you"})
         parent (fn [] [comp @prop 1])]
-    (with-mounted-component [parent]
-      (fn [C div]
-        (swap! ran inc)
+    (u/async
+      (u/with-render [div [parent]]
         (is (= "hi you." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 3 @ran))
+        (is (= 2 @ran))
 
-        (swap! prop assoc :foo "me")
-        (r/flush)
+        (u/act (swap! prop assoc :foo "me"))
         (is (= "hi me." (.-innerText div)))
         (is (= 1 @top-ran))
-        (is (= 4 @ran))))))
+        (is (= 3 @ran))))))
 
 (u/deftest test-create-element
   (let [ae r/as-element
@@ -509,40 +460,39 @@
         comp (fn [props]
                (reset! p props)
                (r/as-element [:div "a" (.-children props)]))]
-    (with-mounted-component [:r> comp #js {:foo {:bar "x"}}
-                             [:p "bar"]]
-      (fn [c div]
-        (is (= {:bar "x"} (gobj/get @p "foo")))
+    (u/async
+      (u/with-render [div [:r> comp #js {:foo {:bar "x"}}
+                           [:p "bar"]]]
+        (is (= {:bar "x"}
+               (gobj/get @p "foo")))
         (is (= "<div>a<p>bar</p></div>" (.-innerHTML div)))))))
 
 (deftest ^:dom shortcut-key-warning
   ;; TODO: Test create-element with key prop
 
-  (let [w (debug/track-warnings
-           #(with-mounted-component [:div
-                                     (list
-                                      [:> "div" {:key 1} "a"]
-                                      [:> "div" {:key 2} "b"])]
-              (fn [c div])))]
-      (is (empty? (:warn w))))
+  (u/async
+    (u/with-render [div [:div
+                         (list
+                           [:> "div" {:key 1} "a"]
+                           [:> "div" {:key 2} "b"])]]
+      {:capture-errors true}
+      (is (empty? (:warn @reagent.debug/warnings))))
 
-  (let [w (debug/track-warnings
-           #(with-mounted-component [:div
-                                     (list
-                                      [:r> "div" #js {:key 1} "a"]
-                                      [:r> "div" #js {:key 2} "b"])]
-              (fn [c div])))]
-      (is (empty? (:warn w))))
+    (u/with-render [div [:div
+                         (list
+                           [:r> "div" #js {:key 1} "a"]
+                           [:r> "div" #js {:key 2} "b"])]]
+      {:capture-errors true}
+      (is (empty? (:warn @reagent.debug/warnings))))
 
-  (let [f (fn [props c]
-            [:div props c])
-        w (debug/track-warnings
-           #(with-mounted-component [:div
-                                     (list
-                                      [:f> f {:key 1} "a"]
-                                      [:f> f {:key 2} "b"])]
-              (fn [c div])))]
-      (is (empty? (:warn w)))))
+    (let [f (fn [props c]
+              [:div props c])]
+      (u/with-render [div [:div
+                           (list
+                             [:f> f {:key 1} "a"]
+                             [:f> f {:key 2} "b"])]]
+        {:capture-errors true}
+        (is (empty? (:warn @reagent.debug/warnings)))))))
 
 (u/deftest test-reactize-component
   (let [ae r/as-element
@@ -572,31 +522,29 @@
     (is (= nil @a))))
 
 (u/deftest ^:dom test-keys
-  (let [a nil ;; (r/atom "a")
-        c (fn key-tester []
-            [:div
-             (for [i (range 3)]
-               ^{:key i} [:p i (some-> a deref)])
-             (for [i (range 3)]
-               [:p {:key i} i (some-> a deref)])])
-        w (debug/track-warnings
-            #(with-mounted-component [c]
-               (fn [c div])))]
-    (is (empty? (:warn w))))
+  (u/async
+    (p/let [a nil ;; (r/atom "a")
+            c (fn key-tester []
+                [:div
+                 (for [i (range 3)]
+                   ^{:key i} [:p i (some-> a deref)])
+                 (for [i (range 3)]
+                   [:p {:key i} i (some-> a deref)])])]
+      (u/with-render [_div [c]]
+        {:capture-errors true}
+        (is (empty? (:warn @reagent.debug/warnings)))))
 
-  (testing "Check warning text can be produced even if hiccup contains function literals"
-    (let [c (fn key-tester []
-              [:div
-               (for [i (range 3)]
-                 ^{:key nil}
-                 [:button {:on-click #(js/console.log %)}])])
-          w (debug/track-warnings
-              (u/wrap-capture-console-error
-                #(with-mounted-component [c]
-                   (fn [c div]))))]
-      (if (dev?)
-        (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
-                     (first (:warn w))))))))
+    (testing "Check warning text can be produced even if hiccup contains function literals"
+      (p/let [c (fn key-tester []
+                  [:div
+                   (for [i (range 3)]
+                     ^{:key nil}
+                     [:button {:on-click #(js/console.log %)}])])]
+        (u/with-render [_div [c]]
+          {:capture-errors true}
+          (when (dev?)
+            (is (re-find #"Warning: Every element in a seq should have a unique :key: \(\[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\] \[:button \{:on-click #object\[Function\]\}\]\)\n \(in reagenttest.testreagent.key_tester\)"
+                         (first (:warn @reagent.debug/warnings))))))))))
 
 (u/deftest test-extended-syntax
   (is (= "<p><b>foo</b></p>"
@@ -615,8 +563,8 @@
                [:div
                 (for [k [1 2]]
                   ^{:key k} [:div>div "a"])])]
-    (with-mounted-component [comp]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [comp]]
         ;; Just make sure this doesn't print a debug message
         ))))
 
@@ -670,24 +618,25 @@
         c3 (fn []
              (swap! comps assoc :c3 (r/current-component))
              [:div "" (reset! spy @(r/track t1))])]
-    (with-mounted-component [c2]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [c2]]
         (is (= {:v1 1 :v2 1} @v))
 
-        (r/force-update (:c2 @comps))
+        (u/act (r/force-update (:c2 @comps)))
         (is (= {:v1 1 :v2 2} @v))
 
-        (r/force-update (:c1 @comps))
+        (u/act (r/force-update (:c1 @comps)))
         (is (= {:v1 2 :v2 2} @v))
 
-        (r/force-update (:c2 @comps) true)
-        (is (= {:v1 3 :v2 3} @v))))
-    (with-mounted-component [c3]
-      (fn [c]
+        (u/act (r/force-update (:c2 @comps) true))
+        (is (= {:v1 3 :v2 3} @v)))
+
+      (u/with-render [div [c3]]
         (is (= 0 @spy))
+        ;; swap! without act doesn't instantly trigger render.
         (swap! state inc)
         (is (= 0 @spy))
-        (r/force-update (:c3 @comps))
+        (u/act (r/force-update (:c3 @comps)))
         (is (= 1 @spy))))))
 
 ;; Class component only
@@ -698,8 +647,8 @@
                                       (let [c (r/current-component)]
                                         (reset! a (comp/component-name c))
                                         [:div]))})]
-    (with-mounted-component [tc]
-      (fn [c]
+    (u/async
+      (u/with-render [div [tc]]
         (is (seq @a))
         (is (re-find #"atestcomponent" @a) "component-path should work")))))
 
@@ -723,26 +672,12 @@
               [:div @val]
               (finally
                 (swap! n3 inc))))]
-    ;; With functional components,
-    ;; effect cleanup (which calls ratom dispose) happens
-    ;; async after unmount.
-    (t/async done
-      (u/with-mounted-component-async [c]
-        (fn []
-          (r/next-tick
-            (fn []
-              (r/next-tick
-                (fn []
-                  (is (= [1 2 1] [@n1 @n2 @n3]))
-                  (done))))))
-        compiler
-        (fn [_ div done]
-          (is (= [1 1 0] [@n1 @n2 @n3]))
-          (swap! val inc)
-          (is (= [1 1 0] [@n1 @n2 @n3]))
-          (r/flush)
-          (is (= [1 2 0] [@n1 @n2 @n3]))
-          (done))))))
+    (u/async
+      (u/with-render [div [c]]
+        (is (= [1 1 0] [@n1 @n2 @n3]))
+        (u/act (swap! val inc))
+        (is (= [1 2 0] [@n1 @n2 @n3])))
+      (is (= [1 2 1] [@n1 @n2 @n3])))))
 
 (u/deftest ^:dom with-let-destroy-only
   (let [compiler u/*test-compiler*
@@ -754,21 +689,10 @@
               [:div]
               (finally
                 (swap! n2 inc))))]
-    (t/async done
-      (u/with-mounted-component-async [c]
-        ;; Wait 2 animation frames for
-        ;; useEffect cleanup to be called.
-        (fn []
-          (r/next-tick
-            (fn []
-              (r/next-tick
-                (fn []
-                  (is (= [1 1] [@n1 @n2]))
-                  (done))))))
-        compiler
-        (fn [_ div done]
-          (is (= [1 0] [@n1 @n2]))
-          (done))))))
+    (u/async
+      (u/with-render [_div [c]]
+        (is (= [1 0] [@n1 @n2])))
+      (is (= [1 1] [@n1 @n2])))))
 
 (u/deftest ^:dom with-let-arg
   (let [a (atom 0)
@@ -780,11 +704,10 @@
         c (fn []
             (r/with-let []
               [f @s]))]
-    (with-mounted-component [c]
-      (fn [_ div]
+    (u/async
+      (u/with-render [div [c]]
         (is (= "foo" @a))
-        (reset! s "bar")
-        (r/flush)
+        (u/act (reset! s "bar"))
         (is (= "bar" @a))))))
 
 (u/deftest with-let-non-reactive
@@ -868,8 +791,8 @@
                 (is (= {:at 4 :args [@t]}
                        (:did-mount @res)))
 
-                (reset! arg ["a" "c"])
-                (r/flush)
+                (u/act (reset! arg ["a" "c"]))
+
                 (is (= {:at 5 :args [@t [@comp "a" "c"]]}
                        (:will-receive @res)))
                 (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
@@ -880,17 +803,22 @@
                        (:render @res)))
                 (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
                        (:did-update @res))))]
-    (with-mounted-component [c2] u/*test-compiler* check)
-    (is (= {:at 10 :args [@t]}
-           (:will-unmount @res)))
+    (u/async
+      (u/with-render [_div [c2]]
+        {:compiler u/*test-compiler*}
+        (check))
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res)))
 
-    (reset! comp (with-meta render2 ls))
-    (reset! arg defarg)
-    (reset! n1 0)
-    (with-mounted-component [c2] nil check)
-    (is (= {:at 10 :args [@t]}
-           (:will-unmount @res)))))
+      (reset! comp (with-meta render2 ls))
+      (reset! arg defarg)
+      (reset! n1 0)
 
+      (u/with-render [_div [c2]]
+        (check))
+
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res))))))
 
 (u/deftest ^:dom lifecycle-native
   (let [n1 (atom 0)
@@ -967,8 +895,7 @@
                 (is (= {:at 4 :args [@t]}
                        (:did-mount @res)))
 
-                (reset! arg [{:f "oo"} "a" "c"])
-                (r/flush)
+                (u/act (reset! arg [{:f "oo"} "a" "c"]))
 
                 (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
                        (:will-receive @res)))
@@ -991,9 +918,11 @@
                        [this oldv] :args} a]
                   (is (= 9 at))
                   (is (= [@comp @oldprops] oldv))))]
-    (with-mounted-component [cnative] check)
-    (is (= {:at 10 :args [@t]}
-           (:will-unmount @res)))))
+    (u/async
+      (u/with-render [_div [cnative]]
+        (check))
+      (is (= {:at 10 :args [@t]}
+             (:will-unmount @res))))))
 
 (defn foo []
   [:div])
@@ -1045,42 +974,38 @@
                   #js {:render (fn [])})
                 (gobj/extend cmp react/Component)
                 cmp)
-          compiler u/*test-compiler*
-          rend (fn [x]
-                 (with-mounted-component x compiler identity))]
+          compiler u/*test-compiler*]
 
-      ;; Error is orginally caused by comp1, so only that is shown in the error
-      (let [e (debug/track-warnings
-                (u/wrap-capture-window-error
-                  (u/wrap-capture-console-error
-                    #(is (thrown-with-msg?
-                           :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                           (rend [comp2 [:div. "foo"]]))))))]
-        (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                     (first (:error e)))))
+      (u/async
+        ;; Error is orginally caused by comp1, so only that is shown in the error
+        (u/with-render [div [comp2 [:div. "foo"]]]
+          {:capture-errors true}
+          ;; The render call itself throws the exception
+          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
+          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                       (first (:error @reagent.debug/warnings))))
+          nil)
 
-      (let [e (debug/track-warnings
-                (u/wrap-capture-window-error
-                  (u/wrap-capture-console-error
-                    #(is (thrown-with-msg?
-                           :default #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
-                           (rend [comp1 [:div. "foo"]]))))))]
-        (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                     (first (:error e)))))
+        (u/with-render [div [comp1 [:div. "foo"]]]
+          {:capture-errors true}
+          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
+          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
+                       (first (:error @reagent.debug/warnings))))
+          nil)
 
-      (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
-        (is (re-find #"Using native React classes directly"
-                     (-> e :warn first))))
+        (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
+          (is (re-find #"Using native React classes directly"
+                       (-> e :warn first))))
 
-      (let [e (debug/track-warnings
-                #(rend [comp3]))]
-        (is (re-find #"Reactive deref not supported"
-                     (-> e :warn first))))
+        (u/with-render [div [comp3]]
+          {:capture-errors true}
+          (is (re-find #"Reactive deref not supported"
+                       (-> @reagent.debug/warnings :warn first))))
 
-      (let [e (debug/track-warnings
-                #(r/as-element (comp4) compiler))]
-        (is (re-find #"Every element in a seq should have a unique :key"
-                     (-> e :warn first)))))))
+        (let [e (debug/track-warnings
+                  #(r/as-element (comp4) compiler))]
+          (is (re-find #"Every element in a seq should have a unique :key"
+                       (-> e :warn first))))))))
 
 (u/deftest ^:dom test-error-boundary
   (let [error (r/atom nil)
@@ -1100,23 +1025,20 @@
                 (throw (js/Error. "Test error")))
         comp2 (fn comp2 []
                 [comp1])]
-    (debug/track-warnings
-      (u/wrap-capture-window-error
-        (u/wrap-capture-console-error
-          #(with-mounted-component [error-boundary [comp2]]
-             (fn [c div]
-               (r/flush)
-               (is (= "Test error" (.-message @error)))
-               (is (re-find #"Something went wrong\." (.-innerHTML div)))
-               (if (dev?)
-                 ;; FIXME: Firefox formats the stack traces differently, and perhaps there is a real problem that
-                 ;; the component function names aren't being used correctly, and all components are named "cmp"?
-                 (when-not (.. js/navigator -userAgent toLowerCase (includes "firefox"))
-                   (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
-                                (.-componentStack ^js @info))))
-                 ;; Names are completely manged on adv compilation
-                 (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
-                              (.-componentStack ^js @info)))))))))))
+    (u/async
+      (u/with-render [div [error-boundary [comp2]]]
+        {:capture-errors true}
+        (is (= "Test error" (.-message @error)))
+        (is (re-find #"Something went wrong\." (.-innerHTML div)))
+        (if (dev?)
+          ;; FIXME: Firefox formats the stack traces differently, and perhaps there is a real problem that
+          ;; the component function names aren't being used correctly, and all components are named "cmp"?
+          (when-not (.. js/navigator -userAgent toLowerCase (includes "firefox"))
+            (is (re-find #"^\n    at reagenttest.testreagent.comp1 \([^)]*\)\n    at reagenttest.testreagent.comp2 \([^)]*\)\n    at reagent[0-9]+ \([^)]*\)\n    at reagenttest.testreagent.error_boundary \([^)]*\)"
+                         (.-componentStack ^js @info))))
+          ;; Names are completely manged on adv compilation
+          (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
+                       (.-componentStack ^js @info))))))))
 
 #_{:clj-kondo/ignore [:deprecated-var]}
 (u/deftest ^:dom test-dom-node
@@ -1128,8 +1050,8 @@
                 :component-did-mount
                 (fn [this]
                   (reset! node (rdom/dom-node this)))})]
-    (with-mounted-component [comp]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [comp]]
         (is (= "foobar" (.-innerHTML @ref)))
         (is (= "foobar" (.-innerHTML @node)))
         (is (identical? @ref @node))))))
@@ -1150,7 +1072,9 @@
         exp (atom 0)
         node (atom nil)
         state (r/atom 0)
+        component-instance (atom nil)
         comp (fn []
+               (reset! component-instance (r/current-component))
                (let [old @spy]
                  (r/after-render
                    (fn []
@@ -1158,28 +1082,40 @@
                      (swap! spy inc)))
                  (is (= @spy old))
                  (is (= @exp @val))
-                 [:div {:ref #(reset! node %)} @state]))]
-    (with-mounted-component [comp]
-      (fn [c div]
-        (r/flush)
+                 [:div
+                  {:ref #(reset! node %)}
+                  @state]))]
+    (u/async
+      (u/with-render [div [comp]]
+        ;; after-render was already called after the initial render
         (is (= 1 @spy))
-        (swap! state inc)
-        (is (= 1 @spy))
+
+        (u/act (swap! state inc))
+
+        (is (= 2 @spy))
+
+        ;; Update some non reactive values
         (r/next-tick #(swap! val inc))
         (reset! exp 1)
-        (is (= 0 @val))
-        (r/flush)
+
+        ;; After waiting for render, the next-tick update has also happened
+        (u/act nil)
+
         (is (= 1 @val))
         (is (= 2 @spy))
-        ;; FIXME: c is nil because render call doesn't return anything
-        ; (r/force-update c)
-        ; (is (= 3 @spy))
-        ; (r/next-tick #(reset! spy 0))
-        ; (is (= 3 @spy))
-        ; (r/flush)
-        ; (is (= 0 @spy))
-        ))
-    (is (= nil @node))))
+
+        ;; Now if we force render directly, spy is also updated from after-render callback
+        (r/force-update @component-instance)
+        (is (= 3 @spy))
+
+        ;; next-tick callback isn't called right away,
+        (r/next-tick #(reset! spy 0))
+        (is (= 3 @spy))
+
+        ;; the update is run when waiting for the component to finish rendering
+        (u/act nil)
+        (is (= 0 @spy)))
+      (is (= nil @node)))))
 
 (u/deftest style-property-names-are-camel-cased
   (is (= "<div style=\"text-align:center\">foo</div>"
@@ -1203,10 +1139,9 @@
            (as-string [:i (gstr/unescapeEntities "&nbsp;")])))))
 
 (def Foo (react/createContext))
-(def FooProvider (.-Provider Foo))
 
 (defn context-wrapper [child]
-  [:r> FooProvider
+  [:r> (.-Provider Foo)
    #js {:value #js {:foo "bar"}}
    [:div
     "parent,"
@@ -1223,10 +1158,8 @@
 
 ;; Class component only
 (deftest ^:dom context-test
-  (with-mounted-component
-    [context-wrapper [context-child]]
-    nil
-    (fn [c div]
+  (u/async
+    (u/with-render [div [context-wrapper [context-child]]]
       (is (= "parent,child,bar"
              (.-innerText div))))))
 
@@ -1313,20 +1246,20 @@
         component (fn []
                     [component-class @prop])]
 
-    (when (dev?)
-      (let [e (debug/track-warnings
-                #(with-mounted-component [component]
-                   (fn [c div]
-                     (reset! prop (sorted-map 1 2))
-                     (try
-                       (r/flush)
-                       (catch :default e
-                         (reset! error-thrown-after-updating-props true)))
+    (u/async
+      (when (dev?)
+        (u/with-render [div [component]]
+          {:capture-errors true}
+          (u/act (reset! prop (sorted-map 1 2)))
+          ; (try
+          ;   (r/flush)
+          ;   (catch :default e
+          ;     (reset! error-thrown-after-updating-props true)))
 
-                     (is (not @component-was-updated))
-                     (is (not @error-thrown-after-updating-props)))))]
-        (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
-                     (first (:warn e))))))))
+          (is (not @component-was-updated))
+          (is (not @error-thrown-after-updating-props))
+          (is (re-find #"Warning: Exception thrown while comparing argv's in shouldComponentUpdate:"
+                       (first (:warn @reagent.debug/warnings)))))))))
 
 (u/deftest ^:dom get-derived-state-from-props-test
   (let [prop (r/atom 0)
@@ -1344,11 +1277,10 @@
                                     (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
         component (fn []
                     [pure-component {:value @prop}])]
-    (with-mounted-component [component]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [component]]
         (is (= "Value foo" (.-innerText div)))
-        (swap! prop inc)
-        (r/flush)
+        (u/act (swap! prop inc))
         (is (= "Value foo foo" (.-innerText div)))))))
 
 (u/deftest ^:dom get-derived-state-from-error-test
@@ -1367,14 +1299,12 @@
                         (if (= 0 @prop)
                           [:div "Ok"]
                           (throw (js/Error. "foo"))))]
-    (u/wrap-capture-window-error
-      (u/wrap-capture-console-error
-        #(with-mounted-component [component [bad-component]]
-           (fn [c div]
-             (is (= "Ok" (.-innerText div)))
-             (swap! prop inc)
-             (r/flush)
-             (is (= "Error" (.-innerText div)))))))))
+    (u/async
+      (u/with-render [div [component [bad-component]]]
+        {:capture-errors true}
+        (is (= "Ok" (.-innerText div)))
+        (u/act (swap! prop inc))
+        (is (= "Error" (.-innerText div)))))))
 
 (u/deftest ^:dom get-snapshot-before-update-test
   (let [ref (react/createRef)
@@ -1393,13 +1323,12 @@
                                   "foo"]))})
         component-2 (fn []
                       [component {:value @prop}])]
-    (with-mounted-component [component-2]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [component-2]]
         ;; Attach to DOM to get real height value
         (.appendChild js/document.body div)
         (is (= "foo" (.-innerText div)))
-        (swap! prop inc)
-        (r/flush)
+        (u/act (swap! prop inc))
         (is (= {:height 20} @did-update))
         (.removeChild js/document.body div)))))
 
@@ -1416,42 +1345,36 @@
         c (fn issue-462-c []
             ^{:key @val}
             [b])]
-    (with-mounted-component [c]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [c]]
         (is (= 1 @render))
-        (reset! val 1)
-        (r/flush)
+        (u/act (reset! val 1))
         (is (= 2 @render))
-        (reset! val 0)
-        (r/flush)
+        (u/act (reset! val 0))
         (is (= 3 @render))))))
 
 (deftest ^:dom functional-component-poc-simple
   (let [c (fn [x]
             [:span "Hello " x])]
-    (testing ":f>"
-      (with-mounted-component [:f> c "foo"]
-        u/class-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Hello foo" (.-innerText div))))))
+    (u/async
+      (testing ":f>"
+        (u/with-render [div [:f> c "foo"]]
+          {:compiler u/class-compiler}
+          (is (= "Hello foo" (.-innerText div)))))
 
-    (testing "compiler options"
-      (with-mounted-component [c "foo"]
-        u/fn-compiler
-        (fn [c div]
-          (is (nil? c) "Render returns nil for stateless components")
-          (is (= "Hello foo" (.-innerText div))))))
+      (testing "compiler options"
+        (u/with-render [div [c "foo"]]
+          {:compiler u/fn-compiler}
+          (is (= "Hello foo" (.-innerText div)))))
 
-    (testing "setting default compiler"
-      (try
-        (r/set-default-compiler! u/fn-compiler)
-        (with-mounted-component [c "foo"] nil
-          (fn [c div]
-            (is (nil? c) "Render returns nil for stateless components")
-            (is (= "Hello foo" (.-innerText div)))))
-        (finally
-          (r/set-default-compiler! nil))))))
+      (testing "setting default compiler"
+        (try
+          (r/set-default-compiler! u/fn-compiler)
+          (u/with-render [div [c "foo"]]
+            {:compiler nil}
+            (is (= "Hello foo" (.-innerText div))))
+          (finally
+            (r/set-default-compiler! nil)))))))
 
 (deftest ^:dom functional-component-poc-state-hook
   (let [;; Probably not the best idea to keep
@@ -1462,29 +1385,25 @@
             (let [[c set-count] (react/useState x)]
               (reset! set-count! set-count)
               [:span "Count " c]))]
-    (with-mounted-component [c 5]
-      u/fn-compiler
-      (fn [c div]
-        (is (nil? c) "Render returns nil for stateless components")
+    (u/async
+      (u/with-render [div [c 5]]
+        {:compiler u/fn-compiler}
         (is (= "Count 5" (.-innerText div)))
-        (@set-count! 6)
+        (u/act (@set-count! 6))
         (is (= "Count 6" (.-innerText div)))))))
 
 (deftest ^:dom functional-component-poc-ratom
   (let [count (r/atom 5)
         c (fn [x]
             [:span "Count " @count])]
-    (with-mounted-component [c 5]
-      u/fn-compiler
-      (fn [c div]
-        (is (nil? c) "Render returns nil for stateless components")
+    (u/async
+      (u/with-render [div [c 5]]
+        {:compiler u/fn-compiler}
         (is (= "Count 5" (.-innerText div)))
-        (reset! count 6)
-        (r/flush)
-        (is (= "Count 6" (.-innerText div)))
-        ;; TODO: Test that component RAtom is disposed
-        ))))
+        (u/act (reset! count 6))
 
+        ;; TODO: Test that component RAtom is disposed
+        (is (= "Count 6" (.-innerText div)))))))
 
 (deftest ^:dom functional-component-poc-ratom-state-hook
   (let [r-count (r/atom 3)
@@ -1493,17 +1412,14 @@
             (let [[c set-count] (react/useState x)]
               (reset! set-count! set-count)
               [:span "Counts " @r-count " " c]))]
-    (with-mounted-component [c 15]
-      u/fn-compiler
-      (fn [c div]
-        (is (nil? c) "Render returns nil for stateless components")
+    (u/async
+      (u/with-render [div [c 15]]
+        {:compiler u/fn-compiler}
         (is (= "Counts 3 15" (.-innerText div)))
-        (reset! r-count 6)
-        (r/flush)
+        (u/act (reset! r-count 6))
         (is (= "Counts 6 15" (.-innerText div)))
-        (@set-count! 17)
-        (is (= "Counts 6 17" (.-innerText div)))
-        ))))
+        (u/act (@set-count! 17))
+        (is (= "Counts 6 17" (.-innerText div)))))))
 
 (u/deftest ^:dom test-input-el-ref
   (let [ref-1 (atom nil)
@@ -1522,11 +1438,10 @@
               {:ref ref-2
                :value nil
                :on-change (fn [_])}]])]
-    (with-mounted-component [c]
-      (fn [c div]
+    (u/async
+      (u/with-render [div [c]]
         (is (some? @ref-1))
-        (is (some? (.-current ref-2)))
-        ))))
+        (is (some? (.-current ref-2)))))))
 
 (deftest test-element-key
   (is (= "0" (.-key (r/as-element           [:div {:key 0}]))))
