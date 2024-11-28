@@ -3,7 +3,6 @@
             [clojure.string :as string]
             [reagent.impl.util :as util :refer [named?]]
             [reagent.impl.component :as comp]
-            [reagent.impl.input :as input]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
             [reagent.debug :refer-macros [dev? warn]]
@@ -206,24 +205,9 @@
         jsprops (or (convert-props (if hasprops props) parsed)
                     #js {})
         first-child (+ first (if hasprops 1 0))]
-    (if (input/input-component? component)
-      (let [;; Also read :key from props map, because
-            ;; input wrapper will not place the key in useful place.
-            react-key (util/get-react-key props)
-            input-class (or (.-reagentInput compiler)
-                            (let [x (comp/create-class input/input-spec compiler)]
-                              (set! (.-reagentInput compiler) x)
-                              x))]
-        (p/as-element
-          compiler
-          (with-meta [input-class argv component jsprops first-child compiler]
-                     (merge (when react-key
-                              {:key react-key})
-                            (meta argv)))))
-      (do
-        (when-some [key (-> (meta argv) util/get-react-key)]
-          (set! (.-key jsprops) key))
-        (p/make-element compiler argv component jsprops first-child)))))
+    (when-some [key (-> (meta argv) util/get-react-key)]
+      (set! (.-key jsprops) key))
+    (p/make-element compiler argv component jsprops first-child)))
 
 (defn raw-element [comp argv compiler]
   (let [props (nth argv 2 nil)

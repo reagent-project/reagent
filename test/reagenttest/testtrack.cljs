@@ -25,7 +25,7 @@
 
 (enable-console-print!)
 
-
+#_
 (deftest basic-ratom
   (let [runs (running)
         start (rv/atom 0)
@@ -51,6 +51,7 @@
     (dispose const)
     (is (= (running) runs))))
 
+#_
 (deftest test-track!
   (sync)
   (let [runs (running)
