@@ -3,7 +3,6 @@
             [clojure.test :as t :refer-macros [is deftest testing]]
             [goog.object :as gobj]
             [goog.string :as gstr]
-            [promesa.core :as p]
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
@@ -523,23 +522,23 @@
 
 (u/deftest ^:dom test-keys
   (u/async
-    (p/let [a nil ;; (r/atom "a")
-            c (fn key-tester []
-                [:div
-                 (for [i (range 3)]
-                   ^{:key i} [:p i (some-> a deref)])
-                 (for [i (range 3)]
-                   [:p {:key i} i (some-> a deref)])])]
+    (let [a nil ;; (r/atom "a")
+          c (fn key-tester []
+              [:div
+               (for [i (range 3)]
+                 ^{:key i} [:p i (some-> a deref)])
+               (for [i (range 3)]
+                 [:p {:key i} i (some-> a deref)])])]
       (u/with-render [_div [c]]
         {:capture-errors true}
         (is (empty? (:warn @reagent.debug/warnings)))))
 
     (testing "Check warning text can be produced even if hiccup contains function literals"
-      (p/let [c (fn key-tester []
-                  [:div
-                   (for [i (range 3)]
-                     ^{:key nil}
-                     [:button {:on-click #(js/console.log %)}])])]
+      (let [c (fn key-tester []
+                [:div
+                 (for [i (range 3)]
+                   ^{:key nil}
+                   [:button {:on-click #(js/console.log %)}])])]
         (u/with-render [_div [c]]
           {:capture-errors true}
           (when (dev?)
