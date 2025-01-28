@@ -490,3 +490,48 @@
            (pr-str (r/track (fn foo [] (:foo @x))))))
     (is (= "#object[reagent.ratom.Reaction {:val 1}]"
            (pr-str (reaction (:foo @x)))))))
+
+(deftest adapt-regular-atom-test
+  (testing "WrappedAtom"
+    (let [runs (running)
+          start (rv/->ratom (atom 0))
+          sv (reaction @start)
+          comp (reaction @sv (+ 2 @sv))
+          c2 (reaction (inc @comp))
+          count (rv/atom 0)
+          out (rv/atom 0)
+          res (reaction
+                (swap! count inc)
+                @sv @c2 @comp)
+          const (run!
+                  (reset! out @res))]
+      (is (= @count 1) "constrain ran")
+      (is (= @out 2))
+      (reset! start 1)
+      (r/flush)
+      (is (= @out 3))
+      (is (<= 2 @count 3))
+      (dispose const)
+      (is (= (running) runs))))
+
+  (testing "reagent-deref"
+    (let [runs (running)
+          start (atom 0)
+          sv (reaction (rv/reagent-deref start))
+          comp (reaction @sv (+ 2 @sv))
+          c2 (reaction (inc @comp))
+          count (rv/atom 0)
+          out (rv/atom 0)
+          res (reaction
+                (swap! count inc)
+                @sv @c2 @comp)
+          const (run!
+                  (reset! out @res))]
+      (is (= @count 1) "constrain ran")
+      (is (= @out 2))
+      (reset! start 1)
+      (r/flush)
+      (is (= @out 3))
+      (is (<= 2 @count 3))
+      (dispose const)
+      (is (= (running) runs)))))

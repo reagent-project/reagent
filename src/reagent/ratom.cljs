@@ -634,3 +634,69 @@
                 (flush!)))
         (dispose! res))))
   (ratom-perf))
+
+(deftype WrappedAtom [x]
+  IAtom
+  IReactiveAtom
+
+  IEquiv
+  (-equiv [o other] (identical? o other))
+
+  IDeref
+  (-deref [this]
+    (notify-deref-watcher! x)
+    @x)
+
+  IReset
+  (-reset! [a new-value]
+    (reset! x new-value))
+
+  ISwap
+  (-swap! [a f]          (swap! x f))
+  (-swap! [a f x]        (swap! x f x))
+  (-swap! [a f x y]      (swap! x f x y))
+  (-swap! [a f x y more] (swap! x f x y more))
+
+  IWithMeta
+  (-with-meta [_ new-meta]
+    (WrappedAtom. (with-meta x new-meta)))
+
+  IMeta
+  (-meta [_] (meta x))
+
+  IPrintWithWriter
+  (-pr-writer [a w opts] (pr-atom a w opts "WrappedAtom" {:atom x}))
+
+  IWatchable
+  (-notify-watches [this old new] (-notify-watches x old new))
+  (-add-watch [this key f]        (-add-watch x key f))
+  (-remove-watch [this key]       (-remove-watch x key))
+
+  IHash
+  (-hash [this] (goog/getUid this)))
+
+(defn ->ratom
+  "Wraps Atom like object so that it notifies current reactive context
+  on deref.
+
+  The object must implement be a cljs.core.Atom or
+  implement IDeref, IWatchable, IReset, ISwap, IMeta and IWithMeta."
+  [v]
+  (WrappedAtom. v))
+
+;; Or:
+;; Both wouldn't be implemented, but not sure right now which
+;; is better.
+
+;; TODO: Better name
+(defn reagent-deref
+  "Deref a Atom and register watcher to current Reactive
+  context, so that the context will be notified if the Atom
+  value is updated.
+
+  This will enable using Atom in place of RAtom and Reactions,
+  as long as you remember to use this function instead of directly
+  dereferecing the Atom."
+  [a]
+  (notify-deref-watcher! a)
+  @a)
