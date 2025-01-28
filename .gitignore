@@ -13,5 +13,10 @@ reagent.iml
 .lein-failures
 
 node_modules
+junit
+.shadow-cljs
+coverage/
 
-test-environments/*/junit
+.clj-kondo/
+.cpcache/
+.lsp/.cache

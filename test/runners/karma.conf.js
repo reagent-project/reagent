@@ -8,16 +8,9 @@
 
 var path = require('path');
 
-// Doo writes this file to /tmp, so can't use relative require directly
-var logger = require(process.cwd() + '/node_modules/karma/lib/logger.js');
-
 module.exports = function(config) {
 
   var suite = path.basename(process.cwd());
-
-  // Hide two unncessary warnings
-  logger.create('web-server', 'error');
-  logger.create('watcher', 'error');
 
   configData.plugins = ['karma-*'];
 
@@ -30,6 +23,24 @@ module.exports = function(config) {
     suite: suite, // suite will become the package name attribute in xml testsuite element
     useBrowserName: false // add browser name to report and classes names
   };
+
+  if (process.env.COVERAGE) {
+    configData.reporters = ['dots', 'junit', 'coverage'];
+
+    configData.preprocessors = {
+      'target/cljsbuild/test/out/reagent/**/!(*_test).js': ['sourcemap', 'coverage'],
+    };
+
+    configData.coverageReporter = {
+      reporters: [
+        {type: 'html'},
+        {type: 'lcovonly'},
+      ],
+      dir: 'coverage',
+      subdir: '.',
+      includeAllSources: true,
+    };
+  }
 
   config.set(configData);
 };

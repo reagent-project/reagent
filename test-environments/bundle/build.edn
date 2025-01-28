@@ -1,0 +1,8 @@
+{:main reagenttest.runtests
+ :output-to "target/bundle/resources/public/js/out/index.js"
+ :output-dir "target/bundle/resources/public/js/out"
+ :asset-path "js/out"
+ :target :bundle
+ ; :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+ ;              :default ["npx" "webpack"]}
+ }

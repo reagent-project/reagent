@@ -1,6 +1,5 @@
 (ns reagentdemo.news.news050
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
@@ -13,7 +12,7 @@
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
-(def cel-link "http://facebook.github.io/react/docs/top-level-api.html#react.createelement")
+(def cel-link "https://reactjs.org/docs/react-api.html#createelement")
 
 (def figwheel-link "https://github.com/bhauman/lein-figwheel")
 
@@ -26,7 +25,7 @@
   [:div
    prompt
    [:input {:value @val
-            :on-change #(reset! val (.-target.value %))}]])
+            :on-change #(reset! val (.. % -target -value))}]])
 
 (defn name-edit [n]
   (let [{:keys [first-name last-name]} @n]
@@ -106,6 +105,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2014-12-10"]
    [:div.demo-text
     [:p "Reagent 0.5.0 has automatic importing of React.js, two kinds
     of cursors, better integration of native React components, better

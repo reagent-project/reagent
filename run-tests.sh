@@ -12,16 +12,32 @@ EXIT=0
 
 SUMMARY="$blue##\n## SUMMARY\n##$reset\n\n"
 
+TOOL=$1
+
 for env in test-environments/*; do
+    if [[ ! -f $env/test.sh ]]; then
+        continue
+    fi
+
     name=$(basename "$env")
-    (
-    cd "$env"
+
+    if [[ -n $TOOL ]]; then
+        if [[ $name == bundle* ]]; then
+            if [[ $TOOL != 'clj' ]]; then
+                continue
+            fi
+        else
+            if [[ $TOOL != 'lein' ]]; then
+                continue
+            fi
+        fi
+    fi
+
     echo -e "$blue##"
     echo -e "## TESTING $name"
     echo -e "##$reset"
     echo
-    ./test.sh
-    )
+    $env/test.sh
     if [[ $? != "0" ]]; then
         echo
         echo -e "${red}FAIL $name$reset"

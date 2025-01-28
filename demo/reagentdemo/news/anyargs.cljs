@@ -1,6 +1,5 @@
 (ns reagentdemo.news.anyargs
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
@@ -37,6 +36,8 @@
         jonase {:href "https://github.com/jonase"}]
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-02-15"]
+
      [:div.demo-text
 
       [:h2 "If it looks like a function…"]

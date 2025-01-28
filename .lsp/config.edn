@@ -1,0 +1,4 @@
+{:clean {:automatically-after-ns-refactor true
+         :ns-inner-blocks-indentation :same-line
+         :sort {:require :lexicographically}}
+ :cljfmt {:function-arguments-indentation :cursive}}

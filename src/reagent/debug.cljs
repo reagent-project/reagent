@@ -8,7 +8,7 @@
 (defonce warnings (atom nil))
 
 (defonce track-console
-  (let [o #js{}]
+  (let [o #js {}]
     (set! (.-warn o)
           (fn [& args]
             (swap! warnings update-in [:warn] conj (apply str args))))

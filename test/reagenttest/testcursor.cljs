@@ -1,7 +1,6 @@
 (ns reagenttest.testcursor
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :refer-macros [dbg]]
             [reagent.core :as r]))
 
 ;; this repeats all the atom tests but using cursors instead
@@ -468,3 +467,11 @@
     (f)
     (is (= @spy false))
     (dispose r)))
+
+(def assert-enabled? (try (assert false)
+                          false
+                          (catch :default _ true)))
+
+(deftest cursor-assert-test
+  (when assert-enabled?
+    (is (thrown-with-msg? :default #"src must be a reactive atom or a function, not nil while attempting to get path: \[:foo :bar\]" (r/cursor nil [:foo :bar])))))

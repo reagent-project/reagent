@@ -1,9 +1,9 @@
 (ns reagentdemo.news.news051
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
-            [reagentdemo.common :as common :refer [demo-component]]))
+            [reagentdemo.common :as common :refer [demo-component]]
+            [clojure.string :as string]))
 
 (def url "/news/news051.html")
 (def title "News in 0.5.1")
@@ -28,13 +28,13 @@
    [:p "Value is: " @upper-value]
    [:input {:type 'text :value @upper-value
             :on-change #(reset! upper-value
-                                (-> % .-target .-value
-                                    clojure.string/upper-case))}]])
+                                (-> % .-target .-value string/upper-case))}]])
 
 
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2015-09-09"]
    [:div.demo-text
     [:p "Reagent 0.5.1 contains a new convenient shortcut for nested
     elements, better error messages, new logic for maintaining cursor

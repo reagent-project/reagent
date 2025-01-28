@@ -1,25 +1,30 @@
+<img src="logo/logo-text.png" width="264px" alt="Reagent">
 
-# Reagent
+[![Run tests](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml/badge.svg)](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml)
+[![Clojars Project](https://img.shields.io/clojars/v/reagent.svg)](https://clojars.org/reagent)
+[![codecov](https://codecov.io/gh/reagent-project/reagent/branch/master/graph/badge.svg)](https://codecov.io/gh/reagent-project/reagent)
+[![cljdoc badge](https://cljdoc.org/badge/reagent/reagent)](https://cljdoc.org/d/reagent/reagent/CURRENT)
+[![project chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C0620C0C8)
 
-A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](http://facebook.github.io/react/).
+A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [React](https://reactjs.org/).
 
 Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
   * **[Detailed intro with live examples](http://reagent-project.github.io/)**
   * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[API Documentation](http://reagent-project.github.io/docs/master/)**
+  * **[Documentation, latest release](https://cljdoc.org/d/reagent/reagent/CURRENT)**
+  * **Documentation, next release: [API docs](http://reagent-project.github.io/docs/master/), [Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
   * **Community discussion and support channels**
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
-    * **[Reagent Project Mailing List](https://groups.google.com/forum/#!forum/reagent-project)**
-
-### Prerequisites
-
-* Java JDK
-* [Leiningen](http://leiningen.org/)
+  * **Commercial video material**
+    * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT), [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
+    * [Learn Re-frame Free](https://www.jacekschae.com/learn-re-frame-free/tycit?coupon=REAGENT), [Learn Re-frame Pro](https://www.jacekschae.com/learn-re-frame-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
+    * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
+    * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
 ### Usage
 
-To create a new Reagent project simply run:
+To create a new Reagent project using [Leiningen](http://leiningen.org/) template simply run:
 
     lein new reagent myproject
 
@@ -27,20 +32,27 @@ If you wish to only create the assets for ClojureScript without a Clojure backen
 
     lein new reagent-frontend myproject
 
-This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template). 
+This will setup a new Reagent project with some reasonable defaults, see here for more [details](https://github.com/reagent-project/reagent-template).
 
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
-[![CircleCI](https://circleci.com/gh/reagent-project/reagent.svg?style=svg)](https://circleci.com/gh/reagent-project/reagent)
 
-This is all you need to do if you want the standard version of React. If you want the version of React with addons, you'd use something like this instead:
+And provide React using either npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
-    [reagent "0.7.0" :exclusions [cljsjs/react]]
-    [cljsjs/react-with-addons "15.4.2-2"]
+```
+npm i react react-dom
+```
 
-If you want to use your own build of React (or React from a CDN), you have to use `:exclusions` variant of the dependency, and also provide a file named "cljsjs/react.cljs", containing just `(ns cljsjs.react)`, in your project.
+or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
 
+```
+[cljsjs/react "17.0.2-0"]
+[cljsjs/react-dom "17.0.2-0"]
+```
+
+Note: Reagent is tested against React 17, but should be compatible with other
+versions.
 
 ## Examples
 
@@ -50,7 +62,7 @@ Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead
 (defn some-component []
   [:div
    [:h3 "I am a component!"]
-   [:p.someclass 
+   [:p.someclass
     "I have " [:strong "bold"]
     [:span {:style {:color "red"}} " and red"]
     " text."]])
@@ -63,18 +75,18 @@ Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements
   [:p
     [:b "Nested Element"]]]
 ```
-      
+
 can be written as:
-      
+
 ```clj
 [:div>p>b "Nested Element"]
-```        
-
-The `:class` attribute can accept either a collection or a string.
-
-```clj
-[:div {:class ["a-class" (when active? "active") "b-class"]}]
 ```
+
+> **Since version 0.8:** The `:class` attribute also supports collections of classes, and nil values are removed:
+>
+> ```clj
+> [:div {:class ["a-class" (when active? "active") "b-class"]}]
+> ```
 
 You can use one component inside another:
 
@@ -98,7 +110,7 @@ You mount the component into the DOM like this:
 
 ```clj
 (defn mountit []
-  (r/render [childcaller]
+  (rd/render [childcaller]
             (.-body js/document)))
 ```
 
@@ -106,7 +118,8 @@ assuming we have imported Reagent like this:
 
 ```clj
 (ns example
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [reagent.dom :as rd]))
 ```
 
 State is handled using Reagent's version of `atom`, like this:
@@ -121,7 +134,7 @@ State is handled using Reagent's version of `atom`, like this:
 
 Any component that dereferences a `reagent.core/atom` will be automatically re-rendered.
 
-If you want do some setting up when the component is first created, the component function can return a new function that will be called to do the actual rendering:
+If you want to do some setting up when the component is first created, the component function can return a new function that will be called to do the actual rendering:
 
 ```clj
 (defn timer-component []
@@ -146,7 +159,7 @@ But you can still use them if you want to, either using `reagent.core/create-cla
   (with-meta plain-component
     {:component-did-mount
      (fn [this]
-       (reset! my-html (.-innerHTML (reagent/dom-node this))))}))
+       (reset! my-html (.-innerHTML (rd/dom-node this))))}))
 ```
 
 See the examples directory for more examples.
@@ -158,11 +171,11 @@ React is pretty darn fast, and so is Reagent. It should even be faster than plai
 
 The ClojureScript overhead is kept down, thanks to lots of caching.
 
-Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 53K gzipped, using advanced compilation.
-
+Code size is a little bigger than React.js, but still quite small. The todomvc example clocks in at roughly 79K gzipped, using advanced compilation.
 
 ## About
 
-The idea and some of the code for making components atom-like comes from [pump](https://github.com/piranha/pump). The reactive-atom idea (and some code) comes from [reflex](https://github.com/lynaghk/reflex).
+The idea and some of the code for making components atom-like comes from [pump](https://github.com/piranha/pump).
+The reactive-atom idea (and some code) comes from [reflex](https://github.com/lynaghk/reflex).
 
 The license is MIT.

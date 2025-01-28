@@ -1,7 +1,7 @@
 (ns reagentdemo.syntax
   (:require [clojure.java.io :as io]
-            [clojure.string :as string]))
-
+            [clojure.string :as string]
+            [cljs.analyzer :as analyzer]))
 
 ;;; Source splitting
 
@@ -45,7 +45,7 @@
    (assert (or (nil? resource)
                (string? resource)))
    (let [f (if (nil? resource)
-             (-> (name cljs.analyzer/*cljs-ns*)
+             (-> (name analyzer/*cljs-ns*)
                  (string/replace #"[.]" "/")
                  (str ".cljs"))
              resource)

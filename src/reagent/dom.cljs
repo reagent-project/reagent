@@ -3,11 +3,8 @@
             [reagent.impl.util :as util]
             [reagent.impl.template :as tmpl]
             [reagent.impl.batching :as batch]
-            [reagent.ratom :as ratom]
-            [reagent.debug :refer-macros [dbg]]
-            [reagent.interop :refer-macros [$ $!]]))
-
-(defonce ^:private imported nil)
+            [reagent.impl.protocols :as p]
+            [reagent.ratom :as ratom]))
 
 (defonce ^:private roots (atom {}))
 
@@ -20,7 +17,7 @@
     (react-dom/render (comp) container
       (fn []
         (binding [util/*always-update* false]
-          (swap! roots assoc container [comp container])
+          (swap! roots assoc container comp)
           (batch/flush-after-render)
           (if (some? callback)
             (callback)))))))
@@ -30,28 +27,39 @@
 
 (defn render
   "Render a Reagent component into the DOM. The first argument may be
-  either a vector (using Reagent's Hiccup syntax), or a React element. The second argument should be a DOM node.
+  either a vector (using Reagent's Hiccup syntax), or a React element.
+  The second argument should be a DOM node.
 
   Optionally takes a callback that is called when the component is in place.
 
   Returns the mounted component instance."
   ([comp container]
-   (render comp container nil))
-  ([comp container callback]
+   (render comp container tmpl/*current-default-compiler*))
+  ([comp container callback-or-compiler]
    (ratom/flush!)
-   (let [f (fn []
-             (tmpl/as-element (if (fn? comp) (comp) comp)))]
+   (let [[compiler callback] (cond
+                               (map? callback-or-compiler)
+                               [(:compiler callback-or-compiler) (:callback callback-or-compiler)]
+
+                               (fn? callback-or-compiler)
+                               [tmpl/*current-default-compiler* callback-or-compiler]
+
+                               :else
+                               [callback-or-compiler nil])
+         f (fn []
+             (p/as-element compiler (if (fn? comp) (comp) comp)))]
      (render-comp f container callback))))
 
-(defn unmount-component-at-node [container]
+(defn unmount-component-at-node
+  "Remove a component from the given DOM node."
+  [container]
   (unmount-comp container))
 
 (defn dom-node
   "Returns the root DOM node of a mounted component."
+  {:deprecated "1.2.0"}
   [this]
   (react-dom/findDOMNode this))
-
-(set! tmpl/find-dom-node dom-node)
 
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
@@ -63,8 +71,9 @@
   functions are passed by value, and not by reference, in
   ClojureScript). To get around this you'll have to introduce a layer
   of indirection, for example by using `(render [#'foo])` instead."
+  {:deprecated "1.2.0"}
   []
   (ratom/flush!)
-  (doseq [v (vals @roots)]
-    (apply re-render-component v))
-  "Updated")
+  (doseq [[container comp] @roots]
+    (re-render-component comp container))
+  (batch/flush-after-render))

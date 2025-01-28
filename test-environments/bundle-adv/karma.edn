@@ -1,0 +1,8 @@
+{:main reagenttest.runtests
+ :optimizations :advanced
+ :output-to "target/bundle-adv/resources/public/js/out/karma.js"
+ :output-dir "target/bundle-adv/resources/public/js/out"
+ ; :pseudo-names true
+ :elide-asserts true
+ :target :bundle
+ :closure-defines {cljs.core/*global* "window"}}

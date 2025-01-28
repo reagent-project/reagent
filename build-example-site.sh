@@ -1,27 +1,29 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 SHA=$(git rev-parse HEAD)
 
-# Prerendering seems to work best on React 16
-cd test-environments/browser-node-react-16
+lein 'do' clean, cljsbuild once prod-npm, cljsbuild once prerender
 
-lein do clean, cljsbuild once prod
-
-lein cljsbuild once prerender
-node target/cljsbuild/prerender/main.js
-
-cd ../..
+node target/cljsbuild/prerender/main.js target/cljsbuild/prod-npm/public/
 
 lein codox
 
 rm -fr tmp
-git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+if [[ -n $GITHUB_ACTOR ]]; then
+    git config --global user.email "14146879+github-actions[bot]@users.noreply.github.com"
+    git config --global user.name "github-actions[bot]"
+    git clone "https://${GITHUB_ACTOR}:${SITE_TOKEN}@github.com/reagent-project/reagent-project.github.io.git" tmp
+else
+    git clone git@github.com:reagent-project/reagent-project.github.io.git tmp
+fi
+
+# Remove everything to ensure old files are removed
 rm -fr tmp/*
 
-cp -r test-environments/browser-node-react-16/target/cljsbuild/prod/public/* tmp/
-cp -r test-environments/browser-node-react-16/target/prerender/public/* tmp/
+cp -r target/cljsbuild/prod-npm/public/* tmp/
+cp -r target/prerender/public/* tmp/
 mkdir -p tmp/docs/master/
 cp -r target/doc/* tmp/docs/master/
 
@@ -30,7 +32,10 @@ test -f tmp/js/main.js
 test ! -e tmp/js/out
 
 cd tmp
-git checkout -- README.md
+
+# Restore files not created by this script
+git add docs/master/
+git checkout -- README.md docs/
 git add .
 git commit -m "Built site from $SHA"
 git push

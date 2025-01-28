@@ -1,0 +1,18 @@
+{:source-paths ["src" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo"]
+ :dev-http {8090 {:roots ["site/public" "target/shadow-cljs/client/public" "classpath:public"]}}
+ :builds
+ {:client {:target :browser
+           :output-dir "target/shadow-cljs/client/public/js"
+           :asset-path "/js"
+           :modules {:main {:entries [reagentdemo.dev]}}
+           :devtools {:ignore-warnings true}
+           :compiler-options {:warnings {:fn-deprecated false}}}
+  :test {:target :karma
+         :output-to "target/shadow-cljs/resources/public/js/karma.js"
+         :output-dir "target/shadow-cljs/resources/public/js"
+         :asset-path "js"
+         :source-map true
+         :compiler-options {:infer-externs :auto}
+         :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}}
+ :dependencies [[doo "0.1.11"]
+                [funcool/promesa "11.0.678"]]}

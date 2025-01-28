@@ -1,9 +1,7 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println time]]
-            [clojure.string :as string]
+            [reagent.dom :as rdom]
             [reagentdemo.syntax :as s]
-            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))
@@ -65,28 +63,32 @@
        "Seconds Elapsed: " @seconds-elapsed])))
 
 (defn render-simple []
-  (r/render [simple-component]
+  (rdom/render
+    [simple-component]
     (.-body js/document)))
 
-(def bmi-data (r/atom {:height 180 :weight 80}))
-
-(defn calc-bmi []
-  (let [{:keys [height weight bmi] :as data} @bmi-data
-        h (/ height 100)]
+(defn calc-bmi [{:keys [height weight bmi] :as data}]
+  (let [h (/ height 100)]
     (if (nil? bmi)
       (assoc data :bmi (/ weight (* h h)))
       (assoc data :weight (* bmi h h)))))
 
-(defn slider [param value min max]
+(def bmi-data (r/atom (calc-bmi {:height 180 :weight 80})))
+
+(defn slider [param value min max invalidates]
   [:input {:type "range" :value value :min min :max max
            :style {:width "100%"}
            :on-change (fn [e]
-                        (swap! bmi-data assoc param (.-target.value e))
-                        (when (not= param :bmi)
-                          (swap! bmi-data assoc :bmi nil)))}])
+                        (let [new-value (js/parseInt (.. e -target -value))]
+                          (swap! bmi-data
+                                 (fn [data]
+                                   (-> data
+                                     (assoc param new-value)
+                                     (dissoc invalidates)
+                                     calc-bmi)))))}])
 
 (defn bmi-component []
-  (let [{:keys [weight height bmi]} (calc-bmi)
+  (let [{:keys [weight height bmi]} @bmi-data
         [color diagnose] (cond
                           (< bmi 18.5) ["orange" "underweight"]
                           (< bmi 25) ["inherit" "normal"]
@@ -96,25 +98,28 @@
      [:h3 "BMI calculator"]
      [:div
       "Height: " (int height) "cm"
-      [slider :height height 100 220]]
+      [slider :height height 100 220 :bmi]]
      [:div
       "Weight: " (int weight) "kg"
-      [slider :weight weight 30 150]]
+      [slider :weight weight 30 150 :bmi]]
      [:div
       "BMI: " (int bmi) " "
       [:span {:style {:color color}} diagnose]
-      [slider :bmi bmi 10 50]]]))
+      [slider :bmi bmi 10 50 :weight]]]))
 
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
 
+(def ns-src-with-rdom (s/syntaxed "(ns example
+  (:require [reagent.dom :as rdom]))"))
+
 (defn intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
         clojurescript {:href "https://github.com/clojure/clojurescript"}
-        react {:href "http://facebook.github.io/react/"}
+        react {:href "https://reactjs.org/"}
         hiccup {:href "https://github.com/weavejester/hiccup"}
-        dynamic-children {:href "http://facebook.github.io/react/docs/multiple-components.html#dynamic-children"}]
+        react-keys {:href "https://reactjs.org/docs/lists-and-keys.html#keys"}]
     [:div.demo-text
 
      [:h2 "Introduction to Reagent"]
@@ -128,7 +133,7 @@
 
      [:p "The goal of Reagent is to make it possible to define
      arbitrarily complex UIs using just a couple of basic concepts,
-     and to be fast enough by default that you rarely have to care
+     and to be fast enough by default that you rarely have to think
      about performance."]
 
      [:p "A very basic Reagent component may look something like this: "]
@@ -168,7 +173,7 @@
      and helps React to improve performance for large lists. The key
      can be given either (as in this example) as meta-data, or as a "
      [:code ":key"] " item in the first argument to a component (if it
-     is a map). See React’s " [:a dynamic-children "documentation"] "
+     is a map). See React’s " [:a react-keys "documentation"] "
      for more info."]]))
 
 (defn managing-state []
@@ -225,14 +230,14 @@
 
    [:p "Reagent supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
-    [:code "reagent.core/render"] "."]
+    [:code "reagent.dom/render"] "."]
 
    [:p "It takes two arguments: a component, and a DOM node. For
    example, splashing the very first example all over the page would
    look like this:"]
 
    [demo-component {:src [:pre
-                          ns-src
+                          ns-src-with-rdom
                           (s/src-of [:simple-component :render-simple])]}]])
 
 (defn performance []
@@ -293,7 +298,7 @@
    [demo-component {:comp bmi-component
                     :src [:pre
                           ns-src
-                          (s/src-of [:bmi-data :calc-bmi :slider
+                          (s/src-of [:calc-bmi :bmi-data :slider
                                      :bmi-component])]}]])
 
 (defn complete-simple-demo []

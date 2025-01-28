@@ -1,8 +1,5 @@
 (ns reagentdemo.news.news061
-  (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
-            [reagentdemo.syntax :as s]
-            [reagentdemo.common :as common :refer [demo-component]]
+  (:require [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]))
 
 (def url "/news/news061.html")
@@ -24,6 +21,7 @@
   [:div.reagent-demo
    [:h1
     [link {:href url} title]]
+   [:span "2017-03-11"]
    [:div
     [abstract]]])
 

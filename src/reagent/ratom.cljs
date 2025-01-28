@@ -1,10 +1,13 @@
 (ns reagent.ratom
   (:refer-clojure :exclude [atom])
-  (:require-macros [reagent.ratom :refer [with-let]])
+  (:require-macros [reagent.ratom])
   (:require [reagent.impl.util :as util]
-            [reagent.debug :refer-macros [dbg log warn error dev? time]]
+            [reagent.debug :refer-macros [warn dev?]]
             [reagent.impl.batching :as batch]
-            [clojure.set :as s]))
+            [clojure.set :as s]
+            [goog.object :as obj]))
+
+(declare flush!)
 
 (declare ^:dynamic *ratom-context*)
 (defonce ^boolean debug false)
@@ -32,11 +35,22 @@
                  (recur (inc i))
                  false))))))
 
-(defn- in-context [obj f]
+(defn- in-context
+  "When f is executed, if (f) derefs any ratoms, they are then added to 'obj.captured'(*ratom-context*).
+
+  See function notify-deref-watcher! to know how *ratom-context* is updated"
+  [obj f]
   (binding [*ratom-context* obj]
     (f)))
 
-(defn- deref-capture [f r]
+(defn- deref-capture
+  "Returns `(in-context r f)`.  Calls `_update-watching` on r with any
+  `deref`ed atoms captured during `in-context`, if any differ from the
+  `watching` field of r.  Clears the `dirty?` flag on r.
+
+  Inside '_update-watching' along with adding the ratoms in 'r.watching' of reaction,
+  the reaction is also added to the list of watches on each ratoms f derefs."
+  [f ^clj r]
   (set! (.-captured r) nil)
   (when (dev?)
     (set! (.-ratomGeneration r) (set! generation (inc generation))))
@@ -48,8 +62,12 @@
       (._update-watching r c))
     res))
 
-(defn- notify-deref-watcher! [derefed]
-  (when-some [r *ratom-context*]
+(defn- notify-deref-watcher!
+  "Add `derefed` to the `captured` field of `*ratom-context*`.
+
+  See also `in-context`"
+  [derefed]
+  (when-some [^clj r *ratom-context*]
     (let [c (.-captured r)]
       (if (nil? c)
         (set! (.-captured r) (array derefed))
@@ -60,36 +78,36 @@
     (swap! -running + (- (count new) (count old))))
   new)
 
-(defn- add-w [this key f]
+(defn- add-w [^clj this key f]
   (let [w (.-watches this)]
     (set! (.-watches this) (check-watches w (assoc w key f)))
     (set! (.-watchesArr this) nil)))
 
-(defn- remove-w [this key]
+(defn- remove-w [^clj this key]
   (let [w (.-watches this)]
     (set! (.-watches this) (check-watches w (dissoc w key)))
     (set! (.-watchesArr this) nil)))
 
-(defn- notify-w [this old new]
+(defn- notify-w [^clj this old new]
   (let [w (.-watchesArr this)
         a (if (nil? w)
             ;; Copy watches to array for speed
             (->> (.-watches this)
                  (reduce-kv #(doto %1 (.push %2) (.push %3)) #js[])
                  (set! (.-watchesArr this)))
-            w)]
-    (let [len (alength a)]
-      (loop [i 0]
-        (when (< i len)
-          (let [k (aget a i)
-                f (aget a (inc i))]
-            (f k this old new))
-          (recur (+ 2 i)))))))
+            w)
+        len (alength a)]
+    (loop [i 0]
+      (when (< i len)
+        (let [k (aget a i)
+              f (aget a (inc i))]
+          (f k this old new))
+        (recur (+ 2 i))))))
 
-(defn- pr-atom [a writer opts s]
-  (-write writer (str "#<" s " "))
-  (pr-writer (binding [*ratom-context* nil] (-deref a)) writer opts)
-  (-write writer ">"))
+(defn- pr-atom [a writer opts s v]
+  (-write writer (str "#object[reagent.ratom." s " "))
+  (pr-writer (binding [*ratom-context* nil] v) writer opts)
+  (-write writer "]"))
 
 
 ;;; Queueing
@@ -98,21 +116,9 @@
 
 (defn- rea-enqueue [r]
   (when (nil? rea-queue)
-    (set! rea-queue (array))
+    (set! rea-queue #js [])
     (batch/schedule))
   (.push rea-queue r))
-
-(defn flush! []
-  (loop []
-    (let [q rea-queue]
-      (when-not (nil? q)
-        (set! rea-queue nil)
-        (dotimes [i (alength q)]
-          (._queued-run (aget q i)))
-        (recur)))))
-
-(set! batch/ratom-flush flush!)
-
 
 ;;; Atom
 
@@ -153,7 +159,7 @@
   (-meta [_] meta)
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Atom:"))
+  (-pr-writer [a w opts] (pr-atom a w opts "RAtom" {:val (-deref a)}))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
@@ -173,10 +179,8 @@
 
 (declare make-reaction)
 
-(def ^{:private true :const true} cache-key "reagReactionCache")
-
-(defn- cached-reaction [f o k obj destroy]
-  (let [m (aget o cache-key)
+(defn- cached-reaction [f ^clj o k ^clj obj destroy]
+  (let [m (.-reagReactionCache o)
         m (if (nil? m) {} m)
         r (m k nil)]
     (cond
@@ -185,15 +189,15 @@
       :else (let [r (make-reaction
                      f :on-dispose (fn [x]
                                      (when debug (swap! -running dec))
-                                     (as-> (aget o cache-key) _
+                                     (as-> (.-reagReactionCache o) _
                                        (dissoc _ k)
-                                       (aset o cache-key _))
+                                       (set! (.-reagReactionCache o) _))
                                      (when (some? obj)
                                        (set! (.-reaction obj) nil))
                                      (when (some? destroy)
                                        (destroy x))))
                   v (-deref r)]
-              (aset o cache-key (assoc m k r))
+              (set! (.-reagReactionCache o) (assoc m k r))
               (when debug (swap! -running inc))
               (when (some? obj)
                 (set! (.-reaction obj) r))
@@ -209,7 +213,7 @@
       (cached-reaction #(apply f args) f args this nil)))
 
   IEquiv
-  (-equiv [_ other]
+  (-equiv [_ ^clj other]
     (and (instance? Track other)
          (= f (.-f other))
          (= args (.-args other))))
@@ -218,7 +222,8 @@
   (-hash [_] (hash [f args]))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Track:")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Track" {:val (-deref a)
+                                                    :f f})))
 
 (defn make-track [f args]
   (Track. f args nil))
@@ -241,12 +246,12 @@
 ;;; cursor
 
 (deftype RCursor [ratom path ^:mutable reaction
-                  ^:mutable state ^:mutable watches]
+                  ^:mutable state ^:mutable watches meta]
   IAtom
   IReactiveAtom
 
   IEquiv
-  (-equiv [_ other]
+  (-equiv [_ ^clj other]
     (and (instance? RCursor other)
          (= path (.-path other))
          (= ratom (.-ratom other))))
@@ -291,9 +296,16 @@
   (-swap! [a f x y]      (-reset! a (f (._peek a) x y)))
   (-swap! [a f x y more] (-reset! a (apply f (._peek a) x y more)))
 
-  IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts (str "Cursor: " path)))
+  IWithMeta
+  (-with-meta [_ new-meta] (RCursor. ratom path reaction
+                                     state watches new-meta))
 
+  IMeta
+  (-meta [_] meta)
+
+  IPrintWithWriter
+  (-pr-writer [a w opts] (pr-atom a w opts "RCursor" {:val (-deref a)
+                                                      :path path}))
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
   (-add-watch [this key f]        (add-w this key f))
@@ -303,13 +315,15 @@
   (-hash [_] (hash [ratom path])))
 
 (defn cursor
-  [src path]
+  [^clj src path]
   (assert (or (satisfies? IReactiveAtom src)
               (and (ifn? src)
                    (not (vector? src))))
           (str "src must be a reactive atom or a function, not "
-               (pr-str src)))
-  (->RCursor src path nil nil nil))
+               (pr-str src)
+               " while attempting to get path: "
+               (pr-str path)))
+  (->RCursor src path nil nil nil nil))
 
 
 ;;; with-let support
@@ -320,9 +334,8 @@
 
 (defn with-let-values [key]
   (if-some [c *ratom-context*]
-    (cached-reaction array c key
-                     nil with-let-destroy)
-    (array)))
+    (cached-reaction (fn [] #js []) c key nil with-let-destroy)
+    #js []))
 
 
 ;;;; reaction
@@ -334,10 +347,18 @@
 (defprotocol IRunnable
   (run [this]))
 
-(defn- handle-reaction-change [this sender old new]
+(defn- handle-reaction-change [^clj this sender old new]
   (._handle-change this sender old new))
 
-
+;; Fields of a Reaction javascript object
+;; - auto_run
+;; - captured
+;; - caught
+;; - f
+;; - ratomGeneration
+;; - state
+;; - watches
+;; - watching
 (deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty? ^boolean nocache?
                    ^:mutable watching ^:mutable watches ^:mutable auto-run
                    ^:mutable caught]
@@ -482,11 +503,22 @@
   (-equiv [o other] (identical? o other))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts (str "Reaction " (hash a) ":")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Reaction" {:val (-deref a)}))
 
   IHash
   (-hash [this] (goog/getUid this)))
 
+(defn flush! []
+  (loop []
+    (let [q rea-queue]
+      (when-not (nil? q)
+        (set! rea-queue nil)
+        (dotimes [i (alength q)]
+          (let [^Reaction r (aget q i)]
+            (._queued-run r)))
+        (recur)))))
+
+(set! batch/ratom-flush flush!)
 
 (defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
   (let [reaction (->Reaction f nil true false nil nil nil nil)]
@@ -499,7 +531,16 @@
 
 (def ^:private temp-reaction (make-reaction nil))
 
-(defn run-in-reaction [f obj key run opts]
+
+(defn run-in-reaction
+  "Evaluates `f` and returns the result.  If `f` calls `deref` on any ratoms,
+   creates a new Reaction that watches those atoms and calls `run` whenever
+   any of those watched ratoms change.  Also, the new reaction is added to
+   list of 'watches' of each of the ratoms. The `run` parameter is a function
+   that should expect one argument.  It is passed `obj` when run.  The `opts`
+   are any options accepted by a Reaction and will be set on the newly created
+   Reaction. Sets the newly created Reaction to the `key` on `obj`."
+  [f obj key run opts]
   (let [r temp-reaction
         res (deref-capture f r)]
     (when-not (nil? (.-watching r))
@@ -507,7 +548,7 @@
       (._set-opts r opts)
       (set! (.-f r) f)
       (set! (.-auto-run r) #(run obj))
-      (aset obj key r))
+      (obj/set obj key r))
     res))
 
 (defn check-derefs [f]
@@ -548,14 +589,14 @@
   (-swap! [a f x y more] (-reset! a (apply f state x y more)))
 
   IEquiv
-  (-equiv [_ other]
-          (and (instance? Wrapper other)
-               ;; If either of the wrappers have changed, equality
-               ;; cannot be relied on.
-               (not changed)
-               (not (.-changed other))
-               (= state (.-state other))
-               (= callback (.-callback other))))
+  (-equiv [this ^clj other]
+    (and (instance? Wrapper other)
+         ;; If either of the wrappers have changed, equality
+         ;; cannot be relied on.
+         (not changed)
+         (not (.-changed other))
+         (= state (.-state other))
+         (= callback (.-callback other))))
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
@@ -563,7 +604,7 @@
   (-remove-watch [this key]       (remove-w this key))
 
   IPrintWithWriter
-  (-pr-writer [a w opts] (pr-atom a w opts "Wrap:")))
+  (-pr-writer [a w opts] (pr-atom a w opts "Wrapper" {:val (-deref a)})))
 
 (defn make-wrapper [value callback-fn args]
   (->Wrapper value

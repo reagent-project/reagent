@@ -1,7 +1,5 @@
 (ns reagentdemo.news.clockpost
-  (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg]]
-            [reagentdemo.syntax :as s]
+  (:require [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
@@ -21,6 +19,7 @@
 
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-02-26"]
      [:div.demo-text
 
       (when-not summary

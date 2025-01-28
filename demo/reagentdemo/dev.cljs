@@ -3,7 +3,9 @@
   (:require [reagentdemo.core :as core]
             [reagenttest.runtests :as tests]))
 
-(defn init! []
+(enable-console-print!)
+
+(defn ^:dev/after-load init! []
   (core/init! (tests/init!)))
 
 (init!)

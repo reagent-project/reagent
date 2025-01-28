@@ -1,6 +1,5 @@
 (ns geometry.components
-  (:require [reagent.core :as r]
-            [goog.events :as events]
+  (:require [goog.events :as events]
             [geometry.geometry :refer [x y dist] :as g])
   (:import [goog.events EventType]))
 

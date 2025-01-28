@@ -1,6 +1,5 @@
 (ns reagentdemo.news.async
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
@@ -18,8 +17,8 @@
         start #(reset! start-time (now))
         stop #(reset! render-time (- (now) @start-time))
         timed-f (with-meta f
-                  {:component-will-mount start
-                   :component-will-update start
+                  {:constructor start
+                   :UNSAFE_component-will-update start
                    :component-did-mount stop
                    :component-did-update stop})]
     (fn []
@@ -93,6 +92,8 @@
   (let [om-article {:href "http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"}]
     [:div.reagent-demo
      [:h1 [link {:href url} title]]
+     [:span "2014-01-30"]
+
      [:div.demo-text
       [:h2 "Reagent gets async rendering"]
 

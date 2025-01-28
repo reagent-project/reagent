@@ -6,13 +6,11 @@
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
+            [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
-            [reagent.debug :as deb :refer-macros [dbg prn
-                                                  assert-some assert-component
+            [reagent.debug :as deb :refer-macros [assert-some assert-component
                                                   assert-js-object assert-new-state
-                                                  assert-callable]]
-            [reagent.interop :refer-macros [$ $!]]
-            [reagent.dom :as dom]))
+                                                  assert-callable]]))
 
 (def is-client util/is-client)
 
@@ -23,12 +21,16 @@
   that any Reagent hiccup forms must be processed with as-element. For example
   like this:
 
-    (r/create-element \"div\" #js{:className \"foo\"}
-       \"Hi \" (r/as-element [:strong \"world!\"])
+  ```cljs
+  (r/create-element \"div\" #js{:className \"foo\"}
+    \"Hi \" (r/as-element [:strong \"world!\"])
+  ```
 
   which is equivalent to
 
-    [:div.foo \"Hi\" [:strong \"world!\"]]"
+  ```cljs
+  [:div.foo \"Hi\" [:strong \"world!\"]]
+  ```"
   ([type]
    (create-element type nil))
   ([type props]
@@ -44,84 +46,73 @@
 (defn as-element
   "Turns a vector of Hiccup syntax into a React element. Returns form
   unchanged if it is not a vector."
-  [form]
-  (tmpl/as-element form))
+  ([form] (p/as-element tmpl/*current-default-compiler* form))
+  ([form compiler] (p/as-element compiler form)))
 
 (defn adapt-react-class
   "Returns an adapter for a native React class, that may be used
   just like a Reagent component function or class in Hiccup forms."
-  ([c opts]
-   (assert-some c "Component")
-   (tmpl/adapt-react-class c opts))
-  ([c]
-   (adapt-react-class c {})))
+  [c]
+  (assert-some c "Component")
+  (tmpl/adapt-react-class c))
 
 (defn reactify-component
   "Returns an adapter for a Reagent component, that may be used from
   React, for example in JSX. A single argument, props, is passed to
   the component, converted to a map."
-  [c]
-  (assert-some c "Component")
-  (comp/reactify-component c))
-
-(defn render
-  "Render a Reagent component into the DOM. The first argument may be
-  either a vector (using Reagent's Hiccup syntax), or a React element.
-  The second argument should be a DOM node.
-
-  Optionally takes a callback that is called when the component is in place.
-
-  Returns the mounted component instance."
-  ([comp container]
-   (dom/render comp container))
-  ([comp container callback]
-   (dom/render comp container callback)))
-
-(defn unmount-component-at-node
-  "Remove a component from the given DOM node."
-  [container]
-  (dom/unmount-component-at-node container))
-
-;; For backward compatibility
-(def as-component as-element)
-(def render-component render)
-
-(defn ^:export force-update-all
-  "Force re-rendering of all mounted Reagent components. This is
-  probably only useful in a development environment, when you want to
-  update components in response to some dynamic changes to code.
-
-  Note that force-update-all may not update root components. This
-  happens if a component 'foo' is mounted with `(render [foo])` (since
-  functions are passed by value, and not by reference, in
-  ClojureScript). To get around this you'll have to introduce a layer
-  of indirection, for example by using `(render [#'foo])` instead."
-  []
-  (ratom/flush!)
-  (dom/force-update-all)
-  (batch/flush-after-render))
+  ([c] (reactify-component c tmpl/*current-default-compiler*))
+  ([c compiler]
+   (assert-some c "Component")
+   (comp/reactify-component c compiler)))
 
 (defn create-class
-  "Create a component, React style. Should be called with a map,
-  looking like this:
+  "Creates JS class based on provided Clojure map, for example:
 
-    {:get-initial-state (fn [this])
-     :component-will-receive-props (fn [this new-argv])
-     :should-component-update (fn [this old-argv new-argv])
-     :component-will-mount (fn [this])
-     :component-did-mount (fn [this])
-     :component-will-update (fn [this new-argv])
-     :component-did-update (fn [this old-argv])
-     :component-will-unmount (fn [this])
-     :reagent-render (fn [args....])}   ;; or :render (fn [this])
+  ```cljs
+  {;; Constructor
+   :constructor (fn [this props])
+   :get-initial-state (fn [this])
+   ;; Static methods
+   :get-derived-state-from-props (fn [props state] partial-state)
+   :get-derived-state-from-error (fn [error] partial-state)
+   ;; Methods
+   :get-snapshot-before-update (fn [this old-argv new-argv] snapshot)
+   :should-component-update (fn [this old-argv new-argv])
+   :component-did-mount (fn [this])
+   :component-did-update (fn [this old-argv old-state snapshot])
+   :component-will-unmount (fn [this])
+   :component-did-catch (fn [this error info])
+   :reagent-render (fn [args....])
+   ;; Or alternatively:
+   :render (fn [this])
+   ;; Deprecated methods:
+   :UNSAFE_component-will-receive-props (fn [this new-argv])
+   :UNSAFE_component-will-update (fn [this new-argv new-state])
+   :UNSAFE_component-will-mount (fn [this])}
+  ```
 
-  Everything is optional, except either :reagent-render or :render."
-  [spec]
-  (comp/create-class spec))
+  Everything is optional, except either :reagent-render or :render.
+
+  Map keys should use `React.Component` method names (https://reactjs.org/docs/react-component.html),
+  and can be provided in kebab-case or camelCase.
+
+  State can be initialized using constructor, which matches React.Component class,
+  or using getInitialState which matches old React createClass function and is
+  now implemented by Reagent for compatibility.
+
+  State can usually be anything, e.g. Cljs object. But if using getDerivedState
+  methods, the state has to be plain JS object as React implementation uses
+  Object.assign to merge partial state into the current state.
+
+  React built-in static methods or properties are automatically defined as statics."
+  ([spec]
+   (comp/create-class spec tmpl/*current-default-compiler*))
+  ([spec compiler]
+   (comp/create-class spec compiler)))
 
 
 (defn current-component
-  "Returns the current React component (a.k.a this) in a component
+  "Returns the current React component (a.k.a `this`) in a component
   function."
   []
   comp/*current-component*)
@@ -134,14 +125,14 @@
 
 (defn state
   "Returns the state of a component, as set with replace-state or set-state.
-  Equivalent to (deref (r/state-atom this))"
+  Equivalent to `(deref (r/state-atom this))`"
   [this]
   (assert-component this)
   (deref (state-atom this)))
 
 (defn replace-state
   "Set state of a component.
-  Equivalent to (reset! (state-atom this) new-state)"
+  Equivalent to `(reset! (state-atom this) new-state)`"
   [this new-state]
   (assert-component this)
   (assert-new-state new-state)
@@ -149,7 +140,7 @@
 
 (defn set-state
   "Merge component state with new-state.
-  Equivalent to (swap! (state-atom this) merge new-state)"
+  Equivalent to `(swap! (state-atom this) merge new-state)`"
   [this new-state]
   (assert-component this)
   (assert-new-state new-state)
@@ -185,26 +176,35 @@
   (assert-component this)
   (comp/get-argv this))
 
-(defn dom-node
-  "Returns the root DOM node of a mounted component."
-  [this]
-  (dom/dom-node this))
+(defn class-names
+  "Function which normalizes and combines class values to a string
+
+  Reagent allows classes to be defined as:
+  - Strings
+  - Named objects (Symbols or Keywords)
+  - Collections of previous types"
+  ([])
+  ([class] (util/class-names class))
+  ([class1 class2] (util/class-names class1 class2))
+  ([class1 class2 & others] (apply util/class-names class1 class2 others)))
 
 (defn merge-props
-  "Utility function that merges two maps, handling :class and :style
-  specially, like React's transferPropsTo."
-  [defaults props]
-  (util/merge-props defaults props))
+  "Utility function that merges some maps, handling `:class` and `:style`.
+
+  The :class value is always normalized (using `class-names`) even if no
+  merging is done."
+  ([] (util/merge-props))
+  ([defaults] (util/merge-props defaults))
+  ([defaults props] (util/merge-props defaults props))
+  ([defaults props & others] (apply util/merge-props defaults props others)))
 
 (defn flush
-  "Render dirty components immediately to the DOM.
+  "Render dirty components immediately.
 
   Note that this may not work in event handlers, since React.js does
   batching of updates there."
   []
   (batch/flush))
-
-
 
 ;; Ratom
 
@@ -221,8 +221,8 @@
   Reagent atoms (or track, etc), the value will be updated whenever
   the atom changes.
 
-  In other words, @(track foo bar) will produce the same result
-  as (foo bar), but foo will only be called again when the atoms it
+  In other words, `@(track foo bar)` will produce the same result
+  as `(foo bar)`, but foo will only be called again when the atoms it
   depends on changes, and will only trigger updates of components when
   its result changes.
 
@@ -256,8 +256,10 @@
 
   Use for example like this:
 
+  ```cljs
   (wrap (:foo @state)
         swap! state assoc :foo)
+  ```
 
   Probably useful only for passing to child components."
   [value reset-fn & args]
@@ -272,18 +274,23 @@
 
   Behaves like a Reagent atom but focuses updates and derefs to
   the specified path within the wrapped Reagent atom. e.g.,
-    (let [c (cursor ra [:nested :content])]
-      ... @c ;; equivalent to (get-in @ra [:nested :content])
-      ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
-      ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
-      )
+
+  ```cljs
+  (let [c (cursor ra [:nested :content])]
+    ... @c ;; equivalent to (get-in @ra [:nested :content])
+    ... (reset! c 42) ;; equivalent to (swap! ra assoc-in [:nested :content] 42)
+    ... (swap! c inc) ;; equivalence to (swap! ra update-in [:nested :content] inc)
+    )
+  ```
 
   The first parameter can also be a function, that should look
   something like this:
 
-    (defn set-get
-      ([k] (get-in @state k))
-      ([k v] (swap! state assoc-in k v)))
+  ```cljs
+  (defn set-get
+    ([k] (get-in @state k))
+    ([k v] (swap! state assoc-in k v)))
+  ```
 
   The function will be called with one argument – the path passed to
   cursor – when the cursor is deref'ed, and two arguments (path and
@@ -291,7 +298,7 @@
 
   Given that set-get function, (and that state is a Reagent atom, or
   another cursor) these cursors are equivalent:
-  (cursor state [:foo]) and (cursor set-get [:foo]).
+  `(cursor state [:foo])` and `(cursor set-get [:foo])`.
 
   Note that a cursor is lazy: its value will not change until it is
   used. This may be noticed with add-watch."
@@ -302,24 +309,25 @@
 ;; Utilities
 
 (defn rswap!
-  "Swaps the value of a to be (apply f current-value-of-atom args).
+  "Swaps the value of a to be `(apply f current-value-of-atom args)`.
 
   rswap! works like swap!, except that recursive calls to rswap! on
   the same atom are allowed – and it always returns nil."
-  [a f & args]
+  [^IAtom a f & args]
   {:pre [(satisfies? IAtom a)
          (ifn? f)]}
-  (if a.rswapping
-    (-> (or a.rswapfs (set! a.rswapfs (array)))
+  (if (.-rswapping a)
+    (-> (or (.-rswapfs a)
+            (set! (.-rswapfs a) #js []))
         (.push #(apply f % args)))
-    (do (set! a.rswapping true)
+    (do (set! (.-rswapping a) true)
         (try (swap! a (fn [state]
                         (loop [s (apply f state args)]
-                          (if-some [sf (some-> a.rswapfs .shift)]
+                          (if-some [sf (some-> a .-rswapfs .shift)]
                             (recur (sf s))
                             s))))
              (finally
-               (set! a.rswapping false)))))
+               (set! (.-rswapping a) false)))))
   nil)
 
 (defn next-tick
@@ -342,9 +350,25 @@
   [f & args]
   (util/make-partial-fn f args))
 
-(defn component-path
-  ;; Try to return the path of component c as a string.
-  ;; Maybe useful for debugging and error reporting, but may break
-  ;; with future versions of React (and return nil).
-  [c]
-  (comp/component-path c))
+(defn create-compiler
+  "Creates Compiler object with given `opts`,
+  this can be passed to `render`, `as-element` and other functions to control
+  how they turn the Reagent-style Hiccup into React components and elements."
+  [opts]
+  (tmpl/create-compiler opts))
+
+(defn set-default-compiler!
+  "Globally sets the Compiler object used by `render`, `as-element` and other
+  calls by default, when no `compiler` parameter is provided.
+
+  Use `nil` value to restore the original default compiler."
+  [compiler]
+  (tmpl/set-default-compiler! (if (nil? compiler)
+                                tmpl/class-compiler
+                                compiler)))
+
+(defn render
+  {:deprecated "0.10.0"
+   :superseded-by "reagent.dom/render"}
+  [& _]
+  (throw (js/Error. "Reagent.core/render function was moved to reagent.dom namespace in Reagent v1.0.")))

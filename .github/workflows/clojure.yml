@@ -1,0 +1,136 @@
+---
+name: Run tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        env:
+          - browser-cljsjs
+          - browser-cljsjs-prod
+          - browser-npm
+          - browser-npm-prod
+          - bundle
+          - bundle-adv
+          # - node-cljsjs
+          - node-npm
+          - shadow-cljs-prod
+
+    name: Test ${{ matrix.env }}
+
+    runs-on: ubuntu-latest
+    env:
+      ENV: ${{ matrix.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: 17
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.10
+          cli: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/hydrogen
+          cache: 'npm'
+
+      # setup-java cache only looks at pom.xml for the key
+      - name: Cache m2
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Install node deps
+        run: npm ci
+
+      - name: Run tests
+        run: ./test-environments/${{ matrix.env }}/test.sh
+
+      - uses: codecov/codecov-action@v5
+        with:
+          env_vars: ENV
+
+  update-site:
+    name: Update site
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: test
+    environment: build-site
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: 17
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.8
+          cli: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/hydrogen
+          cache: 'npm'
+
+      # setup-java cache only looks at pom.xml for the key
+      - name: Cache m2
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Install node deps
+        run: npm ci
+
+      - name: Build site
+        run: ./build-example-site.sh
+        env:
+          SITE_TOKEN: ${{ secrets.SITE_TOKEN }}
+
+  update-tagged-docs:
+    name: Update docs
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref,  'refs/tags/') }}
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 8
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          lein: 2.9.8
+          cli: latest
+
+      # setup-java cache only looks at pom.xml for the key
+      - name: Cache m2
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Build docs
+        run: ./build-docs.sh
+        # Fine grained personal access token, 366 days expiry, only contents rw permission to the site repo
+        env:
+          SITE_TOKEN: ${{ secrets.SITE_TOKEN }}

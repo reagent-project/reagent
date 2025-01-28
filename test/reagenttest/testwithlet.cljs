@@ -1,10 +1,13 @@
 (ns reagenttest.testwithlet
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv]
-            [reagent.debug :as d :refer-macros [dbg]]
-            [reagent.core :as r
-             :refer [flush track track! dispose!] :refer-macros [with-let]]
+            [reagent.debug :as d]
+            [reagent.core :as r :refer [flush track track! dispose!] :refer-macros [with-let]]
             [clojure.walk :as w]))
+
+;; Test code generated from with-let macro
+;; https://github.com/reagent-project/reagent/issues/420
+(set! *warn-on-infer* true)
 
 (defn fixture [f]
   (set! rv/debug true)
@@ -271,3 +274,27 @@
     (dispose! t)
     (is (= @destroy 2))
     (is (= runs (running)))))
+
+(deftest with-let-binding-error
+  ;; Issue 525
+  ;; Test to ensure that with-let will throw from binding form
+  ;; for further render calls, instead of only for the first.
+  (let [x (r/atom 0)
+        err (atom nil)
+        f1 (fn []
+             (try
+               ;; Deref first, else ratom deref isn't registered
+               (with-let [_ @x
+                          a [1]
+                          _ (throw (js/Error. "Hello there"))
+                          n (count a)]
+                 [:span (nth a (dec n))])
+               (catch :default e
+                 (reset! err (.-message ^js/Error e)))))
+        t (track! (fn []
+                    @(track f1)))]
+    (is (= "Hello there" @err))
+    (reset! err nil)
+    (swap! x inc)
+    (flush)
+    (is (= "Hello there" @err))))

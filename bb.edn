@@ -1,0 +1,2 @@
+{:tasks {figwheel {:task (shell "lein figwheel")}
+         shadow {:task (shell "npx shadow-cljs watch client")}}}

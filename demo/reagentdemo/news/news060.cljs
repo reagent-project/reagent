@@ -1,6 +1,5 @@
 (ns reagentdemo.news.news060
   (:require [reagent.core :as r]
-            [reagent.debug :refer-macros [dbg println]]
             [reagentdemo.syntax :as s]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
@@ -100,7 +99,7 @@
   (let [p @(r/track person id)]
     [:div
      [:input {:value (:name p)
-              :on-change #(emit [:set-name id (.-target.value %)])}]]))
+              :on-change #(emit [:set-name id (.. %  -target -value)])}]]))
 
 (defn edit-fields []
   (let [ids @(r/track person-keys)]
@@ -121,6 +120,7 @@
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
+   [:span "2015-12-06"]
    [:div.demo-text
     [:p "Reagent 0.6.0-alpha contains new reactivity helpers, better
     integration with native React components, a new version of

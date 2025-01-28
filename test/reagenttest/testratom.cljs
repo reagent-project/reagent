@@ -1,7 +1,7 @@
 (ns reagenttest.testratom
-  (:require [cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [clojure.test :as t :refer-macros [is deftest testing]]
             [reagent.ratom :as rv :refer-macros [run! reaction]]
-            [reagent.debug :as debug :refer-macros [dbg]]
+            [reagent.debug :as debug :refer-macros [dbg dev?]]
             [reagent.core :as r]))
 
 (defn fixture [f]
@@ -453,7 +453,7 @@
         rstate (reaction (:val @state))
         r1 (run!
             (when (= @rstate 13)
-              (throw (ex-info "fail" nil))))]
+              (throw (js/Error. "fail"))))]
     (swap! state assoc :val 13)
     (is (thrown? :default
                  (r/flush)))
@@ -461,6 +461,29 @@
     (r/flush)
     (dispose r1)
     (is (= runs (running)))))
+
+(deftest rcursor-with-meta
+  (let [value {:path {:val 1}}
+        meta-value {:meta-val 1}
+        state (with-meta (r/cursor (r/atom value) [:path]) meta-value)]
+    (is (= (meta state) meta-value))
+    (is (= @state (:path value)))))
+
+(deftest print-ratom-test
+  (let [x (r/atom {:foo 1})]
+    (is (= "#object[reagent.ratom.RAtom {:val {:foo 1}}]"
+           (pr-str x)))
+    (is (= "#object[reagent.ratom.RCursor {:val 1, :path [:foo]}]"
+           (pr-str (r/cursor x [:foo]))))
+    (is (= "#object[reagent.ratom.Wrapper {:val 1}]"
+           (pr-str (r/wrap (:foo @x) #(reset! x %)))))
+    (is (= (if (dev?)
+             "#object[reagent.ratom.Track {:val 1, :f #object[reagenttest$testratom$foo]}]"
+             "#object[reagent.ratom.Track {:val 1, :f #object[Function]}]")
+           (pr-str (r/track (fn foo [] (:foo @x))))))
+    (is (= "#object[reagent.ratom.Reaction {:val 1}]"
+           (pr-str (reaction (:foo @x)))))))
+
 
 (deftest running-disposed-reactions
   (let [ra (r/atom 0)
@@ -485,10 +508,3 @@
     @r1
     ;; An exception or error should be logged here as we are trying to deref a disposed reaction.
     (is (= @run-number 2))))
-
-(deftest ratom-with-meta
-  (let [value {:val 1}
-        meta-value {:meta-val 1}
-        state (with-meta (r/atom value) meta-value)]
-    (is (= (meta state) meta-value))
-    (is (= @state value))))

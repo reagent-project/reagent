@@ -1,0 +1,6 @@
+---
+coverage:
+￼  status:
+￼    patch:
+￼      default:
+￼        enabled: false
