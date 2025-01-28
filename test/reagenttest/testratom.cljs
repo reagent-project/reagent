@@ -490,3 +490,30 @@
            (pr-str (r/track (fn foo [] (:foo @x))))))
     (is (= "#object[reagent.ratom.Reaction {:val 1}]"
            (pr-str (reaction (:foo @x)))))))
+
+(deftest running-disposed-reactions
+  (let [ra (r/atom 0)
+        run-number (atom 0)
+        disposed? (atom false)
+        r1 (rv/make-reaction (fn []
+                               (swap! run-number inc)
+                               @ra)
+                             :on-dispose (fn [] (reset! disposed? true)))]
+    (is (= @run-number 0))
+    @r1
+    (is (= @run-number 1))
+    (swap! ra inc)
+    (is (= @run-number 1))
+    @r1
+    (is (= @run-number 2))
+    (rv/dispose! r1)
+    (is (true? @disposed?))
+
+    (is (= @run-number 2))
+    (swap! ra inc)
+    @r1
+    ;; TODO: https://github.com/reagent-project/reagent/pull/270
+    ;; Consider what should happen here (exception? log a warning?) and
+    ;; document the behaviour.
+    #_
+    (is (= @run-number 2))))
