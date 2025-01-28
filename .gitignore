@@ -17,6 +17,6 @@ junit
 .shadow-cljs
 coverage/
 
-.clj-kondo/
+.clj-kondo/.cache
 .cpcache/
 .lsp/.cache
