@@ -469,6 +469,13 @@
     (is (= (meta state) meta-value))
     (is (= @state value))))
 
+(deftest rcursor-with-meta
+  (let [value {:path {:val 1}}
+        meta-value {:meta-val 1}
+        state (with-meta (r/cursor (r/atom value) [:path]) meta-value)]
+    (is (= (meta state) meta-value))
+    (is (= @state (:path value)))))
+
 (deftest print-ratom-test
   (let [x (r/atom {:foo 1})]
     (is (= "#object[reagent.ratom.RAtom {:val {:foo 1}}]"
