@@ -278,3 +278,42 @@ If you need to add static methods or properties, you need to modify `create-clas
   (set! (.-static-method klass) (fn [param] ...))
   klass)
 ```
+
+## [Suspense](https://react.dev/reference/react/Suspense)
+
+`React.Suspense` itself should work the same as in React itself. Just use
+`r/as-element` to provide the fallback element. This will be enough when
+you just need to provide fallbacks for some components from JS libs
+which use suspending.
+
+In React 19 suspending a component should be easy with `React.use` function.
+
+In React 18 you need to throw an Promise to suspend a component (seems like
+this isn't recommended by React docs though). You need to take some care
+to now throw multiple times(?) and always return the same Promise object
+when the loading in in progress(?). When promise is resolved, the component
+is re-rendered automatically, so the result doesn't need to be stored
+in a RAtom (or state hook.)
+
+```cljs
+(def data #js {:current nil})
+
+(def slow-data-request (js/Promise. (fn [resolve _reject]
+                                      (js/setTimeout (fn []
+                                                       (set! (.-current data) "ready!")
+                                                       (resolve))
+                                                     2000))))
+
+(defn slow-component []
+  (when (nil? (.-current data))
+    ;; React 18, in 19 react/use replaces throwing Promises to suspend
+    ;; an component.
+    (throw slow-data-request))
+  [:div (.-current data)])
+
+(defn simple-component []
+  [:div
+   [:> react/Suspense
+    {:fallback (r/as-element [:div "loading"])}
+    [slow-component]]])
+```
