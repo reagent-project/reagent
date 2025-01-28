@@ -228,6 +228,13 @@ as properties into the React function component.
     (react-dom/createPortal (r/as-element [:div "foo"]) el)))
 ```
 
+## [Server-Side Rendering (SSR)](https://react.dev/reference/react-dom/server/renderToString)
+
+```cljs
+(reagent.dom.server/render-to-string
+   (reagent.core/as-element [main-component]))
+```
+
 ## [Hydrate](https://reactjs.org/docs/react-dom.html#hydrate)
 
 ```cljs
