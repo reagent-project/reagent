@@ -72,7 +72,7 @@
      [c/point {:on-drag (move-point svg-ref :p2)} p2]
      [c/point {:on-drag (move-point svg-ref :p3)} p3]]))
 
-(defn main [{:keys [width height]}]
+(defn main* [{:keys [width height]}]
   (let [svg-ref (react/useRef nil)]
     [:svg
      {:ref svg-ref
@@ -85,8 +85,13 @@
       "The points are draggable and the slider controls history"]
      [root svg-ref]]))
 
+(defn main
+  "Just to keep main fn uses regular component uses, without :f>"
+  [props]
+  [:f> main* props])
+
 (defn by-id [id]
   (.getElementById js/document id))
 
 (defn ^:dev/after-load ^:export run []
-  (rdom/render [:f> main] (by-id "app")))
+  (rdom/render [main] (by-id "app")))
