@@ -32,5 +32,5 @@
    [clock]
    [color-input]])
 
-(defn ^:export run []
+(defn ^:dev/after-load ^:export run []
   (rdom/render [simple-example] (js/document.getElementById "app")))

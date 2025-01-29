@@ -1,0 +1,9 @@
+{:source-paths ["src"]
+ :dev-http {3000 ["resources/public" "target/public"]}
+ :builds
+ {:app {:target :browser
+        :output-dir "target/public/js"
+        :asset-path "/js"
+        :modules {:main {:entries [todomvc.core]
+                         :init-fn todomvc.core/run}}}}
+ :dependencies [[reagent "1.2.0"]]}

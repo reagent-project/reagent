@@ -1,8 +1,7 @@
 (ns example.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            [react-sortable-hoc :as sort]
-            [goog.object :as gobj]))
+            [react-sortable-hoc :as sort]))
 
 ;; Adapted from https://github.com/clauderic/react-sortable-hoc/blob/master/examples/drag-handle.js#L10
 

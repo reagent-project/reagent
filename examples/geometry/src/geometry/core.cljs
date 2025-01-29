@@ -1,8 +1,9 @@
 (ns geometry.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
+  (:require ["react" :as react]
             [geometry.components :as c]
-            [geometry.geometry :as g]))
+            [geometry.geometry :as g]
+            [reagent.core :as r]
+            [reagent.dom :as rdom]))
 
 (enable-console-print!)
 
@@ -32,19 +33,19 @@
 
 (add-watch points :record record-state)
 
-(defn get-bcr [svg-root]
-  (-> svg-root
-      rdom/dom-node
-      .getBoundingClientRect))
+(defn get-bcr [svg-ref]
+  (.. svg-ref
+      -current
+      getBoundingClientRect))
 
-(defn move-point [svg-root p]
+(defn move-point [svg-ref p]
   (fn [x y]
-    (let [bcr (get-bcr svg-root)]
+    (let [bcr (get-bcr svg-ref)]
       (swap! points assoc p (g/point (- x (.-left bcr)) (- y (.-top bcr)))))))
 
-(defn move-slider [svg-root p]
+(defn move-slider [svg-ref p]
   (fn [x y]
-    (let [new-x (-> (- x (.-left (get-bcr svg-root)))
+    (let [new-x (-> (- x (.-left (get-bcr svg-ref)))
                     (min 500)
                     (max 100))
           position (/ (- new-x 100)
@@ -55,35 +56,37 @@
       (if history-points
         (reset! points history-points)))))
 
-(defn root [svg-root]
+(defn root [svg-ref]
   (let [{:keys [p1 p2 p3 p c]} @points]
     [:g
      [c/triangle p1 p2 p3]
      [c/circle p c]
      [c/segment p c]
      [c/segment (g/point 100 50) (g/point 500 50)]
-     [c/rect {:on-drag (move-slider svg-root :handle)
+     [c/rect {:on-drag (move-slider svg-ref :handle)
               :on-start stop-recording-history
               :on-end start-recording-history} (:handle @slider)]
-     [c/point {:on-drag (move-point svg-root :c)} c]
-     [c/point {:on-drag (move-point svg-root :p)} p]
-     [c/point {:on-drag (move-point svg-root :p1)} p1]
-     [c/point {:on-drag (move-point svg-root :p2)} p2]
-     [c/point {:on-drag (move-point svg-root :p3)} p3]]))
+     [c/point {:on-drag (move-point svg-ref :c)} c]
+     [c/point {:on-drag (move-point svg-ref :p)} p]
+     [c/point {:on-drag (move-point svg-ref :p1)} p1]
+     [c/point {:on-drag (move-point svg-ref :p2)} p2]
+     [c/point {:on-drag (move-point svg-ref :p3)} p3]]))
 
 (defn main [{:keys [width height]}]
-  [:svg
-   {:width (or width 800)
-    :height (or height 600)
-    :style {:border "1px solid black"}}
-   [:text {:style {:-webkit-user-select "none"
-                   :-moz-user-select "none"}
-           :x 20 :y 20 :font-size 20}
-    "The points are draggable and the slider controls history"]
-   [root (r/current-component)]])
+  (let [svg-ref (react/useRef nil)]
+    [:svg
+     {:ref svg-ref
+      :width (or width 800)
+      :height (or height 600)
+      :style {:border "1px solid black"}}
+     [:text {:style {:-webkit-user-select "none"
+                     :-moz-user-select "none"}
+             :x 20 :y 20 :font-size 20}
+      "The points are draggable and the slider controls history"]
+     [root svg-ref]]))
 
 (defn by-id [id]
   (.getElementById js/document id))
 
-(defn ^:export run []
-  (rdom/render [main] (by-id "app")))
+(defn ^:dev/after-load ^:export run []
+  (rdom/render [:f> main] (by-id "app")))

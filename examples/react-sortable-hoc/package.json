@@ -1,0 +1,11 @@
+{
+  "name": "react-context-example",
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-sortable-hoc": "^2.0.0"
+  },
+  "devDependencies": {
+    "shadow-cljs": "2.28.20"
+  }
+}

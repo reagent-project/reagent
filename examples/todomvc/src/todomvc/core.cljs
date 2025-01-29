@@ -126,5 +126,5 @@
          [:footer#info
           [:p "Double-click to edit a todo"]]]))))
 
-(defn ^:export run []
+(defn ^:dev/after-load ^:export run []
   (rdom/render [todo-app] (js/document.getElementById "app")))
