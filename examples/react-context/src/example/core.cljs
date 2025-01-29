@@ -1,9 +1,7 @@
 (ns example.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            [react :as react]
-            [goog.object :as gobj]))
-
+            [react :as react]))
 
 (defonce my-context (react/createContext "default"))
 
