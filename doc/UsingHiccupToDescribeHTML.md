@@ -8,6 +8,8 @@ Reagent uses a datastructure known as Hiccup to describe HTML. Hiccup describes 
   [:p "I'm the second child element."]]
 ```
 
+NOTE: Also check [Security](./Security.md) for some effects of using data to create React elements.
+
 As described below, reagent provides a number of extensions and conveniences to Hiccup, but the general rules of Hiccup are as follows:
 
 1. The first element is either a keyword or a symbol
