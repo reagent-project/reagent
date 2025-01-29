@@ -520,7 +520,14 @@
 
 (set! batch/ratom-flush flush!)
 
-(defn make-reaction [f & {:keys [auto-run on-set on-dispose]}]
+(defn make-reaction
+  "Creates a Reaction from a function.
+
+  - :auto-run - starts running the reaction immediately, and runs again when
+  atoms deferenced in the function change.
+  - :on-set - runs when reaction value is updated, before notifying watchers.
+  - :on-dispose - runs when the reaction is disposed."
+  [f & {:keys [auto-run on-set on-dispose]}]
   (let [reaction (->Reaction f nil true false nil nil nil nil)]
     (._set-opts reaction {:auto-run auto-run
                           :on-set on-set

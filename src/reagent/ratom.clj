@@ -5,15 +5,21 @@
 
 ;; Note: this macro is duplicated in reagent.core,
 ;; with a docstring.
-(defmacro reaction [& body]
+(defmacro reaction
+  "Prefer using reagent.core/reaction."
+  [& body]
   `(reagent.ratom/make-reaction
     (fn [] ~@body)))
 
 (defmacro run!
-  "Runs body immediately, and runs again whenever atoms deferenced in the body change. Body should side effect."
+  "Creates a Reaction from the body, and runs the body immediately
+  and again whenever atoms deferenced in the body
+  change. Body should side effect.
+
+  Use dispose! to stop running the Reaction."
   [& body]
   `(let [co# (reagent.ratom/make-reaction (fn [] ~@body)
-                                         :auto-run true)]
+                                          :auto-run true)]
      (deref co#)
      co#))
 
