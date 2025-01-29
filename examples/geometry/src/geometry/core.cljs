@@ -93,5 +93,5 @@
 (defn by-id [id]
   (.getElementById js/document id))
 
-(defn ^:dev/after-load ^:export run []
+(defn ^:export run []
   (rdom/render [main] (by-id "app")))

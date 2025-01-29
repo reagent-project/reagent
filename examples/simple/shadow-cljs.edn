@@ -4,6 +4,7 @@
  {:app {:target :browser
         :output-dir "target/public/js"
         :asset-path "/js"
+        :devtools {:after-load simpleexample.core/run}
         :modules {:main {:entries [simpleexample.core]
                          :init-fn simpleexample.core/run}}}}
  :dependencies [[reagent "1.2.0"]]}
