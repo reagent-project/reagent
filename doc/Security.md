@@ -23,7 +23,7 @@ responses.
 Because Reagent deals directly with Clojure data structures, it is perfectly
 valid to build a value somewhere that contains Hiccup, which Reagent will then
 turn into React elements. Unfortunately, this also means it is possible to
-construct these values **if** your API or data source allows representing
+construct these Hiccup values **IF** your API or data source allows representing
 keywords—such as EDN and Transit data.
 
 ```cljs
@@ -75,9 +75,11 @@ or do not use Hiccup ([UIx](https://github.com/pitch-io/uix), [Helix](https://gi
 ### Workarounds
 
 - Wrap data from external sources in `str` calls.
-- Walk over response data and remove all `:dangerouslySetInnerHTML` keys. **This is slow**
+- Walk over response data and remove all `:dangerouslySetInnerHTML` properties. **This is slow**
   and may not prevent all attacks, as modifications can still occur via `:style` maps
   and other properties.
+- Use JSON format in APIs, it isn't usually possible to represent Hiccup forms in JSON.
+- Validate API responses against schema
 
 ### Why a Generic Fix Is Not Possible
 
