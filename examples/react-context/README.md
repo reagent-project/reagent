@@ -1,3 +1,3 @@
 # React Context
 
-`npx shadow-cljs watch client`
+`npx shadow-cljs watch app`

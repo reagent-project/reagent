@@ -1,8 +1,8 @@
 {:source-paths ["src"]
  :dev-http {3000 ["resources/public" "target/public"]}
  :builds
- {:client {:target :browser
-           :output-dir "target/public/js"
-           :asset-path "/js"
-           :modules {:main {:entries [example.core]}}}}
+ {:app {:target :browser
+        :output-dir "target/public/js"
+        :asset-path "/js"
+        :modules {:main {:entries [example.core]}}}}
  :dependencies [[reagent "1.2.0"]]}

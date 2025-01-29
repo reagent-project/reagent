@@ -103,7 +103,7 @@
                                      (r/create-element mui/TextField params))}]])
 
 ;; Props in cljs but classes in JS object
-(defn form [{:keys [classes] :as props}]
+(defn form [{:keys [^js classes] :as props}]
   [:> mui/Grid
    {:container true
     :direction "column"
