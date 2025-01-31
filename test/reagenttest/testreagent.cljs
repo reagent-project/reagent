@@ -308,7 +308,7 @@
          (as-string [:div.bar [:p "foo"]])))
   (is (= "<div class=\"bar\"><p>foobar</p></div>"
          (as-string [:div.bar {:dangerously-set-inner-HTML
-                               {:__html "<p>foobar</p>"}}]))))
+                               (r/unsafe-html "<p>foobar</p>")}]))))
 
 (u/deftest ^:dom test-return-class
   (let [ran (atom 0)
@@ -1525,3 +1525,12 @@
                                     16))))
                [really-simple]]
               u/fn-compiler)))))))
+
+(u/deftest test-unsafe-html
+  (testing "Regular value is ignored"
+    (is (= "<div></div>"
+           (as-string (r/as-element [:div {:dangerouslySetInnerHTML {:__html "<img/>"}}])))))
+
+  (testing "Tagged value is allowed"
+    (is (= "<div><img/></div>"
+           (as-string (r/as-element [:div {:dangerouslySetInnerHTML (r/unsafe-html "<img/>")}]))))))

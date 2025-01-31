@@ -372,3 +372,13 @@
    :superseded-by "reagent.dom/render"}
   [& _]
   (throw (js/Error. "Reagent.core/render function was moved to reagent.dom namespace in Reagent v1.0.")))
+
+(defn unsafe-html
+  "Create a tagged value for use with :dangerouslySetInnerHTML. Reagent doesn't
+  allow other values to be used with the property, to ensure data from external
+  sources (using EDN or Transit) can't be used to accidentally create arbitrary
+  HTML.
+
+  See doc/Security.md"
+  [s]
+  (tmpl/UnsafeHTML. s))
