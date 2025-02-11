@@ -41,7 +41,7 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 And provide React using either npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
 ```
-npm i react react-dom
+npm i react react-dom@18.3.1 react@18.3.1
 ```
 
 or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
@@ -52,7 +52,7 @@ or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
 ```
 
 Note: Reagent is tested against React 17, but should be compatible with other
-versions.
+versions. It is not compatible with React 19
 
 ## Examples
 
