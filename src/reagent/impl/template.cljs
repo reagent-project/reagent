@@ -9,6 +9,8 @@
             [reagent.debug :refer-macros [dev? warn]]
             [goog.object :as gobj]))
 
+(deftype UnsafeHTML [s])
+
 ;; From Weavejester's Hiccup, via pump:
 (def ^{:doc "Regular expression that parses a CSS-style id and class
              from a tag name."}
@@ -118,10 +120,16 @@
   (let [class (:class props)
         props (-> props
                   (cond-> class (assoc :class (util/class-names class)))
-                  (set-id-class id-class))]
-    (if (.-custom id-class)
-      (convert-custom-prop-value props)
-      (convert-prop-value props))))
+                  (set-id-class id-class))
+        ^js js-props (if (.-custom id-class)
+                       (convert-custom-prop-value props)
+                       (convert-prop-value props))]
+    ;; Ensure only tagged values are used for dangerouslySetInnerHTML
+    (when-let [d (and js-props (.-dangerouslySetInnerHTML js-props))]
+      (if (instance? UnsafeHTML d)
+        (set! (.-dangerouslySetInnerHTML js-props) #js {:__html (.-s d)})
+        (js-delete js-props "dangerouslySetInnerHTML")))
+    js-props))
 
 ;;; Conversion from Hiccup forms
 
