@@ -2,7 +2,6 @@
 
 [![Run tests](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml/badge.svg)](https://github.com/reagent-project/reagent/actions/workflows/clojure.yml)
 [![Clojars Project](https://img.shields.io/clojars/v/reagent.svg)](https://clojars.org/reagent)
-[![codecov](https://codecov.io/gh/reagent-project/reagent/branch/master/graph/badge.svg)](https://codecov.io/gh/reagent-project/reagent)
 [![cljdoc badge](https://cljdoc.org/badge/reagent/reagent)](https://cljdoc.org/d/reagent/reagent/CURRENT)
 [![project chat](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C0620C0C8)
 
