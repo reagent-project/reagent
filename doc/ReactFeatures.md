@@ -317,3 +317,13 @@ in a RAtom (or state hook.)
     {:fallback (r/as-element [:div "loading"])}
     [slow-component]]])
 ```
+
+## [DangerouslySetInnerHTML](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html)
+
+Use `reagent.core/unsafe-html` to wrap the values.
+
+```clj
+[:div {:dangerouslySetInnerHTML (r/unsafe-html "<img .../>")}]
+```
+
+See [Security](./Security.md)
