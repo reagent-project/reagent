@@ -1,7 +1,7 @@
 (ns simpleexample.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]))
 
 (defonce timer (r/atom (js/Date.)))
 
@@ -32,5 +32,7 @@
    [clock]
    [color-input]])
 
+(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
+
 (defn ^:export run []
-  (rdom/render [simple-example] (js/document.getElementById "app")))
+  (rdomc/render @root [simple-example]))

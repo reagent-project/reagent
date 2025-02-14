@@ -1,8 +1,8 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [reagentdemo.syntax :as s]
+            [reagent.dom.client :as rdomc]
             [reagentdemo.common :as common :refer [demo-component]]
+            [reagentdemo.syntax :as s]
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))
 
@@ -61,11 +61,6 @@
       (js/setTimeout #(swap! seconds-elapsed inc) 1000)
       [:div
        "Seconds Elapsed: " @seconds-elapsed])))
-
-(defn render-simple []
-  (rdom/render
-    [simple-component]
-    (.-body js/document)))
 
 (defn calc-bmi [{:keys [height weight bmi] :as data}]
   (let [h (/ height 100)]

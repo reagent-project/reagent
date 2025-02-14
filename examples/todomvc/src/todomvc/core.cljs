@@ -1,8 +1,8 @@
 (ns todomvc.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            ["react" :as react]
-            [clojure.string :as str]))
+  (:require ["react" :as react]
+            [clojure.string :as str]
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]))
 
 (defonce todos (r/atom (sorted-map)))
 
@@ -126,5 +126,7 @@
          [:footer#info
           [:p "Double-click to edit a todo"]]]))))
 
+(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
+
 (defn ^:export run []
-  (rdom/render [todo-app] (js/document.getElementById "app")))
+  (rdomc/render @root [todo-app]))
