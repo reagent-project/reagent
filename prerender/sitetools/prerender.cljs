@@ -18,7 +18,7 @@
     (->> "../" (repeat depth) (apply str))))
 
 (defn danger [t s]
-  [t {:dangerouslySetInnerHTML {:__html s}}])
+  [t {:dangerouslySetInnerHTML (r/unsafe-html s)}])
 
 (defn add-cache-buster [resource-path path]
   (let [h (md5-file/sync (path/join resource-path path))]
