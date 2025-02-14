@@ -74,10 +74,12 @@ or do not use Hiccup ([UIx](https://github.com/pitch-io/uix), [Helix](https://gi
 
 ### Workarounds
 
+- **Reagent 1.3.0+**: `:dangerouslySetInnerHTML` values must be created using `reagent.core/unsafe-html`
+  function which tags them using a type, that can't be used accidentally from Transit and EDN
+    - Other attributes, like `:style` can still be potentially dangerous, as there are
+      many attributes that can be used what the page looks like.
+    - (Representing these values in Transit or EDN would require custom tag and reader configuration.)
 - Wrap data from external sources in `str` calls.
-- Walk over response data and remove all `:dangerouslySetInnerHTML` properties. **This is slow**
-  and may not prevent all attacks, as modifications can still occur via `:style` maps
-  and other properties.
 - Use JSON format in APIs, it isn't usually possible to represent Hiccup forms in JSON.
 - Validate API responses against schema
 
