@@ -7,9 +7,9 @@
 ### Features and changes
 
 - **Breaking IF you use `:dangerouslySetInnerHTML`** instead of `{:__html "..."}`
-you now need to use `reagent.core/unsafe-html` to tag these html values which
-will be placed as-is into DOM. See [Security](./doc/Security.md) for the reasoning
-for this change.
+you now need to use `reagent.core/unsafe-html` to tag these html strings which
+will be placed as-is into DOM, or Reagent will ignore the value.
+See [Security](./doc/Security.md) for the reasoning for this change.
 - Added `IWithMeta` and `IMeta` to `RCursor` ([#562](https://github.com/reagent-project/reagent/pull/562))
 - [Examples](./examples/) now use Shadow-cljs
 - Extended docstrings for `reaction`, `make-reaction` and `run!`
