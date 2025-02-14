@@ -46,11 +46,12 @@ npm i react react-dom@18.3.1 react@18.3.1
 or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
 
 ```
-[cljsjs/react "17.0.2-0"]
-[cljsjs/react-dom "17.0.2-0"]
+[cljsjs/react "13.3.1-1"]
+[cljsjs/react-dom "18.3.1-1"]
 ```
 
-Note: Reagent is tested against React 17, but should be compatible with other
+Note: Reagent is tested against React 18, using the compatibility mode (i.e.,
+not using `createRoot` / concurrent mode), but should be compatible with other
 versions. It is not compatible with React 19
 
 ## Examples
