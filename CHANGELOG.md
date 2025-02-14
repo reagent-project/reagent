@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.2.0...master)**
+
+### Features and changes
+
+- **Breaking IF you use `:dangerouslySetInnerHTML`** instead of `{:__html "..."}`
+you now need to use `reagent.core/unsafe-html` to tag these html values which
+will be placed as-is into DOM. See [Security](./doc/Security.md) for the reasoning
+for this change.
+- Added `IWithMeta` and `IMeta` to `RCursor` ([#562](https://github.com/reagent-project/reagent/pull/562))
+- [Examples](./examples/) now use Shadow-cljs
+- Extended docstrings for `reaction`, `make-reaction` and `run!`
+- Expose Clj-kondo library config ([#614](https://github.com/reagent-project/reagent/pull/614))
+    - This maps `reagent.core/with-let` to work like `clojure.core/let`
+
 ## 1.2.0 (2023-02-16)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.1.1...v1.2.0)**
