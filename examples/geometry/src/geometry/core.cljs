@@ -3,7 +3,7 @@
             [geometry.components :as c]
             [geometry.geometry :as g]
             [reagent.core :as r]
-            [reagent.dom :as rdom]))
+            [reagent.dom.client :as rdomc]))
 
 (enable-console-print!)
 
@@ -90,8 +90,7 @@
   [props]
   [:f> main* props])
 
-(defn by-id [id]
-  (.getElementById js/document id))
+(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
 (defn ^:export run []
-  (rdom/render [main] (by-id "app")))
+  (rdomc/render @root [main]))
