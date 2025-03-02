@@ -6,5 +6,5 @@
         :asset-path "/js"
         :devtools {:after-load geometry.core/run}
         :modules {:main {:entries [geometry.core]
-                         :init-fn geometry.core}}}}
+                         :init-fn geometry.core/run}}}}
  :dependencies [[reagent "1.2.0"]]}
