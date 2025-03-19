@@ -12,7 +12,8 @@
                     ["React Features" {:file "doc/ReactFeatures.md"}]
                     ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
                     ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
-                    ["React Renderers" {:file "doc/ReactRenderers.md"}]]
+                    ["React Renderers" {:file "doc/ReactRenderers.md"}]
+                    ["Server Side Rendering" {:file "doc/ServerSideRendering.md"}]]
                    ["Frequently Asked Questions" {}
                     ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
                     ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]

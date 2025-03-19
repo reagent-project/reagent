@@ -228,7 +228,9 @@ as properties into the React function component.
     (react-dom/createPortal (r/as-element [:div "foo"]) el)))
 ```
 
-## [Server-Side Rendering (SSR)](https://react.dev/reference/react-dom/server/renderToString)
+## [Server-Side Rendering (SSR)](https://react.dev/reference/react-dom/server)
+
+See [Server Side Rendering](./ServerSideRendering.md)
 
 ```cljs
 (reagent.dom.server/render-to-string
