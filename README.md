@@ -54,9 +54,11 @@ Note: Reagent is tested against React 18, using the compatibility mode (i.e.,
 not using `createRoot` / concurrent mode), but should be compatible with other
 versions. It is not compatible with React 19
 
+Reagent isn't tied to only React-dom but should work with [other renderers](./doc/ReactRenderers.md) also.
+
 ## Examples
 
-Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead of React's sort-of html. It looks like this:
+Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead of JSX. It looks like this:
 
 ```clj
 (defn some-component []
@@ -66,20 +68,6 @@ Reagent uses [Hiccup-like](https://github.com/weavejester/hiccup) markup instead
     "I have " [:strong "bold"]
     [:span {:style {:color "red"}} " and red"]
     " text."]])
-```
-
-Reagent extends standard Hiccup in one way: it is possible to "squeeze" elements together by using a `>` character.
-
-```clj
-[:div
-  [:p
-    [:b "Nested Element"]]]
-```
-
-can be written as:
-
-```clj
-[:div>p>b "Nested Element"]
 ```
 
 > **Since version 0.8:** The `:class` attribute also supports collections of classes, and nil values are removed:
@@ -102,16 +90,15 @@ And pass properties from one component to another:
 (defn child [name]
   [:p "Hi, I am " name])
 
-(defn childcaller []
+(defn parent []
   [child "Foo Bar"])
 ```
 
 You mount the component into the DOM like this:
 
 ```clj
-(defn mountit []
-  (rd/render [childcaller]
-            (.-body js/document)))
+(defn mount-it []
+  (rd/render [parent] (.-body js/document)))
 ```
 
 assuming we have imported Reagent like this:

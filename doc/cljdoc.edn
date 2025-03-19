@@ -1,5 +1,6 @@
 {:cljdoc.api/platforms #{"cljs"}
  :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
+                   ["Security" {:file "doc/Security.md"}]
                    ["Tutorials" {}
                     ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
                     ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
@@ -10,7 +11,8 @@
                     ["Interop with React" {:file "doc/InteropWithReact.md"}]
                     ["React Features" {:file "doc/ReactFeatures.md"}]
                     ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
-                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]]
+                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
+                    ["React Renderers" {:file "doc/ReactRenderers.md"}]]
                    ["Frequently Asked Questions" {}
                     ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
                     ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]
