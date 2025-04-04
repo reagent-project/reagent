@@ -55,12 +55,6 @@
   [container]
   (unmount-comp container))
 
-(defn dom-node
-  "Returns the root DOM node of a mounted component."
-  {:deprecated "1.2.0"}
-  [this]
-  (react-dom/findDOMNode this))
-
 (defn force-update-all
   "Force re-rendering of all mounted Reagent components. This is
   probably only useful in a development environment, when you want to

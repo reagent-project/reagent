@@ -1039,22 +1039,6 @@
           (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
                        (.-componentStack ^js @info))))))))
 
-#_{:clj-kondo/ignore [:deprecated-var]}
-(u/deftest ^:dom test-dom-node
-  (let [node (atom nil)
-        ref (atom nil)
-        comp (r/create-class
-               {:reagent-render (fn test-dom []
-                                  [:div {:ref #(reset! ref %)} "foobar"])
-                :component-did-mount
-                (fn [this]
-                  (reset! node (rdom/dom-node this)))})]
-    (u/async
-      (u/with-render [div [comp]]
-        (is (= "foobar" (.-innerHTML @ref)))
-        (is (= "foobar" (.-innerHTML @node)))
-        (is (identical? @ref @node))))))
-
 (u/deftest test-empty-input
   (is (= "<div><input/></div>"
          (as-string [:div [:input]]))))

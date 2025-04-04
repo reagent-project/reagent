@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...master)**
+
+- Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
+
 ## 1.3.0 (2025-02-14)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.2.0...v1.3.0)**
