@@ -3,6 +3,7 @@
             [clojure.test :as t :refer-macros [is deftest testing]]
             [goog.object :as gobj]
             [goog.string :as gstr]
+            [promesa.core :as p]
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
@@ -781,27 +782,28 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= {:at 1 :args [@t]}
-                       (:initial-state @res)))
-                (is (= {:at 2 :args [@t]}
-                       (:will-mount @res)))
-                (is (= {:at 3 :args ["a" "b"]}
-                       (:render @res)))
-                (is (= {:at 4 :args [@t]}
-                       (:did-mount @res)))
+                (p/do
+                  (is (= {:at 1 :args [@t]}
+                         (:initial-state @res)))
+                  (is (= {:at 2 :args [@t]}
+                         (:will-mount @res)))
+                  (is (= {:at 3 :args ["a" "b"]}
+                         (:render @res)))
+                  (is (= {:at 4 :args [@t]}
+                         (:did-mount @res)))
 
-                (u/act (reset! arg ["a" "c"]))
+                  (u/act (reset! arg ["a" "c"]))
 
-                (is (= {:at 5 :args [@t [@comp "a" "c"]]}
-                       (:will-receive @res)))
-                (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
-                       (:should-update @res)))
-                (is (= {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}
-                       (:will-update @res)))
-                (is (= {:at 8 :args ["a" "c"]}
-                       (:render @res)))
-                (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
-                       (:did-update @res))))]
+                  (is (= {:at 5 :args [@t [@comp "a" "c"]]}
+                         (:will-receive @res)))
+                  (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
+                         (:should-update @res)))
+                  (is (= {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}
+                         (:will-update @res)))
+                  (is (= {:at 8 :args ["a" "c"]}
+                         (:render @res)))
+                  (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
+                         (:did-update @res)))))]
     (u/async
       (u/with-render [_div [c2]]
         {:compiler u/*test-compiler*}
@@ -885,38 +887,39 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= {:at 1 :args [@t]}
-                       (:initial-state @res)))
-                (is (= {:at 2 :args [@t]}
-                       (:will-mount @res)))
-                (is (= {:at 3 :args [[:children ["a" "b"]]]}
-                       (:render @res)))
-                (is (= {:at 4 :args [@t]}
-                       (:did-mount @res)))
+                (p/do
+                  (is (= {:at 1 :args [@t]}
+                         (:initial-state @res)))
+                  (is (= {:at 2 :args [@t]}
+                         (:will-mount @res)))
+                  (is (= {:at 3 :args [[:children ["a" "b"]]]}
+                         (:render @res)))
+                  (is (= {:at 4 :args [@t]}
+                         (:did-mount @res)))
 
-                (u/act (reset! arg [{:f "oo"} "a" "c"]))
+                  (u/act (reset! arg [{:f "oo"} "a" "c"]))
 
-                (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
-                       (:will-receive @res)))
-                (let [a (:should-update @res)
-                      {at :at
-                       [this oldv newv] :args} a]
-                  (is (= 6 at))
-                  (is (= 3 (count (:args a))))
-                  (is (= (js->clj [@comp @oldprops]) (js->clj oldv)))
-                  (is (= [@comp @newprops] newv)))
-                (let [a (:will-update @res)
-                      {at :at
-                       [this newv] :args} a]
-                  (is (= 7 at))
-                  (is (= [@comp @newprops] newv)))
-                (is (= {:at 8 :args [[:children ["a" "c"]]]}
-                       (:render @res)))
-                (let [a (:did-update @res)
-                      {at :at
-                       [this oldv] :args} a]
-                  (is (= 9 at))
-                  (is (= [@comp @oldprops] oldv))))]
+                  (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
+                         (:will-receive @res)))
+                  (let [a (:should-update @res)
+                        {at :at
+                         [this oldv newv] :args} a]
+                    (is (= 6 at))
+                    (is (= 3 (count (:args a))))
+                    (is (= (js->clj [@comp @oldprops]) (js->clj oldv)))
+                    (is (= [@comp @newprops] newv)))
+                  (let [a (:will-update @res)
+                        {at :at
+                         [this newv] :args} a]
+                    (is (= 7 at))
+                    (is (= [@comp @newprops] newv)))
+                  (is (= {:at 8 :args [[:children ["a" "c"]]]}
+                         (:render @res)))
+                  (let [a (:did-update @res)
+                        {at :at
+                         [this oldv] :args} a]
+                    (is (= 9 at))
+                    (is (= [@comp @oldprops] oldv)))))]
     (u/async
       (u/with-render [_div [cnative]]
         (check))
