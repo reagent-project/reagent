@@ -1073,8 +1073,8 @@
                   @state]))]
     (u/async
       (u/with-render [div [comp]]
-        ;; after-render was already called after the initial render
-        (is (= 1 @spy))
+        (testing "after-render was already called after the initial render"
+          (is (= 1 @spy)))
 
         (u/act (swap! state inc))
 
@@ -1084,23 +1084,25 @@
         (r/next-tick #(swap! val inc))
         (reset! exp 1)
 
-        ;; After waiting for render, the next-tick update has also happened
         (u/act nil)
 
-        (is (= 1 @val))
-        (is (= 2 @spy))
+        (testing "After waiting for render, the next-tick update has also happened"
+          (is (= 1 @val))
+          (is (= 2 @spy)))
 
-        ;; Now if we force render directly, spy is also updated from after-render callback
         (r/force-update @component-instance)
-        (is (= 3 @spy))
-
-        ;; next-tick callback isn't called right away,
-        (r/next-tick #(reset! spy 0))
-        (is (= 3 @spy))
-
-        ;; the update is run when waiting for the component to finish rendering
+        ;; Have to wait for React batching to be cleared?
         (u/act nil)
-        (is (= 0 @spy)))
+        (testing "Now if we force render directly, spy is also updated from after-render callback"
+          (is (= 3 @spy)))
+
+        (r/next-tick #(reset! spy 0))
+        (testing "next-tick callback isn't called right away,"
+          (is (= 3 @spy)))
+
+        (u/act nil)
+        (testing "the update is run when waiting for the component to finish rendering"
+          (is (= 0 @spy))))
       (is (= nil @node)))))
 
 (u/deftest style-property-names-are-camel-cased
