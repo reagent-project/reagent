@@ -1010,19 +1010,24 @@
                        (-> e :warn first))))))))
 
 (u/deftest ^:dom test-error-boundary
-  (let [error (r/atom nil)
-        info (r/atom nil)
+  (let [error (atom nil)
+        info (atom nil)
+        ;; Seems like component-did-catch works correctly only if the
+        ;; component STATE is updated? Not if error state is stored in a ratom.
         error-boundary (fn error-boundary [comp]
                          (r/create-class
-                           {:component-did-catch (fn [this e i]
+                           {:constructor (fn [this _props]
+                                           (set! (.-state this) #js {:didCatch false}))
+                            :component-did-catch (fn [this e i]
                                                    (reset! info i))
                             :get-derived-state-from-error (fn [e]
                                                             (reset! error e)
-                                                            #js {})
+                                                            #js {:didCatch true})
                             :reagent-render (fn [comp]
-                                              (if @error
-                                                [:div "Something went wrong."]
-                                                comp))}))
+                                              (let [^js this (r/current-component)]
+                                                (if (.-didCatch (.-state this))
+                                                  [:div "Something went wrong."]
+                                                  comp)))}))
         comp1 (fn comp1 []
                 (throw (js/Error. "Test error")))
         comp2 (fn comp2 []

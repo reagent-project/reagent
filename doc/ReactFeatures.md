@@ -98,6 +98,9 @@ Tests contain example of using old React lifecycle Context API (`context-wrapper
 
 You can use `getDerivedStateFromError` (since React 16.6.0 and Reagent 0.9) (and `ComponentDidCatch`) lifecycle method with `create-class`:
 
+FIXME: React 18 Concurrent Mode / React 19: It looks like component-did-catch
+only works if get-derived-state-from-error modifies component React state?
+
 ```cljs
 (defn error-boundary [comp]
   (let [error (r/atom nil)]
