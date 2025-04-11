@@ -9,8 +9,10 @@
 
 (defn create-root
   "Create a React Root connected to given container DOM element."
-  [container]
-  (react-dom-client/createRoot container))
+  ([container]
+   (react-dom-client/createRoot container))
+  ([container options]
+   (react-dom-client/createRoot container options)))
 
 (defn unmount
   "Unmount the given React Root"

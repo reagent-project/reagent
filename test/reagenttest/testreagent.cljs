@@ -623,13 +623,16 @@
         (is (= {:v1 1 :v2 1} @v))
 
         (u/act (r/force-update (:c2 @comps)))
-        (is (= {:v1 1 :v2 2} @v))
+        (testing "shallow parent force-update only renders the parent"
+          (is (= {:v1 1 :v2 2} @v)))
 
         (u/act (r/force-update (:c1 @comps)))
-        (is (= {:v1 2 :v2 2} @v))
+        (testing "shallow children force-update onlt renders the children"
+          (is (= {:v1 2 :v2 2} @v)))
 
         (u/act (r/force-update (:c2 @comps) true))
-        (is (= {:v1 3 :v2 3} @v)))
+        (testing "deep parent force-update also triggers children render"
+          (is (= {:v1 3 :v2 3} @v))))
 
       (u/with-render [div [c3]]
         (is (= 0 @spy))

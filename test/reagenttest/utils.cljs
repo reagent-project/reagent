@@ -85,7 +85,7 @@
   [f]
   ;; async act doesn't return a real promise (with chainable then),
   ;; so wrap it.
-  (if (dev?)
+  (if (and false (dev?))
     (js/Promise.
       (fn [resolve reject]
         (try
