@@ -993,16 +993,24 @@
           ;; The render call itself throws the exception
           (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                             (first (:error @reagent.debug/warnings))))
-          (is (safe-re-find #"(The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]|An error occurred in the <reagenttest\.testreagent\.comp1> component\.)"
-                            (first (:warn @reagent.debug/warnings))))
+          ;; React 19 only writes out one error, other message is warnings
+          ;; React 18 has multiple errors
+          (if (= 1 (count (:error @reagent.debug/warnings)))
+            (is (safe-re-find #"An error occurred in the <reagenttest\.testreagent\.comp1> component\."
+                              (first (:warn @reagent.debug/warnings))))
+            (is (safe-re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]"
+                              (second (:error @reagent.debug/warnings)))))
           nil)
 
         (u/with-render [div [comp1 [:div. "foo"]]]
           {:capture-errors true}
           (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
                             (first (:error @reagent.debug/warnings))))
-          (is (safe-re-find #"(The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]|An error occurred in the <reagenttest\.testreagent\.comp1> component\.)"
-                            (first (:warn @reagent.debug/warnings))))
+          (if (= 1 (count (:error @reagent.debug/warnings)))
+            (is (safe-re-find #"An error occurred in the <reagenttest\.testreagent\.comp1> component\."
+                              (first (:warn @reagent.debug/warnings))))
+            (is (safe-re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]"
+                              (second (:error @reagent.debug/warnings)))))
           nil)
 
         (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
