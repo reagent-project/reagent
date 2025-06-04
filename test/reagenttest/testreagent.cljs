@@ -1035,12 +1035,18 @@
         error-boundary (fn error-boundary [comp]
                          (r/create-class
                            {:constructor (fn [this _props]
-                                           (set! (.-state this) #js {:didCatch false}))
+                                           (let [o #js {}]
+                                             ;; Use property access, same as in reagent-render so Closure optimization works for both
+                                             ;; property set and access?
+                                             (set! (.-didCatch o) false)
+                                             (set! (.-state this) o)))
                             :component-did-catch (fn [this e i]
                                                    (reset! info i))
                             :get-derived-state-from-error (fn [e]
                                                             (reset! error e)
-                                                            #js {:didCatch true})
+                                                            (let [o #js {}]
+                                                              (set! (.-didCatch o) true)
+                                                              o))
                             :reagent-render (fn [comp]
                                               (let [^js this (r/current-component)]
                                                 (if (.-didCatch (.-state this))
@@ -1300,9 +1306,13 @@
   (let [prop (r/atom 0)
         component (r/create-class
                     {:constructor (fn [this props]
-                                    (set! (.-state this) #js {:hasError false}))
+                                    (let [o #js {}]
+                                      (set! (.-hasError o) false)
+                                      (set! (.-state this) o)))
                      :get-derived-state-from-error (fn [error]
-                                                     #js {:hasError true})
+                                                     (let [o #js {}]
+                                                       (set! (.-hasError o) true)
+                                                       o))
                      :component-did-catch (fn [this e info])
                      :render (fn [^js/React.Component this]
                                (r/as-element (if (.-hasError (.-state this))
