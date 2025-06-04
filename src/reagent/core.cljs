@@ -150,7 +150,7 @@
   "Force a component to re-render immediately.
 
   If the second argument is true, child components will also be
-  re-rendered, even is their arguments have not changed."
+  re-rendered, even if their arguments have not changed."
   ([this]
    (force-update this false))
   ([this deep]

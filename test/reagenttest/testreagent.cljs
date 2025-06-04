@@ -601,15 +601,15 @@
 
 ;; Class component only
 (deftest ^:dom test-force-update
-  (let [v (atom {:v1 0
-                 :v2 0})
+  (let [renders (atom {:c1 0
+                       :c2 0})
         comps (atom {})
         c1 (fn []
              (swap! comps assoc :c1 (r/current-component))
-             [:p "" (swap! v update-in [:v1] inc)])
+             [:p "" (swap! renders update-in [:c1] inc)])
         c2 (fn []
              (swap! comps assoc :c2 (r/current-component))
-             [:div "" (swap! v update-in [:v2] inc)
+             [:div "" (swap! renders update-in [:c2] inc)
               [c1]])
         state (r/atom 0)
         spy (r/atom 0)
@@ -620,19 +620,19 @@
              [:div "" (reset! spy @(r/track t1))])]
     (u/async
       (u/with-render [div [c2]]
-        (is (= {:v1 1 :v2 1} @v))
+        (is (= {:c1 1 :c2 1} @renders))
 
         (u/act (r/force-update (:c2 @comps)))
         (testing "shallow parent force-update only renders the parent"
-          (is (= {:v1 1 :v2 2} @v)))
+          (is (= {:c1 1 :c2 2} @renders)))
 
         (u/act (r/force-update (:c1 @comps)))
-        (testing "shallow children force-update onlt renders the children"
-          (is (= {:v1 2 :v2 2} @v)))
+        (testing "shallow children force-update only renders the children"
+          (is (= {:c1 2 :c2 2} @renders)))
 
         (u/act (r/force-update (:c2 @comps) true))
         (testing "deep parent force-update also triggers children render"
-          (is (= {:v1 3 :v2 3} @v))))
+          (is (= {:c1 3 :c2 3} @renders))))
 
       (u/with-render [div [c3]]
         (is (= 0 @spy))
