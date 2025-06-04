@@ -37,6 +37,9 @@
 (defn log-error [& f]
   (debug/error (apply str f)))
 
+(defn log-warning [& f]
+  (debug/warn (apply str f)))
+
 ;; "Regular versions"
 
 (defn wrap-capture-console-error [f]
@@ -50,11 +53,13 @@
 
 (defn init-capture []
   (let [org-console js/console.error
+        org-console-warn js/console.warn
         org-window js/window.onerror
         l (fn [e]
             (log-error e))]
     ;; console.error
     (set! js/console.error log-error)
+    (set! js/console.warn log-warning)
     ;; reagent.debug
     (set! debug/tracking true)
     (reset! debug/warnings nil)
@@ -67,6 +72,7 @@
         (.on process "uncaughtException" l)))
     (fn []
       (set! js/console.error org-console)
+      (set! js/console.warn org-console-warn)
       (reset! debug/warnings nil)
       (set! debug/tracking false)
       (if (exists? js/window)
@@ -111,8 +117,6 @@
           (catch :default e
             (reject e)))))))
 
-(def ^:dynamic *render-error* nil)
-
 (defn with-render*
   "Run initial render with React/act and then run
   given function to check the results. If the function
@@ -134,31 +138,13 @@
          ;; with-render body.
          render-error (atom nil)]
      (-> (act* (fn []
-                 (try
-                   (if compiler
-                     (rdomc/render root comp compiler)
-                     (rdomc/render root comp))
-                   (catch :default e
-                     (js/console.log "CATCH RENDER CALL" e)
-                     (reset! render-error e)
-                     nil))))
-         (p/catch (fn [e]
-                    (js/console.log "CATCH RENDER?" e)
-                    (reset! render-error e)
-                    (p/resolved nil)))
+                 (if compiler
+                   (rdomc/render root comp compiler)
+                   (rdomc/render root comp))))
          ;; The callback is called even if render throws an error,
          ;; so this is always resolved.
          (p/then (fn []
-                   (p/do
-                     (set! *render-error* @render-error)
-                     (f div)
-                     (set! *render-error* nil))))
-         ;; If f throws more errors, just ignore them?
-         ;; Not sure if this makes sense.
-         ;; TODO: Might need to catch the errors here? Maybe
-         (p/catch (fn [e]
-                    (js/console.log "CATCH2 RENDER?" e)
-                    nil))
+                   (f div)))
          (p/then (fn []
                    (.unmount root)
                    ;; Need to wait for reagent tick after unmount

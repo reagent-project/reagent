@@ -932,6 +932,11 @@
 (defn foo []
   [:div])
 
+(defn safe-re-find [re s]
+  (if (string? s)
+    (re-find re s)
+    false))
+
 (u/deftest ^:dom test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
@@ -986,31 +991,33 @@
         (u/with-render [div [comp2 [:div. "foo"]]]
           {:capture-errors true}
           ;; The render call itself throws the exception
-          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
-          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                            (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"(The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]|An error occurred in the <reagenttest\.testreagent\.comp1> component\.)"
+                            (first (:warn @reagent.debug/warnings))))
           nil)
 
         (u/with-render [div [comp1 [:div. "foo"]]]
           {:capture-errors true}
-          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
-          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                            (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"(The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]|An error occurred in the <reagenttest\.testreagent\.comp1> component\.)"
+                            (first (:warn @reagent.debug/warnings))))
           nil)
 
         (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
-          (is (re-find #"Using native React classes directly"
-                       (-> e :warn first))))
+          (is (safe-re-find #"Using native React classes directly"
+                            (-> e :warn first))))
 
         (u/with-render [div [comp3]]
           {:capture-errors true}
-          (is (re-find #"Reactive deref not supported"
-                       (-> @reagent.debug/warnings :warn first))))
+          (is (safe-re-find #"Reactive deref not supported"
+                            (-> @reagent.debug/warnings :warn first))))
 
         (let [e (debug/track-warnings
                   #(r/as-element (comp4) compiler))]
-          (is (re-find #"Every element in a seq should have a unique :key"
-                       (-> e :warn first))))))))
+          (is (safe-re-find #"Every element in a seq should have a unique :key"
+                            (-> e :warn first))))))))
 
 (u/deftest ^:dom test-error-boundary
   (let [error (atom nil)
