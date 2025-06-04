@@ -1092,6 +1092,8 @@
           (is (= 1 @spy)))
 
         (u/act (swap! state inc))
+        ;; FIXME: Sometimes this case fails without this additional wait?
+        (u/act :FIXME)
 
         (is (= 2 @spy))
 
@@ -1332,6 +1334,7 @@
         (.appendChild js/document.body div)
         (is (= "foo" (.-innerText div)))
         (u/act (swap! prop inc))
+        ;; (p/delay 16)
         (is (= {:height 20} @did-update))
         (.removeChild js/document.body div)))))
 
@@ -1352,6 +1355,8 @@
       (u/with-render [div [c]]
         (is (= 1 @render))
         (u/act (reset! val 1))
+        ;; FIXME: Sometimes this case fails without this additional wait?
+        (u/act :FIXME)
         (is (= 2 @render))
         (u/act (reset! val 0))
         (is (= 3 @render))))))
