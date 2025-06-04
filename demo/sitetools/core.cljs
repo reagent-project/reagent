@@ -120,4 +120,5 @@
       ;; Enable StrictMode to warn about e.g. findDOMNode
       ;; NOTE: timer-component will go forward 2 seconds at a time, because the
       ;; render fn will be called twice and it will register two timeouts.
-      (rdomc/render @react-root [:> react/StrictMode {} body]))))
+      ; (rdomc/render @react-root [:> react/StrictMode {} body])
+      (rdomc/render @react-root body))))
