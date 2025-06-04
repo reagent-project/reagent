@@ -1170,8 +1170,8 @@
   (testing "Fragment as array"
     (let [compiler u/*test-compiler*
           comp (fn comp1 []
-                 #js [(r/as-element [:div "hello"] compiler)
-                      (r/as-element [:div "world"] compiler)])]
+                 #js [(r/as-element [:div {:key 1} "hello"] compiler)
+                      (r/as-element [:div {:key 2} "world"] compiler)])]
       (is (= "<div>hello</div><div>world</div>"
              (as-string [comp]))))))
 
