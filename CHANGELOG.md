@@ -2,7 +2,11 @@
 
 ## 2.0.0-alpha1 (2025-06-24)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...v2.0.0-alpha1)**
+
+Initial release for testing with React 19. Tested on the examples projects and
+two customer projects (not thoroughly yet). It is not yet clear many
+additional changes or features will be included before final release.
 
 - Tests are now running against React 19 using new `react-dom/client` API,
   meaning the React Concurrent Mode is enabled
