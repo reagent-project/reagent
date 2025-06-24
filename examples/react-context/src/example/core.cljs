@@ -1,7 +1,7 @@
 (ns example.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [react :as react]))
+  (:require [react :as react]
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]))
 
 (defonce my-context (react/createContext "default"))
 
@@ -13,7 +13,7 @@
    (fn [v]
      (r/as-element [:div "Context: " (pr-str v)]))])
 
-(defn root []
+(defn main []
   ;; Provider takes props with single property, value
   ;; :< or adapt-react-class converts the Cljs properties
   ;; map to JS object for the Provider component.
@@ -37,7 +37,7 @@
      #js {:value {:foo "bar"}}
      (r/as-element [children]))])
 
-(defn start []
-  (rdom/render [root] (js/document.getElementById "app")))
+(defonce react-root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(start)
+(defn ^:export ^:dev/after-load run []
+  (rdomc/render @react-root [main]))

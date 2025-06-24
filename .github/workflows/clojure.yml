@@ -8,8 +8,9 @@ jobs:
     strategy:
       matrix:
         env:
-          - browser-cljsjs
-          - browser-cljsjs-prod
+          # React 19 is not available as UMD module
+          # - browser-cljsjs
+          # - browser-cljsjs-prod
           - browser-npm
           - browser-npm-prod
           - bundle
@@ -30,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
-          java-version: 17
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
@@ -73,7 +74,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
-          java-version: 17
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
@@ -112,8 +113,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: 8
+          distribution: 'adopt'
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:

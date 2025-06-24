@@ -328,7 +328,7 @@
 
 ;;; with-let support
 
-(defn with-let-destroy [v]
+(defn with-let-destroy [^Reaction v]
   (when-some [f (.-destroy v)]
     (f)))
 

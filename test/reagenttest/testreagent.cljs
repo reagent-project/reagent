@@ -3,6 +3,7 @@
             [clojure.test :as t :refer-macros [is deftest testing]]
             [goog.object :as gobj]
             [goog.string :as gstr]
+            [promesa.core :as p]
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
@@ -600,15 +601,15 @@
 
 ;; Class component only
 (deftest ^:dom test-force-update
-  (let [v (atom {:v1 0
-                 :v2 0})
+  (let [renders (atom {:c1 0
+                       :c2 0})
         comps (atom {})
         c1 (fn []
              (swap! comps assoc :c1 (r/current-component))
-             [:p "" (swap! v update-in [:v1] inc)])
+             [:p "" (swap! renders update-in [:c1] inc)])
         c2 (fn []
              (swap! comps assoc :c2 (r/current-component))
-             [:div "" (swap! v update-in [:v2] inc)
+             [:div "" (swap! renders update-in [:c2] inc)
               [c1]])
         state (r/atom 0)
         spy (r/atom 0)
@@ -619,16 +620,15 @@
              [:div "" (reset! spy @(r/track t1))])]
     (u/async
       (u/with-render [div [c2]]
-        (is (= {:v1 1 :v2 1} @v))
+        (is (= {:c1 1 :c2 1} @renders))
 
         (u/act (r/force-update (:c2 @comps)))
-        (is (= {:v1 1 :v2 2} @v))
+        (testing "shallow parent force-update only renders the parent"
+          (is (= {:c1 1 :c2 2} @renders)))
 
         (u/act (r/force-update (:c1 @comps)))
-        (is (= {:v1 2 :v2 2} @v))
-
-        (u/act (r/force-update (:c2 @comps) true))
-        (is (= {:v1 3 :v2 3} @v)))
+        (testing "shallow children force-update only renders the children"
+          (is (= {:c1 2 :c2 2} @renders))))
 
       (u/with-render [div [c3]]
         (is (= 0 @spy))
@@ -781,27 +781,28 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= {:at 1 :args [@t]}
-                       (:initial-state @res)))
-                (is (= {:at 2 :args [@t]}
-                       (:will-mount @res)))
-                (is (= {:at 3 :args ["a" "b"]}
-                       (:render @res)))
-                (is (= {:at 4 :args [@t]}
-                       (:did-mount @res)))
+                (p/do
+                  (is (= {:at 1 :args [@t]}
+                         (:initial-state @res)))
+                  (is (= {:at 2 :args [@t]}
+                         (:will-mount @res)))
+                  (is (= {:at 3 :args ["a" "b"]}
+                         (:render @res)))
+                  (is (= {:at 4 :args [@t]}
+                         (:did-mount @res)))
 
-                (u/act (reset! arg ["a" "c"]))
+                  (u/act (reset! arg ["a" "c"]))
 
-                (is (= {:at 5 :args [@t [@comp "a" "c"]]}
-                       (:will-receive @res)))
-                (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
-                       (:should-update @res)))
-                (is (= {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}
-                       (:will-update @res)))
-                (is (= {:at 8 :args ["a" "c"]}
-                       (:render @res)))
-                (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
-                       (:did-update @res))))]
+                  (is (= {:at 5 :args [@t [@comp "a" "c"]]}
+                         (:will-receive @res)))
+                  (is (= {:at 6 :args [@t [@comp "a" "b"] [@comp "a" "c"]]}
+                         (:should-update @res)))
+                  (is (= {:at 7 :args [@t [@comp "a" "c"] {:foo "bar"}]}
+                         (:will-update @res)))
+                  (is (= {:at 8 :args ["a" "c"]}
+                         (:render @res)))
+                  (is (= {:at 9 :args [@t [@comp "a" "b"] {:foo "bar"} nil]}
+                         (:did-update @res)))))]
     (u/async
       (u/with-render [_div [c2]]
         {:compiler u/*test-compiler*}
@@ -885,38 +886,39 @@
         cnative (fn []
                   (into [:> @comp] @arg))
         check (fn []
-                (is (= {:at 1 :args [@t]}
-                       (:initial-state @res)))
-                (is (= {:at 2 :args [@t]}
-                       (:will-mount @res)))
-                (is (= {:at 3 :args [[:children ["a" "b"]]]}
-                       (:render @res)))
-                (is (= {:at 4 :args [@t]}
-                       (:did-mount @res)))
+                (p/do
+                  (is (= {:at 1 :args [@t]}
+                         (:initial-state @res)))
+                  (is (= {:at 2 :args [@t]}
+                         (:will-mount @res)))
+                  (is (= {:at 3 :args [[:children ["a" "b"]]]}
+                         (:render @res)))
+                  (is (= {:at 4 :args [@t]}
+                         (:did-mount @res)))
 
-                (u/act (reset! arg [{:f "oo"} "a" "c"]))
+                  (u/act (reset! arg [{:f "oo"} "a" "c"]))
 
-                (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
-                       (:will-receive @res)))
-                (let [a (:should-update @res)
-                      {at :at
-                       [this oldv newv] :args} a]
-                  (is (= 6 at))
-                  (is (= 3 (count (:args a))))
-                  (is (= (js->clj [@comp @oldprops]) (js->clj oldv)))
-                  (is (= [@comp @newprops] newv)))
-                (let [a (:will-update @res)
-                      {at :at
-                       [this newv] :args} a]
-                  (is (= 7 at))
-                  (is (= [@comp @newprops] newv)))
-                (is (= {:at 8 :args [[:children ["a" "c"]]]}
-                       (:render @res)))
-                (let [a (:did-update @res)
-                      {at :at
-                       [this oldv] :args} a]
-                  (is (= 9 at))
-                  (is (= [@comp @oldprops] oldv))))]
+                  (is (= {:at 5 :args [{:foo "bar"} "a" "b"]}
+                         (:will-receive @res)))
+                  (let [a (:should-update @res)
+                        {at :at
+                         [this oldv newv] :args} a]
+                    (is (= 6 at))
+                    (is (= 3 (count (:args a))))
+                    (is (= (js->clj [@comp @oldprops]) (js->clj oldv)))
+                    (is (= [@comp @newprops] newv)))
+                  (let [a (:will-update @res)
+                        {at :at
+                         [this newv] :args} a]
+                    (is (= 7 at))
+                    (is (= [@comp @newprops] newv)))
+                  (is (= {:at 8 :args [[:children ["a" "c"]]]}
+                         (:render @res)))
+                  (let [a (:did-update @res)
+                        {at :at
+                         [this oldv] :args} a]
+                    (is (= 9 at))
+                    (is (= [@comp @oldprops] oldv)))))]
     (u/async
       (u/with-render [_div [cnative]]
         (check))
@@ -925,6 +927,11 @@
 
 (defn foo []
   [:div])
+
+(defn safe-re-find [re s]
+  (if (string? s)
+    (re-find re s)
+    false))
 
 (u/deftest ^:dom test-err-messages
   (when (dev?)
@@ -980,46 +987,67 @@
         (u/with-render [div [comp2 [:div. "foo"]]]
           {:capture-errors true}
           ;; The render call itself throws the exception
-          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
-          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                            (first (:error @reagent.debug/warnings))))
+          ;; React 19 only writes out one error, other message is warnings
+          ;; React 18 has multiple errors
+          (if (= 1 (count (:error @reagent.debug/warnings)))
+            (is (safe-re-find #"An error occurred in the <reagenttest\.testreagent\.comp1> component\."
+                              (first (:warn @reagent.debug/warnings))))
+            (is (safe-re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]"
+                              (second (:error @reagent.debug/warnings)))))
           nil)
 
         (u/with-render [div [comp1 [:div. "foo"]]]
           {:capture-errors true}
-          (is (re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)" (.-message u/*render-error*)))
-          (is (re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component:"
-                       (first (:error @reagent.debug/warnings))))
+          (is (safe-re-find #"Invalid tag: 'div.' \(in reagenttest.testreagent.comp1\)"
+                            (first (:error @reagent.debug/warnings))))
+          (if (= 1 (count (:error @reagent.debug/warnings)))
+            (is (safe-re-find #"An error occurred in the <reagenttest\.testreagent\.comp1> component\."
+                              (first (:warn @reagent.debug/warnings))))
+            (is (safe-re-find #"The above error occurred in the <reagenttest\.testreagent\.comp1> component[:.]"
+                              (second (:error @reagent.debug/warnings)))))
           nil)
 
         (let [e (debug/track-warnings #(r/as-element [nat] compiler))]
-          (is (re-find #"Using native React classes directly"
-                       (-> e :warn first))))
+          (is (safe-re-find #"Using native React classes directly"
+                            (-> e :warn first))))
 
         (u/with-render [div [comp3]]
           {:capture-errors true}
-          (is (re-find #"Reactive deref not supported"
-                       (-> @reagent.debug/warnings :warn first))))
+          (is (safe-re-find #"Reactive deref not supported"
+                            (-> @reagent.debug/warnings :warn first))))
 
         (let [e (debug/track-warnings
                   #(r/as-element (comp4) compiler))]
-          (is (re-find #"Every element in a seq should have a unique :key"
-                       (-> e :warn first))))))))
+          (is (safe-re-find #"Every element in a seq should have a unique :key"
+                            (-> e :warn first))))))))
 
 (u/deftest ^:dom test-error-boundary
-  (let [error (r/atom nil)
-        info (r/atom nil)
+  (let [error (atom nil)
+        info (atom nil)
+        ;; Seems like component-did-catch works correctly only if the
+        ;; component STATE is updated? Not if error state is stored in a ratom.
         error-boundary (fn error-boundary [comp]
                          (r/create-class
-                           {:component-did-catch (fn [this e i]
+                           {:constructor (fn [this _props]
+                                           (let [o #js {}]
+                                             ;; Use property access, same as in reagent-render so Closure optimization works for both
+                                             ;; property set and access?
+                                             (set! (.-didCatch o) false)
+                                             (set! (.-state this) o)))
+                            :component-did-catch (fn [this e i]
                                                    (reset! info i))
                             :get-derived-state-from-error (fn [e]
                                                             (reset! error e)
-                                                            #js {})
+                                                            (let [o #js {}]
+                                                              (set! (.-didCatch o) true)
+                                                              o))
                             :reagent-render (fn [comp]
-                                              (if @error
-                                                [:div "Something went wrong."]
-                                                comp))}))
+                                              (let [^js this (r/current-component)]
+                                                (if (.-didCatch (.-state this))
+                                                  [:div "Something went wrong."]
+                                                  comp)))}))
         comp1 (fn comp1 []
                 (throw (js/Error. "Test error")))
         comp2 (fn comp2 []
@@ -1038,22 +1066,6 @@
           ;; Names are completely manged on adv compilation
           (is (re-find #"^\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .* \([^)]*\)\n    at .+ \([^)]*\)"
                        (.-componentStack ^js @info))))))))
-
-#_{:clj-kondo/ignore [:deprecated-var]}
-(u/deftest ^:dom test-dom-node
-  (let [node (atom nil)
-        ref (atom nil)
-        comp (r/create-class
-               {:reagent-render (fn test-dom []
-                                  [:div {:ref #(reset! ref %)} "foobar"])
-                :component-did-mount
-                (fn [this]
-                  (reset! node (rdom/dom-node this)))})]
-    (u/async
-      (u/with-render [div [comp]]
-        (is (= "foobar" (.-innerHTML @ref)))
-        (is (= "foobar" (.-innerHTML @node)))
-        (is (identical? @ref @node))))))
 
 (u/deftest test-empty-input
   (is (= "<div><input/></div>"
@@ -1086,10 +1098,12 @@
                   @state]))]
     (u/async
       (u/with-render [div [comp]]
-        ;; after-render was already called after the initial render
-        (is (= 1 @spy))
+        (testing "after-render was already called after the initial render"
+          (is (= 1 @spy)))
 
         (u/act (swap! state inc))
+        ;; FIXME: Sometimes this case fails without this additional wait?
+        (u/act :FIXME)
 
         (is (= 2 @spy))
 
@@ -1097,23 +1111,25 @@
         (r/next-tick #(swap! val inc))
         (reset! exp 1)
 
-        ;; After waiting for render, the next-tick update has also happened
         (u/act nil)
 
-        (is (= 1 @val))
-        (is (= 2 @spy))
+        (testing "After waiting for render, the next-tick update has also happened"
+          (is (= 1 @val))
+          (is (= 2 @spy)))
 
-        ;; Now if we force render directly, spy is also updated from after-render callback
         (r/force-update @component-instance)
-        (is (= 3 @spy))
-
-        ;; next-tick callback isn't called right away,
-        (r/next-tick #(reset! spy 0))
-        (is (= 3 @spy))
-
-        ;; the update is run when waiting for the component to finish rendering
+        ;; Have to wait for React batching to be cleared?
         (u/act nil)
-        (is (= 0 @spy)))
+        (testing "Now if we force render directly, spy is also updated from after-render callback"
+          (is (= 3 @spy)))
+
+        (r/next-tick #(reset! spy 0))
+        (testing "next-tick callback isn't called right away,"
+          (is (= 3 @spy)))
+
+        (u/act nil)
+        (testing "the update is run when waiting for the component to finish rendering"
+          (is (= 0 @spy))))
       (is (= nil @node)))))
 
 (u/deftest style-property-names-are-camel-cased
@@ -1166,8 +1182,8 @@
   (testing "Fragment as array"
     (let [compiler u/*test-compiler*
           comp (fn comp1 []
-                 #js [(r/as-element [:div "hello"] compiler)
-                      (r/as-element [:div "world"] compiler)])]
+                 #js [(r/as-element [:div {:key 1} "hello"] compiler)
+                      (r/as-element [:div {:key 2} "world"] compiler)])]
       (is (= "<div>hello</div><div>world</div>"
              (as-string [comp]))))))
 
@@ -1286,9 +1302,13 @@
   (let [prop (r/atom 0)
         component (r/create-class
                     {:constructor (fn [this props]
-                                    (set! (.-state this) #js {:hasError false}))
+                                    (let [o #js {}]
+                                      (set! (.-hasError o) false)
+                                      (set! (.-state this) o)))
                      :get-derived-state-from-error (fn [error]
-                                                     #js {:hasError true})
+                                                     (let [o #js {}]
+                                                       (set! (.-hasError o) true)
+                                                       o))
                      :component-did-catch (fn [this e info])
                      :render (fn [^js/React.Component this]
                                (r/as-element (if (.-hasError (.-state this))
@@ -1328,6 +1348,7 @@
         (.appendChild js/document.body div)
         (is (= "foo" (.-innerText div)))
         (u/act (swap! prop inc))
+        ;; (p/delay 16)
         (is (= {:height 20} @did-update))
         (.removeChild js/document.body div)))))
 
@@ -1348,6 +1369,8 @@
       (u/with-render [div [c]]
         (is (= 1 @render))
         (u/act (reset! val 1))
+        ;; FIXME: Sometimes this case fails without this additional wait?
+        (u/act :FIXME)
         (is (= 2 @render))
         (u/act (reset! val 0))
         (is (= 3 @render))))))
@@ -1522,7 +1545,7 @@
                                       (is (= "foo 1" (.-innerText div)))
                                       (is (= 2 @ran))
                                       (resolve))
-                                    16))))
+                                    u/RENDER-WAIT))))
                [really-simple]]
               u/fn-compiler)))))))
 

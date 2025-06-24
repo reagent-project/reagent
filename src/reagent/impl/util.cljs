@@ -184,11 +184,8 @@
 ;; TODO: Doesn't look like correct place for this
 (def ^:dynamic *always-update* false)
 
-(defn force-update [^js/React.Component comp deep]
-  (if deep
-    (binding [*always-update* true]
-      (.forceUpdate comp))
-    (.forceUpdate comp)))
+(defn force-update [^js/React.Component comp]
+  (.forceUpdate comp))
 
 (defn shallow-obj-to-map [o]
   (let [ks (js-keys o)

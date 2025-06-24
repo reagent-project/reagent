@@ -1,15 +1,19 @@
 (ns example.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
+  (:require ["@mui/material/Autocomplete$default" :as Autocomplete]
+            ["@mui/material/Button$default" :as Button]
+            ["@mui/material/Chip$default" :as Chip]
+            ["@mui/material/CssBaseline$default" :as CssBaseline]
+            ["@mui/material/Grid$default" :as Grid]
+            ["@mui/material/TextField$default" :as TextField]
+            ["@mui/material/Toolbar$default" :as Toolbar]
+            ["@mui/material/MenuItem$default" :as MenuItem]
+            ["@mui/material/colors" :as mui-colors]
+            ["@mui/material/styles" :refer [createTheme ThemeProvider]]
             ["react" :as react]
-            ["@mui/material" :as mui]
-            ["@mui/material/styles" :refer [ThemeProvider createTheme]]
-            ["@mui/styles" :refer [withStyles]]
-            ["@mui/material/colors/red$default" :as mui-red]
             ["@mui/icons-material" :as mui-icons]
-            ; ["@mui/lab/Autocomplete" :as Autocomplete]
-            [goog.object :as gobj]
-            ;; FIXME: Internal impl namespace should not be used
+            [goog.object :as gobj] ;; FIXME: Internal impl namespace should not be used
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]
             [reagent.impl.template :as rtpl]))
 
 (set! *warn-on-infer* true)
@@ -62,29 +66,20 @@
                   ;; FIXME: Internal fn should not be used
                   ;; clj->js is not enough as prop on-change -> onChange, class -> classNames etc should be handled
                   rtpl/convert-prop-value)]
-    (apply r/create-element mui/TextField props (map r/as-element children))))
+    (apply r/create-element TextField props (map r/as-element children))))
 
 ;; Example
 
 (def custom-theme
   (createTheme
-    #js {:palette #js {:primary #js {:main (gobj/get mui-red 100)}}}))
-
-(defn custom-styles [^js/Mui.Theme theme]
-  #js {:button #js {:margin (.spacing theme 1)}
-       :textField #js {:width 200
-                       :marginLeft (.spacing theme 1)
-                       :marginRight (.spacing theme 1)}})
-
-(def with-custom-styles (withStyles custom-styles))
+    #js {:palette #js {:primary #js {:main (gobj/get mui-colors/red 100)}}}))
 
 (defonce text-state (r/atom "foobar"))
 (defonce select-state (r/atom ""))
 
 (defn autocomplete-example []
-  [:> mui/Grid
+  [:> Grid
    {:item true}
-   #_
    [:> Autocomplete {:options ["foo" "bar" "foobar"]
                      :style {:width 300}
                      ;; Note that the function parameter is a JS Object!
@@ -100,79 +95,77 @@
                                      ;; If necessary, use JS interop to modify params.
                                      (set! (.-variant params) "outlined")
                                      (set! (.-label params) "Autocomplete")
-                                     (r/create-element mui/TextField params))}]])
+                                     (r/create-element TextField params))}]])
 
 ;; Props in cljs but classes in JS object
-(defn form [{:keys [^js classes] :as props}]
-  [:> mui/Grid
+(defn form []
+  [:> Grid
    {:container true
     :direction "column"
-    :spacing 2}
+    :spacing 2
+    :sx {".MuiButton-root" {:m 1}
+         ".MuiTextField-root" {:width 200
+                               :mx 1}}}
 
-   [:> mui/Grid {:item true}
-    [:> mui/Toolbar
+   [:> Grid {:item true}
+    [:> Toolbar
      {:disable-gutters true}
-     [:> mui/Button
+     [:> Button
       {:variant "contained"
        :color "primary"
-       :class (.-button classes)
        :on-click #(swap! text-state str " foo")}
       "Update value property"
       [:> mui-icons/AddBox]]
 
-     [:> mui/Button
+     [:> Button
       {:variant "outlined"
        :color "secondary"
-       :class (.-button classes)
        :on-click #(reset! text-state "")}
       "Reset"
       [:> mui-icons/Clear]]]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @text-state
       :label "Text input"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! text-state (event-value e)))
       :inputRef (fn [e]
                   (js/console.log "input-ref" e))}]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @text-state
       :label "Textarea"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! text-state (event-value e)))
       :multiline true
       ;; TODO: Autosize textarea is broken.
       :rows 10}]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @select-state
       :label "Select"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! select-state (event-value e)))
       :select true}
-     [:> mui/MenuItem
+     [:> MenuItem
       {:value 1}
       "Item 1"]
      ;; Same as previous, alternative to adapt-react-class
-     [:> mui/MenuItem
+     [:> MenuItem
       {:value 2}
       "Item 2"]]]
 
-   [:> mui/Grid {:item true}
-    [:> mui/Grid
+   [:> Grid {:item true}
+    [:> Grid
      {:container true
       :direction "row"
       :spacing 4}
@@ -180,18 +173,18 @@
      ;; For properties that require React Node as parameter,
      ;; either use r/as-element to convert Reagent hiccup forms into React elements,
      ;; or use r/create-element to directly instantiate element from React class (i.e. non-adapted React component).
-     [:> mui/Grid {:item true}
-      [:> mui/Chip
+     [:> Grid {:item true}
+      [:> Chip
        {:icon (r/as-element [:> mui-icons/Face])
         :label "Icon element example, r/as-element"}]]
 
-     [:> mui/Grid {:item true}
-      [:> mui/Chip
+     [:> Grid {:item true}
+      [:> Chip
        {:icon (r/create-element mui-icons/Face)
         :label "Icon element example, r/create-element"}]]]]
 
-   [:> mui/Grid {:item true}
-    [:> mui/Grid
+   [:> Grid {:item true}
+    [:> Grid
      {:container true
       :direction "row"
       :spacing 4}
@@ -200,19 +193,19 @@
 (defn main []
   ;; fragment
   [:<>
-   [:> mui/CssBaseline]
+   [:> CssBaseline]
    [:> ThemeProvider
     {:theme custom-theme}
-    [:> mui/Grid
+    [:> Grid
      {:container true
       :direction "row"
       :justify "center"}
-     [:> mui/Grid
+     [:> Grid
       {:item true
        :xs 6}
-      [:> (with-custom-styles (r/reactify-component form))]]]]])
+      [form]]]]])
 
-(defn start []
-  (rdom/render [main] (js/document.getElementById "app")))
+(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(start)
+(defn ^:export ^:dev/after-load run []
+  (rdomc/render @root [main]))

@@ -16,11 +16,11 @@
     "karma-sourcemap-loader": "0.4.0",
     "karma-webpack": "5.0.1",
     "md5-file": "5.0.0",
-    "shadow-cljs": "2.28.20",
+    "shadow-cljs": "3.1.7",
     "webpack": "5.96.1",
     "webpack-cli": "5.1.4",
     "prop-types": "15.8.1",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }

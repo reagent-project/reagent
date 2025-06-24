@@ -3,22 +3,18 @@
   (:require [promesa.core :as p]
             [reagent.core :as r]
             [reagent.debug :as debug]
-            [reagent.dom :as rdom]
             [reagent.dom.server :as server]
+            [reagent.dom.client :as rdomc]
             [reagent.impl.template :as tmpl]))
 
 ;; Should be only set for tests....
 ;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
 
-;; Silence ReactDOM.render warning
 (defonce original-console-error (.-error js/console))
 
 (set! (.-error js/console)
       (fn [& [first-arg :as args]]
         (cond
-          (and (string? first-arg) (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18."))
-          nil
-
           (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
           nil
 
@@ -40,6 +36,9 @@
 (defn log-error [& f]
   (debug/error (apply str f)))
 
+(defn log-warning [& f]
+  (debug/warn (apply str f)))
+
 ;; "Regular versions"
 
 (defn wrap-capture-console-error [f]
@@ -53,11 +52,13 @@
 
 (defn init-capture []
   (let [org-console js/console.error
+        org-console-warn js/console.warn
         org-window js/window.onerror
         l (fn [e]
             (log-error e))]
     ;; console.error
     (set! js/console.error log-error)
+    (set! js/console.warn log-warning)
     ;; reagent.debug
     (set! debug/tracking true)
     (reset! debug/warnings nil)
@@ -70,6 +71,7 @@
         (.on process "uncaughtException" l)))
     (fn []
       (set! js/console.error org-console)
+      (set! js/console.warn org-console-warn)
       (reset! debug/warnings nil)
       (set! debug/tracking false)
       (if (exists? js/window)
@@ -77,26 +79,45 @@
         (let [process (js/require "process")]
           (.removeListener process "uncaughtException" l))))))
 
-(defn act*
-  "Run f to trigger Reagent updates,
-  will return Promise which will resolve after
-  Reagent and React render."
-  [f]
-  (let [p (p/deferred)]
-    (f)
-    (r/flush)
-    (r/after-render (fn []
-                      (p/resolve! p)))
-    p))
+;; 16.66ms is one animation frame @ 60hz
+;; NOTE: 16.7ms wasn't enough
+(def RENDER-WAIT 17)
 
-(def ^:dynamic *render-error* nil)
+(defn act*
+  "Run f to trigger Reagent updates, will return Promise which will resolve
+  after Reagent and React render.
+
+  React.act doesn't seemn to work for Reagent use so just mock with 17ms
+  timeout... Hopefully that usually is enough time for React to flush the
+  queue?"
+  [f]
+  (js/Promise.
+    (fn [resolve reject]
+      (try
+        ;; Alternative to waiting for 1 animation frame.
+        ;; Just synchronously flush Reagent queue inside React/flushSync,
+        ;; to ensure React sees the updates from Reagent right-away.
+        ;;
+        ;; Not sure if this is preferred way for testing. The tests run faster
+        ;; with this, but both Reagent and React queues are "skipped" (or manually
+        ;; flushed) always.
+        ; (react-dom/flushSync (fn []
+        ;                        (f)
+        ;                        (r/flush)))
+        ; (resolve)
+        (f)
+        (js/setTimeout (fn []
+                         (resolve))
+                       RENDER-WAIT)
+        (catch :default e
+          (reject e))))))
 
 (defn with-render*
-  "Render the given component to a DOM node,
-  after the the component is mounted to DOM,
-  run the given function and wait for the Promise
-  returned from the function to be resolved
-  before unmounting the component from DOM."
+  "Run initial render and wait for the component to be mounted on the dom and then run
+  given function to check the results. If the function
+  also returns a Promise or thenable, this function
+  waits until that is resolved, before unmounting the
+  root and resolving the Promise this function returns."
   ([comp f]
    (with-render* comp *test-compiler* f))
   ([comp options f]
@@ -107,30 +128,20 @@
          compiler (:compiler options)
          restore-error-handlers (when (:capture-errors options)
                                   (init-capture))
+         root (rdomc/create-root div)
          ;; Magic setup to make exception from render available to the
          ;; with-render body.
          render-error (atom nil)]
-     (try
-       (if compiler
-         (rdom/render comp div {:compiler compiler
-                                :callback callback})
-         (rdom/render comp div callback))
-       (catch :default e
-         (reset! render-error e)
-         nil))
-     (-> first-render
+     (-> (act* (fn []
+                 (if compiler
+                   (rdomc/render root comp compiler)
+                   (rdomc/render root comp))))
          ;; The callback is called even if render throws an error,
          ;; so this is always resolved.
          (p/then (fn []
-                   (p/do
-                     (set! *render-error* @render-error)
-                     (f div)
-                     (set! *render-error* nil))))
-         ;; If f throws more errors, just ignore them?
-         ;; Not sure if this makes sense.
-         (p/catch (fn [] nil))
+                   (f div)))
          (p/then (fn []
-                   (rdom/unmount-component-at-node div)
+                   (rdomc/unmount root)
                    ;; Need to wait for reagent tick after unmount
                    ;; for the ratom watches to be removed?
                    (let [ratoms-cleaned (p/deferred)]

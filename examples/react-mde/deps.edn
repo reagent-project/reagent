@@ -1,0 +1,4 @@
+{:deps {;; Always use the local Reagent
+        reagent/reagent {:local/root "../.."}
+        thheller/shadow-cljs {:mvn/version "3.1.7"}}
+ :paths ["src"]}
