@@ -8,8 +8,9 @@ jobs:
     strategy:
       matrix:
         env:
-          - browser-cljsjs
-          - browser-cljsjs-prod
+          # React 19 is not available as UMD module
+          # - browser-cljsjs
+          # - browser-cljsjs-prod
           - browser-npm
           - browser-npm-prod
           - bundle
