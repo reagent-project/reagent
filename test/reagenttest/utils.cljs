@@ -81,7 +81,8 @@
           (.removeListener process "uncaughtException" l))))))
 
 ;; 16.66ms is one animation frame @ 60hz
-(def RENDER-WAIT 16.7)
+;; NOTE: 16.7ms wasn't enough
+(def RENDER-WAIT 17)
 
 (defn act*
   "Run f to trigger Reagent updates, will return Promise which will resolve
