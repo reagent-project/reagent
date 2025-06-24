@@ -1,9 +1,8 @@
 (ns reagenttest.utils
   (:require-macros reagenttest.utils)
-  (:require [react :as react]
-            [promesa.core :as p]
+  (:require [promesa.core :as p]
             [reagent.core :as r]
-            [reagent.debug :as debug :refer [dev?]]
+            [reagent.debug :as debug]
             [reagent.dom.server :as server]
             [reagent.dom.client :as rdomc]
             [reagent.impl.template :as tmpl]))
@@ -95,6 +94,17 @@
   (js/Promise.
     (fn [resolve reject]
       (try
+        ;; Alternative to waiting for 1 animation frame.
+        ;; Just synchronously flush Reagent queue inside React/flushSync,
+        ;; to ensure React sees the updates from Reagent right-away.
+        ;;
+        ;; Not sure if this is preferred way for testing. The tests run faster
+        ;; with this, but both Reagent and React queues are "skipped" (or manually
+        ;; flushed) always.
+        ; (react-dom/flushSync (fn []
+        ;                        (f)
+        ;                        (r/flush)))
+        ; (resolve)
         (f)
         (js/setTimeout (fn []
                          (resolve))
