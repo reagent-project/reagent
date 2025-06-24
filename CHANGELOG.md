@@ -9,6 +9,9 @@
   is no longer supported.
 - NOTE: [StrictMode](./doc/ReactFeatures.md#strictmode) can cause problems with Reagent components triggering side-effects from
   render function body
+- NOTE: React is no longer available as a UMD module, so the Cljsjs packages
+  can't be updated to React 19. Reagent is no longer running the test suite
+  against Cljsjs.
 
 ## 1.3.0 (2025-02-14)
 
