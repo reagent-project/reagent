@@ -184,24 +184,8 @@
 ;; TODO: Doesn't look like correct place for this
 (def ^:dynamic *always-update* false)
 
-(defn force-update [^js/React.Component comp deep]
-  (if deep
-    ; (binding [*always-update* true]
-    ;   (.forceUpdate comp))
-    ;; NOTE: forceUpdate will queue a render, so
-    ;; the *always-update* flag would be restored before component
-    ;; render gets called. Workaround by setting the flag for
-    ;; ~one frame and restore.
-    ;; FIXME: This isn't a real solution, likely just need to
-    ;; remove the deep update from Reagent API. It shouldn't
-    ;; be commonly used anyway?
-    (let [o *always-update*]
-      (set! *always-update* true)
-      (.forceUpdate comp)
-      (js/setTimeout (fn []
-                       (set! *always-update* o))
-                     17))
-    (.forceUpdate comp)))
+(defn force-update [^js/React.Component comp]
+  (.forceUpdate comp))
 
 (defn shallow-obj-to-map [o]
   (let [ks (js-keys o)

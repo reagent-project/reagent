@@ -151,12 +151,10 @@
 
   If the second argument is true, child components will also be
   re-rendered, even if their arguments have not changed."
-  ([this]
-   (force-update this false))
-  ([this deep]
-   (ratom/flush!)
-   (util/force-update this deep)
-   (batch/flush-after-render)))
+  [this]
+  (ratom/flush!)
+  (util/force-update this)
+  (batch/flush-after-render))
 
 (defn props
   "Returns the props passed to a component."

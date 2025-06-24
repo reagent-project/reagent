@@ -628,11 +628,7 @@
 
         (u/act (r/force-update (:c1 @comps)))
         (testing "shallow children force-update only renders the children"
-          (is (= {:c1 2 :c2 2} @renders)))
-
-        (u/act (r/force-update (:c2 @comps) true))
-        (testing "deep parent force-update also triggers children render"
-          (is (= {:c1 3 :c2 3} @renders))))
+          (is (= {:c1 2 :c2 2} @renders))))
 
       (u/with-render [div [c3]]
         (is (= 0 @spy))
