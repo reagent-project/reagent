@@ -1545,7 +1545,7 @@
                                       (is (= "foo 1" (.-innerText div)))
                                       (is (= 2 @ran))
                                       (resolve))
-                                    16))))
+                                    u/RENDER-WAIT))))
                [really-simple]]
               u/fn-compiler)))))))
 

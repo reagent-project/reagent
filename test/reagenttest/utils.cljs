@@ -80,45 +80,29 @@
         (let [process (js/require "process")]
           (.removeListener process "uncaughtException" l))))))
 
-(defn act*
-  "Run f to trigger Reagent updates,
-  will return Promise which will resolve after
-  Reagent and React render.
+;; 16.66ms is one animation frame @ 60hz
+(def RENDER-WAIT 16.7)
 
-  In production builds, the React.act isn't available,
-  so just mock with 17ms timeout... Hopefully that usually
-  is enough time for React to flush the queue?"
+(defn act*
+  "Run f to trigger Reagent updates, will return Promise which will resolve
+  after Reagent and React render.
+
+  React.act doesn't seemn to work for Reagent use so just mock with 17ms
+  timeout... Hopefully that usually is enough time for React to flush the
+  queue?"
   [f]
-  ;; async act doesn't return a real promise (with chainable then),
-  ;; so wrap it.
-  (if (and false (dev?))
-    (js/Promise.
-      (fn [resolve reject]
-        (try
-          (.then (react/act (fn []
-                              (js/Promise. (fn [resolve reject]
-                                             (try
-                                               (f)
-                                               (r/after-render (fn [] (resolve)))
-                                               (catch :default e
-                                                 (reject e)))))))
-                 resolve
-                 reject)
-          (catch :default e
-            (reject e)))))
-    (js/Promise.
-      (fn [resolve reject]
-        (try
-          (f)
-          (js/setTimeout (fn []
-                           (resolve))
-                         ;; 16.6ms is one animation frame @ 60hz
-                         17)
-          (catch :default e
-            (reject e)))))))
+  (js/Promise.
+    (fn [resolve reject]
+      (try
+        (f)
+        (js/setTimeout (fn []
+                         (resolve))
+                       RENDER-WAIT)
+        (catch :default e
+          (reject e))))))
 
 (defn with-render*
-  "Run initial render with React/act and then run
+  "Run initial render and wait for the component to be mounted on the dom and then run
   given function to check the results. If the function
   also returns a Promise or thenable, this function
   waits until that is resolved, before unmounting the
