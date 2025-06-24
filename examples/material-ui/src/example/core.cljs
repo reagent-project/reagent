@@ -1,5 +1,12 @@
 (ns example.core
-  (:require ["@mui/material" :as mui]
+  (:require ["@mui/material/Autocomplete$default" :as Autocomplete]
+            ["@mui/material/Button$default" :as Button]
+            ["@mui/material/Chip$default" :as Chip]
+            ["@mui/material/CssBaseline$default" :as CssBaseline]
+            ["@mui/material/Grid$default" :as Grid]
+            ["@mui/material/TextField$default" :as TextField]
+            ["@mui/material/Toolbar$default" :as Toolbar]
+            ["@mui/material/MenuItem$default" :as MenuItem]
             ["@mui/material/colors" :as mui-colors]
             ["@mui/material/styles" :refer [createTheme ThemeProvider]]
             ["react" :as react]
@@ -59,7 +66,7 @@
                   ;; FIXME: Internal fn should not be used
                   ;; clj->js is not enough as prop on-change -> onChange, class -> classNames etc should be handled
                   rtpl/convert-prop-value)]
-    (apply r/create-element mui/TextField props (map r/as-element children))))
+    (apply r/create-element TextField props (map r/as-element children))))
 
 ;; Example
 
@@ -71,9 +78,8 @@
 (defonce select-state (r/atom ""))
 
 (defn autocomplete-example []
-  [:> mui/Grid
+  [:> Grid
    {:item true}
-   #_
    [:> Autocomplete {:options ["foo" "bar" "foobar"]
                      :style {:width 300}
                      ;; Note that the function parameter is a JS Object!
@@ -89,11 +95,11 @@
                                      ;; If necessary, use JS interop to modify params.
                                      (set! (.-variant params) "outlined")
                                      (set! (.-label params) "Autocomplete")
-                                     (r/create-element mui/TextField params))}]])
+                                     (r/create-element TextField params))}]])
 
 ;; Props in cljs but classes in JS object
 (defn form []
-  [:> mui/Grid
+  [:> Grid
    {:container true
     :direction "column"
     :spacing 2
@@ -101,24 +107,24 @@
          ".MuiTextField-root" {:width 200
                                :mx 1}}}
 
-   [:> mui/Grid {:item true}
-    [:> mui/Toolbar
+   [:> Grid {:item true}
+    [:> Toolbar
      {:disable-gutters true}
-     [:> mui/Button
+     [:> Button
       {:variant "contained"
        :color "primary"
        :on-click #(swap! text-state str " foo")}
       "Update value property"
       [:> mui-icons/AddBox]]
 
-     [:> mui/Button
+     [:> Button
       {:variant "outlined"
        :color "secondary"
        :on-click #(reset! text-state "")}
       "Reset"
       [:> mui-icons/Clear]]]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @text-state
       :label "Text input"
@@ -129,7 +135,7 @@
       :inputRef (fn [e]
                   (js/console.log "input-ref" e))}]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @text-state
       :label "Textarea"
@@ -141,7 +147,7 @@
       ;; TODO: Autosize textarea is broken.
       :rows 10}]]
 
-   [:> mui/Grid {:item true}
+   [:> Grid {:item true}
     [text-field
      {:value @select-state
       :label "Select"
@@ -150,16 +156,16 @@
       :on-change (fn [e]
                    (reset! select-state (event-value e)))
       :select true}
-     [:> mui/MenuItem
+     [:> MenuItem
       {:value 1}
       "Item 1"]
      ;; Same as previous, alternative to adapt-react-class
-     [:> mui/MenuItem
+     [:> MenuItem
       {:value 2}
       "Item 2"]]]
 
-   [:> mui/Grid {:item true}
-    [:> mui/Grid
+   [:> Grid {:item true}
+    [:> Grid
      {:container true
       :direction "row"
       :spacing 4}
@@ -167,18 +173,18 @@
      ;; For properties that require React Node as parameter,
      ;; either use r/as-element to convert Reagent hiccup forms into React elements,
      ;; or use r/create-element to directly instantiate element from React class (i.e. non-adapted React component).
-     [:> mui/Grid {:item true}
-      [:> mui/Chip
+     [:> Grid {:item true}
+      [:> Chip
        {:icon (r/as-element [:> mui-icons/Face])
         :label "Icon element example, r/as-element"}]]
 
-     [:> mui/Grid {:item true}
-      [:> mui/Chip
+     [:> Grid {:item true}
+      [:> Chip
        {:icon (r/create-element mui-icons/Face)
         :label "Icon element example, r/create-element"}]]]]
 
-   [:> mui/Grid {:item true}
-    [:> mui/Grid
+   [:> Grid {:item true}
+    [:> Grid
      {:container true
       :direction "row"
       :spacing 4}
@@ -187,14 +193,14 @@
 (defn main []
   ;; fragment
   [:<>
-   [:> mui/CssBaseline]
+   [:> CssBaseline]
    [:> ThemeProvider
     {:theme custom-theme}
-    [:> mui/Grid
+    [:> Grid
      {:container true
       :direction "row"
       :justify "center"}
-     [:> mui/Grid
+     [:> Grid
       {:item true
        :xs 6}
       [form]]]]])
