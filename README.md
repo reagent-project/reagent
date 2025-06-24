@@ -50,9 +50,10 @@ or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
 [cljsjs/react-dom "18.3.1-1"]
 ```
 
-Note: Reagent is tested against React 18, using the compatibility mode (i.e.,
+Note: Reagent 1 is tested against React 18, using the compatibility mode (i.e.,
 not using `createRoot` / concurrent mode), but should be compatible with other
-versions. It is not compatible with React 19
+versions. [Reagent 2 (alpha version)](./CHANGELOG.md#200-alpha1-2025-06-24)
+is tested against React 19 with Concurrent Mode enabled.
 
 Reagent isn't tied to only React-dom but should work with [other renderers](./doc/ReactRenderers.md) also.
 
