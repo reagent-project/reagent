@@ -1,8 +1,9 @@
-{:builds
+{:deps true
+ :builds
  {:app {:asset-path "/js"
-        :modules {:main {:entries [example.core]}}
+        :modules {:main {:entries [example.core]
+                         :init-fn example.core/run}}
         :output-dir "target/public/js"
         :target :browser}}
- :deps true
  :dev-http {3000 ["resources/public" "target/public"]}
  :nrepl {:port 3333}}

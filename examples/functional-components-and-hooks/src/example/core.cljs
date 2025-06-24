@@ -1,8 +1,8 @@
 (ns example.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
+  (:require ["react" :as react]
             [clojure.string :as str]
-            ["react" :as react]))
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]))
 
 ;; Same as simpleexample, but uses Hooks instead of Ratoms
 
@@ -44,11 +44,7 @@
 
 (def functional-compiler (r/create-compiler {:function-components true}))
 
-(defn run []
-  (rdom/render [simple-example] (js/document.getElementById "app") functional-compiler)
-  ;; Or with default options and shortcut:
-  #_
-  (rdom/render [:f> simple-example] (js/document.getElementById "app"))
-  )
+(defonce react-root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(run)
+(defn ^:export ^:dev/after-load run []
+  (rdomc/render @react-root [simple-example] functional-compiler))

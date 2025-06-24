@@ -5,11 +5,11 @@
   component to `ReactMde` so we can have the cursor positining fixes needed by reagent. BUT
   we must make sure that `ReactMde` sees a ref to the true `textarea` component, and not reagent's
   wrapper."
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
+  (:require ["react-markdown" :as ReactMarkdown]
             ["react-mde$default" :as ReactMde]
-            ["react-markdown" :as ReactMarkdown]
             [react :as react]
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]
             ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
 
@@ -106,7 +106,7 @@
    [with-custom-textarea-but-no-forward-ref]
    [working-example]])
 
-(defn start []
-  (rdom/render [main] (js/document.getElementById "app")))
+(defonce react-root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(start)
+(defn ^:export ^:dev/after-load run []
+  (rdomc/render @react-root [main]))

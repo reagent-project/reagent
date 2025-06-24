@@ -190,5 +190,5 @@ to always put the call at the top, as in `my-div` here:
 ## Examples
 
 - [Material-UI](../examples/material-ui/src/example/core.cljs)
-- [React-sortable-hoc](../examples/react-sortable-hoc/src/example/core.cljs)
 - [React-transition-group](../examples/react-transition-group/src/example/core.cljs)
+- React-sortable-hoc, example removed as the lib is no longer compatible with React 19.

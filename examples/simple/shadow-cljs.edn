@@ -1,4 +1,4 @@
-{:source-paths ["src"]
+{:deps true
  :dev-http {3000 ["resources/public" "target/public"]}
  :builds
  {:app {:target :browser
@@ -6,5 +6,4 @@
         :asset-path "/js"
         :devtools {:after-load simpleexample.core/run}
         :modules {:main {:entries [simpleexample.core]
-                         :init-fn simpleexample.core/run}}}}
- :dependencies [[reagent "1.2.0"]]}
+                         :init-fn simpleexample.core/run}}}}}

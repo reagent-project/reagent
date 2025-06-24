@@ -90,7 +90,7 @@
   [props]
   [:f> main* props])
 
-(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
+(defonce react-root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(defn ^:export run []
-  (rdomc/render @root [main]))
+(defn ^:export ^:dev/after-load run []
+  (rdomc/render @react-root [main]))

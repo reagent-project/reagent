@@ -40,9 +40,7 @@ Also:
 
 ## Examples
 
-- [MaterialUI v1 with working TextField](examples/material-ui.md), React interop example
-- [React-sortable-hoc](../examples/react-sortable-hoc/src/example/core.cljs), React interop example
-
+- [MaterialUI with working TextField](examples/material-ui.md), React interop example
 
 ### Want To Add An FAQ?
 

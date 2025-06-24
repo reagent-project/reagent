@@ -207,7 +207,5 @@
 
 (defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(defn start []
+(defn ^:export ^:dev/after-load run []
   (rdomc/render @root [main]))
-
-(start)
