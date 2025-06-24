@@ -10,9 +10,13 @@
 
 (defn- unmount-comp [container]
   (swap! roots dissoc container)
+  (when-not (exists? react-dom/unmountComponentAtNode)
+    (js/console.warn "react-dom/unmountComponentAtNode function doesn't exist, you are likely trying to use the old DOM api with React 19. Use reagent.dom.client instead."))
   (react-dom/unmountComponentAtNode container))
 
 (defn- render-comp [comp container callback]
+  (when-not (exists? react-dom/render)
+    (js/console.warn "react-dom/render function doesn't exist, you are likely trying to use the old DOM api with React 19. Use reagent.dom.client instead."))
   (binding [util/*always-update* true]
     (react-dom/render (comp) container
       (fn []
@@ -26,7 +30,10 @@
   (render-comp comp container nil))
 
 (defn render
-  "Render a Reagent component into the DOM. The first argument may be
+  "NOTE: Usable only with React 18 or older. React 19 doesn't provide
+  react-dom/render function.
+
+  Render a Reagent component into the DOM. The first argument may be
   either a vector (using Reagent's Hiccup syntax), or a React element.
   The second argument should be a DOM node.
 
