@@ -1,9 +1,14 @@
 # Changelog
 
-## Unreleased
+## 2.0.0-alpha1 (2025-06-24)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...master)**
 
+- Tests are now running against React 19 using new `react-dom/client` API,
+  meaning the React Concurrent Mode is enabled
+    - `reagent.dom` namespace is still available for use with old `react-dom`,
+      that is, React 17 and React 18 without Concurrent Mode, these aren't
+      being tested right now though.
 - Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
 - Removed the second arity of `reagent.core/force-update` function, the `deep` parameter
   is no longer supported.
