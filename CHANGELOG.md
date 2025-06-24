@@ -5,6 +5,8 @@
 **[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...master)**
 
 - Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
+- NOTE: [StrictMode](./doc/ReactFeatures.md#strictmode) can cause problems with Reagent components triggering side-effects from
+  render function body
 
 ## 1.3.0 (2025-02-14)
 

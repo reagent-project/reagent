@@ -332,3 +332,23 @@ Use `reagent.core/unsafe-html` to wrap the values.
 ```
 
 See [Security](./Security.md)
+
+## [StrictMode](https://react.dev/reference/react/StrictMode)
+
+(React 19)
+
+React StrictMode should help with finding bugs in your React components. With
+Reagent this unfortunately might not be helpful.
+
+> Your components will re-render an extra time to find bugs caused by impure rendering.
+> [Fixing bugs found by double rendering in development ](https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development)
+
+In Reagent, triggering a side-effects from render functions has been somewhat
+common use, though it is not recommended in React. The Reagent demo site timer-component
+for example uses `js/setTimeout` directly in the render function to trigger
+`seconds-elapsed` update every second. This is a side-effect and using `StrictMode`
+causes the `js/setTimeout` to be called twice, making the timer run double speed.
+
+If you want to follow React best-practices you can enable StrictMode in your
+application but you then need to be careful to see you trigger such
+side-effects using `useEffect` hook or similar methods.
