@@ -7,11 +7,17 @@
 - Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
 - Removed the second arity of `reagent.core/force-update` function, the `deep` parameter
   is no longer supported.
-- NOTE: [StrictMode](./doc/ReactFeatures.md#strictmode) can cause problems with Reagent components triggering side-effects from
+
+### Notes
+
+- [StrictMode](./doc/ReactFeatures.md#strictmode) can cause problems with Reagent components triggering side-effects from
   render function body
-- NOTE: React is no longer available as a UMD module, so the Cljsjs packages
+- React is no longer available as a UMD module, so the Cljsjs packages
   can't be updated to React 19. Reagent is no longer running the test suite
   against Cljsjs.
+- In addition to breaking changes in Reagent, several previously common React libraries
+  like react-transition-group break or require changes when using with React 19,
+  for example, if they use `findDOMNode` which is now removed.
 
 ## 1.3.0 (2025-02-14)
 
