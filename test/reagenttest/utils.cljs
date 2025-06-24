@@ -146,7 +146,7 @@
          (p/then (fn []
                    (f div)))
          (p/then (fn []
-                   (.unmount root)
+                   (rdomc/unmount root)
                    ;; Need to wait for reagent tick after unmount
                    ;; for the ratom watches to be removed?
                    (let [ratoms-cleaned (p/deferred)]
