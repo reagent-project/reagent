@@ -3,7 +3,6 @@
         :modules {:main {:entries [example.core]}}
         :output-dir "target/public/js"
         :target :browser}}
- :dependencies [[reagent "1.2.0"]]
+ :deps true
  :dev-http {3000 ["resources/public" "target/public"]}
- :nrepl {:port 3333}
- :source-paths ["src"]}
+ :nrepl {:port 3333}}

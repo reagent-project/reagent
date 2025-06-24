@@ -1,15 +1,12 @@
 (ns example.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
+  (:require ["@mui/material" :as mui]
+            ["@mui/material/colors" :as mui-colors]
+            ["@mui/material/styles" :refer [createTheme ThemeProvider]]
             ["react" :as react]
-            ["@mui/material" :as mui]
-            ["@mui/material/styles" :refer [ThemeProvider createTheme]]
-            ["@mui/styles" :refer [withStyles]]
-            ["@mui/material/colors/red$default" :as mui-red]
             ["@mui/icons-material" :as mui-icons]
-            ; ["@mui/lab/Autocomplete" :as Autocomplete]
-            [goog.object :as gobj]
-            ;; FIXME: Internal impl namespace should not be used
+            [goog.object :as gobj] ;; FIXME: Internal impl namespace should not be used
+            [reagent.core :as r]
+            [reagent.dom.client :as rdomc]
             [reagent.impl.template :as rtpl]))
 
 (set! *warn-on-infer* true)
@@ -68,15 +65,7 @@
 
 (def custom-theme
   (createTheme
-    #js {:palette #js {:primary #js {:main (gobj/get mui-red 100)}}}))
-
-(defn custom-styles [^js/Mui.Theme theme]
-  #js {:button #js {:margin (.spacing theme 1)}
-       :textField #js {:width 200
-                       :marginLeft (.spacing theme 1)
-                       :marginRight (.spacing theme 1)}})
-
-(def with-custom-styles (withStyles custom-styles))
+    #js {:palette #js {:primary #js {:main (gobj/get mui-colors/red 100)}}}))
 
 (defonce text-state (r/atom "foobar"))
 (defonce select-state (r/atom ""))
@@ -103,11 +92,14 @@
                                      (r/create-element mui/TextField params))}]])
 
 ;; Props in cljs but classes in JS object
-(defn form [{:keys [^js classes] :as props}]
+(defn form []
   [:> mui/Grid
    {:container true
     :direction "column"
-    :spacing 2}
+    :spacing 2
+    :sx {".MuiButton-root" {:m 1}
+         ".MuiTextField-root" {:width 200
+                               :mx 1}}}
 
    [:> mui/Grid {:item true}
     [:> mui/Toolbar
@@ -115,7 +107,6 @@
      [:> mui/Button
       {:variant "contained"
        :color "primary"
-       :class (.-button classes)
        :on-click #(swap! text-state str " foo")}
       "Update value property"
       [:> mui-icons/AddBox]]
@@ -123,7 +114,6 @@
      [:> mui/Button
       {:variant "outlined"
        :color "secondary"
-       :class (.-button classes)
        :on-click #(reset! text-state "")}
       "Reset"
       [:> mui-icons/Clear]]]]
@@ -134,7 +124,6 @@
       :label "Text input"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! text-state (event-value e)))
       :inputRef (fn [e]
@@ -146,7 +135,6 @@
       :label "Textarea"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! text-state (event-value e)))
       :multiline true
@@ -159,7 +147,6 @@
       :label "Select"
       :placeholder "Placeholder"
       :helper-text "Helper text"
-      :class (.-textField classes)
       :on-change (fn [e]
                    (reset! select-state (event-value e)))
       :select true}
@@ -210,9 +197,11 @@
      [:> mui/Grid
       {:item true
        :xs 6}
-      [:> (with-custom-styles (r/reactify-component form))]]]]])
+      [form]]]]])
+
+(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
 (defn start []
-  (rdom/render [main] (js/document.getElementById "app")))
+  (rdomc/render @root [main]))
 
 (start)
