@@ -16,7 +16,7 @@
 
 (defn unmount
   "Unmount the given React Root"
-  [root]
+  [^js root]
   (.unmount root))
 
 (defn- reagent-root [^js js-props]
@@ -33,9 +33,9 @@
 (defn render
   "Render the given Reagent element (i.e. Hiccup data)
   into a given React root."
-  ([root el]
+  ([^js root el]
    (render root el tmpl/*current-default-compiler*))
-  ([root el compiler]
+  ([^js root el compiler]
    (let [;; Not sure if this should be fn here?
          ;; At least this moves the as-element call to the reagent-root
          ;; render, and handles the *always-update* binding correctly?
