@@ -8,6 +8,24 @@ Initial release for testing with React 19. Tested on the examples projects and
 two real-world projects (not thoroughly yet). It is not yet clear how many
 additional changes or features will be added before the final release.
 
+### Upgrade
+
+- Replace `reagent.dom` require with `reagent.dom.client`
+- Create react root using new API
+- Call render on the react-root with your Reagent entrypoint:
+
+```cljs
+(ns app.core (:require [reagent.dom.client :as rdomc]))
+
+(defn main [] ...)
+
+(defonce react-root (rdomc/create-root (.getElementById js/document "app")))
+
+(defn run [] (rdomc/render react-root [main]))
+```
+
+### Changes
+
 - Tests are now running against React 19 using new `react-dom/client` API,
   meaning the React Concurrent Mode is enabled
     - `reagent.dom` namespace is still available for use with old `react-dom`,
