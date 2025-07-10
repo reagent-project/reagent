@@ -4,9 +4,7 @@
             [reagent.impl.batching :as batch]
             [reagent.impl.protocols :as p]
             [reagent.impl.template :as tmpl]
-            [reagent.impl.util :as util]
-            [goog.object :as gobj]
-            [reagent.core :as r]))
+            [reagent.impl.util :as util]))
 
 (defn create-root
   "Create a React Root connected to given container DOM element."
@@ -54,7 +52,7 @@
   ([^js root el]
    (render root el tmpl/*current-default-compiler*))
   ([^js root el compiler]
-   (let [comp (fn [] (r/as-element el compiler))
+   (let [comp (fn [] (p/as-element compiler el))
          js-props #js {}]
      (set! (.-comp js-props) comp)
      (.render root (react/createElement reagent-root js-props)))))
@@ -65,6 +63,6 @@
   ([container el {:keys [compiler on-recoverable-error identifier-prefix]
                   :or {compiler tmpl/*current-default-compiler*}}]
    (let [js-props #js {}
-         comp (fn [] (r/as-element el compiler))]
+         comp (fn [] (p/as-element compiler el))]
      (set! (.-comp js-props) comp)
      (react-dom-client/hydrateRoot container (react/createElement reagent-root js-props)))))
