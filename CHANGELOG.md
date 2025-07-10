@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha1...master)**
+
+- Fix in `reagent.dom.client/render` to ensure it uses the latest defined Cljs functions
+  in live reload situtations without strange workarounds.
+
 ## 2.0.0-alpha1 (2025-06-24)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...v2.0.0-alpha1)**
