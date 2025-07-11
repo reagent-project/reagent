@@ -199,7 +199,6 @@
     (fn componentWillUnmount []
       (this-as c
                (some-> (gobj/get c "cljsRatom") ratom/dispose!)
-               (batch/mark-rendered c)
                (when-not (nil? f)
                  (.call f c c))))
 
@@ -255,7 +254,6 @@
                      (this-as c (if util/*non-reactive*
                                   (do-render c compiler)
                                   (let [^clj rat (gobj/get c "cljsRatom")]
-                                    (batch/mark-rendered c)
                                     (if (nil? rat)
                                       (ratom/run-in-reaction #(do-render c compiler) c "cljsRatom"
                                                              batch/queue-render rat-opts)
@@ -306,7 +304,6 @@
                   (construct this props))
                 (when get-initial-state
                   (set! (.-state this) (get-initial-state this)))
-                (set! (.-cljsMountOrder this) (batch/next-mount-count))
                 this))]
 
     (gobj/extend (.-prototype cmp) (.-prototype react/Component) methods)
@@ -412,7 +409,6 @@
           _ (when-not (.-current state-ref)
               (let [obj #js {}]
                 (set! (.-forceUpdate obj) force-update)
-                (set! (.-cljsMountOrder obj) (batch/next-mount-count))
                 ;; Use reagentRender name, as that is also used
                 ;; by class components, and some checks.
                 ;; reagentRender is replaced with form-2 inner fn,
@@ -437,8 +433,6 @@
       ;; Argv is also stored in the state,
       ;; so reaction fn will always see the latest value.
       (set! (.-argv reagent-state) argv)
-
-      (batch/mark-rendered reagent-state)
 
       ;; static-fns :render
       (if (nil? rat)
