@@ -401,7 +401,7 @@
           tag (.-reagentRender jsprops)
 
           ;; Use counter to trigger render manually.
-          [_ update-count] (react/useState 0)
+          [_ force-update] (react/useReducer inc 0)
 
           ;; This object mimics React Class attributes and methods.
           ;; To support form-2 components, even the render fn needs to
@@ -411,7 +411,7 @@
 
           _ (when-not (.-current state-ref)
               (let [obj #js {}]
-                (set! (.-forceUpdate obj) (fn [] (update-count inc)))
+                (set! (.-forceUpdate obj) force-update)
                 (set! (.-cljsMountOrder obj) (batch/next-mount-count))
                 ;; Use reagentRender name, as that is also used
                 ;; by class components, and some checks.
