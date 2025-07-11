@@ -197,11 +197,11 @@
 
     :componentWillUnmount
     (fn componentWillUnmount []
-      (this-as c
-               (some-> (gobj/get c "cljsRatom") ratom/dispose!)
-               (batch/mark-rendered c)
-               (when-not (nil? f)
-                 (.call f c c))))
+      (this-as ^clj c
+        (some-> (.-cljsRatom c) ratom/dispose!)
+        (batch/mark-rendered c)
+        (when-not (nil? f)
+          (.call f c c))))
 
     :componentDidCatch
     (fn componentDidCatch [error info]
@@ -252,14 +252,18 @@
            :cljsLegacyRender legacy-render
            :reagentRender render-fun
            :render (fn render []
-                     (this-as c (if util/*non-reactive*
-                                  (do-render c compiler)
-                                  (let [^clj rat (gobj/get c "cljsRatom")]
-                                    (batch/mark-rendered c)
-                                    (if (nil? rat)
-                                      (ratom/run-in-reaction #(do-render c compiler) c "cljsRatom"
-                                                             batch/queue-render rat-opts)
-                                      (._run rat false)))))))))
+                     (this-as ^clj c
+                       (if util/*non-reactive*
+                         (do-render c compiler)
+                         (let [^clj rat (.-cljsRatom c)]
+                           (batch/mark-rendered c)
+                           (if (nil? rat)
+                             (ratom/run-in-reaction-2 (fn [] (do-render c compiler))
+                                                      (fn [] (batch/queue-render c))
+                                                      (fn [new-rat]
+                                                        (set! (.-cljsRatom c) new-rat))
+                                                      rat-opts)
+                             (._run rat false)))))))))
 
 (defn map-to-js [m]
   (reduce-kv (fn [o k v]
@@ -424,13 +428,12 @@
 
           reagent-state (.-current state-ref)
 
-          ;; FIXME: Access cljsRatom using interop forms
-          rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
+          rat ^ratom/Reaction (.-cljsRatom reagent-state)]
 
       (react/useEffect
         (fn mount []
           (fn unmount []
-            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)))
+            (some-> (.-cljsRatom reagent-state) ratom/dispose!)))
         ;; Ignore props - only run effect once on mount and unmount
         #js [])
 
@@ -440,16 +443,13 @@
 
       (batch/mark-rendered reagent-state)
 
-      ;; static-fns :render
       (if (nil? rat)
-        (ratom/run-in-reaction
-          ;; Mock Class component API
-          #(functional-do-render compiler reagent-state)
-          reagent-state
-          "cljsRatom"
-          batch/queue-render
+        (ratom/run-in-reaction-2
+          (fn [] (functional-do-render compiler reagent-state))
+          (fn [] (batch/queue-render reagent-state))
+          (fn [new-rat]
+            (set! (.-cljsRatom reagent-state) new-rat))
           rat-opts)
-        ;; TODO: Consider passing props here, instead of keeping them in state?
         (._run rat false)))))
 
 (defn functional-render-memo-fn

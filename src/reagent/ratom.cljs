@@ -539,7 +539,8 @@
 (def ^:private temp-reaction (make-reaction nil))
 
 
-(defn run-in-reaction
+(defn run-in-reaction-2
+  ;; TODO: Write a new correct docstring
   "Evaluates `f` and returns the result.  If `f` calls `deref` on any ratoms,
    creates a new Reaction that watches those atoms and calls `run` whenever
    any of those watched ratoms change.  Also, the new reaction is added to
@@ -547,15 +548,15 @@
    that should expect one argument.  It is passed `obj` when run.  The `opts`
    are any options accepted by a Reaction and will be set on the newly created
    Reaction. Sets the newly created Reaction to the `key` on `obj`."
-  [f obj key run opts]
+  [f run store-rat opts]
   (let [r temp-reaction
         res (deref-capture f r)]
     (when-not (nil? (.-watching r))
       (set! temp-reaction (make-reaction nil))
       (._set-opts r opts)
       (set! (.-f r) f)
-      (set! (.-auto-run r) #(run obj))
-      (obj/set obj key r))
+      (set! (.-auto-run r) run)
+      (store-rat r))
     res))
 
 (defn check-derefs [f]
