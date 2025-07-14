@@ -29,14 +29,27 @@
   (- (.-cljsMountOrder c1)
      (.-cljsMountOrder c2)))
 
+;; See reagent.dom.client/render and hydrate-root
+;;
+;; On React 19 react-dom/flushSync is used to flush all Reagent ratom changes
+;; to DOM right away, to avoid double batching for these.
+;; React strongly recommends to avoid flushSync, but run-queue is
+;; used just once per animation frame and only when there were component
+;; re-renders triggered from ratom changes, so maybe this is fine.
+(defonce react-flush
+  (fn noop [f]
+    (f)))
+
 (defn run-queue [a]
   ;; sort components by mount order, to make sure parents
   ;; are rendered before children
   (.sort a compare-mount-order)
-  (dotimes [i (alength a)]
-    (let [^js/React.Component c (aget a i)]
-      (when (true? (.-cljsIsDirty c))
-        (.forceUpdate c)))))
+  (react-flush
+    (fn []
+      (dotimes [i (alength a)]
+        (let [^js/React.Component c (aget a i)]
+          (when (true? (.-cljsIsDirty c))
+            (.forceUpdate c)))))))
 
 
 ;; Set from ratom.cljs
