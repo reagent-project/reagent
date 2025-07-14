@@ -24,20 +24,16 @@
                  fake-raf)
              w))))
 
-(defn compare-mount-order
-  [^clj c1 ^clj c2]
-  (- (.-cljsMountOrder c1)
-     (.-cljsMountOrder c2)))
-
-(defn run-queue [a]
-  ;; sort components by mount order, to make sure parents
-  ;; are rendered before children
-  (.sort a compare-mount-order)
-  (dotimes [i (alength a)]
-    (let [^js/React.Component c (aget a i)]
-      (when (true? (.-cljsIsDirty c))
-        (.forceUpdate c)))))
-
+;; See reagent.dom.client/render and hydrate-root
+;;
+;; On React 19 react-dom/flushSync is used to flush all Reagent ratom changes
+;; to DOM right away, to avoid double batching for these.
+;; React strongly recommends to avoid flushSync, but run-queue is
+;; used just once per animation frame and only when there were component
+;; re-renders triggered from ratom changes, so maybe this is fine.
+(defonce react-flush
+  (fn noop [f]
+    (f)))
 
 ;; Set from ratom.cljs
 (defonce ratom-flush (fn []))
@@ -58,11 +54,6 @@
       (set! scheduled? true)
       (next-tick #(.run-queues this))))
 
-  (queue-render [this c]
-    (when (nil? (.-componentQueue this))
-      (set! (.-componentQueue this) #js []))
-    (enqueue this (.-componentQueue this) c))
-
   (add-before-flush [this f]
     (when (nil? (.-beforeFlush this))
       (set! (.-beforeFlush this) #js []))
@@ -82,11 +73,6 @@
       (set! (.-beforeFlush this) nil)
       (run-funs fs)))
 
-  (flush-render [this]
-    (when-some [fs (.-componentQueue this)]
-      (set! (.-componentQueue this) nil)
-      (run-queue fs)))
-
   (flush-after-render [this]
     (when-some [fs (.-afterRender this)]
       (set! (.-afterRender this) nil)
@@ -94,8 +80,7 @@
 
   (flush-queues [this]
     (.flush-before-flush this)
-    (ratom-flush)
-    (.flush-render this)
+    (react-flush (fn [] (ratom-flush)))
     (.flush-after-render this)))
 
 (def render-queue (->RenderQueue false))
@@ -107,12 +92,7 @@
   (.flush-after-render render-queue))
 
 (defn queue-render [^clj c]
-  (when-not (.-cljsIsDirty c)
-    (set! (.-cljsIsDirty c) true)
-    (.queue-render render-queue c)))
-
-(defn mark-rendered [^clj c]
-  (set! (.-cljsIsDirty c) false))
+  (.forceUpdate c))
 
 (defn do-before-flush [f]
   (.add-before-flush render-queue f))
