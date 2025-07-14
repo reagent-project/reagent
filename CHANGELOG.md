@@ -6,6 +6,12 @@
 
 - Fix in `reagent.dom.client/render` to ensure it uses the latest defined Cljs functions
   in live reload situtations without strange workarounds.
+- React component renders due to ratom/reaction changes are triggered synchronously
+  using `react-dom/flushSync` (for DOM environments) [#630](https://github.com/reagent-project/reagent/pull/630)
+    - This should prevent double queuing for these changes (that is, an update taking two animation frames to be mounted to the DOM)
+    - `reagent.core/after-render` should work like previously, i.e., the changes
+      are mounted to DOM when the callback is called
+    - TODO: Provide an option/example for react-native and other environments? If needed.
 
 ## 2.0.0-alpha1 (2025-06-24)
 
