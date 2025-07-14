@@ -81,9 +81,13 @@
         val (r/atom 0)
         secval (r/atom 0)
         reaction-ran (atom 0)
-        v1 (reaction (swap! reaction-ran inc) @val)
+        v1 (reaction
+             (js/console.log "v1 reaction run")
+             (swap! reaction-ran inc)
+             @val)
         comp (fn []
                (swap! ran inc)
+               (js/console.log "comp render")
                [:div (str "val " @v1 " " @val " " @secval)])]
     (u/async
       (u/with-render [div [comp]]
@@ -93,12 +97,23 @@
         (is (= "val 0 0 0" (.-innerText div)))
         (is (= 1 @ran))
 
+        ;; secval goes back to the original value, it shouldn't trigger render.
+        ;; val changes twice, ending up in a new value -> one render.
+        ;; val also triggers v1 reaction -> but the change should happen
+        ;; during the same RAF -> still just one render.
         (u/act
+          (js/console.log "1")
           (reset! secval 1)
+          (js/console.log "2")
           (reset! secval 0)
+          (js/console.log "3")
           (reset! val 1)
+          (js/console.log "4")
           (reset! val 2)
-          (reset! val 1))
+          (js/console.log "5")
+          (reset! val 1)
+          (js/console.log "6")
+          )
 
         (is (= "val 1 1 0" (.-innerText div)))
         (is (= 2 @ran) "ran once more")

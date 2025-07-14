@@ -54,11 +54,6 @@
       (set! scheduled? true)
       (next-tick #(.run-queues this))))
 
-  (queue-render [this c]
-    (when (nil? (.-componentQueue this))
-      (set! (.-componentQueue this) #js []))
-    (enqueue this (.-componentQueue this) c))
-
   (add-before-flush [this f]
     (when (nil? (.-beforeFlush this))
       (set! (.-beforeFlush this) #js []))
