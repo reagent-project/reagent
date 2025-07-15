@@ -4,6 +4,11 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha1...master)**
 
+
+## 2.0.0-alpha2 (2025-07-15)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha1...v2.0.0-alpha2)**
+
 - Fix in `reagent.dom.client/render` to ensure it uses the latest defined Cljs functions
   in live reload situtations without strange workarounds.
 - React component renders due to ratom/reaction changes are triggered synchronously
