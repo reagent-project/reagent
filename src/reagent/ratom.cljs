@@ -453,6 +453,17 @@
     (when (some? no-cache)
       (set! (.-nocache? this) no-cache)))
 
+  (_snapshot [_this]
+    [state watching auto-run])
+
+  (_restore [this [s w a]]
+    (set! watching w)
+    (set! state s)
+    (set! auto-run a)
+    (set! dirty? false)
+    (doseq [watcher (set w)]
+      (-add-watch watcher this handle-reaction-change)))
+
   IRunnable
   (run [this]
     (flush!)

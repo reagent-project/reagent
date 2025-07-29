@@ -428,11 +428,21 @@
           rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
       (react/useEffect
-        (fn mount []
-          (fn unmount []
-            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)))
-        ;; Ignore props - only run effect once on mount and unmount
-        #js [])
+       (fn mount []
+         (when-some [reagent-state (.-current state-ref)]
+           (when-some [r-argv (gobj/get reagent-state "ratomSnapshot" nil)]
+             (let [rat (gobj/get reagent-state "cljsRatom")]
+               (._restore rat r-argv)
+               (gobj/remove reagent-state "ratomSnapshot"))))
+         (fn unmount []
+           (when-some [rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
+            (let [snapshot (._snapshot rat)]
+             (gobj/set reagent-state "ratomSnapshot" snapshot)))
+           (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
+       ))
+       ;; Ignore props - only run effect once on mount and unmount
+       ;; (which means always twice under the React strict mode).
+       #js [])
 
       ;; Argv is also stored in the state,
       ;; so reaction fn will always see the latest value.
