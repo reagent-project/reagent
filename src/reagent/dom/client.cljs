@@ -51,13 +51,19 @@
   "Render the given Reagent element (i.e. Hiccup data)
   into a given React root."
   ([^js root el]
-   (render root el tmpl/*current-default-compiler*))
+   (render root el nil))
   ([^js root el compiler]
+   (render root el compiler false))
+  ([^js root el compiler strict-mode?]
    (set! batch/react-flush react-dom/flushSync)
-   (let [comp (fn [] (p/as-element compiler el))
-         js-props #js {}]
-     (set! (.-comp js-props) comp)
-     (.render root (react/createElement reagent-root js-props)))))
+   (let [eff-compiler (or compiler tmpl/*current-default-compiler*)
+         comp (fn [] (p/as-element eff-compiler el))
+         js-props #js {:comp comp}
+         rg-root-el (react/createElement reagent-root js-props)]
+     (.render root
+              (if-not strict-mode?
+                rg-root-el
+                (react/createElement react/StrictMode #js {} rg-root-el))))))
 
 (defn hydrate-root
   ([container el]
