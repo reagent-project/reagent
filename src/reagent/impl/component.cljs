@@ -429,16 +429,23 @@
 
       (react/useEffect
        (fn mount []
-         (when-some [reagent-state (.-current state-ref)]
-           (when-some [r-argv (gobj/get reagent-state "ratomSnapshot" nil)]
-             (let [rat (gobj/get reagent-state "cljsRatom")]
-               (._restore rat r-argv)
-               (gobj/remove reagent-state "ratomSnapshot"))))
+         (when-not (gobj/containsKey reagent-state "cljsRatom")
+           (ratom/run-in-reaction
+            ; `run` function, its derefs get captured and it's the one executed
+            ; by the `Reaction._run` method.
+            #(functional-do-render compiler reagent-state)
+            ; Container for the reaction.
+            reagent-state
+            ; Key in the container where to store the reaction.
+            "cljsRatom"
+            ; Function triggered by changes in derefed values.
+            batch/queue-render
+            ; Extra options for Reaction.
+            rat-opts))
          (fn unmount []
-           (when-some [rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
-            (let [snapshot (._snapshot rat)]
-             (gobj/set reagent-state "ratomSnapshot" snapshot)))
-           (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
+           (when-some [rat (gobj/get reagent-state "cljsRatom")]
+             (ratom/dispose! rat)
+             (gobj/remove reagent-state "cljsRatom"))
        ))
        ;; Ignore props - only run effect once on mount and unmount
        ;; (which means always twice under the React strict mode).
