@@ -429,23 +429,11 @@
 
       (react/useEffect
        (fn mount []
-         (when-not (gobj/containsKey reagent-state "cljsRatom")
-           (ratom/run-in-reaction
-            ; `run` function, its derefs get captured and it's the one executed
-            ; by the `Reaction._run` method.
-            #(functional-do-render compiler reagent-state)
-            ; Container for the reaction.
-            reagent-state
-            ; Key in the container where to store the reaction.
-            "cljsRatom"
-            ; Function triggered by changes in derefed values.
-            batch/queue-render
-            ; Extra options for Reaction.
-            rat-opts))
+         ;; Should always be non-nil.
+         (when-some [rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
+           (._restore rat))
          (fn unmount []
-           (when-some [rat (gobj/get reagent-state "cljsRatom")]
-             (ratom/dispose! rat)
-             (gobj/remove reagent-state "cljsRatom"))
+           (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
        ))
        ;; Ignore props - only run effect once on mount and unmount
        ;; (which means always twice under the React strict mode).
@@ -460,11 +448,17 @@
       ;; static-fns :render
       (if (nil? rat)
         (ratom/run-in-reaction
-          ;; Mock Class component API
+          ;; Mock the Class component API
+          ; `run` function, its derefs get captured and it's the one executed
+          ; by the `Reaction._run` method.
           #(functional-do-render compiler reagent-state)
+          ; Container for the reaction.
           reagent-state
+          ; Key in the container where to store the reaction.
           "cljsRatom"
+          ; Function triggered by changes in derefed values.
           batch/queue-render
+          ; Extra options for Reaction.
           rat-opts)
         ;; TODO: Consider passing props here, instead of keeping them in state?
         (._run rat false)))))

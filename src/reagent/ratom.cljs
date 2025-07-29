@@ -352,22 +352,30 @@
 
 ;; Fields of a Reaction javascript object
 ;; - auto_run
-;; - captured
-;; - caught
+;; - captured (optional)
+;; - caught (optional)
 ;; - f
-;; - ratomGeneration
+;; - ratomGeneration (optional)
 ;; - state
+;; - dirty_QMARK_
+;; - nocache_QMARK_
 ;; - watches
 ;; - watching
+;; - snapshot (optional)
 (deftype Reaction [f ^:mutable state ^:mutable ^boolean dirty? ^boolean nocache?
                    ^:mutable watching ^:mutable watches ^:mutable auto-run
-                   ^:mutable caught]
+                   ^:mutable caught ^:mutable snapshot]
   IAtom
   IReactiveAtom
 
   IWatchable
   (-notify-watches [this old new] (notify-w this old new))
-  (-add-watch [this key f]        (add-w this key f))
+  (-add-watch [this key f]
+    ;; When this Reaction was disposed because it lost its last watcher,
+    ;; we might have to restore it from the snapshot first.
+    (when (empty? watches)
+      (._restore this))
+    (add-w this key f))
   (-remove-watch [this key]
     (let [was-empty (empty? watches)]
       (remove-w this key)
@@ -429,7 +437,12 @@
         (set! caught e)
         (set! dirty? false))))
 
-  (_run [this check]
+  (_run
+    ; Method run when this Reaction is derefed, or when handling changes
+    ; in the dependencies unless auto-run is set to another function.
+    ; Also executed by the IRunnable:run implementation, but not sure
+    ; when that's used.
+    [this check]
     (let [oldstate state
           res (if check
                 (._try-capture this f)
@@ -454,15 +467,18 @@
       (set! (.-nocache? this) no-cache)))
 
   (_snapshot [_this]
-    [state watching auto-run])
+    (set! snapshot [state watching auto-run]))
 
-  (_restore [this [s w a]]
-    (set! watching w)
-    (set! state s)
-    (set! auto-run a)
-    (set! dirty? false)
-    (doseq [watcher (set w)]
-      (-add-watch watcher this handle-reaction-change)))
+  (_restore [this]
+    (when (some? snapshot)
+      (let [[s w a] snapshot]
+        (set! snapshot nil)
+        (set! watching w)
+        (set! state s)
+        (set! auto-run a)
+        (set! dirty? false)
+        (doseq [watched (set w)]
+          (-add-watch watched this handle-reaction-change)))))
 
   IRunnable
   (run [this]
@@ -490,6 +506,7 @@
 
   IDisposable
   (dispose! [this]
+    (._snapshot this)
     (let [s state
           wg watching]
       (set! watching nil)
@@ -539,7 +556,7 @@
   - :on-set - runs when reaction value is updated, before notifying watchers.
   - :on-dispose - runs when the reaction is disposed."
   [f & {:keys [auto-run on-set on-dispose]}]
-  (let [reaction (->Reaction f nil true false nil nil nil nil)]
+  (let [reaction (->Reaction f nil true false nil nil nil nil nil)]
     (._set-opts reaction {:auto-run auto-run
                           :on-set on-set
                           :on-dispose on-dispose})
