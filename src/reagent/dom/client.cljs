@@ -58,7 +58,8 @@
    (set! batch/react-flush react-dom/flushSync)
    (let [eff-compiler (or compiler tmpl/*current-default-compiler*)
          comp (fn [] (p/as-element eff-compiler el))
-         js-props #js {:comp comp}
+         js-props #js {}
+         _ (set! (.-comp js-props) comp)
          rg-root-el (react/createElement reagent-root js-props)]
      (.render root
               (if-not strict-mode?
