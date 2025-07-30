@@ -126,6 +126,7 @@
          callback (fn []
                     (p/resolve! first-render))
          compiler (:compiler options)
+         strict? (:strict? options)
          restore-error-handlers (when (:capture-errors options)
                                   (init-capture))
          root (rdomc/create-root div)
@@ -133,9 +134,7 @@
          ;; with-render body.
          render-error (atom nil)]
      (-> (act* (fn []
-                 (if compiler
-                   (rdomc/render root comp compiler)
-                   (rdomc/render root comp))))
+                 (rdomc/render root comp compiler strict?)))
          ;; The callback is called even if render throws an error,
          ;; so this is always resolved.
          (p/then (fn []
