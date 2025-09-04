@@ -16,7 +16,14 @@
    [:input {:type "text"
             :placeholder "Shadow DOM input"
             :value @shadow-value
-            :on-change #(reset! shadow-value (.. % -target -value))
+            :on-change (fn [e]
+                         (let [v (.. e -target -value)]
+                           ;; Simulate async event handling like what an re-frame event handler would do.
+                           ;; For some reason just updating the ratom here directly without this doesn't
+                           ;; break the cursor like expected.
+                           (js/setTimeout (fn []
+                                            (reset! shadow-value v))
+                                          0)))
             :style {:padding "8px"
                     :border "2px solid #ccc"
                     :border-radius "4px"
