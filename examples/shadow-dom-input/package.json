@@ -1,0 +1,10 @@
+{
+  "name": "react-context-example",
+  "dependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "shadow-cljs": "3.1.7"
+  }
+}

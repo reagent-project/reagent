@@ -28,9 +28,9 @@
   ;;
   ;; But the saving grace here is that active input element can still be found
   ;; by querying for the `.activeElement`` on the shadow-root.
-  (let [active-element (.-activeElement js/document)]
+  (loop [active-element (.-activeElement js/document)]
     (if-let [shadow-root (.-shadowRoot active-element)]
-      (.-activeElement shadow-root)
+      (recur (.-activeElement shadow-root))
       active-element)))
 
 (defn input-node-set-value

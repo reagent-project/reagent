@@ -1,0 +1,9 @@
+{:deps true
+ :dev-http {3000 ["resources/public" "target/public"]}
+ :builds
+ {:app {:target :browser
+        :output-dir "target/public/js"
+        :asset-path "/js"
+        :devtools {:after-load shadow-dom-input-demo.core/run}
+        :modules {:main {:entries [shadow-dom-input-demo.core]
+                         :init-fn shadow-dom-input-demo.core/run}}}}}
