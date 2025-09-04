@@ -17,9 +17,25 @@
 
 (def ^:dynamic *force-set-dom-value* false)
 
+(defn get-true-active-element []
+  ;; For controlled inputs `input-node-set-value` tries to do some heurestics to
+  ;; preserve the cursor position. But before doing so, it tries to find the active
+  ;; element in the document.
+  ;;
+  ;; Unfortunately, if an input element is inside a shadow dom, the
+  ;; activeElement points to the shadow root instead of the input element. This
+  ;; messes up the cursor perservation logic.
+  ;;
+  ;; But the saving grace here is that active input element can still be found
+  ;; by querying for the `.activeElement`` on the shadow-root.
+  (let [active-element (.-activeElement js/document)]
+    (if-let [shadow-root (.-shadowRoot active-element)]
+      (.-activeElement shadow-root)
+      active-element)))
+
 (defn input-node-set-value
   [node rendered-value dom-value ^clj component {:keys [on-write]}]
-  (if (or (not (and (identical? node (.-activeElement js/document))
+  (if (or (not (and (identical? node (get-true-active-element))
                     (has-selection-api? (.-type node))
                     (string? rendered-value)
                     (string? dom-value)))
