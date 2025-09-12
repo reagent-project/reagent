@@ -7,7 +7,7 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
-            [reagent.dom :as rdom]
+            [reagent.dom] ;; Needed to keep *-prod tests passing. Not sure why.
             [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
@@ -1426,6 +1426,75 @@
 
         ;; TODO: Test that component RAtom is disposed
         (is (= "Count 6" (.-innerText div)))))))
+
+(deftest ^:dom functional-strict
+  (let [numbers (r/atom [0 1])
+        num-c (fn [i]
+                (let [x (get @numbers i)]
+                  [:span x]))
+        c (fn []
+            (let [xs @numbers
+                  ;; Test that hooks can be used.
+                  ref (react/useRef nil)]
+              [:span
+               "counting "
+               (for [i xs]
+                 ^{:key i}
+                 [num-c i])])
+          )]
+    (u/async
+     (u/with-render [div [c]]
+       {:compiler u/fn-compiler
+        :capture-errors true
+        :strict? true}
+
+       (u/act (reset! numbers [0 1 2]))
+       (is (= "counting 012" (.-innerText div)))
+       ;; TODO: Test that component RAtom is disposed
+
+       (when (dev?)
+         (is (string/blank?
+               ;; For sake of readability:
+               (string/join "  ||  "
+                 (reverse (:error @debug/warnings))))))
+))))
+
+(deftest ^:dom functional-strict-transitive
+  (let [count (r/atom 2)
+        numbers (rv/reaction (vec (range @count)))
+        num-c (fn [i]
+                (let [x (get @numbers i)]
+                  [:span x]))
+        c (fn []
+            (let [xs @numbers
+                  ;; Test that hooks can be used.
+                  ref (react/useRef nil)]
+              [:span
+               "counting "
+               (for [i xs]
+                 ^{:key i}
+                 [num-c i])])
+          )]
+    (u/async
+     (u/with-render [div [c]]
+       {:compiler u/fn-compiler
+        :capture-errors true
+        :strict? true}
+
+       (u/act (reset! count 3))
+       (is (= "counting 012" (.-innerText div)))
+       (is (= [0 1 2] @numbers))
+       ;; TODO: Test that component RAtom is disposed
+
+       (u/act (reset! count 2))
+       (is (= "counting 01" (.-innerText div)))
+
+       (when (dev?)
+         (is (string/blank?
+              ;; For sake of readability:
+              (string/join "  ||  "
+                (reverse (:error @debug/warnings))))))
+))))
 
 (deftest ^:dom functional-component-poc-ratom-state-hook
   (let [r-count (r/atom 3)
