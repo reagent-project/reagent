@@ -28,9 +28,12 @@
   (or (named? x)
       (string? x)))
 
+(defn ^boolean reagent-fn-component? [^clj x]
+  (.-reagent-component x))
+
 (defn ^boolean valid-tag? [^clj x]
   (or (hiccup-tag? x)
-      (.-reagent-component x)
+      (reagent-fn-component? x)
       (ifn? x)
       (instance? NativeWrapper x)))
 
@@ -171,7 +174,12 @@
       (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
 
-(defn reag-element-2 [tag v]
+(defn defc-element
+  "Tag is a React function component already wrapped
+  with Reagent function component implementation. This function just
+  needs to wrap the Hiccup element children into the React element
+  properties and set up the optional React key if set."
+  [tag v]
   (let [jsprops #js {}]
     (set! (.-argv jsprops) (subvec v 1))
     (when-some [key (util/react-key-from-vec v)]
@@ -300,8 +308,8 @@
       :f> (function-element (nth v 1 nil) v 2 compiler)
       :<> (fragment-element v compiler)
       (cond
-       (.-reagent-component tag)
-       (reag-element-2 tag v)
+       (reagent-fn-component? tag)
+       (defc-element tag v)
 
        (hiccup-tag? tag)
        (hiccup-element v compiler)
