@@ -1,5 +1,5 @@
 (ns reagent.core
-  (:require [cljs.core :as core]
+  (:require [reagent.impl.util :as util]
             [reagent.ratom :as ra]))
 
 (defmacro with-let
@@ -26,30 +26,6 @@
   `(reagent.ratom/make-reaction
     (fn [] ~@body)))
 
-(defn- parse-sig
-  "Parse doc-string, attr-map, and other metadata from the defn like arguments list."
-  [name fdecl]
-  (let [;; doc-string
-        [fdecl m] (if (string? (first fdecl))
-                    [(next fdecl) {:doc (first fdecl)}]
-                    [fdecl {}])
-        ;; attr-map
-        [fdecl m] (if (map? (first fdecl))
-                    [(next fdecl) (conj m (first fdecl))]
-                    [fdecl m])
-        ;; If single arity, wrap in one item list for next step
-        fdecl (if (vector? (first fdecl))
-                (list fdecl)
-                fdecl)
-        ;; If multi-arity, the last item could be an additional attr-map
-        [fdecl m] (if (map? (last fdecl))
-                    [(butlast fdecl) (conj m (last fdecl))]
-                    [fdecl m])
-        m (conj {:arglists (list 'quote (#'cljs.core/sigs fdecl))} m)
-        ;; Merge with the meta from the original sym
-        m (conj (if (meta name) (meta name) {}) m)]
-    [(with-meta name m) fdecl]))
-
 (defmacro defc
   "Create a Reagent function component
 
@@ -58,23 +34,28 @@
   function. The created function is a React JS function component, i.e., it
   takes single js-props argument, and the function body is already wrapped to
   use Reagent implementation to work with Ratoms etc."
+  ;; NOTE: It would be possible for this macro to also leave out wrapping the fn body on Reagent
+  ;; wrapper and do it runtime, same as :f> but this way we should get some performance
+  ;; benefits of doing more of the work on component definition and not on Hiccup->React conversion
+  ;; time.
   {:arglists '([name doc-string? attr-map? [params*] prepost-map? body]
                [name doc-string? attr-map? ([params*] prepost-map? body) + attr-map?])}
   [sym & fdecl]
-  (let [[fname fdecl] (parse-sig sym fdecl)]
+  (let [[fname fdecl] (util/parse-sig sym fdecl)]
     ;; Consider if :arglists should be replaced with [jsprops] or if that should be
     ;; included as one item?
-    `(do
+    `(let [;; It is important that this fn is using the original name, so
+           ;; multi-arity definitions can call the other arities.
+           render-fn# (fn ~sym ~@fdecl)]
        (def ~fname (reagent.impl.component/memo
                      (fn ~sym [jsprops#]
-                       (let [;; It is important that this fn is using the original name, so
-                             ;; multi-arity definitions can call the other arities.
-                             render-fn# (fn ~sym ~@fdecl)
-                             jsprops2# (js/Object.assign (core/js-obj "reagentRender" render-fn#) jsprops#)]
+                       (let [jsprops2# (cljs.core/js-obj)]
+                         (set! (.-reagentRender ^{:tag 'clj} jsprops2#) render-fn#)
+                         (js/Object.assign jsprops2# jsprops#)
                          (reagent.impl.component/functional-render reagent.impl.template/*current-default-compiler* jsprops2#)))))
        (set! (.-reagent-component ~fname) true)
        (set! (.-displayName ~fname) ~(str sym))
-       (js/Object.defineProperty ~fname "name" (core/js-obj "value" ~(str sym) "writable" false)))))
+       (js/Object.defineProperty ~fname "name" (cljs.core/js-obj "value" ~(str sym) "writable" false)))))
 
 (comment
   (clojure.pprint/pprint (macroexpand-1 '(defc foobar [a b] (+ a b))))
