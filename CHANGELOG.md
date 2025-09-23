@@ -2,8 +2,11 @@
 
 ## Unreleased
 
-**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha1...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha2...master)**
 
+- Add new `defc` macro to define components which will use functional component
+  implementation, i.e., they work with React Hooks, without using them with the
+  `:f>` shortcut.
 
 ## 2.0.0-alpha2 (2025-07-15)
 

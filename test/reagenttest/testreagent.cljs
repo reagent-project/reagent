@@ -1392,6 +1392,18 @@
           {:compiler u/class-compiler}
           (is (= "Hello foo" (.-innerText div)))))
 
+      ;; Doesn't work, :> presumes callable function, which React.memo wrapped
+      ;; component isn't
+      ; (testing "defc with :> (not recommended)"
+      ;   (u/with-render [div [:f> test-1 "foo"]]
+      ;     {:compiler u/class-compiler}
+      ;     (is (= "Hello foo" (.-innerText div)))))
+
+      (testing "defc with :r>"
+        (u/with-render [div [:r> test-1 #js {:argv ["foo"]}]]
+          {:compiler u/class-compiler}
+          (is (= "Hello foo" (.-innerText div)))))
+
       (testing "compiler options"
         (u/with-render [div [c "foo"]]
           {:compiler u/fn-compiler}
