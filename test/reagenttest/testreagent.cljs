@@ -1400,9 +1400,11 @@
       ;     (is (= "Hello foo" (.-innerText div)))))
 
       (testing "defc with :r>"
-        (u/with-render [div [:r> test-1 #js {:argv ["foo"]}]]
-          {:compiler u/class-compiler}
-          (is (= "Hello foo" (.-innerText div)))))
+        (let [props #js {}]
+          (set! (.-argv props) ["foo"])
+          (u/with-render [div [:r> test-1 props]]
+            {:compiler u/class-compiler}
+            (is (= "Hello foo" (.-innerText div))))))
 
       (testing "compiler options"
         (u/with-render [div [c "foo"]]
