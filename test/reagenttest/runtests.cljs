@@ -6,6 +6,7 @@
             [reagenttest.testtrack]
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
+            [reagenttest.testhooks]
             [reagenttest.performancetest]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
@@ -79,7 +80,8 @@
   (js/console.log "DOM tests disabled")
   ;; Filter vars on namespaces using ^:dom metadata on test vars.
   (filter-vars! [(ns-publics 'reagenttest.testreagent)
-                 (ns-publics 'reagenttest.testwrap)]
+                 (ns-publics 'reagenttest.testwrap)
+                 (ns-publics 'reagenttest.testhooks)]
                 (fn [var] (not (:dom (meta var))))))
 
 ;; Macro which sets *main-cli-fn*
