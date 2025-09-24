@@ -28,8 +28,12 @@
   (or (named? x)
       (string? x)))
 
-(defn ^boolean valid-tag? [x]
+(defn ^boolean reagent-fn-component? [^clj x]
+  (.-reagent-component x))
+
+(defn ^boolean valid-tag? [^clj x]
   (or (hiccup-tag? x)
+      (reagent-fn-component? x)
       (ifn? x)
       (instance? NativeWrapper x)))
 
@@ -170,6 +174,18 @@
       (set! (.-key jsprops) key))
     (react/createElement c jsprops)))
 
+(defn defc-element
+  "Tag is a React function component already wrapped
+  with Reagent function component implementation. This function just
+  needs to wrap the Hiccup element children into the React element
+  properties and set up the optional React key if set."
+  [tag v]
+  (let [jsprops #js {}]
+    (set! (.-argv jsprops) (subvec v 1))
+    (when-some [key (util/react-key-from-vec v)]
+      (set! (.-key jsprops) key))
+    (react/createElement tag jsprops)))
+
 (defn function-element [tag v first-arg compiler]
   (let [jsprops #js {}]
     (set! (.-reagentRender jsprops) tag)
@@ -284,7 +300,7 @@
   (when (nil? compiler)
     (js/console.error "vec-to-elem" (pr-str v)))
   (assert (pos? (count v)) (util/hiccup-err v (comp/comp-name) "Hiccup form should not be empty"))
-  (let [tag (nth v 0 nil)]
+  (let [^clj tag (nth v 0 nil)]
     (assert (valid-tag? tag) (util/hiccup-err v (comp/comp-name) "Invalid Hiccup form"))
     (case tag
       :> (native-element (->HiccupTag (nth v 1 nil) nil nil nil) v 2 compiler)
@@ -292,6 +308,9 @@
       :f> (function-element (nth v 1 nil) v 2 compiler)
       :<> (fragment-element v compiler)
       (cond
+       (reagent-fn-component? tag)
+       (defc-element tag v)
+
        (hiccup-tag? tag)
        (hiccup-element v compiler)
 
