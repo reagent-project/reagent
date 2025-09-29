@@ -68,6 +68,12 @@
 
 (def effect-ran (atom 0))
 
+(r/defc effect-0 [x]
+  (hooks/use-effect (fn []
+                      (swap! effect-ran inc)))
+  (swap! ran inc)
+  [:div "foo " (:foo x)])
+
 (r/defc effect-1 [x]
   (hooks/use-effect (fn []
                       (swap! effect-ran inc)
@@ -78,7 +84,25 @@
 
 (deftest ^:dom use-effect-test
   (u/async
-    (testing "update state, pure value"
+    (testing "no dependencies"
+      (reset! ran 0)
+      (reset! effect-ran 0)
+      (let [x (r/atom {:foo 0})
+            y (r/atom 0)
+            c (fn []
+                [effect-0 @x @y])]
+        (u/with-render [div [c]]
+          (is (= 1 @ran))
+          (is (= 1 @effect-ran))
+          (is (= "foo 0" (.-innerText div)))
+
+          (u/act (swap! x assoc :foo 1))
+          (testing "render causes effect rerun"
+            (is (= 2 @ran))
+            (is (= 2 @effect-ran))
+            (is (= "foo 1" (.-innerText div)))))))
+
+    (testing "clj dependencies"
       (reset! ran 0)
       (reset! effect-ran 0)
       (let [x (r/atom {:foo 0})

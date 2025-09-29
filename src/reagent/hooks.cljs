@@ -60,9 +60,12 @@
 (defn use-ref [v]
   (react/useRef v))
 
-(defn use-effect [setup dependencies]
-  (react/useEffect (with-return-value-check setup)
-                   (array (use-clj-deps dependencies))))
+(defn use-effect
+  ([setup]
+   (react/useEffect (with-return-value-check setup)))
+  ([setup dependencies]
+   (react/useEffect (with-return-value-check setup)
+                    (array (use-clj-deps dependencies)))))
 
 (defn use-layout-effect [setup dependencies]
   (react/useLayoutEffect (with-return-value-check setup)
