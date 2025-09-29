@@ -181,23 +181,59 @@
 
 (deftest ^:dom use-ref-test
   (u/async
-    (testing "update state, clojure value"
-      (reset! ran 0)
-      (let [y (r/atom 0)
-            x (r/atom 5)
-            c (fn []
-                ^{:key @y}
-                [ref-1 @x])]
-        (u/with-render [div [c]]
-          (is (= 1 @ran))
-          (is (= "foo 5 5" (.-innerText div)))
+    (reset! ran 0)
+    (let [y (r/atom 0)
+          x (r/atom 5)
+          c (fn []
+              ^{:key @y}
+              [ref-1 @x])]
+      (u/with-render [div [c]]
+        (is (= 1 @ran))
+        (is (= "foo 5 5" (.-innerText div)))
 
-          (u/act (reset! x 7))
+        (u/act (reset! x 7))
+        (is (= 2 @ran))
+        (is (= "foo 7 5" (.-innerText div)))
+
+        (u/act (reset! y 1)
+               (reset! x 9))
+        (is (= 3 @ran))
+        (is (= "foo 9 9" (.-innerText div)))
+        ))))
+
+(def memo-ran (atom 0))
+
+(r/defc memo-1 [x]
+  (let [y (hooks/use-memo (fn []
+                            (swap! memo-ran inc)
+                            (+ (:foo x) 5))
+                          [x])]
+    (swap! ran inc)
+    [:div "foo " (:foo x) " " y]))
+
+(deftest ^:dom use-memo-test
+  (u/async
+    (reset! ran 0)
+    (reset! memo-ran 0)
+    (let [y (r/atom 0)
+          x (r/atom {:foo 1})
+          c (fn []
+              [memo-1 @x @y])]
+      (u/with-render [div [c]]
+        (is (= 1 @ran))
+        (is (= 1 @memo-ran))
+        (is (= "foo 1 6" (.-innerText div)))
+
+        (u/act (swap! x assoc :foo 2))
+        (testing "new value"
           (is (= 2 @ran))
-          (is (= "foo 7 5" (.-innerText div)))
+          (is (= 2 @memo-ran))
+          (is (= "foo 2 7" (.-innerText div))))
 
-          (u/act (reset! y 1)
-                 (reset! x 9))
+        (u/act (swap! y inc)
+               (swap! x assoc :foo 2))
+        (testing "equal value doesn't cause memo re-run"
           (is (= 3 @ran))
-          (is (= "foo 9 9" (.-innerText div)))
-          )))))
+          (is (= 2 @memo-ran))
+          (is (= "foo 2 7" (.-innerText div))))
+        ))))
