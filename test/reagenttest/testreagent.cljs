@@ -1449,6 +1449,74 @@
         ;; TODO: Test that component RAtom is disposed
         (is (= "Count 6" (.-innerText div)))))))
 
+(deftest ^:dom functional-strict
+  (let [numbers (r/atom [0 1])
+        num-c (fn [i]
+                (let [x (get @numbers i)]
+                  [:span x]))
+        c (fn []
+            (let [xs @numbers
+                  ;; Test that hooks can be used.
+                  ref (react/useRef nil)]
+              [:span
+               "counting "
+               (for [i xs]
+                 ^{:key i}
+                 [num-c i])]))
+        runs (rv/running)]
+    (u/async
+      (u/with-render [div [c]]
+        {:compiler u/fn-compiler
+         :capture-errors true
+         :strict? true}
+
+        (u/act (reset! numbers [0 1 2]))
+        (is (= "counting 012" (.-innerText div)))
+
+        (when (dev?)
+          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+
+      (testing "after unmount ratom watches are cleaned"
+        (is (= {} (.-watches ^clj numbers)))
+        (is (= runs (rv/running)))))))
+
+(deftest ^:dom functional-strict-transitive
+  (let [count (r/atom 2)
+        numbers (rv/reaction (vec (range @count)))
+        num-c (fn [i]
+                (let [x (get @numbers i)]
+                  [:span x]))
+        c (fn []
+            (let [xs @numbers
+                  ;; Test that hooks can be used.
+                  ref (react/useRef nil)]
+              [:span
+               "counting "
+               (for [i xs]
+                 ^{:key i}
+                 [num-c i])]))
+
+        runs (rv/running)]
+    (u/async
+      (u/with-render [div [c]]
+        {:compiler u/fn-compiler
+         :capture-errors true
+         :strict? true}
+
+        (u/act (reset! count 3))
+        (is (= "counting 012" (.-innerText div)))
+        (is (= [0 1 2] @numbers))
+
+        (u/act (reset! count 2))
+        (is (= "counting 01" (.-innerText div)))
+
+        (when (dev?)
+          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+
+      (testing "after unmount ratom watches are cleaned"
+        (is (= {} (.-watches ^clj numbers)))
+        (is (= runs (rv/running)))))))
+
 (deftest ^:dom functional-component-poc-ratom-state-hook
   (let [r-count (r/atom 3)
         set-count! (atom nil)
