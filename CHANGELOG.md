@@ -1,15 +1,16 @@
 # Changelog
 
-## Unreleased
+## 2.0.0-alpha3 (2025-09-29)
 
-**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha2...master)**
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha2...v2.0.0-alpha3)**
 
 - Add new `defc` macro to define components which will use functional component
   implementation, i.e., they work with React Hooks, without using them with the
-  `:f>` shortcut.
+  `:f>` shortcut. ([#638](https://github.com/reagent-project/reagent/pull/638))
 - Introduce new `reagent.hooks` namespace with hooks wrapper for React Hooks.
   These wrappers also help with using Clojure values for state or in hooks
-  dependencies.
+  dependencies. ([#639](https://github.com/reagent-project/reagent/pull/639))
+- Fix StrictMode breaking RAtoms in functional components ([#634](https://github.com/reagent-project/reagent/issues/634), [#640](https://github.com/reagent-project/reagent/issues/640))
 
 ## 2.0.0-alpha2 (2025-07-15)
 

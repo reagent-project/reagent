@@ -439,7 +439,7 @@
             ;; (js/console.log "queue cleanup")
             (set! (.-cleanup-cancelled reagent-state) false)
             (set! (.-cleanup-queued reagent-state) true)
-            ;; Promise.resolve creates a microtask, vs setTimeut regular task.
+            ;; Promise.resolve creates a microtask, vs setTimeout regular task.
             ;; A scheduled microtask runs before the next event loop begings (where a regular task would run).
             (.then (.resolve js/Promise nil)
                    (fn []
