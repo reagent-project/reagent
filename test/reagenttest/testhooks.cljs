@@ -175,6 +175,29 @@
 
 
 (r/defc ref-1 [x]
-  (let [r (hooks/use-ref x)]
+  (let [ref-val (hooks/use-ref x)]
     (swap! ran inc)
-    [:div "foo " x]))
+    [:div "foo " x " " (.-current ref-val)]))
+
+(deftest ^:dom use-ref-test
+  (u/async
+    (testing "update state, clojure value"
+      (reset! ran 0)
+      (let [y (r/atom 0)
+            x (r/atom 5)
+            c (fn []
+                ^{:key @y}
+                [ref-1 @x])]
+        (u/with-render [div [c]]
+          (is (= 1 @ran))
+          (is (= "foo 5 5" (.-innerText div)))
+
+          (u/act (reset! x 7))
+          (is (= 2 @ran))
+          (is (= "foo 7 5" (.-innerText div)))
+
+          (u/act (reset! y 1)
+                 (reset! x 9))
+          (is (= 3 @ran))
+          (is (= "foo 9 9" (.-innerText div)))
+          )))))
