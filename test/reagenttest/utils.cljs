@@ -10,16 +10,17 @@
 ;; Should be only set for tests....
 ;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
 
-(defonce original-console-error (.-error js/console))
+(when-not (.-wrapped (.-error js/console))
+  (let [original-console-error (.-error js/console)]
+    (set! (.-error js/console)
+          (fn [& [first-arg :as args]]
+            (cond
+              (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
+              nil
 
-(set! (.-error js/console)
-      (fn [& [first-arg :as args]]
-        (cond
-          (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
-          nil
-
-          :else
-          (apply original-console-error args))))
+              :else
+              (apply original-console-error args))))
+    (set! (.-wrapped (.-error js/console)) true)))
 
 ;; The code from deftest macro will refer to these
 (def class-compiler tmpl/class-compiler)

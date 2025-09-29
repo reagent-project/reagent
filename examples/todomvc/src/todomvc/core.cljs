@@ -128,5 +128,5 @@
 
 (defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
-(defn ^:export ^:dev/after-load run []
+(defn ^:export run []
   (rdomc/render @root [todo-app]))
