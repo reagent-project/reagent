@@ -427,22 +427,26 @@
           ;; FIXME: Access cljsRatom using interop forms
           rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
-      ;; Run ratom dispose async with zero-delay,
-      ;; this is used to cancel the extra cleanup on the second setup fn call,
-      ;; so we can ensure dispose is only called when the component is really unmounted.
+      ;; Delay ratom dispose call so it can be cancelled if StrictMode
+      ;; calls setup the second time.
       (react/useEffect
         (fn mount []
-          (when-let [t (.-cleanup-callback reagent-state)]
-            (js/clearTimeout t)
-            (set! (.-cleanup-callback reagent-state) nil))
+          (when (.-cleanup-queued reagent-state)
+            ;; (js/console.log "cancel cleanup")
+            (set! (.-cleanup-cancelled reagent-state) true)
+            (set! (.-cleanup-queued reagent-state) false))
           (fn unmount []
-            (set! (.-cleanup-callback reagent-state)
-                  (js/setTimeout (fn []
-                                   (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
-                                   (set! (.-cleanup-callback reagent-state) nil))
-                                 ;; Is zero delay enough to get these to run async in strict mode? Seems like it. StrictMode likely calls
-                                 ;; these synchronously so any async operation is enough to get this delayed.
-                                 0))))
+            ;; (js/console.log "queue cleanup")
+            (set! (.-cleanup-cancelled reagent-state) false)
+            (set! (.-cleanup-queued reagent-state) true)
+            ;; Promise.resolve creates a microtask, vs setTimeut regular task.
+            ;; A scheduled microtask runs before the next event loop begings (where a regular task would run).
+            (.then (.resolve js/Promise nil)
+                   (fn []
+                     (when (false? (.-cleanup-cancelled reagent-state))
+                       ;; (js/console.log "run cleanup")
+                       (set! (.-cleanup-queued reagent-state) false)
+                       (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!))))))
         ;; Ignore props - only run effect once on mount and unmount
         ;; (which means always twice under the React strict mode).
         #js [])
