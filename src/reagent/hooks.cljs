@@ -41,6 +41,13 @@
               new-value)))))
     #js [updater]))
 
+(defn- clojure-aware-reducer-updater [reducer]
+  (fn [state action]
+    (let [new-state (reducer state action)]
+      (if (= new-state state)
+        state
+        new-state))))
+
 ;; Hooks
 
 (defn use-state [initial-state]
@@ -48,14 +55,14 @@
         set-state (use-clojure-aware-updater set-state)]
     #js [state set-state]))
 
-(defn use-reducer [reducer initial-arg init]
-  (react/useReducer (fn [state action]
-                      (let [new-state (reducer state action)]
-                        (if (= new-state state)
-                          state
-                          new-state)))
-                    initial-arg
-                    init))
+(defn use-reducer
+  ([reducer initial-arg]
+   (react/useReducer (clojure-aware-reducer-updater reducer)
+                     initial-arg))
+  ([reducer initial-arg init]
+   (react/useReducer (clojure-aware-reducer-updater reducer)
+                     initial-arg
+                     init)))
 
 (defn use-ref [v]
   (react/useRef v))

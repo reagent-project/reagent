@@ -12,7 +12,13 @@
                            (set! rv/debug false))})
 
 (def ran (atom 0))
+(def child-ran (atom 0))
 (def update-state (atom nil))
+(def dispatch (atom nil))
+
+(r/defc child [x]
+  (swap! child-ran inc)
+  [:div " child " x])
 
 (r/defc state-1 []
   (let [[x set-x] (hooks/use-state 0)]
@@ -24,7 +30,8 @@
   (let [[x set-x] (hooks/use-state {:foo 0})]
     (reset! update-state set-x)
     (swap! ran inc)
-    [:div "foo " (:foo x)]))
+    [:div "foo " (:foo x)
+     [child (:foo x)]]))
 
 (deftest ^:dom use-state-test
   (u/async
@@ -40,30 +47,29 @@
 
     (testing "update state, clojure value"
       (reset! ran 0)
+      (reset! child-ran 0)
       (u/with-render [div [state-2]]
         (is (= 1 @ran))
-        (is (= "foo 0" (.-innerText div)))
+        (is (= 1 @child-ran))
+        (is (= "foo 0 child 0" (.-innerText div)))
 
         (u/act (@update-state #(assoc % :foo 1)))
         (testing "new value causes re-render"
           (is (= 2 @ran))
-          (is (= "foo 1" (.-innerText div))))
+          (is (= 2 @child-ran))
+          (is (= "foo 1 child 1" (.-innerText div))))
 
         (u/act (@update-state #(assoc % :foo 1)))
         (testing "associng equal value to the state shouldn't trigger re-render, but looks the first time does"
           (is (= 3 @ran))
-          (is (= "foo 1" (.-innerText div))))
+          (is (= 2 @child-ran))
+          (is (= "foo 1 child 1" (.-innerText div))))
 
         (u/act (@update-state #(assoc % :foo 1)))
         (testing "associng equal value to the state shouldn't trigger re-render"
           (is (= 3 @ran))
-          (is (= "foo 1" (.-innerText div))))
-
-        ;; try again
-        (u/act (@update-state #(assoc % :foo 1)))
-        (testing "associng equal value to the state shouldn't trigger re-render"
-          (is (= 3 @ran))
-          (is (= "foo 1" (.-innerText div))))
+          (is (= 2 @child-ran))
+          (is (= "foo 1 child 1" (.-innerText div))))
         ))))
 
 (def effect-ran (atom 0))
@@ -127,3 +133,48 @@
             (is (= 3 @ran))
             (is (= 2 @effect-ran))
             (is (= "foo 1" (.-innerText div)))))))))
+
+(r/defc reducer-1 [x]
+  (let [[v dispatch*] (hooks/use-reducer (fn [current-state action]
+                                           (update current-state :foo + action))
+                                         x
+                                         (fn [init-arg]
+                                           {:foo init-arg}))]
+    (swap! ran inc)
+    (reset! dispatch dispatch*)
+    [:div "foo " (:foo v)
+     [child (:foo v)]]))
+
+(deftest ^:dom use-reducer-test
+  (u/async
+    (testing "update state, clojure value"
+      (reset! ran 0)
+      (reset! child-ran 0)
+      (u/with-render [div [reducer-1 0]]
+        (is (= 1 @ran))
+        (is (= 1 @child-ran))
+        (is (= "foo 0 child 0" (.-innerText div)))
+
+        (u/act (@dispatch 2))
+        (testing "new value causes re-render"
+          (is (= 2 @ran))
+          (is (= 2 @child-ran))
+          (is (= "foo 2 child 2" (.-innerText div))))
+
+        (u/act (@dispatch 0))
+        (testing "equal value shouldn't trigger re-render, but looks the first time does"
+          (is (= 3 @ran))
+          (is (= 2 @child-ran))
+          (is (= "foo 2 child 2" (.-innerText div))))
+
+        (u/act (@dispatch 0))
+        (testing "equal value shouldn't trigger re-render"
+          (is (= 4 @ran))
+          (is (= 2 @child-ran))
+          (is (= "foo 2 child 2" (.-innerText div))))))))
+
+
+(r/defc ref-1 [x]
+  (let [r (hooks/use-ref x)]
+    (swap! ran inc)
+    [:div "foo " x]))
