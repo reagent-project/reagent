@@ -45,14 +45,26 @@
         (is (= "foo 0" (.-innerText div)))
 
         (u/act (@update-state #(assoc % :foo 1)))
-        (is (= 2 @ran))
-        (is (= "foo 1" (.-innerText div)))
+        (testing "new value causes re-render"
+          (is (= 2 @ran))
+          (is (= "foo 1" (.-innerText div))))
 
-        ;; associng the same value into the clj map shouldn't trigger
-        ;; change because the clojure equality is still same
         (u/act (@update-state #(assoc % :foo 1)))
-        (is (= 2 @ran))
-        (is (= "foo 1" (.-innerText div)))))))
+        (testing "associng equal value to the state shouldn't trigger re-render, but looks the first time does"
+          (is (= 3 @ran))
+          (is (= "foo 1" (.-innerText div))))
+
+        (u/act (@update-state #(assoc % :foo 1)))
+        (testing "associng equal value to the state shouldn't trigger re-render"
+          (is (= 3 @ran))
+          (is (= "foo 1" (.-innerText div))))
+
+        ;; try again
+        (u/act (@update-state #(assoc % :foo 1)))
+        (testing "associng equal value to the state shouldn't trigger re-render"
+          (is (= 3 @ran))
+          (is (= "foo 1" (.-innerText div))))
+        ))))
 
 (def effect-ran (atom 0))
 
@@ -79,14 +91,15 @@
           (is (= "foo 0" (.-innerText div)))
 
           (u/act (swap! x assoc :foo 1))
-          (is (= 2 @ran))
-          (is (= 2 @effect-ran))
-          (is (= "foo 1" (.-innerText div)))
+          (testing "new dependency value causes effect rerun"
+            (is (= 2 @ran))
+            (is (= 2 @effect-ran))
+            (is (= "foo 1" (.-innerText div))))
 
           ;; use-effect wrapper considers clojure equality
           (u/act (swap! x assoc :foo 1)
                  (swap! y inc))
-          (is (= 3 @ran))
-          ;; effect didn't ran again because dependency value is the same
-          (is (= 2 @effect-ran))
-          (is (= "foo 1" (.-innerText div))))))))
+          (testing "new equal dependency value doesn't cause effect to run again"
+            (is (= 3 @ran))
+            (is (= 2 @effect-ran))
+            (is (= "foo 1" (.-innerText div)))))))))

@@ -36,7 +36,6 @@
           (let [new-value (if (fn? v)
                             (apply v current-value args)
                             v)]
-            (js/console.log (pr-str current-value) (pr-str new-value) (= new-value current-value))
             (if (= new-value current-value)
               current-value
               new-value)))))
