@@ -7,6 +7,9 @@
 - Add new `defc` macro to define components which will use functional component
   implementation, i.e., they work with React Hooks, without using them with the
   `:f>` shortcut.
+- Introduce new `reagent.hooks` namespace with hooks wrapper for React Hooks.
+  These wrappers also help with using Clojure values for state or in hooks
+  dependencies.
 
 ## 2.0.0-alpha2 (2025-07-15)
 
