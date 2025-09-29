@@ -427,11 +427,24 @@
           ;; FIXME: Access cljsRatom using interop forms
           rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
+      ;; Run ratom dispose async with zero-delay,
+      ;; this is used to cancel the extra cleanup on the second setup fn call,
+      ;; so we can ensure dispose is only called when the component is really unmounted.
       (react/useEffect
         (fn mount []
+          (when-let [t (.-cleanup-callback reagent-state)]
+            (js/clearTimeout t)
+            (set! (.-cleanup-callback reagent-state) nil))
           (fn unmount []
-            (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)))
+            (set! (.-cleanup-callback reagent-state)
+                  (js/setTimeout (fn []
+                                   (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!)
+                                   (set! (.-cleanup-callback reagent-state) nil))
+                                 ;; Is zero delay enough to get these to run async in strict mode? Seems like it. StrictMode likely calls
+                                 ;; these synchronously so any async operation is enough to get this delayed.
+                                 0))))
         ;; Ignore props - only run effect once on mount and unmount
+        ;; (which means always twice under the React strict mode).
         #js [])
 
       ;; Argv is also stored in the state,
