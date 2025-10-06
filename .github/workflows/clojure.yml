@@ -108,6 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref,  'refs/tags/') }}
     needs: test
+    environment: build-site
     steps:
       - uses: actions/checkout@v4
       - name: Setup Java
