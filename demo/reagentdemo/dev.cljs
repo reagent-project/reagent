@@ -5,7 +5,7 @@
 
 (enable-console-print!)
 
-(defn ^:dev/after-load init! []
-  (core/init! (tests/init!)))
+(defn ^:dev/after-load refresh []
+  (core/init!))
 
-(init!)
+(reset! core/test-component (tests/init!))

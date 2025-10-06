@@ -1,2 +1,3 @@
 {:tasks {figwheel {:task (shell "lein figwheel")}
-         shadow {:task (shell "npx shadow-cljs watch client")}}}
+         shadow {:task (shell "npx shadow-cljs watch client")}
+         build-report {:task (shell "npx shadow-cljs run shadow.cljs.build-report client report.html")}}}

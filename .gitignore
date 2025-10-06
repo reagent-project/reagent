@@ -21,3 +21,5 @@ coverage/
 .cpcache/
 .lsp/.cache
 .nrepl.edn
+
+report.html

@@ -36,7 +36,9 @@
                               :value "Try again"}]]
                            (into [:<>] children)))})))
 
-(defn demo [& [test-component]]
+(def test-component (r/atom nil))
+
+(defn demo []
   [error-boundary
    [:div
     [:div.nav>ul.nav
@@ -45,12 +47,13 @@
      [:li [link {:href news/url} "News"]]
      [:li>a github "GitHub"]
      [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
-    [:div test-component]
+    (when-let [c @test-component]
+      [:div c])
     [tools/main-content]
     [github-badge]]])
 
-(defn init! [& [test-component]]
-  (tools/start! {:body [#'demo test-component]
+(defn init! []
+  (tools/start! {:body [#'demo]
                  :title-prefix "Reagent: "
                  :css-infiles ["site/public/css/examples.css"
                                "site/public/css/main.css"]}))

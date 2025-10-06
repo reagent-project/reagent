@@ -56,7 +56,8 @@
      :figwheel true
      :compiler {:parallel-build true
                 :optimizations :none
-                :main "reagentdemo.dev"
+                :main "reagentdemo.main"
+                :preloads [reagentdemo.dev]
                 :output-dir "target/cljsbuild/client/public/js/out"
                 :output-to "target/cljsbuild/client/public/js/main.js"
                 :npm-deps false
@@ -70,7 +71,8 @@
      :figwheel true
      :compiler {:parallel-build true
                 :optimizations :none
-                :main "reagentdemo.dev"
+                :main "reagentdemo.main"
+                :preloads [reagentdemo.dev]
                 :output-dir "target/cljsbuild/client-npm/public/js/out"
                 :output-to "target/cljsbuild/client-npm/public/js/main.js"
                 :npm-deps true
@@ -146,7 +148,7 @@
     ;; Cljs compiler will only read :main file.
     {:id "prod"
      :source-paths ["demo"]
-     :compiler {:main "reagentdemo.prod"
+     :compiler {:main "reagentdemo.main"
                 :optimizations :advanced
                 :elide-asserts true
                 :pretty-print false
@@ -159,7 +161,7 @@
 
     {:id "prod-npm"
      :source-paths ["demo"]
-     :compiler {:main "reagentdemo.prod"
+     :compiler {:main "reagentdemo.main"
                 :optimizations :advanced
                 :elide-asserts true
                 :pretty-print false

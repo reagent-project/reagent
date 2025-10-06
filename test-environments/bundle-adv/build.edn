@@ -1,4 +1,4 @@
-{:main reagentdemo.prod
+{:main reagentdemo.main
  :optimizations :advanced
  :output-to "target/bundle-adv/resources/public/js/out/index.js"
  :output-dir "target/bundle-adv/resources/public/js/out"
