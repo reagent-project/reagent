@@ -24,7 +24,8 @@ fi
 # Remove everything to ensure old files are removed
 rm -fr tmp/*
 
-cp -r target/cljsbuild/prod-npm/public/* tmp/
+# cp -r target/cljsbuild/prod-npm/public/* tmp/
+cp -r target/shadow-cljs-release/client/public/* tmp/
 cp -r target/prerender/public/* tmp/
 mkdir -p tmp/docs/master/
 cp -r target/doc/* tmp/docs/master/
