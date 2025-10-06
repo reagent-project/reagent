@@ -52,7 +52,8 @@
 (defn test-output-mini []
   (let [res @test-results]
     [:div
-     {:style test-box-style}
+     {:class "test-output-mini"
+      :style test-box-style}
      (if res
        (if (zero? (+ (:fail res) (:error res)))
          "All tests ok"

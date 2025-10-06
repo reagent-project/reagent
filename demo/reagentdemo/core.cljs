@@ -49,10 +49,10 @@
      [:li [link {:href news/url} "News"]]
      [:li>a github "GitHub"]
      [:li [:a {:href "http://reagent-project.github.io/docs/master/"} "API"]]]
-    (when-let [c @test-component]
-      [:div c])
     [tools/main-content]
-    [github-badge]]])
+    [github-badge]
+    (when-let [c @test-component]
+      [:div c])]])
 
 (defn init! []
   (tools/start! {:body [#'demo]

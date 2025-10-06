@@ -18,59 +18,61 @@
 body {
     background-color: #eeeeec;
     text-rendering: optimizeLegibility;
+    width: auto;
 }
 
 div.nav {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    width: 750px;
+    margin: 0 auto;
 }
 
 ul.nav {
-    margin: 0 auto;
-    width: 750px;
-    height: 40px;
     padding-left: 60px;
+    padding-right: 60px;
     padding-top: 18px;
+    padding-bottom: 18px;
     list-style-type: none;
+    display: flex;
+    flex-direction: row;
+    gap: 15px 60px;
 }
 
 ul.nav > li {
-    float: left;
-    margin-right: 60px;
 }
 
 ul.nav > li > a {
     text-decoration: none;
     text-transform: uppercase;
     letter-spacing: 4px;
-    font-size: 11px;
     color: #777;
 }
 
 ul.nav > li.brand > a {
     color: #444;
+    font-size: 1.2rem;
+    font-weight: 600;
 }
 
 @media (max-width: 768px) {
     div.nav {
-        position: static;
+        width: 100%;
+        /* position: static; */
         background-color: #fff;
     }
     ul.nav {
         width: 100%;
         padding: 18px 27px;
+        flex-wrap: wrap;
     }
     ul.nav > li {
-        float: left;
         margin-right: 30px;
     }
 }
 
 .reagent-demo {
+    width: 750px;
     background-color: #fff;
-    margin: 60px -100px;
+    margin: 0 auto;
     padding: 29px 60px 45px 60px;
 }
 
@@ -111,8 +113,6 @@ ul.nav > li.brand > a {
 }
 
 .test-output-mini {
-    text-align: right;
-    margin-right: -180px;
 }
 
 .reagent-demo h2 {
