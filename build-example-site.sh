@@ -30,6 +30,8 @@ cp -r target/prerender/public/* tmp/
 mkdir -p tmp/docs/master/
 cp -r target/doc/* tmp/docs/master/
 
+./build-docs-index.sh
+
 test -f tmp/index.html
 test -f tmp/js/main.js
 test ! -e tmp/js/out
