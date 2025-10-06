@@ -19,9 +19,19 @@
 
 (def test-results (r/atom nil))
 
-(def test-box-style {:position 'absolute
-                     :margin-left -35
-                     :color :#aaa})
+(def test-box-style {:position "absolute"
+                     :top 5
+                     :width 170
+                     :right 5
+                     :border "1px solid #444"
+                     :padding "3px"
+                     :background-color "#A88"
+                     :color "#000"})
+
+(def btn-style {:color "#000"
+                :background "#CCC"
+                :padding "2px"
+                :cursor "pointer"})
 
 (defn all-tests []
   (test/run-all-tests #"(reagenttest\.test.*|reagent\..*-test)"))
@@ -43,17 +53,25 @@
   (let [res @test-results]
     [:div
      {:style test-box-style}
-     [:div {:on-click run-tests}
-      (if res
-        (if (zero? (+ (:fail res) (:error res)))
-          "All tests ok"
-          [:span "Test failure: "
-           (:fail res) " failures, " (:error res) " errors."])
-        "testing")]
-     [:button
-      {:on-click (fn [_e]
-                   (reagenttest.performancetest/test-create-element))}
-      "Run performance test"]]))
+     (if res
+       (if (zero? (+ (:fail res) (:error res)))
+         "All tests ok"
+         (str "Test failure: "
+              (:fail res) " failures, " (:error res) " errors."))
+       "testing")
+     [:div
+      {:style {:display "flex"
+               :flex-direction "row"
+               :gap "3px"}}
+      [:button
+       {:on-click run-tests
+        :style btn-style}
+       "Run again"]
+      [:button
+       {:on-click (fn [_e]
+                    (reagenttest.performancetest/test-create-element))
+        :style btn-style}
+       "Perf test"]]]))
 
 (defn init! []
   ;; This function is only used when running tests from the demo app.

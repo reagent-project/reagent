@@ -9,9 +9,11 @@
 (defn github-badge []
   [:a.github-badge
    github
-   [:img {:style {:position "absolute" :top 0 :left 0 :border 0}
+   [:img {:width 149
+          :height 149
+          :style {:position "absolute" :top 0 :left 0 :border 0}
           :alt "Fork me on GitHub"
-          :src "https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png"}]])
+          :src "https://github.blog/wp-content/uploads/2008/12/forkme_left_orange_ff7600.png"}]])
 
 (def index-page "/index.html")
 (def title "Minimalistic React for ClojureScript")

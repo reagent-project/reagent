@@ -6,6 +6,9 @@
 (defn hello-world-component []
   [:h1 "Hello world"])
 
+(r/defc hello-world-component2 []
+  [:h1 "Hello world"])
+
 (def functional-compiler (r/create-compiler {:function-components true}))
 
 (defn test-functional []
@@ -24,8 +27,18 @@
   (js/performance.mark "class-end")
   (js/console.log (js/performance.measure "class" "class-start" "class-end")))
 
+(defn test-defc []
+  (js/performance.mark "defc-start")
+  ; (simple-benchmark [x [hello-world-component]] (p/as-element tmpl/default-compiler* x) 100000)
+  (dotimes [i 100000]
+    (p/as-element tmpl/class-compiler [hello-world-component2]))
+  (js/performance.mark "defc-end")
+  (js/console.log (js/performance.measure "defc" "defc-start" "defc-end")))
+
 (defn test-create-element []
+  (js/console.log "as-element benchmark")
   (test-functional)
+  (test-defc)
   (test-class))
 
 (comment
