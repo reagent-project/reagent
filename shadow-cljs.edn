@@ -1,4 +1,4 @@
-{:source-paths ["src" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo"]
+{:source-paths ["src" "test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo" "prerender"]
  :dev-http {8090 {:roots ["site/public" "target/shadow-cljs/client/public" "classpath:public"]}}
  :builds
  {:client {:target :browser
@@ -7,6 +7,7 @@
            :modules {:main {:entries [reagentdemo.main]}}
            :devtools {:ignore-warnings true
                       :preloads [reagentdemo.dev]}
+           :release {:output-dir "target/shadow-cljs-release/client/public/js"}
            :compiler-options {:warnings {:fn-deprecated false}}}
   :test {:target :karma
          :output-to "target/shadow-cljs/resources/public/js/karma.js"
@@ -14,6 +15,9 @@
          :asset-path "js"
          :source-map true
          :compiler-options {:infer-externs :auto}
-         :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}}
+         :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}
+  :prerender {:target :node-script
+              :main sitetools.prerender/-main
+              :output-to "target/shadow-cljs-prerender/main.js"}}
  :dependencies [[doo "0.1.11"]
                 [funcool/promesa "11.0.678"]]}
