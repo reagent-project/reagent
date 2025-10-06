@@ -30,18 +30,24 @@ cp -r target/prerender/public/* tmp/
 mkdir -p tmp/docs/master/
 cp -r target/doc/* tmp/docs/master/
 
-./build-docs-index.sh
-
 test -f tmp/index.html
 test -f tmp/js/main.js
 test ! -e tmp/js/out
 
-cd tmp
-
 # Restore files not created by this script
+(
+cd tmp
 git add docs/master/
 git checkout -- README.md docs/
+)
+
+# First need to ensure files for all versions are present
+./build-docs-index.sh
+
+(
+cd tmp
 git add .
 git commit -m "Built site from $SHA"
 git push
 rm -rf tmp
+)
