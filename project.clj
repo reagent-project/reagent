@@ -18,7 +18,9 @@
           :doc-paths []}
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.3"]
-                                  [org.clojure/clojurescript "1.12.42"]
+                                  ;; 1.12.42 currently breaks browser-npm(-prod) tests
+                                  ;; likely due to Closure compiler update affecting npm-deps
+                                  [org.clojure/clojurescript "1.11.132"]
                                   [figwheel "0.5.20"]
                                   [figwheel-sidecar "0.5.20"]
                                   [doo "0.1.11"]
