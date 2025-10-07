@@ -1,0 +1,24 @@
+{:main reagentdemo.main
+ :optimizations :advanced
+ :output-dir "target/lite-adv/resources/public/js/out"
+ :elide-asserts true
+ :closure-defines {cljs.core/*global* "window"}
+
+ ;; Lite mode
+ :lite-mode true
+ :elide-to-string true
+
+ ;; Testing
+ :pseudo-names true
+ :pretty-print true
+ :verbose true
+
+ ;; With npm deps
+ :npm-deps true
+ :target :browser
+ :output-to "target/lite-adv/resources/public/js/main.js"
+
+ ;; With webpack
+ ; :target :bundle
+ ; :output-to "target/lite-adv/resources/public/js/out/index.js"
+ }

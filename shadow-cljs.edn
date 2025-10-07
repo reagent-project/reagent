@@ -8,7 +8,9 @@
            :devtools {:ignore-warnings true
                       :preloads [reagentdemo.dev]}
            :release {:output-dir "target/shadow-cljs-release/client/public/js"}
-           :compiler-options {:warnings {:fn-deprecated false}}}
+           :compiler-options {:warnings {:fn-deprecated false}
+                              ;; Minor artifact size optimization
+                              :shadow-keywords true}}
   :test {:target :karma
          :output-to "target/shadow-cljs/resources/public/js/karma.js"
          :output-dir "target/shadow-cljs/resources/public/js"

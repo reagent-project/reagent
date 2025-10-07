@@ -3,4 +3,6 @@
  {:dev {:extra-paths ["test" "examples/todomvc/src" "examples/simple/src" "examples/geometry/src" "demo"]
         :extra-deps {org.clojure/clojurescript {:mvn/version "1.11.132"}
                      doo/doo {:mvn/version "0.1.11"}
-                     funcool/promesa {:mvn/version "11.0.678"}}}}}
+                     funcool/promesa {:mvn/version "11.0.678"}}}
+  :lite-cljs {:extra-deps {org.clojure/clojurescript {:git/sha "f9a6856d91e45377391406fc34a581bc4043615e"
+                                                      :git/url "https://github.com/clojure/clojurescript"}}}}}
