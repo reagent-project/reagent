@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "clojure-mcp": {
+      "args": ["-c", "clojure -X:user/mcp :port $(cat .shadow-cljs/nrepl.port)"],
+      "command": "/bin/bash"
+    },
+    "language-server": {
+      "command": "/bin/bash",
+      "args": ["-c", "mcp-language-server --workspace ${CWD} --lsp clojure-lsp listen"]
+    }
+  }
+}
