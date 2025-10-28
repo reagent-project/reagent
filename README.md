@@ -37,23 +37,14 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
 
-And provide React using either npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
+And provide React using npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
 ```
-npm i react react-dom@18.3.1 react@18.3.1
+npm i react react-dom@19.2.0 react@19.2.0
 ```
 
-or by adding [Cljsjs](http://cljsjs.github.io/) React packages to your project:
-
-```
-[cljsjs/react "18.3.1-1"]
-[cljsjs/react-dom "18.3.1-1"]
-```
-
-Note: Reagent 1 is tested against React 18, using the compatibility mode (i.e.,
-not using `createRoot` / concurrent mode), but should be compatible with other
-versions. [Reagent 2 (alpha version)](./CHANGELOG.md#200-alpha1-2025-06-24)
-is tested against React 19 with Concurrent Mode enabled.
+If you want to keep using React 18 or older versions, you can
+also use [cljsjs packages to provide React.](./doc/reagent1.md)
 
 Reagent isn't tied to only React-dom but should work with [other renderers](./doc/ReactRenderers.md) also.
 
