@@ -1,5 +1,38 @@
 # Changelog
 
+## 2.0.0 (TODO)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...v2.0.0)**
+
+- [Upgrade guide](./doc/2.0-upgrade.md)
+- [React 19 notes](./doc/React19.md)
+
+### React 19 support
+
+- Tests are now running against React 19 using new `react-dom/client` API,
+  meaning the React Concurrent Mode is enabled
+    - `reagent.dom` namespace is still available for use with old `react-dom`,
+      that is, React 17 and React 18 without Concurrent Mode, these aren't
+      being tested now though.
+- Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
+- Removed the second arity of `reagent.core/force-update` function, the `deep` parameter
+  is no longer supported.
+- React component renders due to ratom/reaction changes are triggered synchronously
+  using `react-dom/flushSync` (for DOM environments) [#630](https://github.com/reagent-project/reagent/pull/630)
+
+### New features
+
+- Add new `defc` macro to define components which will use functional component
+  implementation, i.e., they work with React Hooks, without using them with the
+  `:f>` shortcut. ([#638](https://github.com/reagent-project/reagent/pull/638))
+- Introduce new `reagent.hooks` namespace with hooks wrapper for React Hooks.
+  These wrappers also help with using Clojure values for state or in hooks
+  dependencies. ([#639](https://github.com/reagent-project/reagent/pull/639))
+
+### Bug fixes
+
+- Fix StrictMode breaking RAtoms in functional components ([#634](https://github.com/reagent-project/reagent/issues/634), [#640](https://github.com/reagent-project/reagent/issues/640))
+
 ## 2.0.0-alpha3 (2025-09-29)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v2.0.0-alpha2...v2.0.0-alpha3)**
