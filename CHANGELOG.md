@@ -1,13 +1,14 @@
 # Changelog
 
-## 2.0.0 (TODO)
+## 2.0.0 (2025-10-29)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...v2.0.0)**
 
 - [Upgrade guide](./doc/2.0-upgrade.md)
-- [React 19 notes](./doc/React19.md)
 
 ### React 19 support
+
+- [React 19 batching notes](./doc/React19.md)
 
 - Tests are now running against React 19 using new `react-dom/client` API,
   meaning the React Concurrent Mode is enabled
