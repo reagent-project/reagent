@@ -1,20 +1,24 @@
 (ns reagenttest.utils
   (:require-macros reagenttest.utils)
-  (:require [promesa.core :as p]
+  (:require ["react" :as react]
+            [promesa.core :as p]
             [reagent.core :as r]
             [reagent.debug :as debug]
-            [reagent.dom.server :as server]
             [reagent.dom.client :as rdomc]
-            [reagent.impl.template :as tmpl]))
+            [reagent.dom.server :as server]
+            [reagent.impl.template :as tmpl]
+            [reagent.dom :as rdom]))
 
-;; Should be only set for tests....
-;; (set! (.-IS_REACT_ACT_ENVIRONMENT js/window) true)
+(def OLD-REACT (<= (js/parseInt react/version) 18))
 
 (when-not (.-wrapped (.-error js/console))
   (let [original-console-error (.-error js/console)]
     (set! (.-error js/console)
           (fn [& [first-arg :as args]]
             (cond
+              (and OLD-REACT (string? first-arg) (.startsWith first-arg "Warning: ReactDOM.render is no longer supported in React 18."))
+              nil
+
               (and (string? first-arg) (.startsWith first-arg "Warning: The current testing environment is not configured to support"))
               nil
 
@@ -113,27 +117,73 @@
         (catch :default e
           (reject e))))))
 
-(defn with-render*
+(def ^:dynamic *render-error* nil)
+
+(defn old-with-render*
   "Run initial render and wait for the component to be mounted on the dom and then run
   given function to check the results. If the function
   also returns a Promise or thenable, this function
   waits until that is resolved, before unmounting the
   root and resolving the Promise this function returns."
   ([comp f]
-   (with-render* comp *test-compiler* f))
+   (old-with-render* comp *test-compiler* f))
   ([comp options f]
    (let [div (.createElement js/document "div")
          first-render (p/deferred)
          callback (fn []
                     (p/resolve! first-render))
          compiler (:compiler options)
-         strict? (:strict? options)
          restore-error-handlers (when (:capture-errors options)
                                   (init-capture))
-         root (rdomc/create-root div)
          ;; Magic setup to make exception from render available to the
          ;; with-render body.
          render-error (atom nil)]
+     (try
+       (if compiler
+         (rdom/render comp div {:compiler compiler
+                                :callback callback})
+         (rdom/render comp div callback))
+       (catch :default e
+         (reset! render-error e)
+         nil))
+     (-> (act* (fn [] first-render))
+         ;; The callback is called even if render throws an error,
+         ;; so this is always resolved.
+         (p/then (fn []
+                   (p/do
+                     (set! *render-error* @render-error)
+                     (f div)
+                     (set! *render-error* nil))))
+         ;; If f throws more errors, just ignore them?
+         ;; Not sure if this makes sense.
+         (p/catch (fn [] nil))
+         (p/then (fn []
+                   (rdom/unmount-component-at-node div)
+                   ;; Need to wait for reagent tick after unmount
+                   ;; for the ratom watches to be removed?
+                   (let [ratoms-cleaned (p/deferred)]
+                     (r/next-tick (fn []
+                                    (p/resolve! ratoms-cleaned)))
+                     ratoms-cleaned)))
+         (p/finally (fn []
+                      (when restore-error-handlers
+                        (restore-error-handlers))))))))
+
+(defn new-with-render*
+  "Run initial render and wait for the component to be mounted on the dom and then run
+  given function to check the results. If the function
+  also returns a Promise or thenable, this function
+  waits until that is resolved, before unmounting the
+  root and resolving the Promise this function returns."
+  ([comp f]
+   (new-with-render* comp *test-compiler* f))
+  ([comp options f]
+   (let [div (.createElement js/document "div")
+         compiler (:compiler options)
+         strict? (:strict? options)
+         restore-error-handlers (when (:capture-errors options)
+                                  (init-capture))
+         root (rdomc/create-root div)]
      (-> (act* (fn []
                  (rdomc/render root comp compiler strict?)))
          ;; The callback is called even if render throws an error,
@@ -151,3 +201,5 @@
          (p/finally (fn []
                       (when restore-error-handlers
                         (restore-error-handlers))))))))
+
+(def with-render* (if OLD-REACT old-with-render* new-with-render*))

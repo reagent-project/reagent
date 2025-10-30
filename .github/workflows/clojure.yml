@@ -8,22 +8,30 @@ jobs:
     strategy:
       matrix:
         env:
-          # React 19 is not available as UMD module
-          # - browser-cljsjs
-          # - browser-cljsjs-prod
           - browser-npm
           - browser-npm-prod
           - bundle
           - bundle-adv
-          # - node-cljsjs
           - node-npm
           - shadow-cljs-prod
+        react:
+          - 19
+        include:
+          # Test against React 18 on a few envs
+          # React 19 is not available as UMD module
+          - react: 18
+            env: browser-cljsjs
+          - react: 18
+            env: browser-cljsjs-prod
+          - react: 18
+            env: shadow-cljs-prod
 
-    name: Test ${{ matrix.env }}
+    name: Test ${{ matrix.env }} on React ${{ matrix.react }}
 
     runs-on: ubuntu-latest
     env:
       ENV: ${{ matrix.env }}
+      REACT_VERSION: ${{ matrix.react }}
 
     steps:
       - uses: actions/checkout@v4
@@ -38,10 +46,9 @@ jobs:
           lein: 2.9.10
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: lts/hydrogen
-          cache: 'npm'
+          node-version-file: 'package.json'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
@@ -54,6 +61,11 @@ jobs:
 
       - name: Install node deps
         run: npm ci
+
+      # Note, react 18 doesn't get cached? Or might even mess up node cache
+      - name: Setup React
+        if: ${{ matrix.react == 18 }}
+        run: npm install react@18.3.1 react-dom@18.3.1
 
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
@@ -81,10 +93,9 @@ jobs:
           lein: 2.9.8
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: lts/hydrogen
-          cache: 'npm'
+          node-version-file: 'package.json'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2

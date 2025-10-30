@@ -7,7 +7,6 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
-            [reagent.dom :as rdom]
             [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
@@ -1474,7 +1473,7 @@
         (is (= "counting 012" (.-innerText div)))
 
         (when (dev?)
-          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+          (is (string/blank? (string/join "\n" (reverse (remove #(string/starts-with? % "Warning: ReactDOM.render is no longer supported in React 18.") (:error @debug/warnings))))))))
 
       (testing "after unmount ratom watches are cleaned"
         (is (= {} (.-watches ^clj numbers)))
@@ -1511,7 +1510,7 @@
         (is (= "counting 01" (.-innerText div)))
 
         (when (dev?)
-          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+          (is (string/blank? (string/join "\n" (reverse (remove #(string/starts-with? % "Warning: ReactDOM.render is no longer supported in React 18.") (:error @debug/warnings))))))))
 
       (testing "after unmount ratom watches are cleaned"
         (is (= {} (.-watches ^clj numbers)))
