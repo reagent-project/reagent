@@ -1610,8 +1610,10 @@
              [:div.asd.xyz {:class "bar"}]
              compiler)))))
 
-(deftest ^:dom react-18-test
-  (when (>= (js/parseInt react/version) 18)
+(deftest ^:dom react-concurrent-mode-test
+  ;; 18 has this API, but skip on those tests, because calling
+  ;; rdomc/render once, will setup react-flush for concurrent mode.
+  (when (>= (js/parseInt react/version) 19)
     (let [div (.createElement js/document "div")
           root (rdomc/create-root div)
           i (r/atom 0)
