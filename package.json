@@ -1,9 +1,13 @@
 {
   "name": "@reagent-project/reagent",
   "private": true,
-  "dependencies": {},
   "scripts": {
     "start": "lein figwheel client-npm"
+  },
+  "packageManager": "npm@^11",
+  "engines": {
+    "node": "24",
+    "npm": "11"
   },
   "devDependencies": {
     "@cljs-oss/module-deps": "1.1.1",
@@ -16,11 +20,11 @@
     "karma-sourcemap-loader": "0.4.0",
     "karma-webpack": "5.0.1",
     "md5-file": "5.0.0",
-    "shadow-cljs": "3.2.1",
-    "webpack": "5.102.0",
-    "webpack-cli": "6.0.1",
     "prop-types": "15.8.1",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "shadow-cljs": "3.2.1",
+    "webpack": "5.102.0",
+    "webpack-cli": "6.0.1"
   }
 }

@@ -13,8 +13,8 @@
 - Tests are now running against React 19 using new `react-dom/client` API,
   meaning the React Concurrent Mode is enabled
     - `reagent.dom` namespace is still available for use with old `react-dom`,
-      that is, React 17 and React 18 without Concurrent Mode, these aren't
-      being tested now though.
+      that is, React 17 and React 18 without Concurrent Mode. Reagent is
+      also being tested against React 18 with `reagent.dom`.
 - Removed deprecated `reagent.dom/dom-node` function, the underlying function has been removed in React 19
 - Removed the second arity of `reagent.core/force-update` function, the `deep` parameter
   is no longer supported.

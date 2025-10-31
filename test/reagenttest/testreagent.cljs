@@ -7,7 +7,6 @@
             [react :as react]
             [reagent.core :as r]
             [reagent.debug :as debug :refer [dev?]]
-            [reagent.dom :as rdom]
             [reagent.dom.client :as rdomc]
             [reagent.dom.server :as server]
             [reagent.impl.component :as comp]
@@ -1474,7 +1473,7 @@
         (is (= "counting 012" (.-innerText div)))
 
         (when (dev?)
-          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+          (is (string/blank? (string/join "\n" (reverse (remove #(string/starts-with? % "Warning: ReactDOM.render is no longer supported in React 18.") (:error @debug/warnings))))))))
 
       (testing "after unmount ratom watches are cleaned"
         (is (= {} (.-watches ^clj numbers)))
@@ -1511,7 +1510,7 @@
         (is (= "counting 01" (.-innerText div)))
 
         (when (dev?)
-          (is (string/blank? (string/join "\n" (reverse (:error @debug/warnings)))))))
+          (is (string/blank? (string/join "\n" (reverse (remove #(string/starts-with? % "Warning: ReactDOM.render is no longer supported in React 18.") (:error @debug/warnings))))))))
 
       (testing "after unmount ratom watches are cleaned"
         (is (= {} (.-watches ^clj numbers)))
@@ -1611,8 +1610,10 @@
              [:div.asd.xyz {:class "bar"}]
              compiler)))))
 
-(deftest ^:dom react-18-test
-  (when (>= (js/parseInt react/version) 18)
+(deftest ^:dom react-concurrent-mode-test
+  ;; 18 has this API, but skip on those tests, because calling
+  ;; rdomc/render once, will setup react-flush for concurrent mode.
+  (when (>= (js/parseInt react/version) 19)
     (let [div (.createElement js/document "div")
           root (rdomc/create-root div)
           i (r/atom 0)
