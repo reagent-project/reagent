@@ -335,13 +335,15 @@ See [Security](./Security.md)
 
 ## [StrictMode](https://react.dev/reference/react/StrictMode)
 
-(React 19)
+(React 18/19 Concurrent Mode, i.e. createRoot)
 
 React StrictMode should help with finding bugs in your React components. With
 Reagent this unfortunately might not be helpful.
 
 > Your components will re-render an extra time to find bugs caused by impure rendering.
 > [Fixing bugs found by double rendering in development ](https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development)
+
+[React v18, New Strict Mode Behaviors](https://react.dev/blog/2022/03/29/react-v18#new-strict-mode-behaviors)
 
 In Reagent, triggering a side-effects from render functions has been somewhat
 common use, though it is not recommended in React. The Reagent demo site timer-component
