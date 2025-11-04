@@ -1448,6 +1448,36 @@
         ;; TODO: Test that component RAtom is disposed
         (is (= "Count 6" (.-innerText div)))))))
 
+(deftest ^:dom class-strict
+  ;; Ensure mount->unmount->mount done by StrictMode
+  ;; doesn't prematurely dispose the render ratom
+  (let [numbers (r/atom [0 1])
+        num-c (fn [i]
+                (let [x (get @numbers i)]
+                  [:span x]))
+        c (fn []
+            (let [xs @numbers]
+              [:span
+               "counting "
+               (for [i (range (count xs))]
+                 ^{:key i}
+                 [num-c i])]))
+        runs (rv/running)]
+    (u/async
+      (u/with-render [div [c]]
+        {:compiler u/class-compiler
+         :strict? true}
+
+        (is (= "counting 01" (.-innerText div)))
+
+        (u/act (reset! numbers [2 4 6]))
+
+        (is (= "counting 246" (.-innerText div))))
+
+      (testing "after unmount ratom watches are cleaned"
+        (is (= {} (.-watches ^clj numbers)))
+        (is (= runs (rv/running)))))))
+
 (deftest ^:dom functional-strict
   (let [numbers (r/atom [0 1])
         num-c (fn [i]
@@ -1459,7 +1489,7 @@
                   ref (react/useRef nil)]
               [:span
                "counting "
-               (for [i xs]
+               (for [i (range (count xs))]
                  ^{:key i}
                  [num-c i])]))
         runs (rv/running)]
@@ -1480,8 +1510,8 @@
         (is (= runs (rv/running)))))))
 
 (deftest ^:dom functional-strict-transitive
-  (let [count (r/atom 2)
-        numbers (rv/reaction (vec (range @count)))
+  (let [cnt (r/atom 2)
+        numbers (rv/reaction (vec (range @cnt)))
         num-c (fn [i]
                 (let [x (get @numbers i)]
                   [:span x]))
@@ -1491,7 +1521,7 @@
                   ref (react/useRef nil)]
               [:span
                "counting "
-               (for [i xs]
+               (for [i (range (count xs))]
                  ^{:key i}
                  [num-c i])]))
 
@@ -1502,11 +1532,11 @@
          :capture-errors true
          :strict? true}
 
-        (u/act (reset! count 3))
+        (u/act (reset! cnt 3))
         (is (= "counting 012" (.-innerText div)))
         (is (= [0 1 2] @numbers))
 
-        (u/act (reset! count 2))
+        (u/act (reset! cnt 2))
         (is (= "counting 01" (.-innerText div)))
 
         (when (dev?)

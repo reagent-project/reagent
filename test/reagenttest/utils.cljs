@@ -115,6 +115,7 @@
                          (resolve))
                        RENDER-WAIT)
         (catch :default e
+          ;; NOTE: errors from act body aren't logged currently
           (reject e))))))
 
 (def ^:dynamic *render-error* nil)
@@ -137,7 +138,10 @@
                                   (init-capture))
          ;; Magic setup to make exception from render available to the
          ;; with-render body.
-         render-error (atom nil)]
+         render-error (atom nil)
+         comp (if (:strict-mode? options)
+                [:> react/StrictMode comp]
+                comp)]
      (try
        (if compiler
          (rdom/render comp div {:compiler compiler

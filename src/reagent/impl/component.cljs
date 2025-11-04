@@ -116,6 +116,30 @@
   (binding [*current-component* c]
     (wrap-render c compiler)))
 
+;; Ratom cleanup
+;; On StrictMode React calls mount->unmount->mount on component initialization.
+;; This means we need to use tricks to keep the render ratom running even
+;; though unmount is called on initialization. It we let the dispose to be
+;; called, we lose the ratom watches from derefs inside reagent-render, and
+;; there is no good way to restore them.
+
+(defn cancel-cleanup [^clj component-state]
+  (when (.-cleanup-queued component-state)
+    (set! (.-cleanup-cancelled component-state) true)
+    (set! (.-cleanup-queued component-state) false)))
+
+;; Delay ratom dispose call so it can be cancelled if mount/setup is second time.
+(defn queue-cleanup [^clj component-state]
+  (set! (.-cleanup-cancelled component-state) false)
+  (set! (.-cleanup-queued component-state) true)
+  ;; Promise.resolve creates a microtask, vs setTimeout regular task.
+  ;; A scheduled microtask runs before the next event loop begings (where a regular task would run).
+  (.then (.resolve js/Promise nil)
+         (fn []
+           (when (false? (.-cleanup-cancelled component-state))
+             (set! (.-cleanup-queued component-state) false)
+             (batch/mark-rendered component-state)
+             (some-> (gobj/get component-state "cljsRatom") ratom/dispose!)))))
 
 ;;; Method wrapping
 
@@ -193,13 +217,15 @@
 
     :componentDidMount
     (fn componentDidMount []
-      (this-as c (.call f c c)))
+      (this-as c
+        (cancel-cleanup c)
+        (when-not (nil? f)
+          (.call f c c))))
 
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (some-> (gobj/get c "cljsRatom") ratom/dispose!)
-               (batch/mark-rendered c)
+               (queue-cleanup c)
                (when-not (nil? f)
                  (.call f c c))))
 
@@ -218,6 +244,7 @@
 ;; Though the value is nil here, the wrapper function will be
 ;; added to class to manage Reagent ratom lifecycle.
 (def obligatory {:shouldComponentUpdate nil
+                 :componentDidMount nil
                  :componentWillUnmount nil})
 
 (def dash-to-method-name (util/memoize-1 util/dash-to-method-name))
@@ -427,26 +454,11 @@
           ;; FIXME: Access cljsRatom using interop forms
           rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
-      ;; Delay ratom dispose call so it can be cancelled if StrictMode
-      ;; calls setup the second time.
       (react/useEffect
         (fn mount []
-          (when (.-cleanup-queued reagent-state)
-            ;; (js/console.log "cancel cleanup")
-            (set! (.-cleanup-cancelled reagent-state) true)
-            (set! (.-cleanup-queued reagent-state) false))
+          (cancel-cleanup reagent-state)
           (fn unmount []
-            ;; (js/console.log "queue cleanup")
-            (set! (.-cleanup-cancelled reagent-state) false)
-            (set! (.-cleanup-queued reagent-state) true)
-            ;; Promise.resolve creates a microtask, vs setTimeout regular task.
-            ;; A scheduled microtask runs before the next event loop begings (where a regular task would run).
-            (.then (.resolve js/Promise nil)
-                   (fn []
-                     (when (false? (.-cleanup-cancelled reagent-state))
-                       ;; (js/console.log "run cleanup")
-                       (set! (.-cleanup-queued reagent-state) false)
-                       (some-> (gobj/get reagent-state "cljsRatom") ratom/dispose!))))))
+            (queue-cleanup reagent-state)))
         ;; Ignore props - only run effect once on mount and unmount
         ;; (which means always twice under the React strict mode).
         #js [])
