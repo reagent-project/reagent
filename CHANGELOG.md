@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1 (2025-11-04)
+
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.0...v2.0.1)**
+
+- **StrictMode**: Fix class components (i.e., anything not using `defc` or `:f>`)
+  losing render Ratom watches when using with React StrictMode.
+  [#647](https://github.com/reagent-project/reagent/pull/647)
+    - StrictMode will run mount->unmount->mount on component initialization and
+      Reagent implementation cleaned the Ratom watches on the first unmount call,
+      which can't be restored easily. This meant the component no longer
+      followed changes in dereferenced atoms.
+
 ## 2.0.0 (2025-10-29)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v1.3.0...v2.0.0)**
