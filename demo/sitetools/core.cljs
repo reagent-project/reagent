@@ -13,7 +13,8 @@
 (declare main-content)
 
 (defonce root
-  ;; Init only on use, this ns is loaded for SSR build also
+  ;; Init only on use, this ns is loaded for SSR build also,
+  ;; delay is usually not needed on regular apps.
   (delay (rdomc/create-root (js/document.getElementById "main-content"))))
 
 (defonce config (r/atom {:body [#'main-content]

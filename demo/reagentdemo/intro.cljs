@@ -1,6 +1,5 @@
 (ns reagentdemo.intro
   (:require [reagent.core :as r]
-            [reagent.dom.client :as rdomc]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.syntax :as s]
             [simpleexample.core :as simple]

@@ -32,6 +32,9 @@
    [clock]
    [color-input]])
 
+;; Delay create-root call until app is mounted,
+;; this is only because this ns is already part of the demosite build.
+;; Delay is not usually needed for regular apps.
 (defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
 
 (defn ^:export run []

@@ -78,8 +78,8 @@
     (set! (.-innerHTML shadow-app-div) "")
     (.appendChild shadow-app-div shadow-element)))
 
-(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
+(defonce root (rdomc/create-root (.getElementById js/document "app")))
 
 (defn ^:export ^:dev/after-load run []
-  (rdomc/render @root [normal-app])
+  (rdomc/render root [normal-app])
   (setup-shadow-component))

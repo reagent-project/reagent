@@ -205,7 +205,7 @@
        :xs 6}
       [form]]]]])
 
-(defonce root (delay (rdomc/create-root (.getElementById js/document "app"))))
+(defonce root (rdomc/create-root (.getElementById js/document "app")))
 
 (defn ^:export ^:dev/after-load run []
-  (rdomc/render @root [main]))
+  (rdomc/render root [main]))
