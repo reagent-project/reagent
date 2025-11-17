@@ -45,6 +45,14 @@ jobs:
         with:
           lein: 2.9.10
           cli: latest
+
+      # Note, react 18 doesn't get cached? Or might even mess up node cache
+      - name: Setup React version
+        if: ${{ matrix.react == 18 }}
+        run: |
+          cp react-18-package.json package.json
+          cp react-18-package-lock.json package-lock.json
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -61,11 +69,6 @@ jobs:
 
       - name: Install node deps
         run: npm ci
-
-      # Note, react 18 doesn't get cached? Or might even mess up node cache
-      - name: Setup React
-        if: ${{ matrix.react == 18 }}
-        run: npm install react@18.3.1 react-dom@18.3.1
 
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
