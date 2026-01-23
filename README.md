@@ -40,7 +40,7 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 And provide React using npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
 ```
-npm i react@19.2.0 react-dom@19.2.0
+npm i react@19.2.3 react-dom@19.2.3
 ```
 
 If you want to keep using React 18 or older versions, you can
