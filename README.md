@@ -43,6 +43,9 @@ And provide React using npm (when using e.g. [Shadow-cljs](https://shadow-cljs.g
 npm i react@19.2.3 react-dom@19.2.3
 ```
 
+If there is a more recent minor or patch version of React available, it should
+be safe to use it in your application.
+
 If you want to keep using React 18 or older versions, you can
 also use [cljsjs packages to provide React.](./doc/reagent1.md)
 
