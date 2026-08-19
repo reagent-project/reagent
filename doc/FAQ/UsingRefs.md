@@ -24,7 +24,7 @@ We'll start with a code fragment, because it is worth a 1000 words:
                                 (if (.-paused video)
                                   (.play video)
                                   (.pause video))))}
-         "Toogle"]]])))
+         "Toggle"]]])))
 ```
 
 Notes:
