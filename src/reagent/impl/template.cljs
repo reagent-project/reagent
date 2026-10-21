@@ -29,7 +29,8 @@
       (string? x)))
 
 (defn ^boolean reagent-fn-component? [^clj x]
-  (.-reagent-component x))
+  (when x
+    (.-reagent-component x)))
 
 (defn ^boolean valid-tag? [^clj x]
   (or (hiccup-tag? x)
