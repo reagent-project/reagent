@@ -125,13 +125,17 @@ code, pre { font-family: var(--mono); }
     position: sticky;
     top: 0;
     z-index: 10;
+    /* Total height including the border, so sticky sidebars at
+       top: var(--header-h) line up exactly. */
+    box-sizing: border-box;
+    height: var(--header-h);
     background: var(--bg);
     border-bottom: 1px solid var(--border);
 }
 
 .site-header-inner {
     max-width: 1400px;
-    height: var(--header-h);
+    height: 100%;
     margin: 0 auto;
     padding: 0 24px;
     display: flex;
@@ -627,7 +631,7 @@ code, pre { font-family: var(--mono); }
     }
     .search { width: 100%; margin-left: 0; order: 1; }
     .theme-toggle { margin-left: auto; }
-    .site-header { position: static; }
+    .site-header { position: static; height: auto; }
     .docs-layout {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto;
