@@ -10,8 +10,9 @@
     --accent: #2d6a9f;
     --accent-fg: #ffffff;
     --accent-soft: #e8f0f8;
+    --accent-strong: #2d6a9f;
     --code-bg: #f6f8fa;
-    --hl-comment: #6e7781;
+    --hl-comment: #57606a;
     --hl-string: #116329;
     --hl-keyword: #0550ae;
     --hl-number: #953800;
@@ -37,9 +38,10 @@
     --bg: #0d1117;
     --bg-soft: #151b23;
     --border: #30363d;
-    --accent: #4493f8;
+    --accent: #58a6ff;
     --accent-fg: #ffffff;
     --accent-soft: #1b2a3d;
+    --accent-strong: #1f6feb;
     --code-bg: #151b23;
     --hl-comment: #8b949e;
     --hl-string: #7ee787;
@@ -59,9 +61,10 @@
         --bg: #0d1117;
         --bg-soft: #151b23;
         --border: #30363d;
-        --accent: #4493f8;
+        --accent: #58a6ff;
         --accent-fg: #ffffff;
         --accent-soft: #1b2a3d;
+        --accent-strong: #1f6feb;
         --code-bg: #151b23;
         --hl-comment: #8b949e;
         --hl-string: #7ee787;
@@ -77,6 +80,14 @@
 }
 
 :root[data-theme="dark"] .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
+
+/* examples.css (TodoMVC) sets `div, h1, input { color: #777 }` globally.
+   Keep that grey inside the TodoMVC demo only; the specificity here is one
+   class, so later class rules in this file still win. */
+.site { color: var(--fg); }
+.site :where(div:not(#todoapp *), h1:not(#todoapp *), input:not(#todoapp *)) {
+    color: var(--fg);
+}
 
 /* Syntax highlighting (sitetools.highlight) */
 
@@ -280,8 +291,8 @@ code, pre { font-family: var(--mono); }
 }
 
 .button.primary {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
     color: var(--accent-fg);
 }
 
@@ -572,6 +583,9 @@ code, pre { font-family: var(--mono); }
     border: 1px solid var(--border);
 }
 .demo-example div, .demo-example p { color: var(--fg); }
+/* TodoMVC keeps its own light panel and dark text in both themes. */
+#todoapp { color: #4d4d4d; }
+#todoapp div { color: inherit; }
 .demo-source {
     background: var(--code-bg);
     color: var(--fg);
@@ -622,7 +636,7 @@ code, pre { font-family: var(--mono); }
 .hero-demo-live button {
     padding: 8px 16px;
     border-radius: 6px;
-    background: var(--accent);
+    background: var(--accent-strong);
     color: var(--accent-fg);
     font-weight: 600;
     cursor: pointer;
