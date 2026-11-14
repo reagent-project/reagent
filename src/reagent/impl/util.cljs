@@ -129,9 +129,13 @@
    (if (coll? class)
      (let [classes (keep (fn [c]
                            (if c
-                             (if (named? c)
-                               (name c)
-                               c)))
+                             (cond
+                               (string? c) c
+                               (named? c) (name c)
+                               ;; Nested collections, e.g. a :class value
+                               ;; passed down from a parent component.
+                               (coll? c) (class-names c)
+                               :else c)))
                          class)]
        (if (seq classes)
          (string/join " " classes)))

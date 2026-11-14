@@ -6,6 +6,13 @@
 
 - Tests are now running against React 19.3
   [#654](https://github.com/reagent-project/reagent/pull/654)
+- `class-names` and `merge-props` now flatten nested collections in class
+  values: `(r/class-names [:a [:b nil [:c]]])` returns `"a b c"` and
+  `(r/merge-props {:class :a} {:class [:b [:c]]})` returns `{:class "a b c"}`.
+  Previously a nested collection was converted to a string using `str`, e.g.
+  `"a [:b nil [:c]]"`. `:class` values on HTML elements are normalized the
+  same way.
+  [#601](https://github.com/reagent-project/reagent/issues/601)
 - Fix `reagent.impl.template/valid-tag?` throwing when called with `nil`
   (regression in 2.0, affected e.g. re-com)
   [#655](https://github.com/reagent-project/reagent/issues/655)

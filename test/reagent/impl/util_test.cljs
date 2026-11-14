@@ -19,7 +19,15 @@
          (r/class-names nil "a")
          (r/class-names [] nil "a")))
   (is (= "a b c d"
-         (r/class-names "a" "b" nil ["c" "d"]))))
+         (r/class-names "a" "b" nil ["c" "d"])))
+  (testing "nested collections"
+    (is (= "a b c d"
+           (r/class-names [:a ["b" nil [:c [:d]]]])
+           (r/class-names :a [[] "b" '(:c) #{"d"}])))
+    (is (= nil
+           (r/class-names [[] [nil] [[]]])))
+    (is (= "child parent grandparent"
+           (r/class-names :child [:parent [:grandparent]])))))
 
 (deftest dash-to-prop-name-test
   (is (= "tabIndex" (util/dash-to-prop-name :tab-index)))
@@ -67,6 +75,12 @@
     (is (= {:disabled true}
            (r/merge-props nil {:disabled true})
            (r/merge-props {:disabled true} nil))))
+
+  (testing "nested class collections are flattened"
+    (is (= {:class "a b c d"}
+           (r/merge-props {:class [:a [:b]]} {:class [:c [nil :d]]})))
+    (is (= {:class "a b"}
+           (r/merge-props {:class [:a [:b]]}))))
 
   (testing "two arguments without classes"
     (is (= {:disabled false :style {:flex 1 :flex-direction "row"}}
