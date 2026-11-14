@@ -345,7 +345,11 @@
       (as-element [this x]
         (as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]
-        (make-element this argv component jsprops first-child)))))
+        (make-element this argv component jsprops first-child))
+      (reactify-component [this comp]
+        (if (:function-components opts)
+          (comp/functional-reactify-component this comp)
+          (comp/as-class comp this))))))
 
 (def class-compiler (create-compiler {}))
 (def ^:dynamic *current-default-compiler* class-compiler)

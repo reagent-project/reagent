@@ -397,7 +397,7 @@
 (defn reactify-component [comp compiler]
   (if (react-class? comp)
     comp
-    (as-class comp compiler)))
+    (p/reactify-component compiler comp)))
 
 (defn functional-wrap-render
   [compiler ^clj c]
@@ -505,6 +505,29 @@
             f (react/memo f functional-render-memo-fn)]
         (cache-react-class compiler tag f)
         f)))
+
+(defn functional-reactify-component
+  "Create a React function component for `tag`, for use from React code.
+
+  React props are converted to a map and passed as the only argument,
+  same as with the class version of reactify-component. The component
+  renders using `functional-render` directly, so the Reagent component
+  can use React hooks."
+  [compiler tag]
+  ;; Separate cache key from functional-render-fn, which expects Reagent
+  ;; argv in props.
+  (let [cache-key (str "reactify-" (p/get-id compiler))]
+    (or (gobj/get tag cache-key)
+        (let [f (fn [jsprops]
+                  (let [reagent-props #js {}]
+                    (set! (.-reagentRender reagent-props) tag)
+                    (set! (.-argv reagent-props) [(util/shallow-obj-to-map jsprops)])
+                    (functional-render compiler reagent-props)))
+              display-name (util/fun-name tag)]
+          (set! (.-displayName f) display-name)
+          (js/Object.defineProperty f "name" #js {:value display-name :writable false})
+          (gobj/set tag cache-key f)
+          f))))
 
 ;; defc impl
 

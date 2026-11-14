@@ -248,7 +248,7 @@ See [Server Side Rendering](./ServerSideRendering.md)
 
 ## Component classes
 
-For interop with React libraries, you might need to pass Component classes to other components as parameter. If you have a Reagent component (a function) you can use `r/reactify-component` which returns creates a Class from the function.
+For interop with React libraries, you might need to pass Component classes to other components as parameter. If you have a Reagent component (a function) you can use `r/reactify-component` which creates a Class from the function. With a [function components compiler](./ReagentCompiler.md) (`{:function-components true}`), it creates a React function component instead, so the Reagent component can also use React hooks.
 
 If the parent Component awaits classes with some custom methods or properties, you need to be careful and probably should use `r/create-class`. In this case you don't want to use `r/reactify-component` with a function (even if the function returns a class) because `r/reactify-component` wraps the function in another Component class, and parent Component doesn't see the correct class.
 
