@@ -18,7 +18,7 @@ If a ratom changes but your Component doesn't update, then the gotchas to look o
 3. Make sure your ratom will survive a rerender. Either declare it as a global var, or use a form-2 or form-3 component. [Read this](https://github.com/reagent-project/reagent-cookbook/tree/master/basics/component-level-state) if you want to understand why.
 4. If you put your ratom in a form-2 or form-3 component, be sure you are calling that function using `[square brackets]`, not `(parenthesis)`.
 When function (component) is called using `( )` Reagent doesn't create new component, but instead just places the function's return value into current component. In this case the function closure which should hold the local state doesn't work.
-5. Make sure to `deref` your ratom outside of a seq or wrap that seq in a `doall`. See this [related issue](https://github.com/reagent-project/reagent/issues/18).
+5. Make sure to `deref` your ratom outside of a seq or wrap that seq in a `doall`. See [Derefs inside lazy sequences](../ManagingState.md#derefs-inside-lazy-sequences).
 
 ### Props Change
 
