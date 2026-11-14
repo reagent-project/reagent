@@ -178,16 +178,11 @@ Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line n
     - `CreatingReagentComponents.md:90,100,176`
     - `UsingHiccupToDescribeHTML.md:58`
     - `FAQ/MyAttributesAreMissing.md:7`
-    - `FAQ/dangerouslySetInnerHTML.md:1`
+    - `FAQ/dangerouslySetInnerHTML.md:3`
     - `FAQ/UsingRefs.md:33`
     - `ReagentCompiler.md:46`
     - `examples/material-ui.md:10`
   - Fix: update them to react.dev equivalents.
-- **[low] Old-looking external links in README.md.**
-  - Where: `doc/README.md:17` (blogspot.com.au), `:20` (`github.com/Day8/re-frame/...` — the org is now `day8`, and the docs moved) and `:40` (nils-blum-oeste.net).
-  - These weren't link-checked. Fix: check them and remove dead ones.
-- **[low] `http://reagent-project.github.io/` links.**
-  - Where: `doc/CreatingReagentComponents.md:11,57`. Switch them to https; the second occurrence also has the typo "Offical".
 
 ## 7. Index and structure
 
@@ -222,26 +217,19 @@ Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line n
   - `doc/UsingSquareBracketsInsteadOfParens.md:1` and `doc/WhenDoComponentsUpdate.md:1` start with body text.
   - `doc/README.md:1` starts at `##`.
   - Fix: give every page a single H1 that matches its index title.
-- **[low] Form naming is inconsistent.**
-  - "Form-1/Form-2/Form-3": `CreatingReagentComponents.md`, `UsingRefs.md:31`, `InteropWithReact.md:93`.
-  - "form-2"/"form-3": `FAQ/ComponentNotRerendering.md:14-15`, `CreatingReagentComponents.md:185,268`.
-  - "form-1": `ReactFeatures.md:66`.
-  - Fix: pick one (e.g. "Form-2") everywhere.
-- **[low] "Ratom" spelling varies.** It appears as "ratom", "RAtom" and "Ratom" (e.g. `ReactFeatures.md:157,171`, `ReagentCompiler.md:26,41`, `React19.md:27,50`). Pick one.
+- **[medium] "Ratom" spelling varies.** It appears as "ratom", "RAtom" and "Ratom" (e.g. `ReactFeatures.md:157,171`, `ReagentCompiler.md:26,41`, `React19.md:27,50`). Open: decide which spelling to use, then apply it everywhere (docs and docstrings).
 - **[low] First-person, uncertain tone.**
   - Where: `doc/React19.md:34-35` ("but I don't know how exactly React batching works") and `:58`, plus `doc/BatchingAndTiming.md:24,34` ("on my Macbook Air").
   - Fix: rephrase neutrally.
 - **[low] TODO left in Security.md.**
   - Where: `doc/Security.md:11` ("TODO: Does this change in React 19?").
-- **[low] Typos.**
-  - "styntax" (`UsingHiccupToDescribeHTML.md:60`)
-  - "attibutes" (`:81`)
-  - "seperately" (`FAQ/ComponentNotRerendering.md:7`)
-  - "creats" (`InteropWithReact.md:42`)
-  - "announcenment" (`ReagentCompiler.md:61`)
-  - "to to" (`ServerSideRendering.md:16`)
-  - "rereun" (`WhenDoComponentsUpdate.md:242`)
-  - "an component" (`ReactFeatures.md:315`)
 
 ### Out of scope (source, noticed while verifying)
 - `src/reagent/core.cljs:155-160`: the `force-update` docstring still describes the removed second ("deep") argument.
+
+## Fixed
+
+- 2026-11-14: every FAQ page starts with the question as its H1, and `cljdoc.edn` has short sidebar titles.
+- 2026-11-14: typos fixed: styntax, attibutes, seperately, creats, announcenment, "to to", rereun, "an component", Offical, "it's own", "Its a"/"Its just".
+- 2026-11-14: component forms are written in lower case (`form-1`, `form-2`, `form-3`) except at the start of a sentence or heading.
+- 2026-11-14: `http://` links changed to `https://` (all checked). `README.md` now links to re-frame's current docs (`day8.github.io/re-frame/Using-Stateful-JS-Components/`) and `timothypratley.blogspot.com`.

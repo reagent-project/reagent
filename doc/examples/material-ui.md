@@ -5,7 +5,7 @@
 Material-UI [TextField](https://material-ui.com/api/text-field/) has for long
 time caused problems for Reagent users. The problem is that `TextField` wraps the
 `input` element inside a component so that Reagent is not able to enable
-input cursor fixes, which are required due to [async rendering](http://reagent-project.github.io/news/reagent-is-async.html).
+input cursor fixes, which are required due to [async rendering](https://reagent-project.github.io/news/reagent-is-async.html).
 
 Note that this only happens when using [controlled inputs](https://reactjs.org/docs/forms.html#controlled-components). In some cases you can workaround the problem by using [an uncontrolled input](https://reactjs.org/docs/uncontrolled-components.html) (i.e. `:default-value`). See also [Reagent controlled inputs](../ControlledInputs.md).
 

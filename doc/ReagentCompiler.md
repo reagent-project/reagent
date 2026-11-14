@@ -58,7 +58,7 @@ Now that this mechanism to control how Reagent compiles Hiccup-style markup
 to React calls is in place, it will be probably used later to control
 some other things also:
 
-From [Clojurist Together announcenment](https://www.clojuriststogether.org/news/q1-2020-funding-announcement/):
+From [Clojurist Together announcement](https://www.clojuriststogether.org/news/q1-2020-funding-announcement/):
 
 > As this [hooks] affects how Reagent turns Hiccup to React elements and components, I
 > have some ideas on allowing users configure the Reagent Hiccup compiler,

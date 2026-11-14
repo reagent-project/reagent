@@ -1,7 +1,7 @@
 # Reagent 1
 
 When using React 18 or older you can provide the
-react dependencies using [Cljsjs](http://cljsjs.github.io/) React packages to your project:
+react dependencies using [Cljsjs](https://cljsjs.github.io/) React packages to your project:
 
 ```
 [cljsjs/react "18.3.1-1"]

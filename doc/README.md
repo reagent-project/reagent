@@ -16,10 +16,10 @@
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial
-  * [Reagent Deep Dive Series by Timothy Pratley](http://timothypratley.blogspot.com.au/p/p.html) - a four part series
+  * [Reagent Deep Dive Series by Timothy Pratley](https://timothypratley.blogspot.com/p/p.html) - a four part series
   * [Reagent Mysteries series by Paulus Esterhazy](https://presumably.de/) - a four part series
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
-  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
+  * [Using Stateful JS Components - like D3](https://day8.github.io/re-frame/Using-Stateful-JS-Components/)  (external link)
 
 ## Commercial Videos Series
 
@@ -39,7 +39,7 @@ Also:
 5. [Reagent doesn't work after updating dependencies](FAQ/CljsjsReactProblems.md)
 5. [How do I force Component re-creation?](FAQ/ForcingComponentRecreation.md)
 5. [Using HTML entities](FAQ/HtmlEntities.md)
-6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
+6. [How do I access "props" in lifecycle methods?](https://www.nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 
 ## Examples
 

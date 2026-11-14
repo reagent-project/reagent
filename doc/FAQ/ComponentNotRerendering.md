@@ -4,7 +4,7 @@ Ask yourself this question: why do you think the Component should have re-render
   - a ratom (used by the Component) changed 
   - the props for (arguments to) the Component changed
 
-We'll deal with these two cases seperately.
+We'll deal with these two cases separately.
 
 ### A Ratom Changed
 

@@ -8,7 +8,7 @@ So they're important and this document describes how to create them.
 ##### Not An Absolute Introduction
 
 Although I stay as basic as possible, this document isn't an introductory tutorial. You should read it *after*
-you have already digested [The Official Introduction.](http://reagent-project.github.io/)
+you have already digested [The Official Introduction.](https://reagent-project.github.io/)
 
 This document is useful because it clarifies the basics. It represents an extra bit of learning which might save you from some annoying paper cuts.
 
@@ -45,7 +45,7 @@ Ordered by increasing complexity, they are:
 
 In the simplest case, a `component` collapses down to *only* be a `render` function.  You supply nothing else.
 
-Although a simple approach, in my experience, you'll probably use `Form-1` components about 40% of the time, perhaps more.  Simple and useful.
+Although a simple approach, in my experience, you'll probably use `form-1` components about 40% of the time, perhaps more.  Simple and useful.
 
 You just write a regular clojurescript function which takes data as parameters and produces HTML.
 ```cljs
@@ -54,7 +54,7 @@ You just write a regular clojurescript function which takes data as parameters a
    [:div "Hello " name])     ;; returns Hiccup (HTML)
 ```
 
-Until now, I've talked about `render functions` returning HTML.  That isn't strictly speaking true, of course, as you've seen in the [The Offical Introduction.](http://reagent-project.github.io/)  Instead, renderers always return clojurescript data structures which specify HTML via `Hiccup` format.
+Until now, I've talked about `render functions` returning HTML.  That isn't strictly speaking true, of course, as you've seen in the [The Official Introduction.](https://reagent-project.github.io/)  Instead, renderers always return clojurescript data structures which specify HTML via `Hiccup` format.
 
 `Hiccup` uses vectors to represent HTML elements, and maps to represent an element's attributes.
 
@@ -129,9 +129,9 @@ This example is taken from the tutorial:
 
 Here `timer-component` is the outer function, and it returns an inner, anonymous render function which closes over the initialised, local state `seconds-elapsed`.
 
-As before, the job of the render function is to turn data into HTML. That's the backbone. Its just that `Form-2` allows your renderer to close over some state created and initialised by the outer.
+As before, the job of the render function is to turn data into HTML. That's the backbone. It's just that `form-2` allows your renderer to close over some state created and initialised by the outer.
 
-In my experience, you'll use `Form-2` `components` at least 50% of the time.
+In my experience, you'll use `form-2` `components` at least 50% of the time.
 
 Let's be quite clear what is going on here:
   - `timer-component` is **called once** per component instance (and will create the state for that instance)
@@ -139,7 +139,7 @@ Let's be quite clear what is going on here:
 
 **Rookie mistake**
 
-When starting out, everyone makes this mistake with the `Form-2` construct: they forget to repeat the parameters in the inner, anonymous render function.
+When starting out, everyone makes this mistake with the `form-2` construct: they forget to repeat the parameters in the inner, anonymous render function.
 
 ```cljs
 (defn outer
@@ -159,9 +159,9 @@ Remember, `outer` is called once _per component instance_.  Each time, the param
 
 Now, for the final step in complexity.
 
-In my experience, you'll probably use `Form-3` `components` less than 1% of the
+In my experience, you'll probably use `form-3` `components` less than 1% of the
 time, perhaps only when you want to use a js library like D3 or introduce some
-hand-crafted optimisations. Maybe.  While you'll ignore `Form-3` components
+hand-crafted optimisations. Maybe.  While you'll ignore `form-3` components
 most of the time, when you do need them, you need them bad. So pay attention,
 because they'll save your bacon one day.
 
@@ -170,7 +170,7 @@ need to perform actions at various critical moments in a component's lifetime,
 like when it is first created, or when its about to be destroyed (removed from
 the DOM), or when its about to be updated, etc.
 
-With `Form-3` components, you can nominate `lifecycle methods`. reagent
+With `form-3` components, you can nominate `lifecycle methods`. reagent
 provides a very thin layer over React's own `lifecycle methods`. So, before
 going on, [read all about React's lifecycle
 methods.](https://reactjs.org/docs/react-component.html#the-component-lifecycle).
@@ -185,7 +185,7 @@ described below.  You may also find `r/dom-node` helpful, as a common use of
 form-3 components is to draw into a `canvas` element, and you will need access
 to the underlying DOM element to do so.
 
-A `Form-3` component definition looks like this:
+A `form-3` component definition looks like this:
 ```cljs
 (defn my-component
   [x y z]
@@ -228,13 +228,13 @@ Alternately, you can use `(reagent/props this)` and `(reagent/children this)`, b
 
 Finally, note that some React lifecycle methods take `prevState` and `nextState`.  Because Reagent provides its own state management system, there is no access to these parameters in the lifecycle methods.
 
-It is possible to create `Form-3` `components` using `with-meta`.  However, `with-meta` is a bit clumsy and has no advantages over the above method, but be aware that an alternative way exists to achieve the same outcome.
+It is possible to create `form-3` `components` using `with-meta`.  However, `with-meta` is a bit clumsy and has no advantages over the above method, but be aware that an alternative way exists to achieve the same outcome.
 
 **Rookie mistake**
 
 In the code sample above, notice that the renderer function is identified via an odd keyword in the map given to `reagent/create-class`. It's called `:reagent-render` rather than the shorter, more obvious `:render`.
 
-Its a trap to mistakenly use `:render` because you won't get any errors, **except** the function you supply will only ever be called with one parameter, and it won't be the one you expect. [Some details here](https://github.com/reagent-project/reagent/issues/47#issuecomment-61056999).
+It's a trap to mistakenly use `:render` because you won't get any errors, **except** the function you supply will only ever be called with one parameter, and it won't be the one you expect. [Some details here](https://github.com/reagent-project/reagent/issues/47#issuecomment-61056999).
 
 **Rookie mistake**
 
@@ -248,20 +248,20 @@ Leaving out the `:display-name` entry.  If you leave it out, Reagent and React h
 
 ## Final Note
 
-Above I used the terms `Form-1`, `Form-2` and `Form-3`, but there's actually only one kind of component. It is just that there's **3 different ways to create a component**.
+Above I used the terms `form-1`, `form-2` and `form-3`, but there's actually only one kind of component. It is just that there's **3 different ways to create a component**.
 
-At the end of the day, no matter how it is created, a component will end up with a render function and some life-cycle methods.  A component created via `Form-1` has the same basic structure as one created via `Form-3` because underneath they are all [just React components](https://betweentwoparens.com/blog/what-the-reagent-component!/).
+At the end of the day, no matter how it is created, a component will end up with a render function and some life-cycle methods.  A component created via `form-1` has the same basic structure as one created via `form-3` because underneath they are all [just React components](https://betweentwoparens.com/blog/what-the-reagent-component!/).
 
 ## Appendix A - Lifting the Lid Slightly
 
 Here's some further notes about Reagent's mechanics:
-  1. When you provide a function as the first element of a hiccup vector `[my-func 1 2 3]`, Reagent will say "hey I have been given a render function".  That function might be `Form-1` or `Form-2`, but it doesn't know at that point. It just sees a function.
-  2. A render function by itself is not enough to make a React Component.  So, Reagent takes this render function and "merges" it with default lifecycle functions to form a React component.  (`Form-3`, of course, allows you to supply your own lifecycle functions)
+  1. When you provide a function as the first element of a hiccup vector `[my-func 1 2 3]`, Reagent will say "hey I have been given a render function".  That function might be `form-1` or `form-2`, but it doesn't know at that point. It just sees a function.
+  2. A render function by itself is not enough to make a React Component.  So, Reagent takes this render function and "merges" it with default lifecycle functions to form a React component.  (`form-3`, of course, allows you to supply your own lifecycle functions)
   3. Some time later, when Reagent **first** wants to render this component, it will, unsurprisingly, call the render function which you supplied (`my-func` in the snippet above).  It will pass in the "props" (parameters) supplied by the rendering parent (`1 2 3` in the snippet above).
   4. If this first call to the render function returns hiccup (a vector of stuff):
-     - Reagent will just interpret it. So this is what happens in the case of a `Form-1` function.
-     - If, however, this render function returns another function - ie. it is a `Form-2` outer function returning the inner function - then Reagent knows to replace the Component's render function with the newly returned inner function forever thereafter. So the outer will have been called once but, from that point forward, the inner function will be used for all further rendering. In fact,  Reagent will instantly call the inner function after the outer returns it, because Reagent wants a first rendering (hiccup) for the component.
-  5. So, in the case of `Form-2`, the outer function is called once and once only (with initial props/parameters), and the inner is called at least once (with initial props/parameters), but probably many, many times thereafter. Both will be called with the same arrangement of props/parameters - although the inner render function will see different values in those props/parameters, over time.
+     - Reagent will just interpret it. So this is what happens in the case of a `form-1` function.
+     - If, however, this render function returns another function - ie. it is a `form-2` outer function returning the inner function - then Reagent knows to replace the Component's render function with the newly returned inner function forever thereafter. So the outer will have been called once but, from that point forward, the inner function will be used for all further rendering. In fact,  Reagent will instantly call the inner function after the outer returns it, because Reagent wants a first rendering (hiccup) for the component.
+  5. So, in the case of `form-2`, the outer function is called once and once only (with initial props/parameters), and the inner is called at least once (with initial props/parameters), but probably many, many times thereafter. Both will be called with the same arrangement of props/parameters - although the inner render function will see different values in those props/parameters, over time.
 
 ## Appendix B - with-let macro
 

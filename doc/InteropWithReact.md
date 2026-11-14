@@ -39,7 +39,7 @@ As an example, here are four ways to create the same element:
 
 This works because `reagent.dom/render` itself expects (1) a React element or (2) a
 Hiccup form. If passed an element, it just uses it. If passed a Hiccup, it
-creats a (cached) React component and then creates an element from that
+creates a (cached) React component and then creates an element from that
 component.
 
 ## Creating React Elements from Hiccup forms
@@ -90,7 +90,7 @@ const TopArticles = ({ articles }) => (
 
 ## Creating React Components from Reagent "Components"
 
-The `reagent/reactify-component` will take a Form-1, Form-2, or Form-3 reagent "component". For example:
+The `reagent/reactify-component` will take a form-1, form-2, or form-3 reagent "component". For example:
 
 ```clojure
 (defn exported [props]
