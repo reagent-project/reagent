@@ -3,7 +3,7 @@
 :root {
     color-scheme: light dark;
     --fg: #1f2328;
-    --fg-muted: #59636e;
+    --fg-muted: #4b545d;
     --bg: #ffffff;
     --bg-soft: #f6f8fa;
     --border: #d1d9e0;
@@ -34,22 +34,22 @@
 :root[data-theme="dark"] {
     color-scheme: dark;
     --fg: #e6edf3;
-    --fg-muted: #9198a1;
+    --fg-muted: #b1bac4;
     --bg: #0d1117;
     --bg-soft: #151b23;
     --border: #30363d;
     --accent: #58a6ff;
     --accent-fg: #ffffff;
     --accent-soft: #1b2a3d;
-    --accent-strong: #1f6feb;
+    --accent-strong: #1158c7;
     --code-bg: #151b23;
-    --hl-comment: #8b949e;
+    --hl-comment: #9da7b3;
     --hl-string: #7ee787;
     --hl-keyword: #79c0ff;
     --hl-number: #ffa657;
     --hl-builtin: #d2a8ff;
     --hl-def: #ffa657;
-    --hl-p0: #8b949e;
+    --hl-p0: #9da7b3;
     --hl-p1: #e3b341;
     --hl-p2: #79c0ff;
 }
@@ -57,22 +57,22 @@
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         --fg: #e6edf3;
-        --fg-muted: #9198a1;
+        --fg-muted: #b1bac4;
         --bg: #0d1117;
         --bg-soft: #151b23;
         --border: #30363d;
         --accent: #58a6ff;
         --accent-fg: #ffffff;
         --accent-soft: #1b2a3d;
-        --accent-strong: #1f6feb;
+        --accent-strong: #1158c7;
         --code-bg: #151b23;
-        --hl-comment: #8b949e;
+        --hl-comment: #9da7b3;
         --hl-string: #7ee787;
         --hl-keyword: #79c0ff;
         --hl-number: #ffa657;
         --hl-builtin: #d2a8ff;
         --hl-def: #ffa657;
-        --hl-p0: #8b949e;
+        --hl-p0: #9da7b3;
         --hl-p1: #e3b341;
         --hl-p2: #79c0ff;
     }
@@ -155,12 +155,12 @@ code, pre { font-family: var(--mono); }
 }
 
 .site-nav a {
-    color: var(--fg-muted);
+    color: var(--fg);
     text-decoration: none;
     font-weight: 500;
 }
 
-.site-nav a:hover { color: var(--fg); }
+.site-nav a:hover { color: var(--accent); }
 
 .theme-toggle {
     display: flex;
@@ -361,15 +361,16 @@ code, pre { font-family: var(--mono); }
     display: block;
     padding: 3px 8px;
     border-radius: 4px;
-    color: var(--fg-muted);
+    color: var(--fg);
     text-decoration: none;
 }
 
-.sidebar a:hover { color: var(--fg); }
+.sidebar a:hover { color: var(--accent); }
 
 .sidebar a.active {
     background: var(--accent-soft);
-    color: var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
+    color: var(--fg);
 }
 
 .sidebar-section {
