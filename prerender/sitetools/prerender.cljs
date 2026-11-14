@@ -36,6 +36,8 @@
      [:base {:href (-> page-conf :page-path base)}]
      [:link {:href (add-cache-buster site-dir css-file)
              :rel "stylesheet"}]
+     ;; Apply the stored theme choice before first paint.
+     (danger :script "try{var t=localStorage.getItem(\"theme\");if(t)document.documentElement.dataset.theme=t}catch(e){}")
      [:title title]]
     [:body
      [:div

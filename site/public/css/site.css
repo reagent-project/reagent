@@ -25,8 +25,35 @@
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* Dark theme: follows the system unless the header toggle stored a choice
+   (data-theme on <html>, set before first paint by a script in <head>). */
+
+:root[data-theme="light"] { color-scheme: light; }
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --fg: #e6edf3;
+    --fg-muted: #9198a1;
+    --bg: #0d1117;
+    --bg-soft: #151b23;
+    --border: #30363d;
+    --accent: #4493f8;
+    --accent-fg: #ffffff;
+    --accent-soft: #1b2a3d;
+    --code-bg: #151b23;
+    --hl-comment: #8b949e;
+    --hl-string: #7ee787;
+    --hl-keyword: #79c0ff;
+    --hl-number: #ffa657;
+    --hl-builtin: #d2a8ff;
+    --hl-def: #ffa657;
+    --hl-p0: #8b949e;
+    --hl-p1: #e3b341;
+    --hl-p2: #79c0ff;
+}
+
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
         --fg: #e6edf3;
         --fg-muted: #9198a1;
         --bg: #0d1117;
@@ -46,8 +73,10 @@
         --hl-p1: #e3b341;
         --hl-p2: #79c0ff;
     }
-    .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
+    :root:not([data-theme="light"]) .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
 }
+
+:root[data-theme="dark"] .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
 
 /* Syntax highlighting (sitetools.highlight) */
 
@@ -121,6 +150,23 @@ code, pre { font-family: var(--mono); }
 }
 
 .site-nav a:hover { color: var(--fg); }
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-soft);
+    color: var(--fg-muted);
+    cursor: pointer;
+}
+
+.theme-toggle:hover { color: var(--fg); }
+.theme-toggle svg { width: 16px; height: 16px; }
 
 /* Search */
 
@@ -470,7 +516,8 @@ code, pre { font-family: var(--mono); }
         gap: 8px 20px;
         padding: 10px 16px;
     }
-    .search { width: 100%; margin-left: 0; }
+    .search { width: 100%; margin-left: 0; order: 1; }
+    .theme-toggle { margin-left: auto; }
     .site-header { position: static; }
     .docs-layout {
         grid-template-columns: minmax(0, 1fr);
