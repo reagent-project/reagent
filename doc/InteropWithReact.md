@@ -102,6 +102,42 @@ The `reagent/reactify-component` will take a Form-1, Form-2, or Form-3 reagent "
   (r/create-element react-comp #js{:name "world"}))
 ```
 
+### What the Reagent component receives
+
+The Reagent component is called with a single argument: the React props object,
+shallowly converted to a Clojure map.
+
+* Keys are converted to keywords as is, without any case conversion: `onClick`
+becomes `:onClick`, not `:on-click`.
+* Values are not converted. Nested JS objects and arrays stay as JS values.
+* Children are in `:children` as React passes them: missing, a single React
+element, or a JS array of React elements. These are not Hiccup vectors, but
+can be used as children in Hiccup forms as is.
+* `key` is not included in the props, same as in React.
+
+```clojure
+(defn exported [{:keys [title onClick children]}]
+  [:div {:on-click onClick}
+   [:h2 title]
+   children])
+
+(def react-comp (r/reactify-component exported))
+
+;; JSX: <ReactComp title="Hello" onClick={f}><b>child</b></ReactComp>
+(r/create-element react-comp
+                  #js {:title "Hello" :onClick f}
+                  (r/as-element [:b "child"]))
+```
+
+When using the component from Hiccup through `:>`, the props are first
+converted to a JS object the same way as for any React component, so
+`[:> react-comp {:on-click f}]` is seen as `{:onClick f}`.
+
+With the default compiler, `r/props` and `r/children` also work inside the
+component (`r/children` returns the children as a vector). With a
+[function components compiler](./ReagentCompiler.md), use the props argument
+instead.
+
 Note:
 
 * `adapt-react-class` and `reactify-component` are not perfectly symmetrical,
