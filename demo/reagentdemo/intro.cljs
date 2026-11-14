@@ -77,17 +77,17 @@
                           (swap! bmi-data
                                  (fn [data]
                                    (-> data
-                                     (assoc param new-value)
-                                     (dissoc invalidates)
-                                     calc-bmi)))))}])
+                                       (assoc param new-value)
+                                       (dissoc invalidates)
+                                       calc-bmi)))))}])
 
 (r/defc bmi-component []
   (let [{:keys [weight height bmi]} @bmi-data
         [color diagnose] (cond
-                          (< bmi 18.5) ["orange" "underweight"]
-                          (< bmi 25) ["inherit" "normal"]
-                          (< bmi 30) ["orange" "overweight"]
-                          :else ["red" "obese"])]
+                           (< bmi 18.5) ["orange" "underweight"]
+                           (< bmi 25) ["inherit" "normal"]
+                           (< bmi 30) ["orange" "overweight"]
+                           :else ["red" "obese"])]
     [:div
      [:h3 "BMI calculator"]
      [:div
@@ -104,7 +104,6 @@
 (def ns-src (s/syntaxed "(ns example
   (:require [reagent.core :as r]))"))
 
-
 (def ns-src-with-rdom (s/syntaxed "(ns example
   (:require [reagent.dom :as rdom]))"))
 
@@ -120,7 +119,7 @@
 
      [:p [:a github "Reagent"] " provides a minimalistic interface
      between " [:a clojurescript "ClojureScript"] " and " [:a
-     react "React"] ". It allows you to define efficient React
+                                                           react "React"] ". It allows you to define efficient React
      components using nothing but plain ClojureScript functions and
      data, that describe your UI using a " [:a hiccup "Hiccup"] "-like
      syntax."]
@@ -155,18 +154,18 @@
       be called with square brackets."]
 
      [:p "Here is another example that shows items in a "
-     [:code "seq"] ":" ]
+      [:code "seq"] ":"]
 
      [demo-component {:comp lister-user
                       :src (s/src-of [:lister :lister-user])}]
 
      [:p [:strong "Note: "]
-     "The " [:code "^{:key item}"] " part above isn’t really necessary
+      "The " [:code "^{:key item}"] " part above isn’t really necessary
      in this simple example, but attaching a unique key to every item
      in a dynamically generated list of components is good practice,
      and helps React to improve performance for large lists. The key
      can be given either (as in this example) as meta-data, or as a "
-     [:code ":key"] " item in the first argument to a component (if it
+      [:code ":key"] " item in the first argument to a component (if it
      is a map). See React’s " [:a react-keys "documentation"] "
      for more info."]]))
 
@@ -177,7 +176,7 @@
    [:p "The easiest way to manage state in Reagent is to use Reagent’s
    own version of " [:code "atom"] ". It works exactly like the one in
    clojure.core, except that it keeps track of every time it is
-   deref’ed. Any component that uses an " [:code "atom"]" is automagically
+   deref’ed. Any component that uses an " [:code "atom"] " is automagically
    re-rendered when its value changes."]
 
    [:p "Let’s demonstrate that with a simple example:"]
@@ -204,7 +203,7 @@
    [:p "This allows you to perform some setup of newly created
    components without resorting to React’s lifecycle events."]
 
-   [:p "By simply passing an "[:code "atom"]" around you can share
+   [:p "By simply passing an " [:code "atom"] " around you can share
    state management between components, like this:"]
 
    [demo-component {:comp shared-state
@@ -213,7 +212,7 @@
                           (s/src-of [:atom-input :shared-state])]}]
 
    [:p [:strong "Note: "] "Component functions can be called with any
-   arguments – as long as they are immutable. You "[:em "could"]" use
+   arguments – as long as they are immutable. You " [:em "could"] " use
    mutable objects as well, but then you have to make sure that the
    component is updated when your data changes. Reagent assumes by
    default that two objects are equal if they are the same object."]])
@@ -244,11 +243,11 @@
 
    [:p "Mounted components are only re-rendered when their parameters
    have changed. The change could come from a deref’ed "
-   [:code "atom"] ", the arguments passed to the component or
+    [:code "atom"] ", the arguments passed to the component or
    component state."]
 
    [:p "All of these are checked for changes with "
-   [:code "identical?"] " which is basically only a pointer
+    [:code "identical?"] " which is basically only a pointer
    comparison, so the overhead is very low. Maps passed as arguments
    to components are compared the same way: they are considered equal
    if all their entries are identical. This also applies to built-in
@@ -275,7 +274,7 @@
 
    [:p "Incidentally, this page also uses another React trick: the
    entire page is pre-rendered using Node, and "
-   [:code "reagent.dom.server/render-to-string"] ". When it is loaded
+    [:code "reagent.dom.server/render-to-string"] ". When it is loaded
    into the browser, React automatically attaches event-handlers to
    the already present DOM tree."]])
 

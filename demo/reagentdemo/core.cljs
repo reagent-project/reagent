@@ -23,20 +23,20 @@
 (defn error-boundary [& children]
   (let [error (r/atom nil)]
     (r/create-class
-      {:constructor (fn [this props])
-       :component-did-catch (fn [this e info])
-       :get-derived-state-from-error (fn [e]
-                                       (reset! error e)
-                                       #js {})
-       :reagent-render (fn [& children]
-                         (if @error
-                           [:div
-                            "Something went wrong."
-                            [:input
-                             {:type "button"
-                              :on-click #(reset! error nil)
-                              :value "Try again"}]]
-                           (into [:<>] children)))})))
+     {:constructor (fn [this props])
+      :component-did-catch (fn [this e info])
+      :get-derived-state-from-error (fn [e]
+                                      (reset! error e)
+                                      #js {})
+      :reagent-render (fn [& children]
+                        (if @error
+                          [:div
+                           "Something went wrong."
+                           [:input
+                            {:type "button"
+                             :on-click #(reset! error nil)
+                             :value "Try again"}]]
+                          (into [:<>] children)))})))
 
 (def test-component (r/atom nil))
 

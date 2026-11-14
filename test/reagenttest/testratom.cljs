@@ -106,7 +106,6 @@
       (dispose !co))
     (is (= runs (running)))))
 
-
 (deftest test-unsubscribe
   (dotimes [x testite]
     (let [runs (running)
@@ -282,7 +281,6 @@
       (is (= @disposed-c true))
       (is (= @disposed-cns true))
       (is (= runs (running))))))
-
 
 (deftest test-on-set
   (let [runs (running)
@@ -515,5 +513,4 @@
     ;; TODO: https://github.com/reagent-project/reagent/pull/270
     ;; Consider what should happen here (exception? log a warning?) and
     ;; document the behaviour.
-    #_
-    (is (= @run-number 2))))
+    #_(is (= @run-number 2))))

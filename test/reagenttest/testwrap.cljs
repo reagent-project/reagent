@@ -125,7 +125,7 @@
         (is (= "value:3:" (.-innerText div)))
 
         (u/act (reset! state {:foo {:bar {:foobar 3}}
-                       :foo1 {}}))
+                              :foo1 {}}))
 
         (is (= 3 @ran))
 
@@ -154,9 +154,7 @@
         (u/act (reset! @grand-state {:foobar 4}))
 
         ; (is (= 7 @ran))
-        (is (= "value:4:" (.-innerText div)))
-
-        ))))
+        (is (= "value:4:" (.-innerText div)))))))
 
 (u/deftest ^:dom test-cursor
   (let [compiler u/*test-compiler*

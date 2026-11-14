@@ -14,19 +14,18 @@
 (def paren-style-2 {:style {:color "#940"}})
 (def paren-style-3 {:style {:color "#44a"}})
 
-
 ;;;;; Colorization
 
 (def builtins #{"def" "defn" "defonce" "ns" "atom" "let" "if" "when"
-               "cond" "merge" "assoc" "swap!" "reset!" "for"
-               "range" "nil?" "int" "or" "->" "->>" "%" "fn" "if-not"
-               "empty?" "case" "str" "pos?" "zero?" "map" "remove"
-               "empty" "into" "assoc-in" "dissoc" "get-in" "when-not"
-               "filter" "vals" "count" "complement" "identity" "dotimes"
-               "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
-               "=" "partial" "first" "second" "rest" "list" "conj"
-               "drop" "when-let" "if-let" "add-watch" "mod" "quot"
-               "bit-test" "vector" "do" "try" "catch" "finally"})
+                "cond" "merge" "assoc" "swap!" "reset!" "for"
+                "range" "nil?" "int" "or" "->" "->>" "%" "fn" "if-not"
+                "empty?" "case" "str" "pos?" "zero?" "map" "remove"
+                "empty" "into" "assoc-in" "dissoc" "get-in" "when-not"
+                "filter" "vals" "count" "complement" "identity" "dotimes"
+                "update-in" "sorted-map" "inc" "dec" "false" "true" "not"
+                "=" "partial" "first" "second" "rest" "list" "conj"
+                "drop" "when-let" "if-let" "add-watch" "mod" "quot"
+                "bit-test" "vector" "do" "try" "catch" "finally"})
 
 (def styles {:comment  comment-style
              :str-litt string-style

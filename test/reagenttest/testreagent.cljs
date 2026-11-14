@@ -15,10 +15,10 @@
             [reagenttest.utils :as u :refer [as-string]]))
 
 (t/use-fixtures :once
-                {:before (fn []
-                           (set! rv/debug true))
-                 :after  (fn []
-                           (set! rv/debug false))})
+  {:before (fn []
+             (set! rv/debug true))
+   :after  (fn []
+             (set! rv/debug false))})
 
 (u/deftest ^:dom really-simple-test
   (let [ran (atom 0)
@@ -33,16 +33,16 @@
 (u/deftest ^:dom test-simple-callback
   (let [ran (atom 0)
         comp (r/create-class
-               {:component-did-mount #(swap! ran inc)
-                :render
-                (fn [this]
-                  (let [props (r/props this)]
-                    (is (map? props))
-                    (is (= props ((r/argv this) 1)))
-                    (is (= 1 (first (r/children this))))
-                    (is (= 1 (count (r/children this))))
-                    (swap! ran inc)
-                    [:div (str "hi " (:foo props) ".")]))})]
+              {:component-did-mount #(swap! ran inc)
+               :render
+               (fn [this]
+                 (let [props (r/props this)]
+                   (is (map? props))
+                   (is (= props ((r/argv this) 1)))
+                   (is (= 1 (first (r/children this))))
+                   (is (= 1 (count (r/children this))))
+                   (swap! ran inc)
+                   [:div (str "hi " (:foo props) ".")]))})]
     (u/async
       (u/with-render [div [comp {:foo "you"} 1]]
         (is (= "hi you." (.-innerText div)))
@@ -53,13 +53,13 @@
   (let [ran (atom 0)
         self (r/atom nil)
         comp (r/create-class
-               {:get-initial-state (fn [] {:foo "initial"})
-                :reagent-render
-                (fn []
-                  (let [this (r/current-component)]
-                    (reset! self this)
-                    (swap! ran inc)
-                    [:div (str "hi " (:foo (r/state this)))]))})]
+              {:get-initial-state (fn [] {:foo "initial"})
+               :reagent-render
+               (fn []
+                 (let [this (r/current-component)]
+                   (reset! self this)
+                   (swap! ran inc)
+                   [:div (str "hi " (:foo (r/state this)))]))})]
     (u/async
       (u/with-render [div [comp]]
         (swap! ran inc)
@@ -316,16 +316,16 @@
         comp (fn []
                (swap! top-ran inc)
                (r/create-class
-                 {:component-did-mount #(swap! ran inc)
-                  :render
-                  (fn [this]
-                    (let [props (r/props this)]
-                      (is (map? props))
-                      (is (= props ((r/argv this) 1)))
-                      (is (= 1 (first (r/children this))))
-                      (is (= 1 (count (r/children this))))
-                      (swap! ran inc)
-                      [:div (str "hi " (:foo props) ".")]))}))
+                {:component-did-mount #(swap! ran inc)
+                 :render
+                 (fn [this]
+                   (let [props (r/props this)]
+                     (is (map? props))
+                     (is (= props ((r/argv this) 1)))
+                     (is (= 1 (first (r/children this))))
+                     (is (= 1 (count (r/children this))))
+                     (swap! ran inc)
+                     [:div (str "hi " (:foo props) ".")]))}))
         prop (r/atom {:foo "you"})
         parent (fn [] [comp @prop 1])]
     (u/async
@@ -345,12 +345,12 @@
         comp (fn []
                (swap! top-ran inc)
                (r/create-class
-                 {:component-did-mount #(swap! ran inc)
-                  :reagent-render
-                  (fn [p a]
-                    (is (= 1 a))
-                    (swap! ran inc)
-                    [:div (str "hi " (:foo p) ".")])}))
+                {:component-did-mount #(swap! ran inc)
+                 :reagent-render
+                 (fn [p a]
+                   (is (= 1 a))
+                   (swap! ran inc)
+                   [:div (str "hi " (:foo p) ".")])}))
         prop (r/atom {:foo "you"})
         parent (fn [] [comp @prop 1])]
     (u/async
@@ -391,14 +391,14 @@
 
 (def ndiv (let [cmp (fn [])]
             (gobj/extend
-              (.-prototype cmp)
+             (.-prototype cmp)
               (.-prototype react/Component)
               #js {:render (fn []
                              (this-as
-                               this
+                              this
                                (r/create-element
-                                 "div" #js {:className (.. this -props -className)}
-                                 (.. this -props -children))))})
+                                "div" #js {:className (.. this -props -className)}
+                                (.. this -props -children))))})
             (gobj/extend cmp react/Component)
             cmp))
 
@@ -472,15 +472,15 @@
   (u/async
     (u/with-render [div [:div
                          (list
-                           [:> "div" {:key 1} "a"]
-                           [:> "div" {:key 2} "b"])]]
+                          [:> "div" {:key 1} "a"]
+                          [:> "div" {:key 2} "b"])]]
       {:capture-errors true}
       (is (empty? (:warn @reagent.debug/warnings))))
 
     (u/with-render [div [:div
                          (list
-                           [:r> "div" #js {:key 1} "a"]
-                           [:r> "div" #js {:key 2} "b"])]]
+                          [:r> "div" #js {:key 1} "a"]
+                          [:r> "div" #js {:key 2} "b"])]]
       {:capture-errors true}
       (is (empty? (:warn @reagent.debug/warnings))))
 
@@ -488,8 +488,8 @@
               [:div props c])]
       (u/with-render [div [:div
                            (list
-                             [:f> f {:key 1} "a"]
-                             [:f> f {:key 2} "b"])]]
+                            [:f> f {:key 1} "a"]
+                            [:f> f {:key 2} "b"])]]
         {:capture-errors true}
         (is (empty? (:warn @reagent.debug/warnings)))))))
 
@@ -522,13 +522,12 @@
 
 (u/deftest ^:dom test-keys
   (u/async
-    (let [a nil ;; (r/atom "a")
-          c (fn key-tester []
+    (let [c (fn key-tester []
               [:div
                (for [i (range 3)]
-                 ^{:key i} [:p i (some-> a deref)])
+                 ^{:key i} [:p i])
                (for [i (range 3)]
-                 [:p {:key i} i (some-> a deref)])])]
+                 [:p {:key i} i])])]
       (u/with-render [_div [c]]
         {:capture-errors true}
         (is (empty? (:warn @reagent.debug/warnings)))))
@@ -771,7 +770,7 @@
               (this-as c (is (= c (first args))))
               (add-args :will-unmount args))}
         c1 (r/create-class
-             (assoc ls :reagent-render render))
+            (assoc ls :reagent-render render))
         defarg ["a" "b"]
         arg (r/atom defarg)
         comp (atom c1)
@@ -831,7 +830,7 @@
                            :args (vec args)}))
         render (fn [& args]
                  (this-as
-                   c
+                  c
                    (when @newprops
                      (is (= (first args) @newprops))
                      (is (= (r/props c) @newprops)))
@@ -878,7 +877,7 @@
               (this-as c (is (= c (first args))))
               (add-args :will-unmount args))}
         c1 (r/create-class
-             (assoc ls :reagent-render render))
+            (assoc ls :reagent-render render))
         defarg [{:foo "bar"} "a" "b"]
         arg (r/atom defarg)
         comp (atom c1)
@@ -935,14 +934,14 @@
 (u/deftest ^:dom test-err-messages
   (when (dev?)
     (is (thrown-with-msg?
-          :default #"Hiccup form should not be empty: \[]"
-          (as-string [])))
+         :default #"Hiccup form should not be empty: \[]"
+         (as-string [])))
     (is (thrown-with-msg?
-          :default #"Invalid Hiccup tag: \[:>div \[reagenttest.testreagent.foo]]"
-          (as-string [:>div [foo]])))
+         :default #"Invalid Hiccup tag: \[:>div \[reagenttest.testreagent.foo]]"
+         (as-string [:>div [foo]])))
     (is (thrown-with-msg?
-          :default #"Invalid Hiccup form: \[23]"
-          (as-string [23])))
+         :default #"Invalid Hiccup form: \[23]"
+         (as-string [23])))
     ;; This used to be asserted by Reagent, but because it is hard to validate
     ;; components, now we just trust React will validate elements.
     ; (is (thrown-with-msg?
@@ -952,14 +951,14 @@
     ;; NOTE: browser-npm uses production cjs bundle for now which only shows
     ;; the minified error
     (debug/track-warnings
-      (u/wrap-capture-console-error
-        #(is (thrown-with-msg?
-               :default #"(Element type is invalid:|Minified React error)"
-               (as-string [:> [:div]])))))
+     (u/wrap-capture-console-error
+      #(is (thrown-with-msg?
+            :default #"(Element type is invalid:|Minified React error)"
+            (as-string [:> [:div]])))))
 
     (is (thrown-with-msg?
-          :default #"Invalid tag: 'p.'"
-          (as-string [:p.])))
+         :default #"Invalid tag: 'p.'"
+         (as-string [:p.])))
 
     (let [comp1 (fn comp1 [x]
                   x)
@@ -974,7 +973,7 @@
                     [:p "foo"]))
           nat (let [cmp (fn [])]
                 (gobj/extend
-                  (.-prototype cmp)
+                 (.-prototype cmp)
                   (.-prototype react/Component)
                   #js {:render (fn [])})
                 (gobj/extend cmp react/Component)
@@ -1018,7 +1017,7 @@
                             (-> @reagent.debug/warnings :warn first))))
 
         (let [e (debug/track-warnings
-                  #(r/as-element (comp4) compiler))]
+                 #(r/as-element (comp4) compiler))]
           (is (safe-re-find #"Every element in a seq should have a unique :key"
                             (-> e :warn first))))))))
 
@@ -1029,24 +1028,24 @@
         ;; component STATE is updated? Not if error state is stored in a ratom.
         error-boundary (fn error-boundary [comp]
                          (r/create-class
-                           {:constructor (fn [this _props]
-                                           (let [o #js {}]
-                                             ;; Use property access, same as in reagent-render so Closure optimization works for both
-                                             ;; property set and access?
-                                             (set! (.-didCatch o) false)
-                                             (set! (.-state this) o)))
-                            :component-did-catch (fn [this e i]
-                                                   (reset! info i))
-                            :get-derived-state-from-error (fn [e]
-                                                            (reset! error e)
-                                                            (let [o #js {}]
-                                                              (set! (.-didCatch o) true)
-                                                              o))
-                            :reagent-render (fn [comp]
-                                              (let [^js this (r/current-component)]
-                                                (if (.-didCatch (.-state this))
-                                                  [:div "Something went wrong."]
-                                                  comp)))}))
+                          {:constructor (fn [this _props]
+                                          (let [o #js {}]
+                                            ;; Use property access, same as in reagent-render so Closure optimization works for both
+                                            ;; property set and access?
+                                            (set! (.-didCatch o) false)
+                                            (set! (.-state this) o)))
+                           :component-did-catch (fn [this e i]
+                                                  (reset! info i))
+                           :get-derived-state-from-error (fn [e]
+                                                           (reset! error e)
+                                                           (let [o #js {}]
+                                                             (set! (.-didCatch o) true)
+                                                             o))
+                           :reagent-render (fn [comp]
+                                             (let [^js this (r/current-component)]
+                                               (if (.-didCatch (.-state this))
+                                                 [:div "Something went wrong."]
+                                                 comp)))}))
         comp1 (fn comp1 []
                 (throw (js/Error. "Test error")))
         comp2 (fn comp2 []
@@ -1087,9 +1086,9 @@
                (reset! component-instance (r/current-component))
                (let [old @spy]
                  (r/after-render
-                   (fn []
-                     (is (= "DIV" (.-tagName @node)))
-                     (swap! spy inc)))
+                  (fn []
+                    (is (= "DIV" (.-tagName @node)))
+                    (swap! spy inc)))
                  (is (= @spy old))
                  (is (= @exp @val))
                  [:div
@@ -1163,12 +1162,12 @@
 
 (defn context-child []
   (r/create-class
-    {:context-type Foo
-     :reagent-render (fn []
-                       (let [this (r/current-component)]
-                         ;; Context property name is not mangled, so need to  use gobj/get to access property by string name
-                         ;; React extern handles context name.
-                         [:div "child," (gobj/get (.-context this) "foo")]))}))
+   {:context-type Foo
+    :reagent-render (fn []
+                      (let [this (r/current-component)]
+                        ;; Context property name is not mangled, so need to  use gobj/get to access property by string name
+                        ;; React extern handles context name.
+                        [:div "child," (gobj/get (.-context this) "foo")]))}))
 
 ;; Class component only
 (deftest ^:dom context-test
@@ -1196,48 +1195,48 @@
 (u/deftest new-context-test
   (is (= "<div>Context: foo</div>"
          (as-string
+          (r/create-element
+           Provider #js {:value "foo"}
            (r/create-element
-             Provider #js {:value "foo"}
-             (r/create-element
-               Consumer #js {}
-               (fn [v]
-                 (r/as-element [:div "Context: " v])))))))
+            Consumer #js {}
+            (fn [v]
+              (r/as-element [:div "Context: " v])))))))
 
   (testing "context default value works"
     (is (= "<div>Context: default</div>"
            (as-string
-             (r/create-element
-               Consumer #js {}
-               (fn [v]
-                 (r/as-element [:div "Context: " v])))))))
+            (r/create-element
+             Consumer #js {}
+             (fn [v]
+               (r/as-element [:div "Context: " v])))))))
 
   (testing "context works with adapt-react-class"
     (let [provider (r/adapt-react-class Provider)
           consumer (r/adapt-react-class Consumer)]
       (is (= "<div>Context: bar</div>"
              (as-string
-               [provider {:value "bar"}
-                [consumer {}
-                 (fn [v]
-                   (r/as-element [:div "Context: " v]))]])))))
+              [provider {:value "bar"}
+               [consumer {}
+                (fn [v]
+                  (r/as-element [:div "Context: " v]))]])))))
 
   (testing "context works with :>"
     (is (= "<div>Context: bar</div>"
            (as-string
-             [:> Provider {:value "bar"}
-              [:> Consumer {}
-               (fn [v]
-                 (r/as-element [:div "Context: " v]))]]))))
+            [:> Provider {:value "bar"}
+             [:> Consumer {}
+              (fn [v]
+                (r/as-element [:div "Context: " v]))]]))))
 
   (testing "static contextType"
     (let [comp (r/create-class
-                 {:context-type my-context
-                  :reagent-render (fn []
-                                    (this-as this
-                                      (r/as-element [:div "Context: " (.-context this)])))})]
+                {:context-type my-context
+                 :reagent-render (fn []
+                                   (this-as this
+                                     (r/as-element [:div "Context: " (.-context this)])))})]
       (is (= "<div>Context: default</div>"
              (as-string
-               [comp])))))
+              [comp])))))
 
   (testing "useContext hook"
     (let [comp (fn [v]
@@ -1245,9 +1244,9 @@
                    [:div "Context: " v]))]
       (is (= "<div>Context: foo</div>"
              (as-string
-               [:r> Provider
-                #js {:value "foo"}
-                [:f> comp]]))))))
+              [:r> Provider
+               #js {:value "foo"}
+               [:f> comp]]))))))
 
 (u/deftest ^:dom on-failed-prop-comparison-in-should-update-swallow-exception-and-do-not-update-component
   (let [prop (r/atom {:todos 1})
@@ -1282,13 +1281,13 @@
         ;; Object.assign to merge current state and partial state returned
         ;; from the method, so the state has to be plain old object.
         pure-component (r/create-class
-                         {:constructor (fn [this]
-                                         (set! (.-state this) #js {}))
-                          :get-derived-state-from-props (fn [props state]
-                                                          ;; "Expensive" calculation based on the props
-                                                          #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
-                          :render (fn [this]
-                                    (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
+                        {:constructor (fn [this]
+                                        (set! (.-state this) #js {}))
+                         :get-derived-state-from-props (fn [props state]
+                                                         ;; "Expensive" calculation based on the props
+                                                         #js {:v (string/join " " (repeat (inc (:value props)) "foo"))})
+                         :render (fn [this]
+                                   (r/as-element [:p "Value " (gobj/get (.-state this) "v")]))})
         component (fn []
                     [pure-component {:value @prop}])]
     (u/async
@@ -1300,19 +1299,19 @@
 (u/deftest ^:dom get-derived-state-from-error-test
   (let [prop (r/atom 0)
         component (r/create-class
-                    {:constructor (fn [this props]
-                                    (let [o #js {}]
-                                      (set! (.-hasError o) false)
-                                      (set! (.-state this) o)))
-                     :get-derived-state-from-error (fn [error]
-                                                     (let [o #js {}]
-                                                       (set! (.-hasError o) true)
-                                                       o))
-                     :component-did-catch (fn [this e info])
-                     :render (fn [^js/React.Component this]
-                               (r/as-element (if (.-hasError (.-state this))
-                                               [:p "Error"]
-                                               (into [:<>] (r/children this)))))})
+                   {:constructor (fn [this props]
+                                   (let [o #js {}]
+                                     (set! (.-hasError o) false)
+                                     (set! (.-state this) o)))
+                    :get-derived-state-from-error (fn [error]
+                                                    (let [o #js {}]
+                                                      (set! (.-hasError o) true)
+                                                      o))
+                    :component-did-catch (fn [this e info])
+                    :render (fn [^js/React.Component this]
+                              (r/as-element (if (.-hasError (.-state this))
+                                              [:p "Error"]
+                                              (into [:<>] (r/children this)))))})
         bad-component (fn []
                         (if (= 0 @prop)
                           [:div "Ok"]
@@ -1329,16 +1328,16 @@
         prop (r/atom 0)
         did-update (atom nil)
         component (r/create-class
-                    {:get-snapshot-before-update (fn [this [_ prev-props] prev-state]
-                                                   {:height (.. ref -current -scrollHeight)})
-                     :component-did-update (fn [this [_ prev-props] prev-state snapshot]
-                                             (reset! did-update snapshot))
-                     :render (fn [this]
-                               (r/as-element
-                                 [:div
-                                  {:ref ref
-                                   :style {:height "20px"}}
-                                  "foo"]))})
+                   {:get-snapshot-before-update (fn [this [_ prev-props] prev-state]
+                                                  {:height (.. ref -current -scrollHeight)})
+                    :component-did-update (fn [this [_ prev-props] prev-state snapshot]
+                                            (reset! did-update snapshot))
+                    :render (fn [this]
+                              (r/as-element
+                               [:div
+                                {:ref ref
+                                 :style {:height "20px"}}
+                                "foo"]))})
         component-2 (fn []
                       [component {:value @prop}])]
     (u/async
@@ -1511,7 +1510,7 @@
 
 (deftest ^:dom functional-strict-transitive
   (let [cnt (r/atom 2)
-        numbers (rv/reaction (vec (range @cnt)))
+        numbers (reaction (vec (range @cnt)))
         num-c (fn [i]
                 (let [x (get @numbers i)]
                   [:span x]))
@@ -1603,8 +1602,7 @@
   (is (= "0" (.-key (r/as-element           [:div {:key 0}]))))
   (is (= "0" (.-key (r/as-element ^{:key 0} [:div]))))
   (is (= "0" (.-key (r/as-element           [:input {:key 0}]))))
-  (is (= "0" (.-key (r/as-element ^{:key 0} [:input]))))
-  )
+  (is (= "0" (.-key (r/as-element ^{:key 0} [:input])))))
 
 ;; Note: you still pretty much need to access the impl.template namespace to
 ;; implement your own parse-tag
@@ -1637,8 +1635,8 @@
     (gobj/clear tag-name-cache)
     (is (= "<div class=\"foo_asd foo_xyz bar\"></div>"
            (server/render-to-static-markup
-             [:div.asd.xyz {:class "bar"}]
-             compiler)))))
+            [:div.asd.xyz {:class "bar"}]
+            compiler)))))
 
 (deftest ^:dom react-concurrent-mode-test
   ;; 18 has this API, but skip on those tests, because calling
@@ -1661,29 +1659,29 @@
         ;; TODO: Create helper to render to div and check after initial render
         ;; is done.
         (js/Promise.
-          (fn [resolve reject]
-            (rdomc/render
-              root
-              [:f> test-wrap
-               (fn []
-                 (is (= "foo 0" (.-innerText div)))
-                 (is (= 1 @ran))
+         (fn [resolve reject]
+           (rdomc/render
+            root
+            [:f> test-wrap
+             (fn []
+               (is (= "foo 0" (.-innerText div)))
+               (is (= 1 @ran))
 
-                 (swap! i inc)
+               (swap! i inc)
 
-                 ;; Wait for Reagent to flush ratom queue.
-                 (r/after-render
-                   (fn []
-                     ;; NOTE: React act isn't usable as it isn't available on production bundles.
-                     ;; Wait 16ms, this is probably enough for
-                     ;; React to render the results.
-                     (js/setTimeout (fn []
-                                      (is (= "foo 1" (.-innerText div)))
-                                      (is (= 2 @ran))
-                                      (resolve))
-                                    u/RENDER-WAIT))))
-               [really-simple]]
-              u/fn-compiler)))))))
+               ;; Wait for Reagent to flush ratom queue.
+               (r/after-render
+                (fn []
+                  ;; NOTE: React act isn't usable as it isn't available on production bundles.
+                  ;; Wait 16ms, this is probably enough for
+                  ;; React to render the results.
+                  (js/setTimeout (fn []
+                                   (is (= "foo 1" (.-innerText div)))
+                                   (is (= 2 @ran))
+                                   (resolve))
+                                 u/RENDER-WAIT))))
+             [really-simple]]
+            u/fn-compiler)))))))
 
 (u/deftest test-unsafe-html
   (testing "Regular value is ignored"

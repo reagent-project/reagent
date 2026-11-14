@@ -30,16 +30,16 @@
   keep using the old value, to keep the identity stable."
   [updater]
   (react/useCallback
-    (fn [v & args]
-      (updater
-        (fn [current-value]
-          (let [new-value (if (fn? v)
-                            (apply v current-value args)
-                            v)]
-            (if (= new-value current-value)
-              current-value
-              new-value)))))
-    #js [updater]))
+   (fn [v & args]
+     (updater
+      (fn [current-value]
+        (let [new-value (if (fn? v)
+                          (apply v current-value args)
+                          v)]
+          (if (= new-value current-value)
+            current-value
+            new-value)))))
+   #js [updater]))
 
 (defn- clojure-aware-reducer-updater [reducer]
   (fn [state action]

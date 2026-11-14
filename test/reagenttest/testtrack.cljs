@@ -25,7 +25,6 @@
 
 (enable-console-print!)
 
-
 (deftest basic-ratom
   (let [runs (running)
         start (rv/atom 0)
@@ -115,7 +114,6 @@
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
-
 
 (deftest test-unsubscribe
   (dotimes [x testite]

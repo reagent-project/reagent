@@ -48,16 +48,17 @@
            ;; multi-arity definitions can call the other arities.
            render-fn# (fn ~sym ~@fdecl)]
        (def ~fname (reagent.impl.component/memo
-                     (fn ~sym [jsprops#]
-                       (let [jsprops2# (cljs.core/js-obj)]
-                         (set! (.-reagentRender ^{:tag 'clj} jsprops2#) render-fn#)
-                         (js/Object.assign jsprops2# jsprops#)
-                         (reagent.impl.component/functional-render reagent.impl.template/*current-default-compiler* jsprops2#)))))
+                    (fn ~sym [jsprops#]
+                      (let [jsprops2# (cljs.core/js-obj)]
+                        (set! (.-reagentRender ^{:tag 'clj} jsprops2#) render-fn#)
+                        (js/Object.assign jsprops2# jsprops#)
+                        (reagent.impl.component/functional-render reagent.impl.template/*current-default-compiler* jsprops2#)))))
        (set! (.-reagent-component ~fname) true)
        (set! (.-displayName ~fname) ~(str sym))
        (js/Object.defineProperty ~fname "name" (cljs.core/js-obj "value" ~(str sym) "writable" false)))))
 
 (comment
+  (require '[clojure.pprint] '[clojure.walk])
   (clojure.pprint/pprint (macroexpand-1 '(defc foobar [a b] (+ a b))))
   (clojure.pprint/pprint (macroexpand-1 '(defc foobar "docstring" ([a] (foobar a nil)) ([a b] (+ a b)))))
   (clojure.pprint/pprint (clojure.walk/macroexpand-all '(defc foobar [a b] (+ a b)))))

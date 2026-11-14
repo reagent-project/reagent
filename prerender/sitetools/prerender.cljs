@@ -28,23 +28,23 @@
                              js-file css-file
                              js-resource-path site-dir]}]
   (server/render-to-static-markup
-    [:html
-     [:head
-      [:meta {:charset 'utf-8}]
-      [:meta {:name 'viewport
-              :content "width=device-width, initial-scale=1.0"}]
-      [:base {:href (-> page-conf :page-path base)}]
-      [:link {:href (add-cache-buster site-dir css-file)
-              :rel "stylesheet"}]
-      [:title title]]
-     [:body
-      [:div
-       {:id "main-content"}
-       (danger :div body-html)]
-      (danger :script (str "var pageConfig = "
-                           (-> page-conf clj->js js/JSON.stringify)))
-      [:script {:src (add-cache-buster js-resource-path js-file)
-                :type "text/javascript"}]]]))
+   [:html
+    [:head
+     [:meta {:charset 'utf-8}]
+     [:meta {:name 'viewport
+             :content "width=device-width, initial-scale=1.0"}]
+     [:base {:href (-> page-conf :page-path base)}]
+     [:link {:href (add-cache-buster site-dir css-file)
+             :rel "stylesheet"}]
+     [:title title]]
+    [:body
+     [:div
+      {:id "main-content"}
+      (danger :div body-html)]
+     (danger :script (str "var pageConfig = "
+                          (-> page-conf clj->js js/JSON.stringify)))
+     [:script {:src (add-cache-buster js-resource-path js-file)
+               :type "text/javascript"}]]]))
 
 (defn gen-page [page-path conf]
   (tools/emit [:set-page page-path])
@@ -82,7 +82,7 @@
     (write-resources site-dir conf)
     (doseq [f (keys pages)]
       (write-file (->> f tools/to-relative (path/join site-dir))
-                         (gen-page f conf))))
+                  (gen-page f conf))))
   (log "Wrote site")
   (js/process.exit 0))
 

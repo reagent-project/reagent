@@ -45,12 +45,11 @@
   ;; are rendered before children
   (.sort a compare-mount-order)
   (react-flush
-    (fn []
-      (dotimes [i (alength a)]
-        (let [^js/React.Component c (aget a i)]
-          (when (true? (.-cljsIsDirty c))
-            (.forceUpdate c)))))))
-
+   (fn []
+     (dotimes [i (alength a)]
+       (let [^js/React.Component c (aget a i)]
+         (when (true? (.-cljsIsDirty c))
+           (.forceUpdate c)))))))
 
 ;; Set from ratom.cljs
 (defonce ratom-flush (fn []))

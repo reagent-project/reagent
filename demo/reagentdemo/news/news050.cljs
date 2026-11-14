@@ -16,8 +16,6 @@
 
 (def figwheel-link "https://github.com/bhauman/lein-figwheel")
 
-
-
 (defonce person (r/atom {:name
                          {:first-name "John" :last-name "Smith"}}))
 
@@ -73,8 +71,8 @@
                      #js{:className "foo"}
                      "Hello "
                      (r/create-element "strong"
-                                        #js{}
-                                        "world"))
+                                       #js{}
+                                       "world"))
 
    (r/create-element "div"
                      #js{:className "foo"}
@@ -85,13 +83,11 @@
                                         #js{}
                                         "world")]])
 
-
 (def div-adapter (r/adapt-react-class "div"))
 
 (defn adapted []
   [div-adapter {:class "foo"}
    "Hello " [:strong "world"]])
-
 
 (defn exported [props]
   [:div "Hi, " (:name props)])
@@ -100,7 +96,6 @@
 
 (defn could-be-jsx []
   (r/create-element react-comp #js{:name "world"}))
-
 
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
@@ -137,7 +132,6 @@
        import React in some other way."]
 
        [:p "Reagent now requires ClojureScript 0.0-2816 or later."]
-
 
        [:h2 "Splitting atoms"]
 
@@ -232,7 +226,6 @@
        re-rendering is avoided by checking if the cursor's value has
        changed using " [:code "identical?"] ")."]
 
-
        [:h2 "Faster rendering"]
 
        [:p "Reagent used to wrap all ”native” React components in an
@@ -245,7 +238,6 @@
        elements. This will be noticeable if you generate html strings,
        or if you animate a large number of components."]
 
-
        [:h2 "Simple React integration"]
 
        [:p "Since Reagent doesn't need those wrappers anymore it is
@@ -253,7 +245,7 @@
        ones. There’s a new convenience
        function, " [:code "reagent.core/create-element"] ", that
        simply calls " [:a {:href
-       cel-link} [:code "React.createElement"]] ". This,
+                           cel-link} [:code "React.createElement"]] ". This,
        unsurprisingly, creates React elements, either from the result
        of " [:code "React.createClass"] " or html tag names."]
 
@@ -292,7 +284,6 @@
        single argument: the React " [:code "props"] ", converted to a
        ClojureScript " [:code "map"] "."]
 
-
        [:h2 "More equality"]
 
        [:p "Reagent used to have a rather complicated way of
@@ -325,12 +316,11 @@
        just like render-to-string, except that it doesn’t add
        React-specific attributes."]
 
-
        [:h2 "Easier live-programming"]
 
        [:p "It is now easier than before to integrate Reagent with
        e.g. the rather excellent " [:a {:href
-       figwheel-link} "figwheel"] ", since " [:code "render"] " now
+                                        figwheel-link} "figwheel"] ", since " [:code "render"] " now
        will cause the entire component tree to update (by-passing the
        equality checks)."]
 

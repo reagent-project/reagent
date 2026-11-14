@@ -1,0 +1,13 @@
+{:indent-line-comments? true
+ :extra-indents {this-as [[:block 1]]
+                 reagent.core/with-let [[:block 1]]
+                 reagent.ratom/with-let [[:block 1]]
+                 reagent.core/reaction [[:block 0]]
+                 reagent.ratom/reaction [[:block 0]]
+                 reagent.ratom/run! [[:block 0]]
+                 reagent.debug/time [[:block 0]]
+                 cljs.test/async [[:block 1]]
+                 clojure.test/async [[:block 1]]
+                 reagenttest.utils/async [[:block 0]]
+                 reagenttest.utils/act [[:block 0]]
+                 reagenttest.utils/with-render [[:block 1]]}}

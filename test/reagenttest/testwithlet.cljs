@@ -17,7 +17,7 @@
 (t/use-fixtures :once fixture)
 
 (defn running []
-  (r/flush)
+  (flush)
   (rv/running))
 
 (deftest basic-with-let
@@ -57,7 +57,6 @@
     (is (= [[12 2] 3 4 3] [@r @n1 @n2 @n3]))
 
     (is (= runs (running)))))
-
 
 (deftest test-with-let-args
   (let [runs (running)

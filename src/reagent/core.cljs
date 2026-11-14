@@ -110,7 +110,6 @@
   ([spec compiler]
    (comp/create-class spec compiler)))
 
-
 (defn current-component
   "Returns the current React component (a.k.a `this`) in a component
   function."
@@ -264,7 +263,6 @@
   (assert-callable reset-fn)
   (ratom/make-wrapper value reset-fn args))
 
-
 ;; RCursor
 
 (defn cursor
@@ -302,7 +300,6 @@
   used. This may be noticed with add-watch."
   ([src path]
    (ratom/cursor src path)))
-
 
 ;; Utilities
 

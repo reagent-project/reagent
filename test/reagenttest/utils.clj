@@ -4,13 +4,13 @@
   `(do
      (cljs.test/deftest
        ~(with-meta (symbol (str (name test-name) "--class"))
-                   (meta test-name))
+          (meta test-name))
        (binding [reagenttest.utils/*test-compiler* class-compiler
                  reagenttest.utils/*test-compiler-name* "class"]
          ~@body))
      (cljs.test/deftest
        ~(with-meta (symbol (str (name test-name) "--fn"))
-                   (meta test-name))
+          (meta test-name))
        (binding [reagenttest.utils/*test-compiler* fn-compiler
                  reagenttest.utils/*test-compiler-name* "fn"]
          ~@body))))

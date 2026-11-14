@@ -31,17 +31,17 @@
 ;; but reactify-component would also do that.
 (def ^:private input-component
   (react/forwardRef
-    (fn [props ref]
-      (r/as-element
-        [:input (-> (js->clj props :keywordize-keys true)
-                    (assoc :ref ref))]))))
+   (fn [props ref]
+     (r/as-element
+      [:input (-> (js->clj props :keywordize-keys true)
+                  (assoc :ref ref))]))))
 
 (def ^:private textarea-component
   (react/forwardRef
-    (fn [props ref]
-      (r/as-element
-        [:textarea (-> (js->clj props :keywordize-keys true)
-                       (assoc :ref ref))]))))
+   (fn [props ref]
+     (r/as-element
+      [:textarea (-> (js->clj props :keywordize-keys true)
+                     (assoc :ref ref))]))))
 
 ;; To fix cursor jumping when controlled input value is changed,
 ;; use wrapper input element created by Reagent instead of
@@ -72,7 +72,7 @@
 
 (def custom-theme
   (createTheme
-    #js {:palette #js {:primary #js {:main (gobj/get mui-colors/red 100)}}}))
+   #js {:palette #js {:primary #js {:main (gobj/get mui-colors/red 100)}}}))
 
 (defonce text-state (r/atom "foobar"))
 (defonce select-state (r/atom ""))

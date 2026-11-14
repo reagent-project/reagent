@@ -19,7 +19,6 @@
 (defn src-for-names [srcmap names]
   (string/join "\n" (map srcmap names)))
 
-
 ;;; Macros
 
 (defmacro syntaxed [src]

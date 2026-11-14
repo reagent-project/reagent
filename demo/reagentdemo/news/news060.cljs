@@ -37,7 +37,6 @@
      (for [i ids]
        ^{:key i} [name-comp i])]))
 
-
 (defn log-app-state []
   (prn @app-state))
 
@@ -46,7 +45,6 @@
 #_(defonce logger (r/track! log-app-state))
 
 #_(r/dispose! logger)
-
 
 (when-not (exists? js/document)
   ;; Add no-op methods for node.js
@@ -81,7 +79,6 @@
    "Pointer moved to: "
    (str @(r/track mouse-pos))])
 
-
 (defn event-handler [state [event-name id value]]
   (case event-name
     :set-name   (assoc-in state [:people id :name]
@@ -111,11 +108,9 @@
               :value "Add person"
               :on-click #(emit [:add-person])}]]))
 
-
 (defn cursor-example []
   (let [first-person (r/cursor app-state [:people 1])]
     [:p "A person: " (:name @first-person)]))
-
 
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
@@ -124,8 +119,8 @@
    [:div.demo-text
     [:p "Reagent 0.6.0-alpha contains new reactivity helpers, better
     integration with native React components, a new version of
-    React (0.14.3), new React dependencies ("[:code "react-dom"]"
-    and "[:code "react-dom-server"]"), better performance, and much
+    React (0.14.3), new React dependencies (" [:code "react-dom"] "
+    and " [:code "react-dom-server"] "), better performance, and much
     more. "]
 
     [:p "This is a quite big release, so it probably contains a fair
@@ -138,35 +133,34 @@
         [:h2 "Breaking changes"]
 
         [:ul
-         [:li "Reagent now depends on "[:code "cljsjs/react-dom"]"
-         and "[:code "cljsjs/react-dom-server"]" (see below)."]
+         [:li "Reagent now depends on " [:code "cljsjs/react-dom"] "
+         and " [:code "cljsjs/react-dom-server"] " (see below)."]
 
-         [:li "The javascript interop macros "[:code ".'"]"
-         and "[:code ".!"]", in the "[:code "reagent.interop"]"
-         namespace are now called "[:code "$"]" and "[:code "$!"]"
+         [:li "The javascript interop macros " [:code ".'"] "
+         and " [:code ".!"] ", in the " [:code "reagent.interop"] "
+         namespace are now called " [:code "$"] " and " [:code "$!"] "
          respectively (the old names clashed with bootstrapped
          ClojureScript)."]
 
-         [:li "Reactions, i.e "[:code "cursor"]" called with a
-         function, "[:code "reagent.ratom/reaction"]", "[:code "reagent.ratom/run!"]"
-         and "[:code "reagent.ratom/make-reaction"]" are now lazy and
+         [:li "Reactions, i.e " [:code "cursor"] " called with a
+         function, " [:code "reagent.ratom/reaction"] ", " [:code "reagent.ratom/run!"] "
+         and " [:code "reagent.ratom/make-reaction"] " are now lazy and
          executed asynchronously. Previously, reactions used to
          execute immediately whenever the atoms they depended on
          changed. This could cause performance issues in code with
          expensive reactions and frequent updates to state. However,
          this change may break existing code that depends on the
          timing of side-effects from running
-         reactions. "[:code "flush"]" can be used to force outstanding
+         reactions. " [:code "flush"] " can be used to force outstanding
          reactions to run at a given time."]
 
          [:li "Reactions now only trigger updates of dependent
          components and other reactions if they produce a new result,
-         compared with "[:code "="]".
-         Previously, "[:code "identical?"]" was used."]
+         compared with " [:code "="] ".
+         Previously, " [:code "identical?"] " was used."]
 
-         [:li [:code "next-tick"]" is now guaranteed to execute its
+         [:li [:code "next-tick"] " is now guaranteed to execute its
          argument before the next render (more on that below.)"]]]
-
 
        [:h2 "track: Use any function as a reactive value"]
 
@@ -201,7 +195,7 @@
        needed, etc."]
 
        [:p "Use of " [:code "track"] " can improve performance in
-       three ways:" ]
+       three ways:"]
 
        [:ul
         [:li "It can be used as a cache for an expensive function,
@@ -220,24 +214,23 @@
         will only result in one call to the " [:code "people"] "
         function (both initially, and when the state atom changes)."]]
 
-       [:p "If you've been using "[:code "reagent.ratom/reaction"]"
-       etc, "[:code "track"]" should be quite familiar. The main
-       difference is that "[:code "track"]" uses named functions and
+       [:p "If you've been using " [:code "reagent.ratom/reaction"] "
+       etc, " [:code "track"] " should be quite familiar. The main
+       difference is that " [:code "track"] " uses named functions and
        variables, rather than depending on closures, and that you
        don’t have to manage their creation manually (since tracks are
        automatically cached and reused)."]
 
-       [:p [:b "Note: "] "The first argument to "[:code "track"]"
+       [:p [:b "Note: "] "The first argument to " [:code "track"] "
        should be a named function, i.e not an anonymous one. Also,
        beware of lazy data sequences: don’t use deref (i.e ”@”) with
-       the "[:code "for"]" macro, unless wrapped
-       in "[:code "doall"]" (just like in Reagent components). "]
-
+       the " [:code "for"] " macro, unless wrapped
+       in " [:code "doall"] " (just like in Reagent components). "]
 
        [:h2 "track!"]
 
-       [:p [:code "track!"]" is another new function. It works just
-       like "[:code "track"]", except that the function passed is
+       [:p [:code "track!"] " is another new function. It works just
+       like " [:code "track"] ", except that the function passed is
        invoked immediately, and continues to be invoked whenever any
        atoms used within it changes."]
 
@@ -246,17 +239,16 @@
        [demo-component {:src (s/src-of [:log-app-state])}]
 
        [:p "you could use " [:code "(defonce logger (r/track!
-       log-app-state))"]" to monitor changes
-       to "[:code "app-state"]". "[:code "log-app-state"]" would
-       continue to run until you stop it, using "[:code "(r/dispose!
-       logger)"]"."]
-
+       log-app-state))"] " to monitor changes
+       to " [:code "app-state"] ". " [:code "log-app-state"] " would
+       continue to run until you stop it, using " [:code "(r/dispose!
+       logger)"] "."]
 
        [:h2 "with-let: Handling destruction"]
 
        [:p "Reagent now has a new way of writing components that need
        to do something when they are no longer around:
-       the "[:code "with-let"]" macro. It looks just
+       the " [:code "with-let"] " macro. It looks just
        like " [:code "let"] " – but the bindings only execute once,
        and it takes an optional " [:code "finally"] " clause, that
        runs when the component is no longer rendered."]
@@ -271,8 +263,8 @@
        [:p "The same thing could of course be achieved with React
        lifecycle methods, but that would be a lot more verbose."]
 
-       [:p [:code "with-let"]" can also be combined
-       with "[:code "track"]" (and other reactive contexts). For
+       [:p [:code "with-let"] " can also be combined
+       with " [:code "track"] " (and other reactive contexts). For
        example, the component above could be written as: "]
 
        [demo-component {:comp tracked-pos
@@ -283,28 +275,27 @@
        when " [:code "mouse-pos"] " is no longer tracked anywhere, i.e
        in this case when " [:code "tracked-pos"] "is unmounted."]
 
-       [:p [:code "with-let"]" can also generally be used instead of
+       [:p [:code "with-let"] " can also generally be used instead of
        returning functions from components that keep local state, and
        may be a bit easier to read."]
-
 
        [:section.demo-text
         [:h2 "Event handling with rswap!"]
 
         [:p [:code "rswap!"] " is another new function in 0.6.0. It
-        works like standard "[:code "swap!"]" except that it"]
+        works like standard " [:code "swap!"] " except that it"]
 
         [:ul
          [:li "always returns nil"]
-         [:li "allows recursive applications of "[:code "rswap!"]" on the same
+         [:li "allows recursive applications of " [:code "rswap!"] " on the same
          atom."]]
 
-        [:p "That makes "[:code "rswap!"]" especially suited for event
+        [:p "That makes " [:code "rswap!"] " especially suited for event
         handling."]
 
         [:p "Here’s an example that uses event handling
-        with "[:code "rswap!"]" to edit the data introduced in the
-        section about "[:code "track"]" above:"]
+        with " [:code "rswap!"] " to edit the data introduced in the
+        section about " [:code "track"] " above:"]
 
         [demo-component {:comp edit-fields
                          :src (s/src-of [:event-handler
@@ -312,19 +303,19 @@
                                          :name-edit
                                          :edit-fields])}]
 
-        [:p "All events are passed through the "[:code "emit"]"
+        [:p "All events are passed through the " [:code "emit"] "
         function, consisting of a trivial application
-        of "[:code "rswap!"]" and some optional logging. This is the
+        of " [:code "rswap!"] " and some optional logging. This is the
         only place where application state actually changes – the rest
         is pure functions."]
 
         [:p "The actual event handling is done
-        in "[:code "event-handler"]", which takes state and event as
+        in " [:code "event-handler"] ", which takes state and event as
         parameters, and returns a new state (events are represented by
         vectors here, with an event name in the first position)."]
 
         [:p "All the UI components have to do is then just to return
-        some markup, and set up routing of events through the "[:code "emit"]"
+        some markup, and set up routing of events through the " [:code "emit"] "
         function. "]
 
         [:p "This architecture basically divides the application into
@@ -337,16 +328,16 @@
          definition."]]
 
         [:p "This simple application could probably just as well use
-        the common "[:code "swap!"]" instead of "[:code "rswap!"]",
-        but using "[:code "swap!"]" in React’s event handlers may
+        the common " [:code "swap!"] " instead of " [:code "rswap!"] ",
+        but using " [:code "swap!"] " in React’s event handlers may
         trigger warnings due to unexpected return values, and may
-        cause severe headaches if an event handler called by "[:code "emit"]"
+        cause severe headaches if an event handler called by " [:code "emit"] "
         itself emits a new event (that would result in lost
         events, and much confusion)."]
 
         [:p "For a more structured version of a similar approach, see
-        the excellent "[:a
-        {:href "https://github.com/Day8/re-frame"} "re-frame"]"
+        the excellent " [:a
+                         {:href "https://github.com/Day8/re-frame"} "re-frame"] "
         framework."]]
 
        [:section.demo-text
@@ -357,11 +348,11 @@
         browser specific code, and HTML generation respectively."]
 
         [:p "To reflect that, two new namespaces have been introduced
-        in Reagent as well: "[:code "reagent.dom"]"
-        and "[:code "reagent.dom.server"]". They contain functions
-        that used to be in "[:code "reagent.core"]". "]
+        in Reagent as well: " [:code "reagent.dom"] "
+        and " [:code "reagent.dom.server"] ". They contain functions
+        that used to be in " [:code "reagent.core"] ". "]
 
-        [:p [:code "reagent.dom"]" contains: "]
+        [:p [:code "reagent.dom"] " contains: "]
 
         [:ul
          [:li [:code "render"]]
@@ -369,39 +360,39 @@
          [:li [:code "dom-node"]]
          [:li [:code "force-update-all"]]]
 
-        [:p [:code "reagent.dom.server"]" contains: "]
+        [:p [:code "reagent.dom.server"] " contains: "]
 
         [:ul
          [:li [:code "render-to-string"]]
          [:li [:code "render-to-static-markup"]]]
 
         [:p "These functions are still available
-        in "[:code "reagent.core"]" in this release (for backward
+        in " [:code "reagent.core"] " in this release (for backward
         compatibility reasons), but they may be deprecated in the
         future."]
 
         [:p "The changes in React also mean that if you specify the
         React version to use in your project.clj,
-        with "[:code "cljsjs/react"]" in the "[:code ":dependencies"]"
-        section, you now have to specify "[:code "cljsjs/react-dom"]"
-        and "[:code "cljsjs/react-dom-server"]" instead."]]
+        with " [:code "cljsjs/react"] " in the " [:code ":dependencies"] "
+        section, you now have to specify " [:code "cljsjs/react-dom"] "
+        and " [:code "cljsjs/react-dom-server"] " instead."]]
 
        [:section.demo-text
         [:h2 "Better interop with native React"]
 
-        [:p "The output of "[:code "create-class"]" can now be used
+        [:p "The output of " [:code "create-class"] " can now be used
         directly in JSX."]
 
         [:p "”Native React components” can now be used directly in
-        Reagent’s hiccup forms, using this syntax: "[:code "[:>
-        nativeComp {:key \"value\"}]"]". This might sometimes be more
-        convenient than using "[:code "adapt-react-class"]". "]
+        Reagent’s hiccup forms, using this syntax: " [:code "[:>
+        nativeComp {:key \"value\"}]"] ". This might sometimes be more
+        convenient than using " [:code "adapt-react-class"] ". "]
 
         [:p "Reagent should now also be a bit easier to use in
         node.js. If global React is not
-        defined (i.e "[:code "React"]", "[:code "ReactDOM"]"
-        and "[:code "ReactDOMServer"]"), Reagent tries to
-        use "[:code "require"]" instead, to get react, react-dom and
+        defined (i.e " [:code "React"] ", " [:code "ReactDOM"] "
+        and " [:code "ReactDOMServer"] "), Reagent tries to
+        use " [:code "require"] " instead, to get react, react-dom and
         react-dom/server from npm."]]
 
        [:section.demo-text
@@ -409,8 +400,8 @@
 
         [:p "Cursors are now cached, which should make them a bit
         easier to use. Previously, every instance
-        of "[:code "cursor"]" had its own state.
-        Now "[:code "cursor"]"s called with the same arguments share
+        of " [:code "cursor"] " had its own state.
+        Now " [:code "cursor"] "s called with the same arguments share
         data, which means that components like this now make sense: "]
 
         [demo-component {:comp cursor-example
@@ -423,18 +414,14 @@
        [:section.demo-text
         [:h2 "Tapping into the rendering loop"]
 
-        [:p "The "[:code "next-tick"]" function now has a more
+        [:p "The " [:code "next-tick"] " function now has a more
         predictable timing. The function passed
-        to "[:code "next-tick"]" is now invoked immediately before the
+        to " [:code "next-tick"] " is now invoked immediately before the
         next rendering (which is in turn triggered
-        using "[:code "requestAnimationFrame"]")."]
+        using " [:code "requestAnimationFrame"] ")."]
 
-        [:p [:code "after-update"]" works just
-        like "[:code "next-tick"]", except that the function given is
-        invoked immediately "[:b "after"]" the next rendering."]]
-
-
-
-       ])]])
+        [:p [:code "after-update"] " works just
+        like " [:code "next-tick"] ", except that the function given is
+        invoked immediately " [:b "after"] " the next rendering."]]])]])
 
 (tools/register-page url [#'main] title)
