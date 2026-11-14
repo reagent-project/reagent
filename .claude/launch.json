@@ -9,8 +9,8 @@
     },
     {
       "name": "site-prerendered",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8095", "-d", "target/site-preview"],
+      "runtimeExecutable": "./site-preview-watch.sh",
+      "runtimeArgs": ["8095"],
       "port": 8095
     }
   ]
