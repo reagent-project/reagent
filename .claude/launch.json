@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shadow-client",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["shadow-cljs", "watch", "client"],
+      "port": 8090
+    }
+  ]
+}
