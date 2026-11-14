@@ -359,7 +359,6 @@ code, pre { font-family: var(--mono); }
 .sidebar a.active {
     background: var(--accent-soft);
     color: var(--accent);
-    font-weight: 600;
 }
 
 .sidebar-section {
