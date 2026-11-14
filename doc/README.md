@@ -11,6 +11,7 @@
 8. [React Features](ReactFeatures.md) and how to use them in Reagent
 8. [Reagent Compiler](ReagentCompiler.md)
 8. [Controlled Inputs](ControlledInputs.md)
+8. [Best Practices](BestPractices.md) (draft)
 8. [Web Components (Custom Elements)](WebComponents.md)
 
 Also:

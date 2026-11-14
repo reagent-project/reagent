@@ -1,8 +1,6 @@
-### Question
+# How can I use React's dangerouslySetInnerHTML?
 
-How can I use React's [dangerouslySetInnerHTML](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml) feature?
-
-### Answer
+See React's [dangerouslySetInnerHTML](https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml) documentation.
 
 A minimal (contrived example):
 

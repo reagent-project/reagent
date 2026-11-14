@@ -1,8 +1,4 @@
-### Question
-
-How can I use an entity like "nbsp"?
-
-### Answer
+# How can I use an entity like `&nbsp;`?
 
 If you try to do this:
 ```clj

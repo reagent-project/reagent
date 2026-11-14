@@ -1,36 +1,38 @@
 {:cljdoc.api/platforms #{"cljs"}
  :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
-                   ["Security" {:file "doc/Security.md"}]
                    ["Getting Started" {:file "doc/GettingStarted.md"}]
-                   ["Tutorials" {}
+                   ["Learn" {}
                     ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
                     ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
-                    ["Using [square brackets] instead of (parentheses)" {:file "doc/UsingSquareBracketsInsteadOfParens.md"}]
+                    ["Square brackets vs parentheses" {:file "doc/UsingSquareBracketsInsteadOfParens.md"}]
                     ["When do components update?" {:file "doc/WhenDoComponentsUpdate.md"}]
-                    ["[WIP] Managing State: atoms, cursors, Reactions, and tracking" {:file "doc/ManagingState.md"}]
-                    ["Batching and Timing: How Reagent Renders Changes to Application State" {:file "doc/BatchingAndTiming.md"}]
+                    ["Managing State" {:file "doc/ManagingState.md"}]
+                    ["Batching and Timing" {:file "doc/BatchingAndTiming.md"}]
+                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
+                    ["Best Practices (draft)" {:file "doc/BestPractices.md"}]]
+                   ["Reference" {}
                     ["Interop with React" {:file "doc/InteropWithReact.md"}]
                     ["React Features" {:file "doc/ReactFeatures.md"}]
                     ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
-                    ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
                     ["Web Components (Custom Elements)" {:file "doc/WebComponents.md"}]
                     ["React Renderers" {:file "doc/ReactRenderers.md"}]
                     ["Server Side Rendering" {:file "doc/ServerSideRendering.md"}]
-                    ["React 19 and Reagent" {:file "doc/React19.md"}]]
-                   ["Frequently Asked Questions" {}
-                    ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
-                    ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]
-                    ["How can I use an entity like \"nbsp\"?" {:file "doc/FAQ/UsingAnEntity.md"}]
-                    ["Why is my attribute (like autoFocus) missing?" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
-                    ["How can I use React's dangerouslySetInnerHTML?" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
-                    ["Reagent doesn't work after updating dependencies" {:file "doc/FAQ/CljsjsReactProblems.md"}]
-                    ["How do I force Component re-creation?" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
-                    ["Using HTML entities" {:file "doc/FAQ/HtmlEntities.md"}]]
-                   ["Examples" {}
-                    ["Material-UI v1" {:file "doc/examples/material-ui.md"}]
-                    ["Smooth UI" {:file "doc/examples/smooth-ui.md"}]]
-                   ["Other" {}
+                    ["React 19 and Reagent" {:file "doc/React19.md"}]
+                    ["Security" {:file "doc/Security.md"}]]
+                   ["FAQ" {}
+                    ["Component not re-rendering" {:file "doc/FAQ/ComponentNotRerendering.md"}]
+                    ["Using refs" {:file "doc/FAQ/UsingRefs.md"}]
+                    ["Entities like nbsp" {:file "doc/FAQ/UsingAnEntity.md"}]
+                    ["HTML entities" {:file "doc/FAQ/HtmlEntities.md"}]
+                    ["Missing attributes" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
+                    ["dangerouslySetInnerHTML" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
+                    ["Forcing re-creation" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
+                    ["Broken after updating deps" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
+                   ["Upgrading" {}
                     ["Reagent 2.0 upgrade guide" {:file "doc/2.0-upgrade.md"}]
                     ["Reagent 1 and React 18" {:file "doc/reagent1.md"}]
-                    ["0.8 Upgrade guide" {:file "doc/0.8-upgrade.md"}]
+                    ["0.8 upgrade guide" {:file "doc/0.8-upgrade.md"}]]
+                   ["More" {}
+                    ["Example: Material-UI" {:file "doc/examples/material-ui.md"}]
+                    ["Example: Smooth UI" {:file "doc/examples/smooth-ui.md"}]
                     ["Development guide" {:file "doc/development.md"}]]]}

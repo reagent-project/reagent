@@ -1,8 +1,4 @@
-### Question
-
-When using Reagent, how do I use React's `refs`?
-
-### Answer
+# How do I use React's refs?
 
 Credit: this entry is entirely based on Paulus Esterhazy's [Reagent Mysteries series](https://presumably.de/reagent-mysteries-part-3-manipulating-the-dom.html)
 

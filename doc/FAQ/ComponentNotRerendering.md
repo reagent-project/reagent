@@ -1,8 +1,4 @@
-### Question
-
-My component is not re-rendering, what's wrong?
-
-### Answer
+# Why isn't my component re-rendering?
 
 Ask yourself this question: why do you think the Component should have re-rendered? There's two possible answers: 
   - a ratom (used by the Component) changed 
