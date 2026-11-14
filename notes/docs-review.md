@@ -2,6 +2,16 @@
 
 Started 2026-11-14. Last updated 2026-11-14. This is a working list: update or remove entries as the issues are fixed.
 
+When a page has been reviewed (and updated) against the current Reagent, add YAML front matter at the top of its Markdown file:
+
+```yaml
+---
+reviewed: 2026-11-14
+---
+```
+
+The site shows a "Not reviewed yet" notice on guide pages without it, and "Reviewed <date>" next to the edit link on pages with it. Note that cljdoc's Markdown renderer has no front matter support, so the block probably renders there as a rule and a "reviewed: …" heading. GitHub shows it as a small table.
+
 **Summary**
 - Almost every rendering example still uses `reagent.dom/render` (React 18 only), and two use `reagent.core/render`, which now throws. No doc outside `2.0-upgrade.md` shows `reagent.dom.client`. `ReactFeatures.md` uses `react-dom/hydrate`, which React 19 removed.
 - The 2.0 features `defc` and `reagent.hooks` aren't covered in any doc. The Hooks and function-component sections still show `:f>` plus raw `react/useState`, and they include a "Pre 1.0 workaround" that links to the archived `hx` library.
