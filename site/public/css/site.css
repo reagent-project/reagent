@@ -347,6 +347,16 @@ code, pre { font-family: var(--mono); }
     font-size: 14px;
 }
 
+/* Tinted sidebar column: full height below the header, and the large
+   left-offset shadow extends the tint to the window's left edge. */
+.sidebar {
+    height: calc(100vh - var(--header-h));
+    padding-right: 12px;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    box-shadow: -2000px 0 0 2000px var(--bg-soft);
+}
+
 .sidebar ul, .toc ul {
     list-style: none;
     margin: 0;
@@ -547,8 +557,12 @@ code, pre { font-family: var(--mono); }
     }
     .sidebar {
         position: static;
+        height: auto;
         max-height: none;
+        border-right: 0;
         border-bottom: 1px solid var(--border);
+        background: none;
+        box-shadow: none;
     }
     .hero { padding: 32px 16px 16px; }
     .hero h1 { font-size: 36px; }
