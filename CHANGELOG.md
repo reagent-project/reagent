@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**[compare](https://github.com/reagent-project/reagent/compare/v2.0.1...master)**
+
+- Tests are now running against React 19.3
+  [#654](https://github.com/reagent-project/reagent/pull/654)
+- Fix `reagent.impl.template/valid-tag?` throwing when called with `nil`
+  (regression in 2.0, affected e.g. re-com)
+  [#655](https://github.com/reagent-project/reagent/issues/655)
 - Fix `reactify-component` with a function components compiler
   (`{:function-components true}`) returning a class component, which meant
   React hooks couldn't be used in the component. It now returns a React
