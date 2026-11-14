@@ -4,6 +4,21 @@ name: Run tests
 on: [push, pull_request]
 
 jobs:
+  lint:
+    name: Lint and format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup clj-kondo and cljfmt
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          clj-kondo: 2026.10.26
+          cljfmt: 0.16.6
+      - name: clj-kondo
+        run: clj-kondo --lint src test
+      - name: cljfmt check
+        run: ./cljfmt.sh check
+
   test:
     strategy:
       matrix:
