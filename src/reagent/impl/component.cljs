@@ -421,8 +421,14 @@
 
 (defn functional-render [compiler ^clj jsprops]
   (if util/*non-reactive*
-    ;; Non-reactive component needs just the render fn and argv
-    (functional-do-render compiler jsprops)
+    ;; Non-reactive component needs just the render fn and argv.
+    ;; Copy them to a new object instead of using jsprops directly: for
+    ;; form-2 components, functional-wrap-render replaces reagentRender,
+    ;; and React props objects are frozen in development builds.
+    (let [c #js {}]
+      (set! (.-reagentRender c) (.-reagentRender jsprops))
+      (set! (.-argv c) (.-argv jsprops))
+      (functional-do-render compiler c))
     (let [argv (.-argv jsprops)
           tag (.-reagentRender jsprops)
 

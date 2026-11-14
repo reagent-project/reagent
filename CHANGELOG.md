@@ -13,6 +13,10 @@
   `"a [:b nil [:c]]"`. `:class` values on HTML elements are normalized the
   same way.
   [#601](https://github.com/reagent-project/reagent/issues/601)
+- Fix server rendering (`reagent.dom.server`) with a function components
+  compiler hanging or throwing `TypeError` for form-2 components, e.g. a
+  component returning `r/create-class` result.
+  [#581](https://github.com/reagent-project/reagent/issues/581)
 - Fix `reagent.impl.template/valid-tag?` throwing when called with `nil`
   (regression in 2.0, affected e.g. re-com)
   [#655](https://github.com/reagent-project/reagent/issues/655)
