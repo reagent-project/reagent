@@ -2,6 +2,7 @@
   "Guide pages from doc/*.md and API pages from docstrings."
   (:require-macros [reagentdemo.docs :refer [doc-site api-docs]])
   (:require [clojure.string :as string]
+            ["react" :as react]
             [reagent.core :as r]
             [sitetools.core :as tools :refer [link]]))
 
@@ -35,9 +36,26 @@
 
 (defonce sidebar-open (r/atom false))
 
+(defn scroll-to-active!
+  "Scroll the sidebar so its active item is visible (centered when it was
+  out of view). Only the sidebar scrolls, not the page."
+  [^js nav]
+  (when-some [^js a (and nav (.querySelector nav "a.active"))]
+    (let [n (.getBoundingClientRect nav)
+          r (.getBoundingClientRect a)]
+      (when (or (< (.-top r) (.-top n)) (> (.-bottom r) (.-bottom n)))
+        (set! (.-scrollTop nav)
+              (+ (.-scrollTop nav)
+                 (- (.-top r) (.-top n))
+                 (- (/ (.-height n) 2))))))))
+
 (r/defc sidebar []
-  (let [current (current-path)]
-    [:nav.sidebar {:class (when @sidebar-open "open")}
+  (let [current (current-path)
+        nav-ref (react/useRef nil)]
+    (react/useEffect (fn [] (scroll-to-active! (.-current nav-ref)) js/undefined)
+                     #js [current])
+    [:nav.sidebar {:class (when @sidebar-open "open")
+                   :ref nav-ref}
      [:button.sidebar-toggle {:on-click #(swap! sidebar-open not)}
       (if @sidebar-open "Close menu" "Menu")]
      [:ul {:on-click-capture #(reset! sidebar-open false)}
@@ -46,6 +64,9 @@
       [:li
        [:span.sidebar-section "API"]
        [:ul
+        [:li [link {:href api-index
+                    :class (when (= current api-index) "active")}
+              "API reference"]]
         (for [{ns-name :ns} api]
           ^{:key ns-name}
           [:li [link {:href (api-path ns-name)
