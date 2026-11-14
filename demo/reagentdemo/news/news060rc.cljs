@@ -20,7 +20,6 @@
 (defn confusion-avoided []
   [:div "This is some atom: " some-atom])
 
-
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
@@ -65,6 +64,5 @@
 
         [:p "Any object hat satisfies IPrintWithWriter is allowed, and
         is converted to a string using " [:code "pr-str" "."]]]])]])
-
 
 (tools/register-page url [#'main] title)

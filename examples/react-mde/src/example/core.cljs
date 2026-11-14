@@ -13,7 +13,6 @@
             ;; FIXME: Internal impl namespace should not be used
             [reagent.impl.template :as rtpl]))
 
-
 ;;
 ;; Constants and helpers
 ;;
@@ -27,7 +26,6 @@
      (resolve
       (r/as-element
        [:> ReactMarkdown {:source source}])))))
-
 
 ;;
 ;; Two broken examples that won't work properly.
@@ -64,7 +62,6 @@
                      :text-area-component textarea}]
        [:div "Value: " (:value @state)]])))
 
-
 ;;
 ;; Real working example
 ;;
@@ -78,14 +75,12 @@
      (let [props (assoc (js->clj props) :ref ref)]
        (r/as-element [:textarea props])))))
 
-
 (defn react-mde
   "Wrapper around ReactMde using our custom textarea-component"
   [props]
   ;; FIXME: Internal fn should not be used
   (let [props (rtpl/convert-prop-value (assoc props :text-area-component textarea-component))]
     (r/create-element ReactMde props)))
-
 
 (defn working-example []
   (let [state (r/atom {:value "Initial Value!" :tab "write"})]
@@ -98,7 +93,6 @@
                    :on-tab-change #(swap! state assoc :tab %)
                    :generate-markdown-preview #(render-markdown %)}]
        [:div "Value: " (:value @state)]])))
-
 
 (defn main []
   [:<>

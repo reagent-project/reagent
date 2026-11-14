@@ -36,11 +36,9 @@
      [color-input time-color update-time-color]
 
      ;; Or with the default options you can create function components using :f> shortcut:
-     #_#_#_
-     [greeting "Hello world, it is now"]
-     [:f> clock time-color]
-     [:f> color-input time-color update-time-color]
-     ]))
+     #_#_#_[greeting "Hello world, it is now"]
+         [:f> clock time-color]
+       [:f> color-input time-color update-time-color]]))
 
 (def functional-compiler (r/create-compiler {:function-components true}))
 

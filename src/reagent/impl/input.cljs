@@ -79,9 +79,9 @@
         (batch/do-after-render #(binding [*force-set-dom-value* true]
                                   (input-component-set-value component)))
         (let [existing-offset-from-end (- (count node-value)
-                                         (.-selectionStart node))
+                                          (.-selectionStart node))
               new-cursor-offset        (- (count rendered-value)
-                                         existing-offset-from-end)]
+                                          existing-offset-from-end)]
           (set! (.-cljsDOMValue component) rendered-value)
           (set! (.-value node) rendered-value)
           (when (fn? on-write)

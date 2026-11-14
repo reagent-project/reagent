@@ -149,7 +149,7 @@
     (.apply react/createElement nil
             (reduce-kv (fn [a k v]
                          (when (>= k first-child)
-                          (.push a (p/as-element this v)))
+                           (.push a (p/as-element this v)))
                          a)
                        #js [component jsprops] argv))))
 
@@ -240,11 +240,11 @@
                               (set! (.-reagentInput compiler) x)
                               x))]
         (p/as-element
-          compiler
-          (with-meta [input-class argv component jsprops first-child compiler]
-                     (merge (when react-key
-                              {:key react-key})
-                            (meta argv)))))
+         compiler
+         (with-meta [input-class argv component jsprops first-child compiler]
+           (merge (when react-key
+                    {:key react-key})
+                  (meta argv)))))
       (do
         (when-some [key (-> (meta argv) util/get-react-key)]
           (set! (.-key jsprops) key))
@@ -276,7 +276,7 @@
         [res derefed] (ratom/check-derefs #(expand-seq-dev x ctx compiler))]
     (when derefed
       (warn (util/hiccup-err x (comp/comp-name) "Reactive deref not supported in lazy seq, "
-                        "it should be wrapped in doall")))
+                             "it should be wrapped in doall")))
     (when (.-no-key ctx)
       (warn (util/hiccup-err x (comp/comp-name) "Every element in a seq should have a unique :key")))
     res))
@@ -294,7 +294,7 @@
       ;; only the key of the outermost element matters.
       (recur (with-meta [(subs n 0 pos)
                          (assoc (with-meta v nil) 0 (subs n (inc pos)))]
-                        (meta v))
+               (meta v))
              compiler))))
 
 (defn vec-to-elem [v compiler fn-to-element]
@@ -309,16 +309,16 @@
       :f> (function-element (nth v 1 nil) v 2 compiler)
       :<> (fragment-element v compiler)
       (cond
-       (reagent-fn-component? tag)
-       (defc-element tag v)
+        (reagent-fn-component? tag)
+        (defc-element tag v)
 
-       (hiccup-tag? tag)
-       (hiccup-element v compiler)
+        (hiccup-tag? tag)
+        (hiccup-element v compiler)
 
-       (instance? NativeWrapper tag)
-       (native-element tag v 1 compiler)
+        (instance? NativeWrapper tag)
+        (native-element tag v 1 compiler)
 
-       :else (fn-to-element tag v compiler)))))
+        :else (fn-to-element tag v compiler)))))
 
 (defn as-element [this x fn-to-element]
   (cond (util/js-val? x) x

@@ -6,10 +6,10 @@
             [reagenttest.utils :as u]))
 
 (t/use-fixtures :once
-                {:before (fn []
-                           (set! rv/debug true))
-                 :after  (fn []
-                           (set! rv/debug false))})
+  {:before (fn []
+             (set! rv/debug true))
+   :after  (fn []
+             (set! rv/debug false))})
 
 (def ran (atom 0))
 (def child-ran (atom 0))
@@ -69,8 +69,7 @@
         (testing "associng equal value to the state shouldn't trigger re-render"
           (is (= 3 @ran))
           (is (= 2 @child-ran))
-          (is (= "foo 1 child 1" (.-innerText div))))
-        ))))
+          (is (= "foo 1 child 1" (.-innerText div))))))))
 
 (def effect-ran (atom 0))
 
@@ -173,7 +172,6 @@
           (is (= 2 @child-ran))
           (is (= "foo 2 child 2" (.-innerText div))))))))
 
-
 (r/defc ref-1 [x]
   (let [ref-val (hooks/use-ref x)]
     (swap! ran inc)
@@ -198,8 +196,7 @@
         (u/act (reset! y 1)
                (reset! x 9))
         (is (= 3 @ran))
-        (is (= "foo 9 9" (.-innerText div)))
-        ))))
+        (is (= "foo 9 9" (.-innerText div)))))))
 
 (def memo-ran (atom 0))
 
@@ -235,5 +232,4 @@
         (testing "equal value doesn't cause memo re-run"
           (is (= 3 @ran))
           (is (= 2 @memo-ran))
-          (is (= "foo 2 7" (.-innerText div))))
-        ))))
+          (is (= "foo 2 7" (.-innerText div))))))))

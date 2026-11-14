@@ -45,20 +45,20 @@
      (events/listen js/window EventType.MOUSEUP drag-end))))
 
 (defn point [{:keys [on-drag]} p]
-  [:circle 
+  [:circle
    (merge point-defaults
           {:on-mouse-down #(dragging on-drag)
            :cx (x p)
            :cy (y p)})])
 
 (defn segment [from to]
-  [:line 
+  [:line
    (merge segment-defaults
           {:x1 (x from) :y1 (y from)
            :x2 (x to) :y2 (y to)})])
 
 (defn triangle [a b c]
-  [:g 
+  [:g
    [segment a b]
    [segment b c]
    [segment c a]])

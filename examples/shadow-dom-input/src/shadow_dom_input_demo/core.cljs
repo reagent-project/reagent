@@ -44,11 +44,11 @@
 
 (defclass ShadowWrapper (extends js/HTMLElement)
   (constructor
-    [this]
-    (super)
-    (let [shadow (.attachShadow this #js {:mode "open"})
-          shadow-element (.createElement js/document "shadow-input")]
-      (.appendChild shadow shadow-element))))
+   [this]
+   (super)
+   (let [shadow (.attachShadow this #js {:mode "open"})
+         shadow-element (.createElement js/document "shadow-input")]
+     (.appendChild shadow shadow-element))))
 
 (defn normal-input []
   [:div

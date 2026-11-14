@@ -17,7 +17,6 @@
 (defn ^boolean reactive? []
   (some? *ratom-context*))
 
-
 ;;; Utilities
 
 (defn running []
@@ -109,7 +108,6 @@
   (pr-writer (binding [*ratom-context* nil] v) writer opts)
   (-write writer "]"))
 
-
 ;;; Queueing
 
 (defonce ^:private rea-queue nil)
@@ -173,7 +171,6 @@
   "Like clojure.core/atom, except that it keeps track of derefs."
   ([x] (->RAtom x nil nil nil))
   ([x & {:keys [meta validator]}] (->RAtom x meta validator nil)))
-
 
 ;;; track
 
@@ -325,7 +322,6 @@
                (pr-str path)))
   (->RCursor src path nil nil nil nil))
 
-
 ;;; with-let support
 
 (defn with-let-destroy [^Reaction v]
@@ -336,7 +332,6 @@
   (if-some [c *ratom-context*]
     (cached-reaction (fn [] #js []) c key nil with-let-destroy)
     #js []))
-
 
 ;;;; reaction
 
@@ -534,10 +529,7 @@
                           :on-dispose on-dispose})
     reaction))
 
-
-
 (def ^:private temp-reaction (make-reaction nil))
-
 
 (defn run-in-reaction
   "Evaluates `f` and returns the result.  If `f` calls `deref` on any ratoms,
@@ -562,7 +554,6 @@
   (let [ctx (js-obj)
         res (in-context ctx f)]
     [res (some? (.-captured ctx))]))
-
 
 ;;; wrap
 
@@ -618,26 +609,22 @@
              (util/make-partial-fn callback-fn args)
              false nil))
 
-
-
-
 #_(do
-  (defn ratom-perf []
-    (set! debug false)
-    (dotimes [_ 10]
-      (let [nite 100000
-            a (atom 0)
-            f (fn []
-                (quot @a 10))
-            mid (make-reaction f)
-            res (track! (fn []
-                          ;; (with-let [x 1])
-                          ;; @(track f)
-                          (inc @mid)
-                          ))]
-        @res
-        (time (dotimes [x nite]
-                (swap! a inc)
-                (flush!)))
-        (dispose! res))))
-  (ratom-perf))
+    (defn ratom-perf []
+      (set! debug false)
+      (dotimes [_ 10]
+        (let [nite 100000
+              a (atom 0)
+              f (fn []
+                  (quot @a 10))
+              mid (make-reaction f)
+              res (track! (fn []
+                            ;; (with-let [x 1])
+                            ;; @(track f)
+                            (inc @mid)))]
+          @res
+          (time (dotimes [x nite]
+                  (swap! a inc)
+                  (flush!)))
+          (dispose! res))))
+    (ratom-perf))

@@ -97,26 +97,26 @@
   queue?"
   [f]
   (js/Promise.
-    (fn [resolve reject]
-      (try
-        ;; Alternative to waiting for 1 animation frame.
-        ;; Just synchronously flush Reagent queue inside React/flushSync,
-        ;; to ensure React sees the updates from Reagent right-away.
-        ;;
-        ;; Not sure if this is preferred way for testing. The tests run faster
-        ;; with this, but both Reagent and React queues are "skipped" (or manually
-        ;; flushed) always.
+   (fn [resolve reject]
+     (try
+       ;; Alternative to waiting for 1 animation frame.
+       ;; Just synchronously flush Reagent queue inside React/flushSync,
+       ;; to ensure React sees the updates from Reagent right-away.
+       ;;
+       ;; Not sure if this is preferred way for testing. The tests run faster
+       ;; with this, but both Reagent and React queues are "skipped" (or manually
+       ;; flushed) always.
         ; (react-dom/flushSync (fn []
         ;                        (f)
         ;                        (r/flush)))
         ; (resolve)
-        (f)
-        (js/setTimeout (fn []
-                         (resolve))
-                       RENDER-WAIT)
-        (catch :default e
-          ;; NOTE: errors from act body aren't logged currently
-          (reject e))))))
+       (f)
+       (js/setTimeout (fn []
+                        (resolve))
+                      RENDER-WAIT)
+       (catch :default e
+         ;; NOTE: errors from act body aren't logged currently
+         (reject e))))))
 
 (def ^:dynamic *render-error* nil)
 

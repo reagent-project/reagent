@@ -97,7 +97,6 @@
       (dispose !co))
     (is (= runs (running)))))
 
-
 (deftest test-unsubscribe
   (dotimes [x testite]
     (let [runs (running)
@@ -260,7 +259,6 @@
     (is (= {:set 11} @a-base))
     (is (= runs (running)))))
 
-
 (deftest test-equality
   (let [a (r/atom {:foo "bar"})
         a1 (r/atom {:foo "bar"})
@@ -317,7 +315,6 @@
     (is (not= w (r/wrap "bar" swap! a assoc :foo)))
     (is (not= w (r/wrap "foobar" swap! a assoc :foo)))))
 
-
 (deftest cursor-values
   (let [test-atom (r/atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor test-atom [:a :b :c :d])
@@ -362,7 +359,6 @@
 
     (is (= runs (running)))))
 
-
 (deftest cursor-atom-behaviors
   (let [test-atom (r/atom {:a {:b {:c {:d 1}}}})
         test-cursor (r/cursor test-atom [:a :b :c :d])
@@ -404,8 +400,7 @@
     (remove-watch test-cursor :w)
     (reset! test-cursor "removed")
     (is (= (:new @witness) "newer")) ;; shouldn't have changed
-    (is (= (running) runs))
-    ))
+    (is (= (running) runs))))
 
 (deftest wrap-atom-behaviors
   (let [test-atom (r/atom "foo")
@@ -438,8 +433,7 @@
     (remove-watch test-wrap :w)
     (reset! test-wrap "removed")
     (is (= (:new @witness) "new")) ;; shouldn't have changed
-    (is (= @test-wrap @test-atom))
-    ))
+    (is (= @test-wrap @test-atom))))
 
 (deftest test-cursor-swap
   (let [a (r/atom {:b 1})

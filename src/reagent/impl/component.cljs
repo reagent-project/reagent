@@ -9,7 +9,6 @@
 
 (declare ^:dynamic *current-component*)
 
-
 ;;; Argv access
 
 (defn extract-props [v]
@@ -178,18 +177,18 @@
     (fn shouldComponentUpdate [nextprops nextstate]
       (or util/*always-update*
           (this-as c
-                   ;; Don't care about nextstate here, we use forceUpdate
-                   ;; when only when state has changed anyway.
-                   (let [old-argv (.. c -props -argv)
-                         new-argv (.-argv nextprops)
-                         noargv (or (nil? old-argv) (nil? new-argv))]
-                     (cond
-                       (nil? f) (or noargv (try (not= old-argv new-argv)
-                                                (catch :default e
-                                                  (warn "Exception thrown while comparing argv's in shouldComponentUpdate: " old-argv " " new-argv " " e)
-                                                  false)))
-                       noargv (.call f c c (get-argv c) (props-argv c nextprops))
-                       :else  (.call f c c old-argv new-argv))))))
+            ;; Don't care about nextstate here, we use forceUpdate
+            ;; when only when state has changed anyway.
+            (let [old-argv (.. c -props -argv)
+                  new-argv (.-argv nextprops)
+                  noargv (or (nil? old-argv) (nil? new-argv))]
+              (cond
+                (nil? f) (or noargv (try (not= old-argv new-argv)
+                                         (catch :default e
+                                           (warn "Exception thrown while comparing argv's in shouldComponentUpdate: " old-argv " " new-argv " " e)
+                                           false)))
+                noargv (.call f c c (get-argv c) (props-argv c nextprops))
+                :else  (.call f c c old-argv new-argv))))))
 
     ;; Deprecated - warning in 16.9 will work through 17.x
     :componentWillUpdate
@@ -225,9 +224,9 @@
     :componentWillUnmount
     (fn componentWillUnmount []
       (this-as c
-               (queue-cleanup c)
-               (when-not (nil? f)
-                 (.call f c c))))
+        (queue-cleanup c)
+        (when-not (nil? f)
+          (.call f c c))))
 
     :componentDidCatch
     (fn componentDidCatch [error info]
@@ -455,13 +454,13 @@
           rat ^ratom/Reaction (gobj/get reagent-state "cljsRatom")]
 
       (react/useEffect
-        (fn mount []
-          (cancel-cleanup reagent-state)
-          (fn unmount []
-            (queue-cleanup reagent-state)))
-        ;; Ignore props - only run effect once on mount and unmount
-        ;; (which means always twice under the React strict mode).
-        #js [])
+       (fn mount []
+         (cancel-cleanup reagent-state)
+         (fn unmount []
+           (queue-cleanup reagent-state)))
+       ;; Ignore props - only run effect once on mount and unmount
+       ;; (which means always twice under the React strict mode).
+       #js [])
 
       ;; Argv is also stored in the state,
       ;; so reaction fn will always see the latest value.
@@ -472,12 +471,12 @@
       ;; static-fns :render
       (if (nil? rat)
         (ratom/run-in-reaction
-          ;; Mock Class component API
-          #(functional-do-render compiler reagent-state)
-          reagent-state
-          "cljsRatom"
-          batch/queue-render
-          rat-opts)
+         ;; Mock Class component API
+         #(functional-do-render compiler reagent-state)
+         reagent-state
+         "cljsRatom"
+         batch/queue-render
+         rat-opts)
         ;; TODO: Consider passing props here, instead of keeping them in state?
         (._run rat false)))))
 

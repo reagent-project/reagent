@@ -57,11 +57,11 @@
                             [body nil]))
         add-destroy (when destroy
                       (list
-                        `(let [destroy# ~destroy]
-                           (if (reagent.ratom/reactive?)
-                             (when (nil? (.-destroy ~v))
-                               (set! (.-destroy ~v) destroy#))
-                             (destroy#)))))
+                       `(let [destroy# ~destroy]
+                          (if (reagent.ratom/reactive?)
+                            (when (nil? (.-destroy ~v))
+                              (set! (.-destroy ~v) destroy#))
+                            (destroy#)))))
         asserting (if *assert* true false)
         res (gensym "res")]
     `(let [~v (reagent.ratom/with-let-values ~k)]

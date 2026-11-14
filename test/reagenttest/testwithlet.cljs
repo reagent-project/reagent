@@ -58,7 +58,6 @@
 
     (is (= runs (running)))))
 
-
 (deftest test-with-let-args
   (let [runs (running)
         n1 (atom 0)

@@ -66,7 +66,7 @@
 
     (is (= {:disabled true}
            (r/merge-props nil {:disabled true})
-           (r/merge-props {:disabled true} nil) )))
+           (r/merge-props {:disabled true} nil))))
 
   (testing "two arguments without classes"
     (is (= {:disabled false :style {:flex 1 :flex-direction "row"}}
@@ -130,7 +130,7 @@
   (is (= "foobar"
          (let [f (fn [] 1)]
            (set! (.-displayName f) "foobar")
-           (util/fun-name f)))) )
+           (util/fun-name f)))))
 
 (defn foo [m]
   [:h1])

@@ -63,7 +63,6 @@
   (swap! config update-in [:pages]
          assoc url {:content comp :title title}))
 
-
 ;;; History
 
 (defn init-history [page]
@@ -76,7 +75,7 @@
                 (.setUseFragment false)
                 (.setPathPrefix (-> js/location.pathname
                                     (string/replace
-                                      (re-pattern (str page "$")) "")
+                                     (re-pattern (str page "$")) "")
                                     (string/replace #"/*$" ""))))
               (History.))]
       (set! history h)
@@ -94,7 +93,6 @@
 
 (defn to-relative [f]
   (string/replace f #"^/" ""))
-
 
 ;;; Components
 

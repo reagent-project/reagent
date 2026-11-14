@@ -19,12 +19,12 @@
     (js/console.warn "react-dom/render function doesn't exist, you are likely trying to use the old DOM api with React 19. Use reagent.dom.client instead."))
   (binding [util/*always-update* true]
     (react-dom/render (comp) container
-      (fn []
-        (binding [util/*always-update* false]
-          (swap! roots assoc container comp)
-          (batch/flush-after-render)
-          (if (some? callback)
-            (callback)))))))
+                      (fn []
+                        (binding [util/*always-update* false]
+                          (swap! roots assoc container comp)
+                          (batch/flush-after-render)
+                          (if (some? callback)
+                            (callback)))))))
 
 (defn- re-render-component [comp container]
   (render-comp comp container nil))

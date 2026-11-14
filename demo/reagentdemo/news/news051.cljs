@@ -30,7 +30,6 @@
             :on-change #(reset! upper-value
                                 (-> % .-target .-value string/upper-case))}]])
 
-
 (defn main [{:keys [summary]}]
   [:div.reagent-demo
    [:h1 [link {:href url} title]]
@@ -63,7 +62,6 @@
        [:p "with identical results, thus saving several square
        brackets from an untimely death."]
 
-
        [:h2 "Keeping position"]
 
        [:p "Reagent now tries harder to maintain cursor position in
@@ -77,7 +75,6 @@
        [demo-component {:comp upper-input
                         :src [:pre ns-src
                               (s/src-of [:upper-value :upper-input])]}]
-
 
        [:h2 "Other news"]
 

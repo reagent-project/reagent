@@ -34,8 +34,8 @@
    ;; Note that you need to convert children from Reagent markup
    ;; to React elements yourself.
    (r/create-element Provider
-     #js {:value {:foo "bar"}}
-     (r/as-element [children]))])
+                     #js {:value {:foo "bar"}}
+                     (r/as-element [children]))])
 
 (defonce react-root (delay (rdomc/create-root (.getElementById js/document "app"))))
 

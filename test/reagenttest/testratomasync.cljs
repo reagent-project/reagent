@@ -34,8 +34,8 @@
         count (rv/atom 0)
         out (rv/atom 0)
         res (r/reaction
-             (swap! count inc)
-             @sv @c2 @comp)
+              (swap! count inc)
+              @sv @c2 @comp)
         const (ar (fn []
                     (reset! out @res)))]
     (is (= @count 1) "constrain ran")
@@ -95,13 +95,12 @@
     (let [!x (rv/atom 0)
           !co (ar #(inc @!x))]
       @!co
-      (is (= 1 @!co) "CO has correct value on first deref") 
+      (is (= 1 @!co) "CO has correct value on first deref")
       (swap! !x inc)
       (sync)
       (is (= 2 @!co) "CO auto-updates")
       (dispose !co))
     (is (= runs (running)))))
-
 
 (deftest test-unsubscribe
   (sync)
@@ -125,7 +124,7 @@
       (is (= @res (+ 2 @a)))
       (is (= @b-changed 1))
       (is (= @c-changed 0))
-             
+
       (reset! a -1)
       (is (= @b-changed 1))
       (sync)
@@ -133,25 +132,25 @@
       (is (= @b-changed 2))
       (is (= @c-changed 0))
       (is (= @res (+ 2 @a)))
-             
+
       (reset! a 2)
       (sync)
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 1))
       (is (= @res (+ 10 @a)))
-             
+
       (reset! a 3)
       (sync)
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @res (+ 10 @a)))
-             
+
       (reset! a 3)
       (sync)
       (is (<= 2 @b-changed 3))
       (is (= @c-changed 2))
       (is (= @res (+ 10 @a)))
-             
+
       (reset! a -1)
       (sync)
       (is (= @res (+ 2 @a)))
