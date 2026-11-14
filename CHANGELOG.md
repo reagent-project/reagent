@@ -10,7 +10,8 @@
     - The function component can't be used directly in Hiccup forms
       (`[react-comp props]`), use `[:> react-comp props]` or the original
       Reagent component instead. The class component returned with the
-      default compiler still works in Hiccup.
+      default compiler still works in Hiccup, but this is an undocumented
+      implementation detail.
     - Internal `reagent.impl.protocols/Compiler` protocol has a new
       `reactify-component` method. Custom Compiler implementations need to
       implement it.
