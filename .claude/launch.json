@@ -9,8 +9,8 @@
     },
     {
       "name": "site-prerendered",
-      "runtimeExecutable": "./site-preview-watch.sh",
-      "runtimeArgs": ["8095"],
+      "runtimeExecutable": "bb",
+      "runtimeArgs": ["site-preview-watch", "8095"],
       "port": 8095
     }
   ]

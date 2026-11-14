@@ -1,3 +1,11 @@
-{:tasks {figwheel {:task (shell "lein figwheel")}
+{:paths ["bb"]
+ :deps {org.babashka/http-server {:mvn/version "0.1.13"}}
+ :tasks {figwheel {:task (shell "lein figwheel")}
          shadow {:task (shell "npx shadow-cljs watch client")}
-         build-report {:task (shell "npx shadow-cljs run shadow.cljs.build-report client report.html")}}}
+         build-report {:task (shell "npx shadow-cljs run shadow.cljs.build-report client report.html")}
+         site-preview {:doc "Build the prerendered site preview into target/site-preview"
+                       :requires ([site-preview])
+                       :task (site-preview/build)}
+         site-preview-watch {:doc "Serve the site preview (port 8095) and rebuild on changes"
+                             :requires ([site-preview])
+                             :task (apply site-preview/watch *command-line-args*)}}}
