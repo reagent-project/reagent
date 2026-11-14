@@ -7,6 +7,10 @@
   React hooks couldn't be used in the component. It now returns a React
   function component.
   [#548](https://github.com/reagent-project/reagent/issues/548)
+    - The function component can't be used directly in Hiccup forms
+      (`[react-comp props]`), use `[:> react-comp props]` or the original
+      Reagent component instead. The class component returned with the
+      default compiler still works in Hiccup.
     - Internal `reagent.impl.protocols/Compiler` protocol has a new
       `reactify-component` method. Custom Compiler implementations need to
       implement it.

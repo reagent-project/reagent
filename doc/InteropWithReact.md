@@ -107,6 +107,10 @@ Note:
 * `adapt-react-class` and `reactify-component` are not perfectly symmetrical,
 because `reactify-component` requires that the reagent component accept
 everything in a single props map, including its children.
+* The result of `reactify-component` is meant to be used from React. In Hiccup,
+use the original Reagent component, or `[:> react-comp props]`. With a
+[function components compiler](./ReagentCompiler.md) the result is a React
+function component, which doesn't work as a Hiccup tag directly.
 
 ## Example: "Decorator" Higher-Order Components
 
