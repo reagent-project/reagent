@@ -110,10 +110,14 @@
 body {
     background: var(--bg);
     color: var(--fg);
-    font: 16px/1.6 var(--sans);
+    font-family: var(--sans);
     width: auto;
     margin: 0;
 }
+
+/* Size and line height on the app root, not body: the in-page test run
+   attaches elements to body and measures them. */
+.site { font-size: 16px; line-height: 1.6; }
 
 a { color: var(--accent); }
 
@@ -797,45 +801,58 @@ code, pre { font-family: var(--mono); }
 }
 .api-var-list a:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Dev-only test status from reagenttest.runtests */
+/* Dev-only test status from reagenttest.runtests: deliberately not themed,
+   so it reads as a dev tool and not part of the site. */
 
 .test-output-mini {
     position: fixed;
     right: 12px;
     bottom: 12px;
-    z-index: 20;
+    z-index: 2147483647;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 8px 6px 12px;
-    border: 1px solid var(--border);
+    padding: 6px 8px;
+    border: 2px solid #1f2328;
     border-radius: 6px;
-    background: var(--bg-soft);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-size: 13px;
-    color: var(--fg);
+    background: repeating-linear-gradient(-45deg, #ffd33d 0 10px, #f5c400 10px 20px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    font: 600 12px/1.4 var(--mono);
+    color: #1f2328;
 }
 
 .test-output-mini::before {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--fg-muted);
+    content: "DEV";
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #1f2328;
+    color: #ffd33d;
+    font-weight: 700;
 }
 
-.test-output-mini.ok::before { background: #2da44e; }
-.test-output-mini.failed::before { background: #cf222e; }
-.test-output-mini.failed { border-color: #cf222e; }
+.test-output-status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: #6e7781;
+    box-shadow: 0 0 0 1px #1f2328;
+}
+
+.test-output-mini.ok .test-output-status::before { background: #1a7f37; }
+.test-output-mini.failed .test-output-status::before { background: #cf222e; }
+.test-output-mini.failed { background: #ffcecb; border-color: #cf222e; }
 
 .test-output-mini button {
     padding: 2px 8px;
-    border: 1px solid var(--border);
+    border: 1px solid #1f2328;
     border-radius: 4px;
-    background: var(--bg);
-    color: var(--fg);
+    background: #fff;
+    color: #1f2328;
     font: inherit;
     cursor: pointer;
 }
 
-.test-output-mini button:hover { border-color: var(--accent); color: var(--accent); }
+.test-output-mini button:hover { background: #1f2328; color: #ffd33d; }
