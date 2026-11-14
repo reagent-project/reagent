@@ -329,24 +329,52 @@
 
 (def version (project-version))
 
+(defonce clicks (r/atom 0))
+
+(r/defc counter []
+  [:div
+   [:button {:on-click #(swap! clicks inc)} "Click me"]
+   " Clicked " @clicks " times"])
+
 (r/defc hero []
-  [:div.hero
-   [:h1 "Reagent"]
-   [:p.tagline "A minimalistic ClojureScript interface to "
-    [:a {:href "https://react.dev/"} "React"] "."]
-   [:p.hero-text "Define React components with plain ClojureScript functions
-   and data. Describe the UI with Hiccup, keep state in atoms, and Reagent
-   re-renders what changed."]
-   [:div.hero-actions
-    [link {:href docs/guide-index :class "button primary"} "Read the guide"]
-    [link {:href docs/api-index :class "button"} "API reference"]]
-   [:div.install
-    [:div.install-label "deps.edn"]
-    [:pre [:code "reagent/reagent {:mvn/version \"" version "\"}"]]
-    [:div.install-label "Leiningen"]
-    [:pre [:code "[reagent \"" version "\"]"]]
-    [:div.install-label "npm"]
-    [:pre [:code "npm install react react-dom"]]]])
+  [:div.hero-grid
+   [:div.hero
+    [:h1 "Reagent"]
+    [:p.tagline "A minimalistic ClojureScript interface to "
+     [:a {:href "https://react.dev/"} "React"] "."]
+    [:p.hero-text "Define React components with plain ClojureScript functions
+    and data. Describe the UI with Hiccup, keep state in atoms, and Reagent
+    re-renders what changed."]
+    [:div.hero-actions
+     [link {:href docs/guide-index :class "button primary"} "Read the guide"]
+     [link {:href docs/api-index :class "button"} "API reference"]]
+    [:div.install
+     [:div.install-label "deps.edn"]
+     [:pre [:code "reagent/reagent {:mvn/version \"" version "\"}"]]
+     [:div.install-label "Leiningen"]
+     [:pre [:code "[reagent \"" version "\"]"]]
+     [:div.install-label "npm"]
+     [:pre [:code "npm install react react-dom"]]]]
+   [:div.hero-demo
+    [:div.hero-demo-live
+     [:span.hero-demo-label "Live"]
+     [counter]]
+    (s/src-of [:clicks :counter])]])
+
+(r/defc features []
+  [:div.features
+   [:div
+    [:h3 "Functions and data"]
+    [:p "Components are functions that return Hiccup vectors. No JSX, no
+    classes, no templates."]]
+   [:div
+    [:h3 "Reactive atoms"]
+    [:p "Deref a Reagent atom in a component and it re-renders when the
+    atom changes. Cursors and reactions build on the same idea."]]
+   [:div
+    [:h3 "Plain React underneath"]
+    [:p "Use React components, hooks and libraries directly, with React 18
+    or 19."]]])
 
 (defn main []
   (let [show-all (r/atom false)]
@@ -354,6 +382,7 @@
     (fn []
       [:div.landing
        [hero]
+       [features]
        [:div.reagent-demo
         [intro]
         [managing-state]

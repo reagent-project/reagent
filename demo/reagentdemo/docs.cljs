@@ -86,6 +86,12 @@
 
 ;;; API pages
 
+(declare html->text)
+
+(defn first-sentence [s]
+  (let [s (string/trim s)]
+    (or (re-find #"^.*?\.(?=\s|$)" s) s)))
+
 (defn arglist->usage [var-name arglist]
   ;; "[x & rest]" -> "(atom x & rest)"
   (let [args (subs arglist 1 (dec (count arglist)))]
@@ -118,14 +124,16 @@
    [:p "Generated from the docstrings in the Reagent source. "
     "Docs for released versions are also on "
     [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] "."]
-   (for [{ns-name :ns :keys [vars]} api]
+   (for [{ns-name :ns :keys [vars doc-html]} api]
      ^{:key ns-name}
      [:section.api-ns-summary
       [:h2 [link {:href (api-path ns-name)} ns-name]]
-      [:p.api-var-list
+      (when doc-html
+        [:p.api-ns-doc (first-sentence (html->text doc-html))])
+      [:div.api-var-list
        (for [{:keys [name]} vars]
          ^{:key name}
-         [:<> [link {:href (str (api-path ns-name) "#" name)} name] " "])]])])
+         [link {:href (str (api-path ns-name) "#" name)} name])]])])
 
 ;;; Search
 

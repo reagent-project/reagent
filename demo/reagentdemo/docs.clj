@@ -41,12 +41,19 @@
 ;;; API docs from source files
 
 (def api-namespaces
-  [["reagent.core" ["src/reagent/core.cljs" "src/reagent/core.clj"]]
-   ["reagent.dom.client" ["src/reagent/dom/client.cljs"]]
-   ["reagent.dom" ["src/reagent/dom.cljs"]]
-   ["reagent.dom.server" ["src/reagent/dom/server.cljs"]]
-   ["reagent.ratom" ["src/reagent/ratom.cljs" "src/reagent/ratom.clj"]]
-   ["reagent.hooks" ["src/reagent/hooks.cljs"]]])
+  "[ns files summary]. Summary is used when the ns has no docstring."
+  [["reagent.core" ["src/reagent/core.cljs" "src/reagent/core.clj"]
+    "Components, Reagent atoms, cursors, reactions and React interop."]
+   ["reagent.dom.client" ["src/reagent/dom/client.cljs"]
+    "Render into React roots (React 18 and 19)."]
+   ["reagent.dom" ["src/reagent/dom.cljs"]
+    "Legacy ReactDOM render API. Not available with React 19."]
+   ["reagent.dom.server" ["src/reagent/dom/server.cljs"]
+    "Render components to HTML strings for server-side rendering."]
+   ["reagent.ratom" ["src/reagent/ratom.cljs" "src/reagent/ratom.clj"]
+    "Reactive atoms, reactions and tracking."]
+   ["reagent.hooks" ["src/reagent/hooks.cljs"]
+    "React hooks that use Clojure value equality for deps and state."]])
 
 (defn read-forms [file]
   (let [rdr (rt/indexing-push-back-reader (slurp file) 1 file)
@@ -107,7 +114,7 @@
 (defmacro api-docs
   "Returns [{:ns :doc-html :vars [...]}] for the public namespaces."
   []
-  (vec (for [[ns-name files] api-namespaces]
+  (vec (for [[ns-name files summary] api-namespaces]
          (let [forms (map read-forms files)
                doc (some ns-doc forms)
                vars (->> (map (fn [file forms]
@@ -119,8 +126,9 @@
                          (map (fn [[_ vs]] (or (first (filter #(= :macro (:type %)) vs)) (first vs))))
                          (sort-by :name)
                          vec)]
-           (cond-> {:ns ns-name :vars vars}
-             doc (assoc :doc-html (:html (md/render (unindent doc)))))))))
+           {:ns ns-name
+            :vars vars
+            :doc-html (:html (md/render (unindent (or doc summary))))}))))
 
 (defmacro inline-file
   "File contents as a string, at compile time."

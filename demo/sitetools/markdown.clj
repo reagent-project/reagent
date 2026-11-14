@@ -1,11 +1,13 @@
 (ns sitetools.markdown
   "Build-time Markdown rendering for the site (used from macros)."
-  (:require [clojure.string :as string])
+  (:require [clojure.string :as string]
+            [sitetools.highlight :as hl])
   (:import [org.commonmark.ext.autolink AutolinkExtension]
            [org.commonmark.ext.gfm.tables TablesExtension]
            [org.commonmark.node Code FencedCodeBlock HardLineBreak Heading IndentedCodeBlock Link Node Paragraph SoftLineBreak Text]
            [org.commonmark.parser Parser]
-           [org.commonmark.renderer.html AttributeProvider AttributeProviderFactory HtmlRenderer]))
+           [org.commonmark.renderer NodeRenderer]
+           [org.commonmark.renderer.html AttributeProvider AttributeProviderFactory HtmlNodeRendererContext HtmlNodeRendererFactory HtmlRenderer HtmlWriter]))
 
 (def github-blob "https://github.com/reagent-project/reagent/blob/master/")
 
@@ -72,9 +74,36 @@
 
         :else (str github-blob full anchor)))))
 
+(def clojure-langs #{"clojure" "clj" "cljs" "cljc" "clojurescript" "edn"})
+
+(defn clojure-code?
+  "Fenced blocks tagged as Clojure, and untagged blocks that look like Clojure."
+  [lang code]
+  (if (string/blank? lang)
+    (boolean (re-find #"^\s*[(\[{;:]" code))
+    (contains? clojure-langs (string/lower-case (first (string/split (string/trim lang) #"\s+"))))))
+
+(def code-block-renderer
+  (reify HtmlNodeRendererFactory
+    (create [_ ctx]
+      (let [^HtmlWriter w (.getWriter ^HtmlNodeRendererContext ctx)]
+        (reify NodeRenderer
+          (getNodeTypes [_] #{FencedCodeBlock IndentedCodeBlock})
+          (render [_ node]
+            (let [[lang code] (if (instance? FencedCodeBlock node)
+                                [(.getInfo ^FencedCodeBlock node) (.getLiteral ^FencedCodeBlock node)]
+                                [nil (.getLiteral ^IndentedCodeBlock node)])
+                  clj? (clojure-code? lang code)]
+              (.line w)
+              (.raw w (str "<pre" (when clj? " class=\"hl\"") "><code>"
+                           (if clj? (hl/highlight-html code) (hl/escape-html code))
+                           "</code></pre>"))
+              (.line w))))))))
+
 (defn renderer [dir]
   (-> (HtmlRenderer/builder)
       (.extensions extensions)
+      (.nodeRendererFactory code-block-renderer)
       (.attributeProviderFactory
        (reify AttributeProviderFactory
          (create [_ _ctx]
