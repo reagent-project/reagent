@@ -162,12 +162,24 @@
 
 ;;; Guide pages
 
-(r/defc doc-page [{:keys [html file title] :as page}]
+;; Shown on pages without `reviewed: YYYY-MM-DD` in their front matter.
+(r/defc review-notice []
+  [:p.review-notice
+   [:strong "Not reviewed yet: "]
+   "this page may be outdated or inconsistent with the other guides. The "
+   [link {:href api-index} "API reference"]
+   " is generated from the current source."])
+
+(r/defc doc-page [{:keys [html file title] {:keys [reviewed]} :meta :as page}]
   [docs-layout page
+   (when-not reviewed
+     [review-notice])
    (when-not (string/starts-with? html "<h1")
      [:h1 title])
    [raw-html :div.markdown {} html]
    [:p.edit-link
+    (when reviewed
+      [:span.reviewed "Reviewed " reviewed " · "])
     [:a {:href (str github-blob file)} "Edit this page on GitHub"]]])
 
 ;;; API pages

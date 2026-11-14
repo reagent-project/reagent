@@ -493,10 +493,23 @@ code, pre { font-family: var(--mono); }
     border-left: 4px solid var(--border);
 }
 
+/* Pages without a reviewed date, see review-notice in docs.cljs */
+.review-notice {
+    margin: 0 0 24px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--fg-muted);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
 .edit-link {
     margin-top: 48px;
     font-size: 14px;
 }
+
+.edit-link .reviewed { color: var(--fg-muted); }
 
 /* API */
 

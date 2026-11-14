@@ -25,16 +25,33 @@
 (defn flatten-nav [tree]
   (mapcat (fn [n] (cons n (flatten-nav (:children n)))) tree))
 
+(defn front-matter
+  "Splits a YAML front matter block (`---` lines around `key: value` lines)
+  from a doc file. Only flat string values are supported. Doc files use
+  `reviewed: YYYY-MM-DD` for the date the page was last reviewed against the
+  current Reagent. Returns [{:reviewed \"...\"} body]."
+  [md]
+  (if-some [[block yaml] (re-find #"^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)" md)]
+    [(into {}
+           (for [line (string/split-lines yaml)
+                 :let [[_ k v] (re-find #"^([\w-]+):\s*(.*?)\s*$" line)]
+                 :when k]
+             [(keyword k) (string/replace v #"^(['\"])(.*)\1$" "$2")]))
+     (subs md (count block))]
+    [{} md]))
+
 (defmacro doc-site
-  "Returns {:nav [...] :pages [{:path :title :file :html :headings}]}."
+  "Returns {:nav [...] :pages [{:path :title :file :html :headings :meta}]}.
+  `:meta` is the file's front matter."
   []
   (let [tree (-> "doc/cljdoc.edn" slurp edn/read-string :cljdoc.doc/tree nav-tree)
         pages (for [{:keys [file path title]} (flatten-nav tree)
-                    :when file]
-                (-> (md/render (slurp file) (.getParent (io/file file)))
+                    :when file
+                    :let [[meta md] (front-matter (slurp file))]]
+                (-> (md/render md (.getParent (io/file file)))
                     ;; Search text is derived from the html at runtime
                     (dissoc :text)
-                    (assoc :path path :title title :file file)))]
+                    (assoc :path path :title title :file file :meta meta)))]
     {:nav tree
      :pages (vec pages)}))
 
