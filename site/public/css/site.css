@@ -414,6 +414,15 @@ code, pre { font-family: var(--mono); }
 
 .toc a:hover { color: var(--accent); }
 
+.toc a.active {
+    color: var(--accent);
+    font-weight: normal;
+}
+
+.toc li { border-left: 2px solid transparent; padding-left: 10px; }
+.toc li:has(> a.active) { border-left-color: var(--accent); }
+.toc .toc-h3 { padding-left: 22px; }
+
 .docs-main {
     min-width: 0;
     display: flex;

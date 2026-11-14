@@ -73,16 +73,59 @@
                       :class (when (= current (api-path ns-name)) "active")}
                 ns-name]])]]]]))
 
+(defn current-heading
+  "Id of the last heading scrolled past the header, or the last one when
+  the page is scrolled to the bottom."
+  [ids]
+  (let [offset 100
+        at-bottom? (>= (+ js/window.scrollY js/window.innerHeight)
+                       (- (.. js/document -documentElement -scrollHeight) 2))]
+    (if at-bottom?
+      (last ids)
+      (reduce (fn [found id]
+                (if-some [el (js/document.getElementById id)]
+                  (if (<= (.-top (.getBoundingClientRect el)) offset)
+                    id
+                    (reduced found))
+                  found))
+              (first ids)
+              ids))))
+
 (r/defc toc [headings]
-  (let [hs (filter #(<= 2 (:level %) 3) headings)]
+  (let [hs (filter #(<= 2 (:level %) 3) headings)
+        ids (mapv :id hs)
+        [active set-active] (react/useState nil)
+        nav-ref (react/useRef nil)]
+    ;; Track the heading in view while scrolling.
+    (react/useEffect
+     (fn []
+       (if (seq ids)
+         (let [frame (atom nil)
+               update! (fn []
+                         (reset! frame nil)
+                         (set-active (current-heading ids)))
+               on-scroll (fn []
+                           (when-not @frame
+                             (reset! frame (js/requestAnimationFrame update!))))]
+           (update!)
+           (js/addEventListener "scroll" on-scroll #js {:passive true})
+           (fn []
+             (some-> @frame js/cancelAnimationFrame)
+             (js/removeEventListener "scroll" on-scroll)))
+         js/undefined))
+     #js [(string/join " " ids)])
+    (react/useEffect (fn [] (scroll-to-active! (.-current nav-ref)) js/undefined)
+                     #js [active])
     (when (seq hs)
-      [:nav.toc
+      [:nav.toc {:ref nav-ref}
        [:div.toc-title "On this page"]
        [:ul
         (for [{:keys [level text id]} hs]
           ^{:key id}
           [:li {:class (str "toc-h" level)}
-           [:a {:href (str "#" id)} text]])]])))
+           [:a {:href (str "#" id)
+                :class (when (= id active) "active")}
+            text]])]])))
 
 (defn docs-page? [path]
   (or (some-> path (string/starts-with? "/doc/"))
