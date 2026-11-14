@@ -1,5 +1,6 @@
 ## Tutorials
 
+0. [Getting Started](GettingStarted.md): create a new app with shadow-cljs
 1. [Using Hiccup to Describe HTML](UsingHiccupToDescribeHTML.md)
 2. [Creating Reagent Components](CreatingReagentComponents.md)
 3. [Using [square brackets] instead of (parentheses)](UsingSquareBracketsInsteadOfParens.md)

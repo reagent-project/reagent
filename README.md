@@ -23,6 +23,9 @@ Reagent provides a way to write efficient React components using (almost) nothin
 
 ### Usage
 
+New to Reagent? The [Getting Started guide](./doc/GettingStarted.md) walks
+through creating a new app with shadow-cljs.
+
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
