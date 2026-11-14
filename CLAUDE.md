@@ -56,11 +56,11 @@ that could behave differently under advanced compilation or across build tools.
 
 cljfmt with `.cljfmt.edn` (clojure-lsp reads the same file). The Claude hook in
 `.claude/settings.json` runs it automatically after each Write/Edit. Manually
-(only tracked files; `examples/*/` contain ignored build caches):
+(`cljfmt.sh` only passes tracked files; `examples/*/` contain ignored build caches):
 
 ```bash
-git ls-files '*.clj' '*.cljs' '*.cljc' | xargs cljfmt check
-cljfmt fix <files>
+./cljfmt.sh check
+./cljfmt.sh fix
 ```
 
 Community style. When adding a macro with a body, add an `:extra-indents`

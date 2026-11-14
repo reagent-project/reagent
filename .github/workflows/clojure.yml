@@ -17,7 +17,7 @@ jobs:
       - name: clj-kondo
         run: clj-kondo --lint src test
       - name: cljfmt check
-        run: git ls-files -z '*.clj' '*.cljs' '*.cljc' | xargs -0 cljfmt check
+        run: ./cljfmt.sh check
 
   test:
     strategy:
