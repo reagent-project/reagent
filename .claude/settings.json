@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "clj-paren-repair-claude-hook"
+            "command": "clj-paren-repair-claude-hook --cljfmt"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "clj-paren-repair-claude-hook"
+            "command": "clj-paren-repair-claude-hook --cljfmt"
           }
         ]
       }

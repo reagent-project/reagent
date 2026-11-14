@@ -52,6 +52,21 @@ in ChromeHeadless.
 and cljsjs, bundled, advanced compilation, shadow release). Only needed for changes
 that could behave differently under advanced compilation or across build tools.
 
+## Formatting
+
+cljfmt with `.cljfmt.edn` (clojure-lsp reads the same file). The Claude hook in
+`.claude/settings.json` runs it automatically after each Write/Edit. Manually
+(only tracked files; `examples/*/` contain ignored build caches):
+
+```bash
+git ls-files '*.clj' '*.cljs' '*.cljc' | xargs cljfmt check
+cljfmt fix <files>
+```
+
+Community style. When adding a macro with a body, add an `:extra-indents`
+entry for it in `.cljfmt.edn` (fully qualified symbol; aliases and `:refer`
+are resolved).
+
 ## Lint
 
 ```bash
