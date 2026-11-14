@@ -80,15 +80,28 @@ starting with `--` but it isn't implemented now.
 
 In JavaScript, `class` is a reserved keyword, so React uses the `className` to specify class attibutes. Reagent just uses `class`.
 
-As of reagent 0.8.0, the `class` attribute accepts a collection of classes and will remove any nil value:
+The `class` attribute of HTML elements accepts a string, a keyword or
+symbol, or a collection of these. Collections can be nested, and `nil` and
+`false` values are removed. Reagent normalizes the value to a class string
+(using `r/class-names`), so there is no need to call it yourself:
 
 ```clojure
 [:div {:class ["a-class" (when active? "active") "b-class"]}]
+
+;; A component can add its own class to a :class value received in props,
+;; even if that value is a collection.
+(defn button [{:keys [class]} label]
+  [:button {:class ["btn" class]} label])
+
+[button {:class ["primary" (when large? "large")]} "OK"]
+;; => <button class="btn primary large">OK</button>
 ```
 
-To combine class values, for example when a component adds its own classes
-to the props it receives, use `r/merge-props` or `r/class-names`. Nested
-collections are flattened:
+This only applies to the `class` attribute of HTML elements. For Reagent
+components `:class` is a normal prop, passed to the component as is.
+
+To combine class values in props maps, use `r/merge-props` or
+`r/class-names`. They normalize nested collections the same way:
 
 ```clojure
 (defn button [props label]

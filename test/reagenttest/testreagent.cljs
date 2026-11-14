@@ -604,14 +604,17 @@
            (as-string [:p.x {:class [[:a] '("b")]}])))))
 
 (defn class-parent [{:keys [class]}]
-  [:span {:class (r/class-names :child class)}])
+  ;; No class-names call, :class on HTML elements is normalized
+  [:span {:class [:child class]}])
 
 (defn class-grandparent [{:keys [class]}]
   [class-parent {:class [:parent class]}])
 
 (u/deftest class-passed-down-components
   ;; https://github.com/reagent-project/reagent/issues/601
-  ;; class-parent receives a nested collection: [:parent [:grandparent :x]]
+  ;; The span gets a nested collection: [:child [:parent :grandparent]]
+  (is (= "<span class=\"child parent grandparent\"></span>"
+         (as-string [class-grandparent {:class :grandparent}])))
   (is (= "<span class=\"child parent grandparent x\"></span>"
          (as-string [class-grandparent {:class [:grandparent :x]}]))))
 
