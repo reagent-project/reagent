@@ -10,6 +10,7 @@
 8. [React Features](ReactFeatures.md) and how to use them in Reagent
 8. [Reagent Compiler](ReagentCompiler.md)
 8. [Controlled Inputs](ControlledInputs.md)
+8. [Web Components (Custom Elements)](WebComponents.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial

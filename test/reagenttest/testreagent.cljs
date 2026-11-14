@@ -1183,6 +1183,81 @@
   (is (= "<custom-element class=\"foobar\">foo</custom-element>"
          (as-string [:custom-element.foobar "foo"]))))
 
+(u/deftest custom-element-props
+  (testing ":class is kept as class, and supports collections"
+    (is (= "<custom-element class=\"a b c\"></custom-element>"
+           (as-string [:custom-element.a {:class ["b" "c"]}]))))
+
+  (testing "keyword prop names are camelCased, string keys are used as is"
+    (is (= "<custom-element myAttr=\"a\" my-attr=\"b\"></custom-element>"
+           (as-string [:custom-element {:my-attr "a" "my-attr" "b"}]))))
+
+  (testing "data- and aria- props keep their dashes"
+    (is (= "<custom-element data-foo-bar=\"a\" aria-label=\"b\"></custom-element>"
+           (as-string [:custom-element {:data-foo-bar "a" :aria-label "b"}])))))
+
+;; Minimal custom element with an `items` property, defined without
+;; ES6 class syntax so this works with all test build setups.
+(defn define-test-element! []
+  (when-not (.get js/customElements "reagent-test-element")
+    (let [ctor (fn ctor []
+                 (js/Reflect.construct js/HTMLElement #js [] ctor))]
+      (set! (.-prototype ctor) (js/Object.create (.-prototype js/HTMLElement)))
+      (set! (.. ctor -prototype -constructor) ctor)
+      (set! (.. ctor -prototype -items) nil)
+      (js/Object.setPrototypeOf ctor js/HTMLElement)
+      (.define js/customElements "reagent-test-element" ctor))))
+
+(defn- test-element [^js div]
+  (.querySelector div "reagent-test-element"))
+
+(u/deftest ^:dom custom-element-dom
+  (define-test-element!)
+  (let [events (atom [])
+        state (r/atom ["a"])
+        comp (fn []
+               [:reagent-test-element
+                {:class ["x" "y"]
+                 ;; Element has this property: set as a JS property
+                 :items @state
+                 ;; No such property: set as an attribute
+                 "my-attr" "a"
+                 :my-attr "b"
+                 :flag true
+                 :other-flag false
+                 ;; Known React event: React synthetic event
+                 :on-click (fn [e] (swap! events conj [:click (.-type e)]))
+                 ;; Other on* function props: addEventListener, event name
+                 ;; is the rest of the prop name as is
+                 "onmy-event" (fn [e] (swap! events conj [:my-event (.-detail e)]))
+                 :on-other-event (fn [e] (swap! events conj [:other-event (.-type e)]))}])]
+    (u/async
+      (u/with-render [div [comp]]
+        (let [el (test-element div)]
+          (is (= "x y" (.getAttribute el "class")))
+
+          (is (array? (.-items el)))
+          (is (= ["a"] (js->clj (.-items el))))
+          (is (not (.hasAttribute el "items")))
+
+          (is (= "a" (.getAttribute el "my-attr")))
+          ;; :my-attr => myAttr, HTML attribute names are case-insensitive
+          (is (= "b" (.getAttribute el "myattr")))
+
+          (is (= "" (.getAttribute el "flag")))
+          (is (not (.hasAttribute el "otherflag")))
+
+          (.click el)
+          (.dispatchEvent el (js/CustomEvent. "my-event" #js {:detail 42}))
+          ;; :on-other-event => onOtherEvent => listens to "OtherEvent"
+          (.dispatchEvent el (js/CustomEvent. "other-event"))
+          (.dispatchEvent el (js/CustomEvent. "OtherEvent"))
+          (is (= [[:click "click"] [:my-event 42] [:other-event "OtherEvent"]]
+                 @events)))
+
+        (u/act (reset! state ["b" "c"]))
+        (is (= ["b" "c"] (js->clj (.-items (test-element div)))))))))
+
 (u/deftest html-entities
   (testing "entity numbers can be unescaped always"
     (is (= "<i> </i>"

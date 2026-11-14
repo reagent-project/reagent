@@ -31,6 +31,11 @@ Will result in:
 <span custom-attribute="value"></span>
 ```
 
+### Custom elements
+
+Tags containing a `-`, like `:my-element`, are rendered as custom elements (Web Components).
+See [Web Components](WebComponents.md) for how props, properties and events work with them.
+
 ## Special treatment of `nil` child nodes
 
 Reagent and React ignore nil nodes, which allow conditional logic in Hiccup forms:

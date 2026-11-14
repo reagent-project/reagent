@@ -12,6 +12,7 @@
                     ["React Features" {:file "doc/ReactFeatures.md"}]
                     ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
                     ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
+                    ["Web Components (Custom Elements)" {:file "doc/WebComponents.md"}]
                     ["React Renderers" {:file "doc/ReactRenderers.md"}]
                     ["Server Side Rendering" {:file "doc/ServerSideRendering.md"}]]
                    ["Frequently Asked Questions" {}
