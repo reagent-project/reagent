@@ -49,6 +49,11 @@
                  (when-some [h history]
                    (r/after-render (fn []
                                      (.setToken h path)
+                                     ;; With HTML5 history keep the anchor in
+                                     ;; the URL; hash history uses the
+                                     ;; fragment for the page path.
+                                     (when (and anchor (instance? Html5History h))
+                                       (js/history.replaceState nil "" (str js/location.pathname "#" anchor)))
                                      (if-some [el (and anchor (js/document.getElementById anchor))]
                                        (.scrollIntoView el)
                                        (js/scrollTo 0 0)))))
@@ -62,16 +67,24 @@
   (emit [:goto-page path]))
 
 (defn internal-link-handler
-  "on-click handler for a container of plain HTML (e.g. rendered markdown):
-  navigates relative .html links within the site without a page load."
+  "on-click handler for a container of plain links (e.g. rendered markdown):
+  navigates relative .html links within the site without a page load, and
+  handles same-page #anchor links (which would otherwise clash with the
+  hash history used in development)."
   [^js e]
   (when-some [a (.closest (.-target e) "a")]
     (let [href (.getAttribute a "href")]
       (when (and href
-                 (not (.-metaKey e)) (not (.-ctrlKey e))
-                 (re-find #"^[^:/#]+.*\.html(#.*)?$" href))
-        (.preventDefault e)
-        (goto-page (str "/" href))))))
+                 (not (.-defaultPrevented e))
+                 (not (.-metaKey e)) (not (.-ctrlKey e)))
+        (cond
+          (string/starts-with? href "#")
+          (do (.preventDefault e)
+              (goto-page (str (get-in @config [:current-page :path]) href)))
+
+          (re-find #"^[^:/#]+.*\.html(#.*)?$" href)
+          (do (.preventDefault e)
+              (goto-page (str "/" href))))))))
 
 (defn emit [event]
   ;; (dbg event)

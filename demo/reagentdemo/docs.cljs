@@ -77,7 +77,7 @@
   "Id of the last heading scrolled past the header, or the last one when
   the page is scrolled to the bottom."
   [ids]
-  (let [offset 100
+  (let [offset 120
         at-bottom? (>= (+ js/window.scrollY js/window.innerHeight)
                        (- (.. js/document -documentElement -scrollHeight) 2))]
     (if at-bottom?
@@ -95,6 +95,7 @@
   (let [hs (filter #(<= 2 (:level %) 3) headings)
         ids (mapv :id hs)
         [active set-active] (react/useState nil)
+        [open? set-open] (react/useState false)
         nav-ref (react/useRef nil)]
     ;; Track the heading in view while scrolling.
     (react/useEffect
@@ -117,9 +118,16 @@
     (react/useEffect (fn [] (scroll-to-active! (.-current nav-ref)) js/undefined)
                      #js [active])
     (when (seq hs)
-      [:nav.toc {:ref nav-ref}
+      [:nav.toc {:ref nav-ref
+                 :class (when open? "open")}
        [:div.toc-title "On this page"]
-       [:ul
+       ;; Narrow screens: the TOC sits above the content, collapsed.
+       [:button.toc-toggle {:on-click #(set-open (not open?))
+                            :aria-expanded open?}
+        "On this page"
+        (when-some [t (some #(when (= active (:id %)) (:text %)) hs)]
+          [:span.toc-current t])]
+       [:ul {:on-click #(set-open false)}
         (for [{:keys [level text id]} hs]
           ^{:key id}
           [:li {:class (str "toc-h" level)}
@@ -141,7 +149,7 @@
 (r/defc docs-layout [{:keys [headings]} & content]
   ;; The footer is inside the content column so the grid reaches the page
   ;; bottom and the sticky sidebars are never pushed up by it.
-  [:div.docs-layout
+  [:div.docs-layout {:on-click tools/internal-link-handler}
    [sidebar]
    [:div.docs-main
     (into [:article.docs-content] content)
@@ -150,7 +158,6 @@
 
 (r/defc raw-html [tag props s]
   [tag (assoc props
-              :on-click tools/internal-link-handler
               :dangerouslySetInnerHTML (r/unsafe-html s))])
 
 ;;; Guide pages
