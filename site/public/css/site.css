@@ -42,6 +42,8 @@
     --accent-fg: #ffffff;
     --accent-soft: #1b2a3d;
     --accent-strong: #1158c7;
+    --logo-bg: #2d353f;
+    --logo-line: #d0d7de;
     --code-bg: #151b23;
     --hl-comment: #9da7b3;
     --hl-string: #7ee787;
@@ -65,6 +67,8 @@
         --accent-fg: #ffffff;
         --accent-soft: #1b2a3d;
         --accent-strong: #1158c7;
+        --logo-bg: #2d353f;
+        --logo-line: #d0d7de;
         --code-bg: #151b23;
         --hl-comment: #9da7b3;
         --hl-string: #7ee787;
@@ -76,10 +80,12 @@
         --hl-p1: #e3b341;
         --hl-p2: #79c0ff;
     }
-    :root:not([data-theme="light"]) .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
+    :root:not([data-theme="light"]) .brand-logo svg path:nth-child(1) { fill: var(--logo-bg); stroke: var(--logo-bg); }
+    :root:not([data-theme="light"]) .brand-logo svg path:nth-child(2) { fill: var(--logo-line); }
 }
 
-:root[data-theme="dark"] .brand-logo svg { border-radius: 4px; box-shadow: 0 0 0 1px var(--border); }
+:root[data-theme="dark"] .brand-logo svg path:nth-child(1) { fill: var(--logo-bg); stroke: var(--logo-bg); }
+:root[data-theme="dark"] .brand-logo svg path:nth-child(2) { fill: var(--logo-line); }
 
 /* examples.css (TodoMVC) sets `div, h1, input { color: #777 }` globally.
    Keep that grey inside the TodoMVC demo only; the specificity here is one
@@ -370,7 +376,6 @@ code, pre { font-family: var(--mono); }
 .sidebar a {
     display: block;
     padding: 3px 8px;
-    border-radius: 4px;
     color: var(--fg);
     text-decoration: none;
 }
@@ -629,7 +634,7 @@ code, pre { font-family: var(--mono); }
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 48px;
-    align-items: center;
+    align-items: end;
 }
 
 .hero-grid .hero { padding: 0; margin: 0; }
