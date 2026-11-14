@@ -469,3 +469,95 @@
 (deftest cursor-assert-test
   (when assert-enabled?
     (is (thrown-with-msg? :default #"src must be a reactive atom or a function, not nil while attempting to get path: \[:foo :bar\]" (r/cursor nil [:foo :bar])))))
+
+;; https://github.com/reagent-project/reagent/issues/244
+;; Cursors are lazy: the cursor value (and so its watches) only updates
+;; when the cursor is dereferenced, or changed through the cursor.
+(deftest cursor-watch-is-lazy
+  (let [base (r/atom {:a 1 :b 1})
+        c (r/cursor base [:a])
+        calls (atom [])]
+    (add-watch c :w (fn [_ _ o n] (swap! calls conj [o n])))
+
+    (swap! base assoc :a 2)
+    (r/flush)
+    (is (= [] @calls) "base atom change doesn't reach watches of a cursor that isn't dereferenced")
+
+    (is (= 2 @c))
+    (is (= [[nil 2]] @calls) "deref updates the cursor state and notifies watches; old value is the last seen value")
+
+    (swap! base assoc :a 3)
+    (swap! base assoc :a 4)
+    (is (= [[nil 2]] @calls))
+    (is (= 4 @c))
+    (is (= [[nil 2] [2 4]] @calls) "intermediate values are not seen")
+
+    (reset! c 5)
+    (is (= [[nil 2] [2 4] [4 5]] @calls) "changes through the cursor notify watches immediately")
+    (swap! c inc)
+    (is (= [[nil 2] [2 4] [4 5] [5 6]] @calls))
+    (is (= {:a 6 :b 1} @base))))
+
+(deftest cursor-watch-with-reactive-deref
+  (let [runs (running)
+        base (r/atom {:a 1 :b 1})
+        c (r/cursor base [:a])
+        calls (atom [])
+        _ (add-watch c :w (fn [_ _ o n] (swap! calls conj [o n])))
+        ;; Keep the cursor dereferenced in a reactive context
+        t (r/track! (fn [] @c))]
+    (is (= [[nil 1]] @calls))
+
+    (swap! base assoc :a 2)
+    (is (= [[nil 1]] @calls) "notification happens on the next flush, not synchronously")
+    (r/flush)
+    (is (= [[nil 1] [1 2]] @calls))
+
+    (swap! base assoc :b 2)
+    (r/flush)
+    (is (= [[nil 1] [1 2]] @calls) "changes to other paths don't notify")
+
+    (swap! base assoc :a 3)
+    (swap! base assoc :a 4)
+    (r/flush)
+    (is (= [[nil 1] [1 2] [2 4]] @calls) "changes are batched until flush")
+
+    (r/dispose! t)
+
+    (swap! base assoc :a 5)
+    (r/flush)
+    (is (= [[nil 1] [1 2] [2 4]] @calls) "after dispose! the cursor is lazy again")
+
+    (remove-watch c :w)
+    (is (= runs (running)))))
+
+(deftest cursor-change-alternatives
+  (testing "track! that derefs the cursor"
+    (let [runs (running)
+          base (r/atom {:a 1 :b 1})
+          c (r/cursor base [:a])
+          seen (atom [])
+          t (r/track! (fn [] (swap! seen conj @c)))]
+      (is (= [1] @seen))
+      (swap! base assoc :a 2)
+      (r/flush)
+      (swap! base assoc :b 2)
+      (r/flush)
+      (is (= [1 2] @seen))
+      (r/dispose! t)
+      (is (= runs (running)))))
+
+  (testing "watch the base atom directly"
+    (let [base (r/atom {:a 1 :b 1})
+          seen (atom [])]
+      (add-watch base :a-changed
+                 (fn [_ _ old new]
+                   (let [o (get-in old [:a])
+                         n (get-in new [:a])]
+                     (when-not (identical? o n)
+                       (swap! seen conj [o n])))))
+      (swap! base assoc :a 2)
+      (swap! base assoc :b 2)
+      (swap! base assoc :a 3)
+      (is (= [[1 2] [2 3]] @seen) "synchronous, sees every change")
+      (remove-watch base :a-changed))))
