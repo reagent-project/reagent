@@ -15,6 +15,10 @@ Props for custom elements are converted slightly differently from props for
 built-in elements, and React 19 decides whether each prop is set as an
 attribute, a property or an event listener. The sections below describe how.
 
+The property and event handling described below requires React 19. React 18
+sets all custom element props as attributes and doesn't add listeners for
+custom events.
+
 ## `:class`, `:id` and the tag shorthand
 
 `:class` works the same as with other elements, including the `.class` and `#id`

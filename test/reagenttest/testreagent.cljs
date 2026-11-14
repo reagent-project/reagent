@@ -1212,51 +1212,54 @@
   (.querySelector div "reagent-test-element"))
 
 (u/deftest ^:dom custom-element-dom
-  (define-test-element!)
-  (let [events (atom [])
-        state (r/atom ["a"])
-        comp (fn []
-               [:reagent-test-element
-                {:class ["x" "y"]
-                 ;; Element has this property: set as a JS property
-                 :items @state
-                 ;; No such property: set as an attribute
-                 "my-attr" "a"
-                 :my-attr "b"
-                 :flag true
-                 :other-flag false
-                 ;; Known React event: React synthetic event
-                 :on-click (fn [e] (swap! events conj [:click (.-type e)]))
-                 ;; Other on* function props: addEventListener, event name
-                 ;; is the rest of the prop name as is
-                 "onmy-event" (fn [e] (swap! events conj [:my-event (.-detail e)]))
-                 :on-other-event (fn [e] (swap! events conj [:other-event (.-type e)]))}])]
-    (u/async
-      (u/with-render [div [comp]]
-        (let [el (test-element div)]
-          (is (= "x y" (.getAttribute el "class")))
+  ;; React 18 sets all custom element props as attributes and doesn't
+  ;; add listeners for custom events, only test React 19 behavior.
+  (when-not u/OLD-REACT
+    (define-test-element!)
+    (let [events (atom [])
+          state (r/atom ["a"])
+          comp (fn []
+                 [:reagent-test-element
+                  {:class ["x" "y"]
+                   ;; Element has this property: set as a JS property
+                   :items @state
+                   ;; No such property: set as an attribute
+                   "my-attr" "a"
+                   :my-attr "b"
+                   :flag true
+                   :other-flag false
+                   ;; Known React event: React synthetic event
+                   :on-click (fn [e] (swap! events conj [:click (.-type e)]))
+                   ;; Other on* function props: addEventListener, event name
+                   ;; is the rest of the prop name as is
+                   "onmy-event" (fn [e] (swap! events conj [:my-event (.-detail e)]))
+                   :on-other-event (fn [e] (swap! events conj [:other-event (.-type e)]))}])]
+      (u/async
+        (u/with-render [div [comp]]
+          (let [el (test-element div)]
+            (is (= "x y" (.getAttribute el "class")))
 
-          (is (array? (.-items el)))
-          (is (= ["a"] (js->clj (.-items el))))
-          (is (not (.hasAttribute el "items")))
+            (is (array? (.-items el)))
+            (is (= ["a"] (js->clj (.-items el))))
+            (is (not (.hasAttribute el "items")))
 
-          (is (= "a" (.getAttribute el "my-attr")))
-          ;; :my-attr => myAttr, HTML attribute names are case-insensitive
-          (is (= "b" (.getAttribute el "myattr")))
+            (is (= "a" (.getAttribute el "my-attr")))
+            ;; :my-attr => myAttr, HTML attribute names are case-insensitive
+            (is (= "b" (.getAttribute el "myattr")))
 
-          (is (= "" (.getAttribute el "flag")))
-          (is (not (.hasAttribute el "otherflag")))
+            (is (= "" (.getAttribute el "flag")))
+            (is (not (.hasAttribute el "otherflag")))
 
-          (.click el)
-          (.dispatchEvent el (js/CustomEvent. "my-event" #js {:detail 42}))
-          ;; :on-other-event => onOtherEvent => listens to "OtherEvent"
-          (.dispatchEvent el (js/CustomEvent. "other-event"))
-          (.dispatchEvent el (js/CustomEvent. "OtherEvent"))
-          (is (= [[:click "click"] [:my-event 42] [:other-event "OtherEvent"]]
-                 @events)))
+            (.click el)
+            (.dispatchEvent el (js/CustomEvent. "my-event" #js {:detail 42}))
+            ;; :on-other-event => onOtherEvent => listens to "OtherEvent"
+            (.dispatchEvent el (js/CustomEvent. "other-event"))
+            (.dispatchEvent el (js/CustomEvent. "OtherEvent"))
+            (is (= [[:click "click"] [:my-event 42] [:other-event "OtherEvent"]]
+                   @events)))
 
-        (u/act (reset! state ["b" "c"]))
-        (is (= ["b" "c"] (js->clj (.-items (test-element div)))))))))
+          (u/act (reset! state ["b" "c"]))
+          (is (= ["b" "c"] (js->clj (.-items (test-element div))))))))))
 
 (u/deftest html-entities
   (testing "entity numbers can be unescaped always"
