@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [sitetools.core :as tools :refer [link]]
             [reagentdemo.intro :as intro]
-            [reagentdemo.news :as news]
+            [reagentdemo.news] ; registers the old release note pages
             [reagentdemo.docs :as docs])
   (:require-macros [reagentdemo.docs :refer [inline-file]]))
 
@@ -86,19 +86,14 @@
     [docs/search-box]
     [theme-toggle]]])
 
-(r/defc footer []
-  [:footer.site-footer
-   [:a {:href github} "GitHub"] " · "
-   [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] " · "
-   [:a {:href "https://clojurians.slack.com/messages/reagent/"} "#reagent on Clojurians Slack"] " · "
-   [link {:href news/url} "Old release notes"]])
-
 (defn demo []
   [error-boundary
    [:div.site
     [header]
     [:main [tools/main-content]]
-    [footer]
+    ;; Guide and API pages render the footer inside their content column.
+    (when-not (docs/docs-page? (docs/current-path))
+      [docs/site-footer])
     (when-let [c @test-component]
       [:div c])]])
 

@@ -63,10 +63,25 @@
           [:li {:class (str "toc-h" level)}
            [:a {:href (str "#" id)} text]])]])))
 
+(defn docs-page? [path]
+  (or (some-> path (string/starts-with? "/doc/"))
+      (some-> path (string/starts-with? "/api/"))))
+
+(r/defc site-footer []
+  [:footer.site-footer
+   [:a {:href "https://github.com/reagent-project/reagent"} "GitHub"] " · "
+   [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] " · "
+   [:a {:href "https://clojurians.slack.com/messages/reagent/"} "#reagent on Clojurians Slack"] " · "
+   [link {:href "/news/index.html"} "Old release notes"]])
+
 (r/defc docs-layout [{:keys [headings]} & content]
+  ;; The footer is inside the content column so the grid reaches the page
+  ;; bottom and the sticky sidebars are never pushed up by it.
   [:div.docs-layout
    [sidebar]
-   (into [:article.docs-content] content)
+   [:div.docs-main
+    (into [:article.docs-content] content)
+    [site-footer]]
    [toc headings]])
 
 (r/defc raw-html [tag props s]
