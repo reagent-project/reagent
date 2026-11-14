@@ -59,7 +59,11 @@
 (defn reactify-component
   "Returns an adapter for a Reagent component, that may be used from
   React, for example in JSX. A single argument, props, is passed to
-  the component, converted to a map."
+  the component, converted to a map.
+
+  With a compiler using `{:function-components true}` option, returns a
+  React function component, so the Reagent component can use React hooks.
+  Otherwise returns a class component."
   ([c] (reactify-component c tmpl/*current-default-compiler*))
   ([c compiler]
    (assert-some c "Component")

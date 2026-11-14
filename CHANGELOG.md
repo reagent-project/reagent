@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Fix `reactify-component` with a function components compiler
+  (`{:function-components true}`) returning a class component, which meant
+  React hooks couldn't be used in the component. It now returns a React
+  function component.
+  [#548](https://github.com/reagent-project/reagent/issues/548)
+    - Internal `reagent.impl.protocols/Compiler` protocol has a new
+      `reactify-component` method. Custom Compiler implementations need to
+      implement it.
+
 ## 2.0.1 (2025-11-04)
 
 **[compare](https://github.com/reagent-project/reagent/compare/v2.0.0...v2.0.1)**

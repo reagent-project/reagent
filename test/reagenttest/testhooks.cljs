@@ -233,3 +233,35 @@
           (is (= 3 @ran))
           (is (= 2 @memo-ran))
           (is (= "foo 2 7" (.-innerText div))))))))
+
+(deftest ^:dom reactify-component-function-components-test
+  (u/async
+    (reset! ran 0)
+    (let [set-count! (atom nil)
+          a (r/atom 0)
+          c (fn [{:keys [x children]}]
+              (let [[n set-n] (hooks/use-state x)]
+                (reset! set-count! set-n)
+                (swap! ran inc)
+                [:div "count " n " ratom " @a children]))
+          react-cmp (r/reactify-component c u/fn-compiler)]
+      (testing "reactify-component returns cached React function component"
+        (is (fn? react-cmp))
+        (is (identical? react-cmp (r/reactify-component c u/fn-compiler)))
+        (is (not (identical? react-cmp (r/reactify-component c u/class-compiler)))))
+
+      (u/with-render [div [:> react-cmp {:x 1} [:b " child"]]]
+        {:compiler u/fn-compiler}
+        (testing "props are converted to a map and children are included"
+          (is (= 1 @ran))
+          (is (= "count 1 ratom 0 child" (.-innerText div))))
+
+        (u/act (@set-count! 5))
+        (testing "hooks work"
+          (is (= 2 @ran))
+          (is (= "count 5 ratom 0 child" (.-innerText div))))
+
+        (u/act (swap! a inc))
+        (testing "ratom deref triggers re-render"
+          (is (= 3 @ran))
+          (is (= "count 5 ratom 1 child" (.-innerText div))))))))
