@@ -796,3 +796,46 @@ code, pre { font-family: var(--mono); }
     background: var(--bg-soft);
 }
 .api-var-list a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Dev-only test status from reagenttest.runtests */
+
+.test-output-mini {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-soft);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 13px;
+    color: var(--fg);
+}
+
+.test-output-mini::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--fg-muted);
+}
+
+.test-output-mini.ok::before { background: #2da44e; }
+.test-output-mini.failed::before { background: #cf222e; }
+.test-output-mini.failed { border-color: #cf222e; }
+
+.test-output-mini button {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--fg);
+    font: inherit;
+    cursor: pointer;
+}
+
+.test-output-mini button:hover { border-color: var(--accent); color: var(--accent); }

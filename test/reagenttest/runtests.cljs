@@ -19,20 +19,6 @@
 
 (def test-results (r/atom nil))
 
-(def test-box-style {:position "absolute"
-                     :top 5
-                     :width 170
-                     :right 5
-                     :border "1px solid #444"
-                     :padding "3px"
-                     :background-color "#A88"
-                     :color "#000"})
-
-(def btn-style {:color "#000"
-                :background "#CCC"
-                :padding "2px"
-                :cursor "pointer"})
-
 (defn all-tests []
   (test/run-all-tests #"(reagenttest\.test.*|reagent\..*-test)"))
 
@@ -50,29 +36,22 @@
     (all-tests)))
 
 (defn test-output-mini []
-  (let [res @test-results]
-    [:div
-     {:class "test-output-mini"
-      :style test-box-style}
-     (if res
-       (if (zero? (+ (:fail res) (:error res)))
-         "All tests ok"
-         (str "Test failure: "
-              (:fail res) " failures, " (:error res) " errors."))
-       "testing")
-     [:div
-      {:style {:display "flex"
-               :flex-direction "row"
-               :gap "3px"}}
-      [:button
-       {:on-click run-tests
-        :style btn-style}
-       "Run again"]
-      [:button
-       {:on-click (fn [_e]
-                    (reagenttest.performancetest/test-create-element))
-        :style btn-style}
-       "Perf test"]]]))
+  ;; Styled by .test-output-mini in site/public/css/site.css
+  (let [res @test-results
+        status (cond
+                 (nil? res) "running"
+                 (zero? (+ (:fail res) (:error res))) "ok"
+                 :else "failed")]
+    [:div {:class ["test-output-mini" status]}
+     [:span.test-output-status
+      (case status
+        "running" "Running tests…"
+        "ok" (str "All " (:test res) " tests ok")
+        (str "Tests: " (:fail res) " failures, " (:error res) " errors"))]
+     [:button {:on-click run-tests} "Run again"]
+     [:button {:on-click (fn [_e]
+                           (reagenttest.performancetest/test-create-element))}
+      "Perf test"]]))
 
 (defn init! []
   ;; This function is only used when running tests from the demo app.
