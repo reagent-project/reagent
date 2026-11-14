@@ -92,9 +92,9 @@
   "Run f to trigger Reagent updates, will return Promise which will resolve
   after Reagent and React render.
 
-  React.act doesn't seemn to work for Reagent use so just mock with 17ms
-  timeout... Hopefully that usually is enough time for React to flush the
-  queue?"
+  React.act doesn't seem to work for Reagent use, so wait for the Reagent
+  render queue (`r/after-render`) and then RENDER-WAIT ms for React to
+  commit and run effects."
   [f]
   (js/Promise.
    (fn [resolve reject]
@@ -111,9 +111,13 @@
         ;                        (r/flush)))
         ; (resolve)
        (f)
-       (js/setTimeout (fn []
-                        (resolve))
-                      RENDER-WAIT)
+       ;; Wait for the Reagent render queue to run, it runs on the next
+       ;; animation frame, which can be late on a busy CI machine. After
+       ;; that, give React a moment to commit and run effects.
+       (r/after-render (fn []
+                         (js/setTimeout (fn []
+                                          (resolve))
+                                        RENDER-WAIT)))
        (catch :default e
          ;; NOTE: errors from act body aren't logged currently
          (reject e))))))
