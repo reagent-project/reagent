@@ -364,6 +364,27 @@
         (is (= 1 @top-ran))
         (is (= 3 @ran))))))
 
+(deftest form-2-render-to-string
+  ;; https://github.com/reagent-project/reagent/issues/581
+  (let [comp (fn []
+               (r/create-class {:reagent-render (fn [] [:span "x"])}))
+        form-2 (fn [a]
+                 (fn [a]
+                   [:span a]))]
+    (testing "class compiler"
+      (is (= "<span>x</span>" (server/render-to-string [comp])))
+      (is (= "<span>y</span>" (server/render-to-string [form-2 "y"]))))
+    (testing "function components compiler"
+      (is (= "<span>x</span>" (server/render-to-string [comp] u/fn-compiler)))
+      (is (= "<span>y</span>" (server/render-to-string [form-2 "y"] u/fn-compiler))))
+    (testing "function components compiler as default compiler"
+      (let [prev tmpl/*current-default-compiler*]
+        (try
+          (r/set-default-compiler! u/fn-compiler)
+          (is (= "<span>x</span>" (server/render-to-string [comp])))
+          (finally
+            (r/set-default-compiler! prev)))))))
+
 (u/deftest test-create-element
   (let [ae r/as-element
         ce r/create-element
