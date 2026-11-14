@@ -595,7 +595,25 @@
 
   (testing "falsey values are filtered from collections"
     (is (= (as-string [:p {:class "a b"}])
-           (as-string [:p {:class [:a :b false nil]}])))))
+           (as-string [:p {:class [:a :b false nil]}]))))
+
+  (testing "nested collections are flattened"
+    (is (= (as-string [:p {:class "a b c"}])
+           (as-string [:p {:class [:a [nil "b" [:c]]]}])))
+    (is (= (as-string [:p {:class "x a b"}])
+           (as-string [:p.x {:class [[:a] '("b")]}])))))
+
+(defn class-parent [{:keys [class]}]
+  [:span {:class (r/class-names :child class)}])
+
+(defn class-grandparent [{:keys [class]}]
+  [class-parent {:class [:parent class]}])
+
+(u/deftest class-passed-down-components
+  ;; https://github.com/reagent-project/reagent/issues/601
+  ;; class-parent receives a nested collection: [:parent [:grandparent :x]]
+  (is (= "<span class=\"child parent grandparent x\"></span>"
+         (as-string [class-grandparent {:class [:grandparent :x]}]))))
 
 ;; Class component only
 (deftest ^:dom test-force-update

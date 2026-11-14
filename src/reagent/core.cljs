@@ -186,7 +186,13 @@
   Reagent allows classes to be defined as:
   - Strings
   - Named objects (Symbols or Keywords)
-  - Collections of previous types"
+  - Collections of previous types, including nested collections
+  - nil values, which are ignored
+
+  ```cljs
+  (class-names :a [\"b\" nil [:c [:d]]])
+  ;; => \"a b c d\"
+  ```"
   ([])
   ([class] (util/class-names class))
   ([class1 class2] (util/class-names class1 class2))

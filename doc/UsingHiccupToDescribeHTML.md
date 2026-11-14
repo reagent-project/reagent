@@ -86,6 +86,18 @@ As of reagent 0.8.0, the `class` attribute accepts a collection of classes and w
 [:div {:class ["a-class" (when active? "active") "b-class"]}]
 ```
 
+To combine class values, for example when a component adds its own classes
+to the props it receives, use `r/merge-props` or `r/class-names`. Nested
+collections are flattened:
+
+```clojure
+(defn button [props label]
+  [:button (r/merge-props {:class "btn"} props) label])
+
+[button {:class ["primary" (when large? ["large" "bold"])]} "OK"]
+;; => <button class="btn primary large bold">OK</button>
+```
+
 ## Special notation for id and class
 
 The id of an element can be indicated with a hash (`#`) after the name of the element.
