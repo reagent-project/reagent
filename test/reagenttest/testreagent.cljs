@@ -1212,53 +1212,58 @@
   (.querySelector div "reagent-test-element"))
 
 (u/deftest ^:dom custom-element-dom
-  ;; React 18 sets all custom element props as attributes and doesn't
-  ;; add listeners for custom events, only test React 19 behavior.
-  (when-not u/OLD-REACT
-    (define-test-element!)
-    (let [events (atom [])
-          state (r/atom ["a"])
-          comp (fn []
-                 [:reagent-test-element
-                  {:class ["x" "y"]
-                   ;; Element has this property: set as a JS property
-                   :items @state
-                   ;; No such property: set as an attribute
-                   "my-attr" "a"
-                   :my-attr "b"
-                   :flag true
-                   :other-flag false
-                   ;; Known React event: React synthetic event
-                   :on-click (fn [e] (swap! events conj [:click (.-type e)]))
-                   ;; Other on* function props: addEventListener, event name
-                   ;; is the rest of the prop name as is
-                   "onmy-event" (fn [e] (swap! events conj [:my-event (.-detail e)]))
-                   :on-other-event (fn [e] (swap! events conj [:other-event (.-type e)]))}])]
-      (u/async
-        (u/with-render [div [comp]]
-          (let [el (test-element div)]
-            (is (= "x y" (.getAttribute el "class")))
+  (define-test-element!)
+  (let [;; React 18 sets all custom element props as attributes and
+        ;; doesn't add listeners for custom events.
+        react-19? (not u/OLD-REACT)
+        events (atom [])
+        state (r/atom ["a"])
+        comp (fn []
+               [:reagent-test-element
+                {:class ["x" "y"]
+                 ;; Element has this property: set as a JS property
+                 :items @state
+                 ;; No such property: set as an attribute
+                 "my-attr" "a"
+                 :my-attr "b"
+                 :flag true
+                 :other-flag false
+                 ;; Known React event: React synthetic event
+                 :on-click (fn [e] (swap! events conj [:click (.-type e)]))
+                 ;; Other on* function props: addEventListener, event name
+                 ;; is the rest of the prop name as is
+                 "onmy-event" (fn [e] (swap! events conj [:my-event (.-detail e)]))
+                 :on-other-event (fn [e] (swap! events conj [:other-event (.-type e)]))}])]
+    (u/async
+      (u/with-render [div [comp]]
+        (let [el (test-element div)]
+          (is (= "x y" (.getAttribute el "class")))
 
+          (is (= "a" (.getAttribute el "my-attr")))
+          ;; :my-attr => myAttr, HTML attribute names are case-insensitive
+          (is (= "b" (.getAttribute el "myattr")))
+
+          (.click el)
+          (is (= [[:click "click"]] @events))
+
+          (when react-19?
             (is (array? (.-items el)))
             (is (= ["a"] (js->clj (.-items el))))
             (is (not (.hasAttribute el "items")))
 
-            (is (= "a" (.getAttribute el "my-attr")))
-            ;; :my-attr => myAttr, HTML attribute names are case-insensitive
-            (is (= "b" (.getAttribute el "myattr")))
-
             (is (= "" (.getAttribute el "flag")))
             (is (not (.hasAttribute el "otherflag")))
 
-            (.click el)
+            (reset! events [])
             (.dispatchEvent el (js/CustomEvent. "my-event" #js {:detail 42}))
             ;; :on-other-event => onOtherEvent => listens to "OtherEvent"
             (.dispatchEvent el (js/CustomEvent. "other-event"))
             (.dispatchEvent el (js/CustomEvent. "OtherEvent"))
-            (is (= [[:click "click"] [:my-event 42] [:other-event "OtherEvent"]]
-                   @events)))
+            (is (= [[:my-event 42] [:other-event "OtherEvent"]]
+                   @events))))
 
-          (u/act (reset! state ["b" "c"]))
+        (u/act (reset! state ["b" "c"]))
+        (when react-19?
           (is (= ["b" "c"] (js->clj (.-items (test-element div))))))))))
 
 (u/deftest html-entities
