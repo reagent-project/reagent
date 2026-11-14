@@ -1,0 +1,133 @@
+(ns reagentdemo.docs
+  "Compile-time loading of doc/*.md and API docstrings for the site."
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [clojure.string :as string]
+            [clojure.tools.reader :as reader]
+            [clojure.tools.reader.reader-types :as rt]
+            [sitetools.markdown :as md]))
+
+;;; Guides from doc/, navigation from doc/cljdoc.edn
+
+(defn doc-path [file]
+  (if (= "doc/README.md" file)
+    "doc/index.html"
+    (string/replace file #"\.md$" ".html")))
+
+(defn nav-tree
+  "cljdoc.edn tree -> [{:title :file :path :children}]"
+  [entries]
+  (vec (for [[title {:keys [file]} & children] entries]
+         (cond-> {:title title}
+           file (assoc :file file :path (doc-path file))
+           (seq children) (assoc :children (nav-tree children))))))
+
+(defn flatten-nav [tree]
+  (mapcat (fn [n] (cons n (flatten-nav (:children n)))) tree))
+
+(defmacro doc-site
+  "Returns {:nav [...] :pages [{:path :title :file :html :headings}]}."
+  []
+  (let [tree (-> "doc/cljdoc.edn" slurp edn/read-string :cljdoc.doc/tree nav-tree)
+        pages (for [{:keys [file path title]} (flatten-nav tree)
+                    :when file]
+                (-> (md/render (slurp file) (.getParent (io/file file)))
+                    ;; Search text is derived from the html at runtime
+                    (dissoc :text)
+                    (assoc :path path :title title :file file)))]
+    {:nav tree
+     :pages (vec pages)}))
+
+;;; API docs from source files
+
+(def api-namespaces
+  [["reagent.core" ["src/reagent/core.cljs" "src/reagent/core.clj"]]
+   ["reagent.dom.client" ["src/reagent/dom/client.cljs"]]
+   ["reagent.dom" ["src/reagent/dom.cljs"]]
+   ["reagent.dom.server" ["src/reagent/dom/server.cljs"]]
+   ["reagent.ratom" ["src/reagent/ratom.cljs" "src/reagent/ratom.clj"]]
+   ["reagent.hooks" ["src/reagent/hooks.cljs"]]])
+
+(defn read-forms [file]
+  (let [rdr (rt/indexing-push-back-reader (slurp file) 1 file)
+        eof (Object.)]
+    (binding [reader/*data-readers* {}
+              reader/*default-data-reader-fn* (fn [_tag v] v)
+              reader/*alias-map* (fn [sym] sym)
+              *ns* (create-ns 'reagentdemo.docs.reading)]
+      (loop [acc []]
+        (let [form (reader/read {:eof eof :read-cond :allow :features #{:cljs}} rdr)]
+          (if (identical? eof form)
+            acc
+            (recur (conj acc form))))))))
+
+(defn unindent
+  "Docstrings indent continuation lines; remove the common indentation so
+  Markdown doesn't treat them as code blocks."
+  [s]
+  (let [[first-line & more] (string/split-lines s)
+        indent (->> more
+                    (remove string/blank?)
+                    (map #(count (re-find #"^ *" %)))
+                    (reduce min 0x7fffffff))
+        indent (if (= 0x7fffffff indent) 0 indent)]
+    (string/join "\n" (cons first-line (map #(if (string/blank? %) "" (subs % indent)) more)))))
+
+(def def-types
+  '{defn :function, defmacro :macro, def :var, defonce :var, defprotocol :protocol
+    defc :macro})
+
+(defn var-info [form]
+  (when (and (seq? form) (contains? '#{defn defmacro def defonce defprotocol} (first form)))
+    (let [[op sym & more] form
+          m (meta sym)
+          [doc more] (if (string? (first more)) [(first more) (rest more)] [nil more])
+          [attr more] (if (map? (first more)) [(first more) (rest more)] [nil more])
+          m (merge m attr)
+          arglists (or (some-> (:arglists m) (as-> a (if (and (seq? a) (= 'quote (first a))) (second a) a)))
+                       (case op
+                         (defn defmacro) (if (vector? (first more))
+                                           (list (first more))
+                                           (map first (filter seq? more)))
+                         nil))
+          doc (or doc (:doc m))]
+      (when-not (or (:private m) (:no-doc m) (= op 'defn-))
+        (cond-> {:name (str sym)
+                 :type (def-types op)
+                 :arglists (mapv pr-str arglists)
+                 :line (:line (meta form))}
+          doc (assoc :doc-html (:html (md/render (unindent doc))))
+          (:deprecated m) (assoc :deprecated (str (:deprecated m))))))))
+
+(defn ns-doc [forms]
+  (let [[op _ & more] (first forms)]
+    (when (and (= 'ns op) (string? (first more)))
+      (first more))))
+
+(defmacro api-docs
+  "Returns [{:ns :doc-html :vars [...]}] for the public namespaces."
+  []
+  (vec (for [[ns-name files] api-namespaces]
+         (let [forms (map read-forms files)
+               doc (some ns-doc forms)
+               vars (->> (map (fn [file forms]
+                                (keep #(some-> (var-info %) (assoc :file file)) forms))
+                              files forms)
+                         (apply concat)
+                         (group-by :name)
+                         ;; cljs fn and clj macro can share a name, prefer the macro
+                         (map (fn [[_ vs]] (or (first (filter #(= :macro (:type %)) vs)) (first vs))))
+                         (sort-by :name)
+                         vec)]
+           (cond-> {:ns ns-name :vars vars}
+             doc (assoc :doc-html (:html (md/render (unindent doc)))))))))
+
+(defmacro inline-file
+  "File contents as a string, at compile time."
+  [file]
+  (slurp file))
+
+(defmacro project-version
+  "Version from project.clj."
+  []
+  (-> "project.clj" slurp read-string (nth 2)))

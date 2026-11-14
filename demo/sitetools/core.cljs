@@ -44,14 +44,34 @@
                     ps (:pages state)
                     p (get ps path (get ps "/index.html"))]
                 (recur state [:set-content p]))
-    :goto-page (let [path x
-                     _ (assert (string? path))]
+    :goto-page (let [_ (assert (string? x))
+                     [path anchor] (string/split x #"#" 2)]
                  (when-some [h history]
                    (r/after-render (fn []
-                                     (.setToken h x)
-                                     (js/scrollTo 0 0)))
-                   state)
-                 (recur state [:set-page x]))))
+                                     (.setToken h path)
+                                     (if-some [el (and anchor (js/document.getElementById anchor))]
+                                       (.scrollIntoView el)
+                                       (js/scrollTo 0 0)))))
+                 (recur state [:set-page path]))))
+
+(declare emit)
+
+(defn goto-page
+  "Navigate to a site page, path like \"/doc/index.html#anchor\"."
+  [path]
+  (emit [:goto-page path]))
+
+(defn internal-link-handler
+  "on-click handler for a container of plain HTML (e.g. rendered markdown):
+  navigates relative .html links within the site without a page load."
+  [^js e]
+  (when-some [a (.closest (.-target e) "a")]
+    (let [href (.getAttribute a "href")]
+      (when (and href
+                 (not (.-metaKey e)) (not (.-ctrlKey e))
+                 (re-find #"^[^:/#]+.*\.html(#.*)?$" href))
+        (.preventDefault e)
+        (goto-page (str "/" href))))))
 
 (defn emit [event]
   ;; (dbg event)
@@ -61,7 +81,7 @@
   {:pre [(re-matches #"/.*[.]html" url)
          (vector? comp)]}
   (swap! config update-in [:pages]
-         assoc url {:content comp :title title}))
+         assoc url {:content comp :title title :path url}))
 
 ;;; History
 
@@ -96,12 +116,12 @@
 
 ;;; Components
 
-(defn link [props child]
-  [:a (assoc props
-             :href (-> props :href to-relative)
-             :on-click #(do (.preventDefault %)
-                            (emit [:goto-page (:href props)])))
-   child])
+(defn link [props & children]
+  (into [:a (assoc props
+                   :href (-> props :href to-relative)
+                   :on-click #(do (.preventDefault %)
+                                  (emit [:goto-page (:href props)])))]
+        children))
 
 (defn main-content []
   (get-in @config [:current-page :content]))

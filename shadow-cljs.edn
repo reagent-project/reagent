@@ -20,4 +20,8 @@
               :main sitetools.prerender/-main
               :output-to "target/shadow-cljs-prerender/main.js"}}
  :dependencies [[doo "0.1.11"]
-                [funcool/promesa "11.0.678"]]}
+                [funcool/promesa "11.0.678"]
+                ;; Site: render doc/*.md and docstrings at compile time
+                [org.commonmark/commonmark "0.24.0"]
+                [org.commonmark/commonmark-ext-gfm-tables "0.24.0"]
+                [org.commonmark/commonmark-ext-autolink "0.24.0"]]}

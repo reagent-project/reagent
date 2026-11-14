@@ -13,7 +13,8 @@
                     ["Reagent Compiler" {:file "doc/ReagentCompiler.md"}]
                     ["Controlled Inputs" {:file "doc/ControlledInputs.md"}]
                     ["React Renderers" {:file "doc/ReactRenderers.md"}]
-                    ["Server Side Rendering" {:file "doc/ServerSideRendering.md"}]]
+                    ["Server Side Rendering" {:file "doc/ServerSideRendering.md"}]
+                    ["React 19 and Reagent" {:file "doc/React19.md"}]]
                    ["Frequently Asked Questions" {}
                     ["Why isn't my Component re-rendering?" {:file "doc/FAQ/ComponentNotRerendering.md"}]
                     ["How do I use React's \"refs\"" {:file "doc/FAQ/UsingRefs.md"}]
@@ -24,7 +25,10 @@
                     ["How do I force Component re-creation?" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
                     ["Using HTML entities" {:file "doc/FAQ/HtmlEntities.md"}]]
                    ["Examples" {}
-                    ["Material-UI v1" {:file "doc/examples/material-ui.md"}]]
+                    ["Material-UI v1" {:file "doc/examples/material-ui.md"}]
+                    ["Smooth UI" {:file "doc/examples/smooth-ui.md"}]]
                    ["Other" {}
+                    ["Reagent 2.0 upgrade guide" {:file "doc/2.0-upgrade.md"}]
+                    ["Reagent 1 and React 18" {:file "doc/reagent1.md"}]
                     ["0.8 Upgrade guide" {:file "doc/0.8-upgrade.md"}]
                     ["Development guide" {:file "doc/development.md"}]]]}
