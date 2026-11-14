@@ -105,6 +105,7 @@
 
 (defn- pr-atom [a writer opts s v]
   (-write writer (str "#object[reagent.ratom." s " "))
+  #_{:clj-kondo/ignore [:private-call]}
   (pr-writer (binding [*ratom-context* nil] v) writer opts)
   (-write writer "]"))
 

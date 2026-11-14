@@ -73,7 +73,7 @@ are resolved).
 clj-kondo --lint src test
 ```
 
-master already has a few findings; only care about new ones in files you touched.
+Should report no findings; keep it that way.
 
 ## Conventions
 

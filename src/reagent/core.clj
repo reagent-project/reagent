@@ -58,6 +58,7 @@
        (js/Object.defineProperty ~fname "name" (cljs.core/js-obj "value" ~(str sym) "writable" false)))))
 
 (comment
+  (require '[clojure.pprint] '[clojure.walk])
   (clojure.pprint/pprint (macroexpand-1 '(defc foobar [a b] (+ a b))))
   (clojure.pprint/pprint (macroexpand-1 '(defc foobar "docstring" ([a] (foobar a nil)) ([a b] (+ a b)))))
   (clojure.pprint/pprint (clojure.walk/macroexpand-all '(defc foobar [a b] (+ a b)))))

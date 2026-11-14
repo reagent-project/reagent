@@ -17,7 +17,7 @@
 (t/use-fixtures :once fixture)
 
 (defn running []
-  (r/flush)
+  (flush)
   (rv/running))
 
 (deftest basic-with-let

@@ -77,7 +77,7 @@
 (defn init! []
   ;; This function is only used when running tests from the demo app.
   ;; Which is why exit-point is set manually.
-  (when (some? (test/deftest empty-test))
+  (when (some? #_{:clj-kondo/ignore [:inline-def]} (test/deftest empty-test))
     (doo/set-exit-point! (fn [success?] nil))
     (run-tests)
     [#'test-output-mini]))

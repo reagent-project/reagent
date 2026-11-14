@@ -522,13 +522,12 @@
 
 (u/deftest ^:dom test-keys
   (u/async
-    (let [a nil ;; (r/atom "a")
-          c (fn key-tester []
+    (let [c (fn key-tester []
               [:div
                (for [i (range 3)]
-                 ^{:key i} [:p i (some-> a deref)])
+                 ^{:key i} [:p i])
                (for [i (range 3)]
-                 [:p {:key i} i (some-> a deref)])])]
+                 [:p {:key i} i])])]
       (u/with-render [_div [c]]
         {:capture-errors true}
         (is (empty? (:warn @reagent.debug/warnings)))))
@@ -1511,7 +1510,7 @@
 
 (deftest ^:dom functional-strict-transitive
   (let [cnt (r/atom 2)
-        numbers (rv/reaction (vec (range @cnt)))
+        numbers (reaction (vec (range @cnt)))
         num-c (fn [i]
                 (let [x (get @numbers i)]
                   [:span x]))
