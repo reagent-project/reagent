@@ -207,8 +207,11 @@
 (r/defc api-index-page []
   [docs-layout {}
    [:h1 "API reference"]
-   [:p "Generated from the docstrings in the Reagent source. "
-    "Docs for released versions are also on "
+   [:p "Generated from the docstrings in the current Reagent source. "
+    "API docs for each released version are on "
+    ;; Codox output deployed by build-docs.sh; no .html so the site's link
+    ;; handler leaves it to the browser.
+    [:a {:href "docs/"} "the versioned API docs"] " and on "
     [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] "."]
    (for [{ns-name :ns :keys [vars doc-html]} api]
      ^{:key ns-name}
