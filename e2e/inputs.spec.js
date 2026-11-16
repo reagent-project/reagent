@@ -84,10 +84,18 @@ test.describe('IME composition (#587)', () => {
   ];
   const word = syllables.map((s) => s.commit).join('');
 
-  async function composeKorean(page, id) {
+  // Chinese pinyin IME: the composition shows the latin letters, then the
+  // chosen characters are committed.
+  const pinyin = [
+    { compose: ['n', 'ni', 'ni h', 'ni ha', 'ni hao'], commit: '你好' },
+    { compose: ['s', 'sh', 'shi', 'shi j', 'shi ji', 'shi jie'], commit: '世界' },
+  ];
+  const chineseWord = pinyin.map((s) => s.commit).join('');
+
+  async function compose(page, id, steps) {
     const cdp = await page.context().newCDPSession(page);
     await page.getByTestId(id).focus();
-    for (const { compose, commit } of syllables) {
+    for (const { compose, commit } of steps) {
       for (const text of compose) {
         await cdp.send('Input.imeSetComposition', {
           text, selectionStart: text.length, selectionEnd: text.length,
@@ -99,19 +107,19 @@ test.describe('IME composition (#587)', () => {
     }
   }
 
-  for (const id of ['ime-sync', 'textarea-sync']) {
-    test(`sync state, ${id}`, async ({ page }) => {
-      await composeKorean(page, id);
+  // Before #676 was fixed, renders with lagging state wrote node.value during
+  // composition, e.g. "ㄹ리리에에이이ㅈ전전ㅌ트" and
+  // "ni hao你好shshishi jishi jie世界".
+  for (const id of ['ime-sync', 'textarea-sync', 'ime-async']) {
+    test(`Korean, ${id}`, async ({ page }) => {
+      await compose(page, id, syllables);
       await expectValue(page, id, word);
     });
+    test(`Chinese pinyin, ${id}`, async ({ page }) => {
+      await compose(page, id, pinyin);
+      await expectValue(page, id, chineseWord);
+    });
   }
-
-  // Before #676 was fixed, renders with lagging state wrote node.value during
-  // composition, e.g. "ㄹ리리에에이이ㅈ전전ㅌ트".
-  test('async state, ime-async', async ({ page }) => {
-    await composeKorean(page, 'ime-async');
-    await expectValue(page, 'ime-async', word);
-  });
 });
 
 // #595: when the text overflows a narrow input, the caret (end of text) must

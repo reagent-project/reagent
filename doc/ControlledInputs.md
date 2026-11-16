@@ -28,10 +28,23 @@ the older values back to the input. If `:on-change` keeps the value unchanged
 (rejects the change), Reagent restores the rendered value after a short delay,
 so that async state has time to update first.
 
-If `:on-change` transforms the value (e.g. upper-cases it) and updates the state
-asynchronously, fast typing can still lose keys: Reagent can't tell the
-transformed value apart from a new value set by the application. Update the
-state synchronously in this case, e.g. with re-frame `dispatch-sync`.
+## Known issues
+
+- If `:on-change` transforms the value (e.g. upper-cases it) and updates the
+  state asynchronously, fast typing can lose keys: Reagent can't tell the
+  transformed value apart from a new value set by the application. Update the
+  state synchronously in this case, e.g. with re-frame `dispatch-sync`.
+- If `:on-change` rejects a change, the rejected text stays visible until the
+  check described above. Keys typed very quickly after it (tens of
+  milliseconds) can be lost when the value is restored.
+- `email` and `number` inputs don't have the Selection API, so Reagent can't
+  restore the cursor when it writes a different value to them. If
+  `:on-change` changes the typed value of such an input, the cursor moves to
+  the end. Typing with the value stored as-is works.
+- When `:on-change` changes the value of a text input that is too narrow for
+  its text, Chrome can leave the cursor and the last character just outside
+  the visible area after Reagent writes the value
+  ([#595](https://github.com/reagent-project/reagent/issues/595)).
 
 For JS libraries, usually the best solution is if the library provides an option to
 use custom component to create the input element, which enables
