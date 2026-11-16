@@ -122,7 +122,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - `r/flush` flushes the render queue (`core.cljs:211-217`). Reaction queues are flushed by `reagent.ratom/flush!` (`ratom.cljs:507`).
   - Fix: name the correct function.
 - **[medium] WIP markers.**
-  - Where: `doc/ManagingState.md:5,107,207,210,226` contain "TODO" notes, and `doc/README.md:7` still has the "[WIP]" title.
+  - Where: `doc/ManagingState.md:5,107,207,210,226` contain "TODO" notes, and `doc/README.md:13` still has the "[WIP]" title.
   - Fix: resolve them or move them to an issue.
 - **[low] Example bugs in ManagingState.md.**
   - `:150` refers to `app-state`, but the example's atom is `state`.
@@ -206,24 +206,24 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - Readers on GitHub/cljdoc landing on README won't find the React 19 or 2.0 upgrade docs.
   - Fix: list everything that cljdoc.edn lists, or make README a short intro that points at the nav.
 - **[medium] Broken numbering in README.**
-  - Where: `doc/README.md:10-13` (four items numbered "8."), and `:32-39` (FAQ numbered 1,1,2,3,4,5,5,5,6).
+  - Where: `doc/README.md:16-20` (five items numbered "8."), and `:38-46` (FAQ numbered 1,1,2,3,4,5,5,5,6).
   - Fix: use unnumbered lists.
 - **[medium] Contribution note names only README.**
-  - Where: `doc/README.md:46-50` ("Want To Add An FAQ?") says to update only this README. The site nav comes from `cljdoc.edn`.
+  - Where: `doc/README.md:52-56` ("Want To Add An FAQ?") says to update only this README. The site nav comes from `cljdoc.edn`.
   - Fix: say both files must be updated.
 - **[low] Item listed only in README.**
-  - The external FAQ "How do I access props in lifecycle methods?" (`README.md:40`) and the "Commercial Videos" section exist only in README. purelyfunctional.tv is listed twice (`:16`, `:27`).
+  - The external FAQ "How do I access props in lifecycle methods?" (`README.md:46`) and the "Commercial Videos" section exist only in README. purelyfunctional.tv is listed twice (`:23`, `:33`).
 - **[low] Titles differ between files and indexes.** The sidebar titles in `cljdoc.edn` were shortened on 2026-11-14 and the README still uses the old ones:
   - `reagent1.md` H1 "Reagent 1" vs "Reagent 1 and React 18";
   - `ManagingState.md` H1 lacks "[WIP]" while README still has it;
-  - `README.md:44` "MaterialUI with working TextField" vs cljdoc "Material-UI v1" at HEAD.
+  - `README.md:50` "MaterialUI with working TextField" vs cljdoc "Material-UI v1" at HEAD.
 
 ## 8. Style and terminology
 
 - **[low] Some docs have no H1.**
   - `doc/CreatingReagentComponents.md:1-8` starts with a blank line and body text, then `#####` sub-headings (`:8,15`).
   - `doc/UsingSquareBracketsInsteadOfParens.md:1` and `doc/WhenDoComponentsUpdate.md:1` start with body text.
-  - `doc/README.md:1` starts at `##`.
+  - `doc/README.md:1` starts at `##` (no H1).
   - Fix: give every page a single H1 that matches its index title.
 - **[medium] "Ratom" spelling varies.** It appears as "ratom", "RAtom" and "Ratom" (e.g. `ReactFeatures.md:157,171`, `ReagentCompiler.md:26,41`, `React19.md:27,50`). Open: decide which spelling to use, then apply it everywhere (docs and docstrings).
 - **[low] First-person, uncertain tone.**
@@ -244,3 +244,4 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-16: new `WhatsNew2.md` (from the 2.0.0/2.0.1 changelog); "Reagent 2" nav section with it and the upgrade guide, also at the top of `README.md`.
 - 2026-11-16: `WhatsNew2.md` and `2.0-upgrade.md` marked reviewed.
 - 2026-11-16: `2.0-upgrade.md` installs React 19.3.1 (latest on npm, matches the tested 19.3).
+- 2026-11-16: broken links fixed: betweentwoparens "What the Reagent Component" (`CreatingReagentComponents.md`), and the Jacek Schae courses in `README.md`, which moved to clojure.stream (old coupon/affiliate links 404).
