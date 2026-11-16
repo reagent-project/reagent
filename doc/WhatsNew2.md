@@ -58,8 +58,10 @@ without the `:f>` shortcut:
 ```
 
 Ratoms work in `defc` components the same way as in other Reagent components.
-Unlike a component defined with `defn`, a `defc` component can't be called as
-a regular function.
+A `defc` component can't be called as a regular function, e.g.
+`(counter {:label "Clicks"})`; use it in Hiccup: `[counter {:label "Clicks"}]`.
+Calling `defn` components as functions usually isn't a good idea either, see
+[Square brackets vs parentheses](UsingSquareBracketsInsteadOfParens.md).
 
 ## `reagent.hooks`
 

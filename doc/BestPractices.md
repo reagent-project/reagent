@@ -13,8 +13,10 @@
   components and hooks, and when to use `:f>` or the function component
   compiler ([Creating Reagent Components](CreatingReagentComponents.md),
   [Reagent Compiler](ReagentCompiler.md), [React Features](ReactFeatures.md)).
-- **Calling components**: `[component args]` vs. `(component args)`
-  ([Square brackets vs parentheses](UsingSquareBracketsInsteadOfParens.md)).
+- **Calling components**: `[component args]` vs. `(component args)`, and why
+  `defc` components can only be used in Hiccup
+  ([Square brackets vs parentheses](UsingSquareBracketsInsteadOfParens.md),
+  [What's new in 2.0](WhatsNew2.md)).
 - **Where state lives**: app state in a few ratoms vs. local state in form-2
   components or `with-let`; cursors, reactions and `track`
   ([Managing State](ManagingState.md)).
