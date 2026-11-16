@@ -82,7 +82,8 @@
           (do (.preventDefault e)
               (goto-page (str (get-in @config [:current-page :path]) href)))
 
-          (re-find #"^[^:/#]+.*\.html(#.*)?$" href)
+          ;; Relative links only: no scheme (https:), no leading / or #.
+          (re-find #"^[^:/#][^:#]*\.html(#.*)?$" href)
           (do (.preventDefault e)
               (goto-page (str "/" href))))))))
 

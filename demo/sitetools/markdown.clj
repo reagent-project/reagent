@@ -4,7 +4,7 @@
             [sitetools.highlight :as hl])
   (:import [org.commonmark.ext.autolink AutolinkExtension]
            [org.commonmark.ext.gfm.tables TablesExtension]
-           [org.commonmark.node Code FencedCodeBlock HardLineBreak Heading IndentedCodeBlock Link Node Paragraph SoftLineBreak Text]
+           [org.commonmark.node Code FencedCodeBlock HardLineBreak Heading Image IndentedCodeBlock Link Node Paragraph SoftLineBreak Text]
            [org.commonmark.parser Parser]
            [org.commonmark.renderer NodeRenderer]
            [org.commonmark.renderer.html AttributeProvider AttributeProviderFactory HtmlNodeRendererContext HtmlNodeRendererFactory HtmlRenderer HtmlWriter]))
@@ -74,6 +74,17 @@
 
         :else (str github-blob full anchor)))))
 
+(def github-raw "https://raw.githubusercontent.com/reagent-project/reagent/master/")
+
+(defn rewrite-src
+  "Relative image paths point to the file in the repository, as the site
+  doesn't copy doc/ images."
+  [dir src]
+  (if (or (re-find #"^[a-z]+:" src)
+          (string/starts-with? src "/"))
+    src
+    (str github-raw (normalize-path (str dir "/" src)))))
+
 (def clojure-langs #{"clojure" "clj" "cljs" "cljc" "clojurescript" "edn"})
 
 (defn clojure-code?
@@ -114,7 +125,10 @@
                  (.put attrs "id" (slug (node-text node)))
 
                  (and dir (instance? Link node))
-                 (.put attrs "href" (rewrite-href dir (.getDestination ^Link node)))))))))
+                 (.put attrs "href" (rewrite-href dir (.getDestination ^Link node)))
+
+                 (and dir (instance? Image node))
+                 (.put attrs "src" (rewrite-src dir (.getDestination ^Image node)))))))))
       (.build)))
 
 (defn headings
