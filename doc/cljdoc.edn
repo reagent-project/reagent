@@ -1,6 +1,7 @@
 {:cljdoc.api/platforms #{"cljs"}
  :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
                    ["Security" {:file "doc/Security.md"}]
+                   ["Getting Started" {:file "doc/GettingStarted.md"}]
                    ["Tutorials" {}
                     ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
                     ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
