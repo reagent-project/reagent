@@ -125,24 +125,47 @@ test.describe('IME composition (#587)', () => {
 
 // #595: when the text overflows a narrow input, the caret (end of text) must
 // stay scrolled into view. Fails before #630 (see top of file).
+// Checked after every key: native typing keeps scrollLeft within 1px of the
+// maximum. Letters only, since keys that on-change doesn't change (e.g.
+// digits when upper-casing) let the browser scroll back into place.
 // https://github.com/reagent-project/reagent/issues/595
 test.describe('caret visible at the end of a full input (#595)', () => {
-  for (const id of ['narrow-sync', 'narrow-upper-sync']) {
-    test(id, async ({ page }) => {
-      const input = page.getByTestId(id);
-      await input.click();
-      const text = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      await page.keyboard.type(text);
-      await expectValue(page, id, id === 'narrow-upper-sync' ? text.toUpperCase() : text);
-      const m = await input.evaluate((el) => ({
-        scrollLeft: el.scrollLeft, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
-        selectionStart: el.selectionStart,
-      }));
-      expect(m.scrollWidth).toBeGreaterThan(m.clientWidth);
-      expect(m.selectionStart).toBe(text.length);
-      expect(m.scrollLeft).toBeGreaterThanOrEqual(m.scrollWidth - m.clientWidth - 2);
-    });
+  async function scrollGaps(page, id, transform) {
+    const input = page.getByTestId(id);
+    await input.click();
+    const text = 'abcdefghijklmnopqrstuvwxyz';
+    const gaps = [];
+    for (let i = 0; i < text.length; i++) {
+      await page.keyboard.press(text[i]);
+      await expect(input).toHaveValue(transform(text.slice(0, i + 1)));
+      const m = await input.evaluate((el) => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve({
+          gap: el.scrollWidth - el.clientWidth - el.scrollLeft,
+          overflow: el.scrollWidth > el.clientWidth,
+          caret: el.selectionStart,
+        }))),
+      ));
+      expect(m.caret).toBe(i + 1);
+      if (m.overflow) gaps.push(m.gap);
+    }
+    expect(gaps.length).toBeGreaterThan(5);
+    return gaps;
   }
+
+  test('narrow-sync', async ({ page }) => {
+    const gaps = await scrollGaps(page, 'narrow-sync', (s) => s);
+    expect(gaps.filter((g) => g > 1)).toEqual([]);
+  });
+
+  // Known failure: Reagent writes the upper-cased (wider) value and sets the
+  // selection, and Chrome then scrolls only until the caret position itself is
+  // inside the input, so the last character and the caret are cut off by
+  // 2-10px.
+  test('narrow-upper-sync', async ({ page }) => {
+    test.fail(true, 'https://github.com/reagent-project/reagent/issues/595');
+    const gaps = await scrollGaps(page, 'narrow-upper-sync', (s) => s.toUpperCase());
+    expect(gaps.filter((g) => g > 1)).toEqual([]);
+  });
 });
 
 // #676: on-change that updates state on a later tick (like re-frame dispatch).
