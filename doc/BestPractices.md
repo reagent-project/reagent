@@ -8,7 +8,7 @@
 
 - **Rendering entry point**: `reagent.dom.client/create-root` and `render`
   for React 18 and 19, instead of the legacy `reagent.dom/render`
-  ([React 19 and Reagent](React19.md), [Reagent 2.0 upgrade](2.0-upgrade.md)).
+  ([React 19 and Reagent](React19.md), [Upgrading to 2.0](2.0-upgrade.md)).
 - **Choosing a component style**: form-1/2/3 class components vs. function
   components and hooks, and when to use `:f>` or the function component
   compiler ([Creating Reagent Components](CreatingReagentComponents.md),

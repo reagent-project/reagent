@@ -32,8 +32,8 @@
                     ["Forcing re-creation" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
                     ["Broken after updating deps" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
                    ["Older versions" {}
-                    ["Reagent 1 and React 18" {:file "doc/reagent1.md"}]
-                    ["0.8 upgrade guide" {:file "doc/0.8-upgrade.md"}]]
+                    ["Upgrading to 1.2" {:file "doc/1.2-upgrade.md"}]
+                    ["Upgrading to 0.8" {:file "doc/0.8-upgrade.md"}]]
                    ["More" {}
                     ["Example: Material-UI" {:file "doc/examples/material-ui.md"}]
                     ["Example: Smooth UI" {:file "doc/examples/smooth-ui.md"}]
