@@ -46,9 +46,14 @@ so that async state has time to update first.
   the visible area after Reagent writes the value
   ([#595](https://github.com/reagent-project/reagent/issues/595)).
 
+## JS libraries
+
 For JS libraries, usually the best solution is if the library provides an option to
 use custom component to create the input element, which enables
 Reagent to create the input element:
+
+- [Material UI](./examples/material-ui.md)
+- [Smooth UI](./examples/smooth-ui.md)
 
 ## React-native
 
@@ -66,8 +71,3 @@ ReactNative has its own `TextInput` component. Similar workaround can't be (at l
 ```
 
 (Similar workaround can be also used with DOM inputs)
-
-## Examples
-
-- [Material UI](./examples/material-ui.md)
-- [Smooth UI](./examples/smooth-ui.md)
