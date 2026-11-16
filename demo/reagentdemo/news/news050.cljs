@@ -1,7 +1,7 @@
 (ns reagentdemo.news.news050
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "/news/news050.html")
@@ -327,4 +327,3 @@
        [:p new-in-alpha "All the examples in the Reagent repo now uses
        figwheel."]])]])
 
-(tools/register-page url [#'main] title)

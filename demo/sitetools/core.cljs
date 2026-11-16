@@ -18,8 +18,8 @@
   (delay (rdomc/create-root (js/document.getElementById "main-content"))))
 
 (defonce config (r/atom {:body [#'main-content]
-                         :pages {"/index.html" {:content [:div]
-                                                :title ""}}
+                         :pages {"/" {:content [:div]
+                                      :title ""}}
                          :site-dir "target/prerender/public/"
                          :css-infiles ["site/public/css/main.css"]
                          :css-file "css/built.css"
@@ -28,6 +28,13 @@
                          :default-title ""}))
 
 (defonce history nil)
+
+(defn page-path
+  "Site page paths are like \"/doc/Security.html\", or end in / for index
+  pages (written as index.html): \"/\", \"/doc/\". Old links with an
+  explicit index.html map to the directory."
+  [path]
+  (string/replace path #"(^|/)index\.html$" "$1"))
 
 (defn demo-handler [state [id x :as event]]
   (case id
@@ -39,10 +46,9 @@
                    (when r/is-client
                      (set! js/document.title title))
                    (assoc state :current-page page :title title))
-    :set-page (let [path x
-                    _ (assert (string? path))
+    :set-page (let [path (page-path x)
                     ps (:pages state)
-                    p (get ps path (get ps "/index.html"))]
+                    p (get ps path (get ps "/"))]
                 (recur state [:set-content p]))
     :goto-page (let [_ (assert (string? x))
                      [path anchor] (string/split x #"#" 2)]
@@ -62,13 +68,13 @@
 (declare emit)
 
 (defn goto-page
-  "Navigate to a site page, path like \"/doc/index.html#anchor\"."
+  "Navigate to a site page, path like \"/doc/#anchor\"."
   [path]
   (emit [:goto-page path]))
 
 (defn internal-link-handler
   "on-click handler for a container of plain links (e.g. rendered markdown):
-  navigates relative .html links within the site without a page load, and
+  navigates relative links to site pages without a page load, and
   handles same-page #anchor links (which would otherwise clash with the
   hash history used in development)."
   [^js e]
@@ -82,8 +88,11 @@
           (do (.preventDefault e)
               (goto-page (str (get-in @config [:current-page :path]) href)))
 
-          ;; Relative links only: no scheme (https:), no leading / or #.
-          (re-find #"^[^:/#][^:#]*\.html(#.*)?$" href)
+          ;; Relative links to registered pages only: no scheme (https:),
+          ;; no leading /, and not e.g. docs/ (codox output, not a page).
+          (and (re-find #"^[^:/#][^:#]*(#.*)?$" href)
+               (contains? (:pages @config)
+                          (page-path (str "/" (first (string/split href #"#" 2))))))
           (do (.preventDefault e)
               (goto-page (str "/" href))))))))
 
@@ -92,29 +101,37 @@
   (r/rswap! config demo-handler event))
 
 (defn register-page [url comp title]
-  {:pre [(re-matches #"/.*[.]html" url)
+  {:pre [(re-matches #"/(.*[.]html|(.*/)?)" url)
+         (not (string/ends-with? url "/index.html"))
          (vector? comp)]}
   (swap! config update-in [:pages]
          assoc url {:content comp :title title :path url}))
 
 ;;; History
 
+(defn path-prefix
+  "The part of `pathname` before the site, when it shows site page `page`
+  (e.g. \"/reagent\" if the site is served from there)."
+  [pathname page]
+  (let [p (page-path pathname)]
+    (-> (if (string/ends-with? p page)
+          (subs p 0 (- (count p) (count page)))
+          p)
+        (string/replace #"/*$" ""))))
+
 (defn init-history [page]
   (if history
     ;; Hot reload: the page's registration was re-evaluated with its new
     ;; content (e.g. reagentdemo.docs re-reading doc/*.md), but
     ;; :current-page still holds the old one; look it up again.
-    (emit [:set-page (get-in @config [:current-page :path] "/index.html")])
+    (emit [:set-page (get-in @config [:current-page :path] "/")])
     (let [html5 (and page
                      (Html5History.isSupported)
                      (#{"http:" "https:"} js/location.protocol))
           h (if html5
               (doto (Html5History.)
                 (.setUseFragment false)
-                (.setPathPrefix (-> js/location.pathname
-                                    (string/replace
-                                     (re-pattern (str page "$")) "")
-                                    (string/replace #"/*$" ""))))
+                (.setPathPrefix (path-prefix js/location.pathname page)))
               (History.))]
       (set! history h)
       (evt/listen history EventType.NAVIGATE
@@ -127,10 +144,19 @@
             p (if (and page (not html5) (empty? token))
                 page
                 token)]
+        ;; e.g. /news/index.html -> /news/
+        (when (and html5 (not= token (page-path token)))
+          (.replaceToken history (page-path token)))
         (emit [:set-page p])))))
 
-(defn to-relative [f]
-  (string/replace f #"^/" ""))
+(defn to-relative
+  "Site path -> link relative to the site root (the <base> of prerendered
+  pages): \"/doc/\" -> \"doc/\", \"/\" -> \"./\"."
+  [f]
+  (let [f (string/replace f #"^/" "")]
+    (if (or (= "" f) (string/starts-with? f "#"))
+      (str "./" f)
+      f)))
 
 ;;; Components
 

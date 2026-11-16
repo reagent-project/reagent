@@ -1,6 +1,6 @@
 (ns reagentdemo.news.clockpost
   (:require [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [reagentdemo.news.binaryclock :as binaryclock]))
 
@@ -120,4 +120,3 @@
          description that corresponds to those arguments, and leave it
          to React to actually display that UI."]])]]))
 
-(tools/register-page url [#'main] title)

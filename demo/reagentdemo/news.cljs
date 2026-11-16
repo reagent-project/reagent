@@ -1,5 +1,8 @@
 (ns reagentdemo.news
-  (:require [reagentdemo.news.anyargs :as anyargs]
+  "Archive: articles from the earlier Reagent website, kept at their old
+  /news/ URLs."
+  (:require [reagent.core :as r]
+            [reagentdemo.news.anyargs :as anyargs]
             [reagentdemo.news.async :as async]
             [reagentdemo.news.undodemo :as undodemo]
             [reagentdemo.news.clockpost :as clock]
@@ -9,56 +12,49 @@
             [reagentdemo.news.news061 :as news061]
             [reagentdemo.news.news060rc :as news060rc]
             [reagentdemo.news.news060release :as news060r]
-            [sitetools.core :as tools]))
+            [reagentdemo.docs :as docs]
+            [sitetools.core :as tools :refer [link]]))
 
-(defn main []
-  [:div
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md"} "Check changelog for the latest releases"]]]
+(def url "/news/")
 
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md"} "Reagent 1.0.0-alpha"]]]
+(def articles
+  "Newest first, as on the old news page. The 0.6.0 post says 2016-06-09,
+  likely a typo: it came out after the 0.6.0-rc."
+  [{:url news061/url :title news061/title :date "2017-03-11" :main #'news061/main}
+   {:url news060r/url :title news060r/title :date "2016-06-09" :main #'news060r/main}
+   {:url news060rc/url :title news060rc/title :date "2016-09-14" :main #'news060rc/main}
+   {:url news060/url :title news060/title :date "2015-12-06" :main #'news060/main}
+   {:url news051/url :title news051/title :date "2015-09-09" :main #'news051/main}
+   {:url news050/url :title news050/title :date "2014-12-10" :main #'news050/main}
+   {:url clock/url :title clock/title :date "2014-02-26" :main #'clock/main}
+   {:url anyargs/url :title anyargs/title :date "2014-02-15" :main #'anyargs/main}
+   {:url async/url :title async/title :date "2014-01-30" :main #'async/main}
+   {:url undodemo/url :title undodemo/title :date "2014-01-19" :main #'undodemo/main}])
 
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#0100-2020-03-06"} "Reagent 0.10.0"]]
-    [:span "2020-03-06"]]
+(r/defc archive-index []
+  [:div.archive
+   [:h1 "Archive"]
+   [:p "Articles from the earlier Reagent website, kept for reference. They
+   describe Reagent as it was when they were written, and the code may use
+   APIs that have since changed. See the " [link {:href docs/guide-index} "guide"]
+    " for current documentation and the "
+    [:a {:href (str docs/github-blob "CHANGELOG.md")} "changelog"]
+    " for all releases."]
+   [:ul.archive-list
+    (for [{:keys [url title date]} articles]
+      ^{:key url}
+      [:li [:span.archive-date date] [link {:href url} title]])]])
 
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#091-2020-01-15"} "Reagent 0.9.1"]]
-    [:span "2020-01-15"]]
+(r/defc archived-article [{:keys [date]} main]
+  [:div.archive
+   [:p.archive-notice
+    [:strong "Archived article"] " from " date
+    ". Reagent has changed since; see the "
+    [link {:href docs/guide-index} "guide"] " for current documentation. "
+    [link {:href url} "All archived articles"]]
+   [main {}]])
 
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#081-2018-05-15"} "Reagent 0.8.1"]]
-    [:span "2018-05-15"]]
+(tools/register-page url [archive-index] "Archive")
 
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#080-2018-04-19"} "Reagent 0.8.0"]]
-    [:span "2018-04-19"]]
-
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#070-2017-06-27"} "Reagent 0.7.0"]]
-    [:span "2017-06-27"]]
-
-   [:div.reagent-demo
-    [:h1 [:a {:href "https://github.com/reagent-project/reagent/blob/master/CHANGELOG.md#062-2017-05-19"} "Reagent 0.6.2"]]
-    [:span "2017-05-19"]]
-
-   [news061/main {:summary true}]
-   [news060r/main {:summary true}]
-   [news060rc/main {:summary true}]
-   [news060/main {:summary true}]
-   [news051/main {:summary true}]
-   [news050/main {:summary true}]
-   [clock/main {:summary true}]
-   [anyargs/main {:summary true}]
-   [async/main {:summary true}]
-   [undodemo/main {:summary true}]
-   [:div.reagent-demo
-    [:h1 "Reagent 0.1.0"]
-    [:span "2014-01-10"]]
-   [:div.reagent-demo
-    [:h1 "Reagent 0.0.2"]
-    [:span "2013-12-17"]]])
-
-(def url "/news/index.html")
-(tools/register-page url [#'main] "News")
+(doseq [{:keys [url title main] :as article} articles]
+  (tools/register-page url [archived-article article main] title))

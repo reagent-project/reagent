@@ -1,6 +1,6 @@
 (ns reagentdemo.news.news061
   (:require [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]))
+            [sitetools.core :refer [link]]))
 
 (def url "/news/news061.html")
 (def title "Reagent 0.6.1")
@@ -25,4 +25,3 @@
    [:div
     [abstract]]])
 
-(tools/register-page url [#'main] title)

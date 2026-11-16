@@ -1,7 +1,7 @@
 (ns reagentdemo.news.news060
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "/news/news060-alpha.html")
@@ -424,4 +424,3 @@
         like " [:code "next-tick"] ", except that the function given is
         invoked immediately " [:b "after"] " the next rendering."]]])]])
 
-(tools/register-page url [#'main] title)
