@@ -4,6 +4,15 @@
 
 **[compare](https://github.com/reagent-project/reagent/compare/v2.0.1...master)**
 
+- Fix controlled inputs losing keys when `:on-change` updates the state on a
+  later tick, e.g. with re-frame `dispatch`: a render with state that lags
+  behind newer typed text no longer overwrites it. This also fixes IME
+  composition (e.g. Korean) with such inputs. The check that restores the
+  value when `:on-change` keeps it unchanged now runs after a `setTimeout`, so
+  the reverted text can stay visible a bit longer. Tests that type into an
+  input and check the reverted value right after `r/flush` need to wait for a
+  `setTimeout` first.
+  [#676](https://github.com/reagent-project/reagent/issues/676)
 - Tests are now running against React 19.3
   [#654](https://github.com/reagent-project/reagent/pull/654)
 - `class-names` and `merge-props` now flatten nested collections in class

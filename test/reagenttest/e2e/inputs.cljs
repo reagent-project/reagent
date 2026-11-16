@@ -14,10 +14,10 @@
   (js/setTimeout f 0))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? style]
-    :or {tag :input transform identity}}]
+  [{:keys [id tag type transform async? style accept?]
+    :or {tag :input transform identity accept? (constantly true)}}]
   (let [v (get @state id "")
-        update! (fn [x] (swap! state assoc id (transform x)))]
+        update! (fn [x] (when (accept? x) (swap! state assoc id (transform x))))]
     [:div {:style {:margin "8px 0"}}
      [:label {:for id :style {:display "inline-block" :width 160}} id]
      [tag {:id id
@@ -44,7 +44,10 @@
    {:id "narrow-upper-sync" :transform str/upper-case :style {:width "80px"}}
    {:id "ime-sync"}
    {:id "ime-async" :async? true}
-   {:id "text-async" :async? true}])
+   {:id "text-async" :async? true}
+   {:id "reject-sync" :accept? #(not (re-find #"[0-9]" %))}
+   {:id "reject-async" :async? true :accept? #(not (re-find #"[0-9]" %))}
+   {:id "upper-async" :async? true :transform str/upper-case}])
 
 (defn page []
   [:div
