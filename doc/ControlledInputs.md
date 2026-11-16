@@ -65,6 +65,14 @@ Then open http://127.0.0.1:8091.
 
 ## JS libraries
 
+If a JS component (e.g. a text field from a component library) renders the
+input element, Reagent only sees the component and the workaround isn't
+applied. Such a controlled input behaves badly even when `:on-change` updates
+a ratom synchronously: the cursor jumps to the end when typing in the middle,
+fast typing loses keys, and IME input (e.g. Korean or Chinese) doubles letters.
+The test page under [Trying it out](#trying-it-out) shows this, next to the
+same component with Reagent's input passed to it.
+
 For JS libraries, usually the best solution is if the library provides an option to
 use custom component to create the input element, which enables
 Reagent to create the input element:

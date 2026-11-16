@@ -260,3 +260,31 @@ test.describe('known issues', () => {
     await expectValue(page, 'upper-async', text.toUpperCase(), { timeout: 1000 });
   });
 });
+
+// Inputs rendered by a JS component (e.g. a component library): Reagent only
+// sees the component, so its controlled input workaround isn't applied, and
+// React's own controlled input moves the caret to the end after each key even
+// with synchronous state. The same input also loses keys when typing fast and
+// doubles IME letters ("ㄹ리링리에엥에이잊이저전전ㅌ트트" for 리에이전트,
+// exactly the #587 report). Passing Reagent's :input to the component (like
+// Material UI's inputComponent option) applies the workaround again.
+test.describe('input rendered by a JS component', () => {
+  async function typeMidText(page, id) {
+    await page.getByTestId(id).click();
+    await page.keyboard.type('abcdef', { delay: 100 });
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('xy', { delay: 100 });
+  }
+
+  test('js-reagent-text-sync', async ({ page }) => {
+    await typeMidText(page, 'js-reagent-text-sync');
+    await expectValue(page, 'js-reagent-text-sync', 'abcxydef');
+  });
+
+  // Known issue: "abcxdefy".
+  test('js-text-sync', async ({ page }) => {
+    test.fail(true, 'no controlled input workaround for inputs inside JS components');
+    await typeMidText(page, 'js-text-sync');
+    await expectValue(page, 'js-text-sync', 'abcxydef', { timeout: 1000 });
+  });
+});

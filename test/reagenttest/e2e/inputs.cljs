@@ -3,7 +3,8 @@
   labelled controlled input with a data-testid, and a <pre> showing the
   current state (data-testid \"<id>-state\"). The :note and :known-issue
   texts are for trying the inputs by hand; the specs don't read them."
-  (:require [clojure.string :as str]
+  (:require ["react" :as react]
+            [clojure.string :as str]
             [reagent.core :as r]
             [reagent.dom.client :as rdomc]))
 
@@ -13,6 +14,14 @@
   "Run f on a later tick, like re-frame dispatch does."
   [f]
   (js/setTimeout f 0))
+
+(defn- js-text-field
+  "Like a text field from a JS component library: a React component that
+  renders input-component itself, so Reagent's controlled input workaround
+  isn't applied to it, unless input-component is Reagent's :input (like
+  Material UI's inputComponent option)."
+  [input-component]
+  (r/adapt-react-class (fn [props] (react/createElement input-component props))))
 
 (defn controlled-input
   [{:keys [id tag type transform async? style accept? note known-issue]
@@ -95,7 +104,20 @@
                "the cursor stays after the new text.")
     :known-issue (str "very fast typing loses keys: Reagent can't tell a "
                       "lagging upper-cased value from a new value set by the "
-                      "app.")}])
+                      "app.")}
+   {:id "js-text-sync" :tag (js-text-field "input")
+    :note (str "The <input> is rendered by a JS component (like a component "
+               "library), so Reagent's workaround isn't applied. " mid-text
+               "the new text should go at the cursor.")
+    :known-issue (str "the cursor jumps to the end after each key, fast typing "
+                      "loses keys and IME input doubles letters (e.g. Korean "
+                      "리에이전트 becomes ㄹ리링리에엥…), even with synchronous "
+                      "state.")}
+   {:id "js-reagent-text-sync"
+    :tag (js-text-field (r/reactify-component (fn [props] [:input props])))
+    :note (str "The same JS component, rendering Reagent's :input passed to it "
+               "(like Material UI's inputComponent option), so the workaround "
+               "applies. " mid-text "the new text goes at the cursor.")}])
 
 (defn page []
   [:div
