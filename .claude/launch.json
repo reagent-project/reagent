@@ -12,6 +12,12 @@
       "runtimeExecutable": "bb",
       "runtimeArgs": ["site-preview-watch", "8095"],
       "port": 8095
+    },
+    {
+      "name": "e2e-page",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["e2e/server.mjs"],
+      "port": 8091
     }
   ]
 }
