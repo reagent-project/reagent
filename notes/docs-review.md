@@ -14,12 +14,12 @@ The site shows a "Not reviewed yet" notice on guide pages without it, and "Revie
 
 **Summary**
 - Almost every rendering example still uses `reagent.dom/render` (React 18 only), and two use `reagent.core/render`, which now throws. No doc outside `2.0-upgrade.md` shows `reagent.dom.client`. `ReactFeatures.md` uses `react-dom/hydrate`, which React 19 removed.
-- The 2.0 features `defc` and `reagent.hooks` aren't covered in any doc. The Hooks and function-component sections still show `:f>` plus raw `react/useState`, and they include a "Pre 1.0 workaround" that links to the archived `hx` library.
+- The 2.0 features `defc` and `reagent.hooks` are only introduced briefly in `WhatsNew2.md`; no guide covers them. The Hooks and function-component sections still show `:f>` plus raw `react/useState`, and they include a "Pre 1.0 workaround" that links to the archived `hx` library.
 - Some docs name APIs that don't exist: `r/dom-node`, `after-update` (the function is `after-render`) and the `make-reaction` option `derefed`. Others describe behaviour wrongly: ratom-triggered re-renders skipping `component-did-update`, ratoms comparing with `=`, and "Reactions power `r/atom`".
 - The Cljsjs, npm and Material-UI advice is out of date: the FAQ says Reagent depends on Cljsjs packages (`project.clj` has `:dependencies []`), `0.8-upgrade.md` calls Cljsjs "the recommended setup", and the MUI doc shows the v1 `"material-ui"` API while the example project uses `@mui/material` v7.
 - The two indexes have drifted apart: `README.md` doesn't list 7 of the docs that `cljdoc.edn` lists, its numbering is broken, and the HTML-entity FAQ exists twice with different advice.
 
-Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md` and the deref caveats and cursor watch sections added to `ManagingState.md` after the review.
+Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md`, `WhatsNew2.md` and the deref caveats and cursor watch sections added to `ManagingState.md` after the review.
 ---
 
 ## 1. Rendering entry point / React versions
@@ -40,7 +40,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - Reagent provides `reagent.dom.client/hydrate-root` (verified at `src/reagent/dom/client.cljs:72-81`; it takes `{:keys [compiler on-recoverable-error identifier-prefix]}`).
   - Fix: show `(rdomc/hydrate-root container [main-component])` and update the link to react.dev.
 - **[medium] The 2.0 upgrade guide is thin and its React version is stale.**
-  - Where: `doc/2.0-upgrade.md:6-8` says `npm i react@19.2.0`, but `package.json:24` and the CHANGELOG "Unreleased" section test 19.3.
+  - Where: `doc/2.0-upgrade.md:8-10` says `npm i react@19.2.0`, but `package.json:24` and the CHANGELOG "Unreleased" section test 19.3.
   - The guide also omits these 2.0 breaking changes listed in `CHANGELOG.md:62-66`:
     - `reagent.dom/dom-node` was removed.
     - The 2-arity of `force-update` was removed.
@@ -48,7 +48,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
     - `defc` and `reagent.hooks` are new.
   - Fix: use a generic `react@19`, and add a short "Other changes" list that links to the CHANGELOG.
 - **[medium] `reagent1.md` mixes up "Reagent 1" with "React 18 via Cljsjs".**
-  - Where: `doc/reagent1.md:1-13`. The heading is "# Reagent 1", the cljdoc title is "Reagent 1 and React 18", and the content is really "using React ≤18 / Cljsjs", which also applies to Reagent 2 (see `2.0-upgrade.md:3-4`).
+  - Where: `doc/reagent1.md:1-13`. The heading is "# Reagent 1", the cljdoc title is "Reagent 1 and React 18", and the content is really "using React ≤18 / Cljsjs", which also applies to Reagent 2 (see `2.0-upgrade.md:5-6`).
   - Fix: retitle it to "Using React 18 / Cljsjs" and cross-link it from `2.0-upgrade.md`.
 - **[medium] `BatchingAndTiming.md` says nothing about React 18/19.**
   - Where: `doc/BatchingAndTiming.md:3-18`. It describes rAF batching only. Since 2.0, the ratom queue is flushed via `flushSync` (verified at `src/reagent/impl/batching.cljs:31-50` and `dom/client.cljs:61`).
@@ -59,8 +59,8 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 
 ## 2. Component forms, function components and hooks
 
-- **[high] `defc` and `reagent.hooks` aren't covered in any doc.**
-  - `grep -rn "defc\|reagent.hooks" doc/` returns no matches. Verified that they exist: `src/reagent/core.clj:29` (`defmacro defc`) and `src/reagent/hooks.cljs` (`use-state`, `use-effect`, `use-ref`, …).
+- **[high] `defc` and `reagent.hooks` aren't covered in the guides.**
+  - Only `WhatsNew2.md` (added 2026-11-16) introduces them with a short example. Verified that they exist: `src/reagent/core.clj:29` (`defmacro defc`) and `src/reagent/hooks.cljs` (`use-state`, `use-effect`, `use-ref`, …).
   - Docs that should mention them:
     - `doc/ReactFeatures.md:144-224` (Function components / Hooks)
     - `doc/ReagentCompiler.md`
@@ -202,7 +202,6 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
     - ReactRenderers.md
     - ServerSideRendering.md
     - React19.md
-    - 2.0-upgrade.md
     - reagent1.md
     - examples/smooth-ui.md
   - Readers on GitHub/cljdoc landing on README won't find the React 19 or 2.0 upgrade docs.
@@ -243,3 +242,4 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-14: typos fixed: styntax, attibutes, seperately, creats, announcenment, "to to", rereun, "an component", Offical, "it's own", "Its a"/"Its just".
 - 2026-11-14: component forms are written in lower case (`form-1`, `form-2`, `form-3`) except at the start of a sentence or heading.
 - 2026-11-14: `http://` links changed to `https://` (all checked). `README.md` now links to re-frame's current docs (`day8.github.io/re-frame/Using-Stateful-JS-Components/`) and `timothypratley.blogspot.com`.
+- 2026-11-16: new `WhatsNew2.md` (from the 2.0.0/2.0.1 changelog); "Reagent 2" nav section with it and the upgrade guide, also at the top of `README.md`.

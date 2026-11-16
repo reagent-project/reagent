@@ -1,6 +1,9 @@
 {:cljdoc.api/platforms #{"cljs"}
  :cljdoc.doc/tree [["Documentation index" {:file "doc/README.md"}]
                    ["Getting Started" {:file "doc/GettingStarted.md"}]
+                   ["Reagent 2" {}
+                    ["What's new in 2.0" {:file "doc/WhatsNew2.md"}]
+                    ["Upgrading to 2.0" {:file "doc/2.0-upgrade.md"}]]
                    ["Learn" {}
                     ["Using Hiccup to Describe HTML" {:file "doc/UsingHiccupToDescribeHTML.md"}]
                     ["Creating Reagent Components" {:file "doc/CreatingReagentComponents.md"}]
@@ -28,8 +31,7 @@
                     ["dangerouslySetInnerHTML" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
                     ["Forcing re-creation" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
                     ["Broken after updating deps" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
-                   ["Upgrading" {}
-                    ["Reagent 2.0 upgrade guide" {:file "doc/2.0-upgrade.md"}]
+                   ["Older versions" {}
                     ["Reagent 1 and React 18" {:file "doc/reagent1.md"}]
                     ["0.8 upgrade guide" {:file "doc/0.8-upgrade.md"}]]
                    ["More" {}

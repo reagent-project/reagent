@@ -1,3 +1,8 @@
+## Reagent 2
+
+- [What's new in Reagent 2.0](WhatsNew2.md): React 19, `defc` and `reagent.hooks`
+- [Upgrading to 2.0](2.0-upgrade.md)
+
 ## Tutorials
 
 0. [Getting Started](GettingStarted.md): create a new app with shadow-cljs
