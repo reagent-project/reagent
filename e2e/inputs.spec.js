@@ -192,8 +192,6 @@ test.describe('fast typing (#676)', () => {
 // on-change can reject a change by keeping the state unchanged; Reagent then
 // restores the rendered value. Here digits are rejected. With async state the
 // check waits for the state to update first.
-// Not tested: very fast typing (keys ~10ms apart) can lose the keys typed
-// after a rejected one, before the revert.
 test.describe('rejected change is reverted', () => {
   for (const id of ['reject-sync', 'reject-async']) {
     test(id, async ({ page }) => {
@@ -205,8 +203,6 @@ test.describe('rejected change is reverted', () => {
 });
 
 // Async on-change that transforms the value: the caret is still restored.
-// Not tested: fast typing loses keys here, because a transformed value can't
-// be told apart from a new value set by the app.
 test('async upper-case, caret mid-text', async ({ page }) => {
   const input = page.getByTestId('upper-async');
   await input.click();
@@ -215,4 +211,52 @@ test('async upper-case, caret mid-text', async ({ page }) => {
   await page.keyboard.type('xy', { delay: 50 });
   await expectValue(page, 'upper-async', 'ABCXYDEF');
   expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+});
+
+// Known issues, listed in doc/ControlledInputs.md. The fast typing ones are
+// races, so a run can happen to produce the right value, which test.fail()
+// reports as a failure; retries cover that.
+test.describe('known issues', () => {
+  test.describe.configure({ retries: 2 });
+
+  // email and number inputs have no Selection API: when on-change changes the
+  // value, Reagent writes it and the caret moves to the end, so the next key
+  // goes to the end.
+  const transformCases = [
+    // on-change lower-cases: the typed "Q" is written back as "q".
+    { id: 'email-lower-sync', initial: 'user@example.com', left: 4, insert: 'QR', expected: 'user@exampleqr.com' },
+    // on-change drops zeros: the typed "0" is removed.
+    { id: 'number-nozero-sync', initial: '12345', left: 2, insert: '09', expected: '123945' },
+  ];
+  for (const c of transformCases) {
+    test(`caret mid-text when on-change changes the value, ${c.id}`, async ({ page }) => {
+      test.fail(true, 'email/number inputs have no Selection API (#609)');
+      await page.getByTestId(c.id).click();
+      await page.keyboard.type(c.initial, { delay: 50 });
+      for (let i = 0; i < c.left; i++) await page.keyboard.press('ArrowLeft');
+      await page.keyboard.type(c.insert, { delay: 50 });
+      await expectValue(page, c.id, c.expected, { timeout: 1000 });
+    });
+  }
+
+  // Keys typed right after a rejected key land on the rejected text, and are
+  // lost when Reagent restores the rendered value.
+  for (const id of ['reject-sync', 'reject-async']) {
+    test(`fast typing after a rejected key, ${id}`, async ({ page }) => {
+      test.fail(true, 'rejected text is restored after a setTimeout and a render');
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectValue(page, id, 'abcd', { timeout: 1000 });
+    });
+  }
+
+  // Async on-change that transforms the value: a lagging transformed value
+  // can't be told apart from a new value set by the app, so it is written.
+  test('fast typing with async upper-case', async ({ page }) => {
+    test.fail(true, 'transformed values from async on-change are written');
+    const text = 'The quick brown fox jumps over the lazy d';
+    await page.getByTestId('upper-async').click();
+    await page.keyboard.type(text, { delay: 10 });
+    await expectValue(page, 'upper-async', text.toUpperCase(), { timeout: 1000 });
+  });
 });

@@ -37,6 +37,8 @@
   [{:id "text-sync"}
    {:id "email-sync" :type "email"}
    {:id "number-sync" :type "number"}
+   {:id "email-lower-sync" :type "email" :transform str/lower-case}
+   {:id "number-nozero-sync" :type "number" :transform #(str/replace % "0" "")}
    {:id "upper-sync" :transform str/upper-case}
    {:id "textarea-sync" :tag :textarea}
    {:id "textarea-upper-sync" :tag :textarea :transform str/upper-case}
