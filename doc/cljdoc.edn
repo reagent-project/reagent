@@ -33,6 +33,8 @@
                     ["Broken after updating deps" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
                    ["Older versions" {}
                     ["Upgrading to 1.2" {:file "doc/1.2-upgrade.md"}]
+                    ["Upgrading to 1.1" {:file "doc/1.1-upgrade.md"}]
+                    ["Upgrading to 1.0" {:file "doc/1.0-upgrade.md"}]
                     ["Upgrading to 0.8" {:file "doc/0.8-upgrade.md"}]]
                    ["More" {}
                     ["Example: Material-UI" {:file "doc/examples/material-ui.md"}]
