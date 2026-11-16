@@ -29,7 +29,9 @@
                              :value "Try again"}]]
                           (into [:<>] children)))})))
 
-(def test-component (r/atom nil))
+;; Set by reagentdemo.dev, which a hot reload of this ns doesn't re-run
+;; (e.g. reagentdemo.docs is ^:dev/always and reloads its dependents).
+(defonce test-component (r/atom nil))
 
 (def logo-svg (inline-file "logo/logo.svg"))
 
