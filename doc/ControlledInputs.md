@@ -46,6 +46,23 @@ so that async state has time to update first.
   the visible area after Reagent writes the value
   ([#595](https://github.com/reagent-project/reagent/issues/595)).
 
+## Trying it out
+
+The Reagent repository has a test page with a controlled input for each of
+these cases, with notes on what to try and which known issues to expect
+([source](https://github.com/reagent-project/reagent/blob/master/test/reagenttest/e2e/inputs.cljs)).
+The same page is used by browser tests that type into it with real keyboard
+and IME input
+([e2e/inputs.spec.js](https://github.com/reagent-project/reagent/blob/master/e2e/inputs.spec.js)).
+To open it, in a checkout of the repository (needs Node and Java):
+
+```bash
+npm ci
+npm run e2e:page
+```
+
+Then open http://127.0.0.1:8091.
+
 ## JS libraries
 
 For JS libraries, usually the best solution is if the library provides an option to

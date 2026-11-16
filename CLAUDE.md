@@ -62,9 +62,10 @@ npm run test:e2e   # shadow-cljs release e2e && playwright test
 
 `npx playwright test` alone reuses the last build; `--repeat-each 20` checks
 for flakiness. The page is served on port 8091; set `E2E_PORT` to run in
-several checkouts at once. To try the page by hand, start `e2e-page` from
-`.claude/launch.json` (serves the last build on 8091, so run the specs with
-another `E2E_PORT` meanwhile).
+several checkouts at once. To try the page by hand, `npm run e2e:page` builds
+and serves it on http://127.0.0.1:8091 (`PORT` overrides), or start `e2e-page`
+from `.claude/launch.json` to serve the last build. Run the specs with another
+`E2E_PORT` meanwhile.
 
 ### All environments (CI-equivalent, slow)
 

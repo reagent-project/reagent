@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "start": "lein figwheel client-npm",
-    "test:e2e": "shadow-cljs release e2e && playwright test"
+    "test:e2e": "shadow-cljs release e2e && playwright test",
+    "e2e:page": "shadow-cljs release e2e && node e2e/server.mjs"
   },
   "packageManager": "npm@^11",
   "engines": {
