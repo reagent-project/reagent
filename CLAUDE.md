@@ -91,10 +91,22 @@ are resolved).
 ## Lint
 
 ```bash
-clj-kondo --lint src test
+./lint.sh
 ```
 
-Should report no findings; keep it that way.
+Lints `src test demo prerender bb` in one run, then each `examples/*/src` on
+its own (several examples share the `example.core` namespace name, so linting
+them together gives false "Unresolved var" warnings).
+
+Should report no findings; keep it that way. CI pins the clj-kondo version
+(`.github/workflows/clojure.yml`); an older local binary can report false positives.
+
+`.clj-kondo/<group>/<artifact>/` are configs imported from libraries on the
+classpath (clojure-lsp copies them, or `clj-kondo --lint <classpath>
+--dependencies --copy-configs --skip-lint`). The ones the code here uses are
+committed; don't edit or reformat them. The rest are listed in `.gitignore`:
+those from libraries built into babashka, and the copy of Reagent's own export
+(`src/clj-kondo/clj-kondo.exports`).
 
 ## Conventions
 

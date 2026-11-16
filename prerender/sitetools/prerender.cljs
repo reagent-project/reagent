@@ -1,7 +1,6 @@
 (ns sitetools.prerender
   (:require [reagentdemo.core :as demo]
             [clojure.string :as string]
-            [goog.events :as evt]
             [reagent.core :as r]
             [reagent.dom.server :as server]
             [reagent.debug :refer [log]]
@@ -10,7 +9,6 @@
             ;; Node libs
             [path :as path]
             [md5-file :as md5-file]
-            [path :as path]
             [fs :as fs]))
 
 (defn base [page]
