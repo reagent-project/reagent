@@ -7,9 +7,17 @@
 
   The render queue is flushed manually with `r/flush`, so tests decide exactly
   when Reagent renders relative to keystrokes and state updates. A real browser
-  can run the render queue (requestAnimationFrame) at any of these points."
+  can run the render queue (requestAnimationFrame) at any of these points.
+
+  Real, trusted input (caret movement in email/number inputs, IME
+  composition, scrolling of a full input, typing speed) is tested with
+  Playwright in `e2e/inputs.spec.js`. These tests cover what that can't pin
+  down: exact orderings of keystrokes, renders and state updates, and that
+  Reagent doesn't write node.value at all when the state follows the typed
+  text. They also run in CI, the e2e specs don't."
   (:require [clojure.test :refer-macros [is testing]]
             [clojure.string :as string]
+            [promesa.core :as p]
             [reagent.core :as r]
             [reagenttest.utils :as u]))
 
@@ -21,27 +29,17 @@
 (defn- set-native-value! [node v]
   (.call (native-value-setter node) node v))
 
-(defn- selection-api? [node]
-  (try
-    (some? (.-selectionStart node))
-    (catch :default _ false)))
-
-(defn- dispatch-input! [node & [opts]]
-  (.dispatchEvent node (js/InputEvent. "input" (clj->js (merge {:bubbles true} opts)))))
-
 (defn- type-text!
   "Simulate user typing text s at the current selection, replacing the
-  selected text. Inputs without the Selection API (email, number) append."
-  [node s & [event-opts]]
-  (let [v (.-value node)]
-    (if (selection-api? node)
-      (let [start (.-selectionStart node)
-            end (.-selectionEnd node)
-            pos (+ start (count s))]
-        (set-native-value! node (str (subs v 0 start) s (subs v end)))
-        (.setSelectionRange node pos pos))
-      (set-native-value! node (str v s)))
-    (dispatch-input! node event-opts)))
+  selected text."
+  [node s]
+  (let [v (.-value node)
+        start (.-selectionStart node)
+        end (.-selectionEnd node)
+        pos (+ start (count s))]
+    (set-native-value! node (str (subs v 0 start) s (subs v end)))
+    (.setSelectionRange node pos pos)
+    (.dispatchEvent node (js/InputEvent. "input" #js {:bubbles true}))))
 
 (defn- type-keys!
   "Type each character of s separately, calling (between) after each key."
@@ -73,34 +71,46 @@
                    (.call (.-set desc) this v)))})
     writes))
 
+(defn- change-check!
+  "Let the check that restores the rendered value after a change run: it is
+  scheduled with a setTimeout after on-change and then waits for a render."
+  []
+  (p/do (p/delay 0)
+        (r/flush)))
+
 (defn- with-focused-input
   "Render comp into a container attached to the document, focus the first
-  input or textarea and call (f node). The container needs to be in the
-  document for focus and so for the cursor handling of the workaround."
+  input or textarea and call (f node), which can return a promise. The
+  container needs to be in the document for focus and so for the cursor
+  handling of the workaround."
   [comp f]
   (u/with-render* comp
     (fn [div]
       (.appendChild (.-body js/document) div)
-      (try
-        (let [node (.querySelector div "input, textarea")]
-          (.focus node)
-          (f node))
-        (finally
-          (.remove div))))))
+      (-> (p/do
+            (let [node (.querySelector div "input, textarea")]
+              (.focus node)
+              (f node)))
+          (p/finally (fn [] (.remove div)))))))
 
 (defn- async-state
   "State container that applies updates later, like re-frame's dispatch,
   which runs the event handler on a later tick. Returns [state dispatch!
-  process!], process! applies the queued updates in order."
-  [init]
-  (let [state (r/atom init)
-        queue (atom [])]
-    [state
-     (fn dispatch! [v] (swap! queue conj v))
-     (fn process! []
-       (let [q @queue]
-         (reset! queue [])
-         (doseq [v q] (reset! state v))))]))
+  process!], process! applies the queued updates in order. Updates for which
+  (accept? v) is false are dropped, like an event handler that keeps the db
+  unchanged."
+  ([init] (async-state init (constantly true)))
+  ([init accept?]
+   (let [state (r/atom init)
+         queue (atom [])]
+     [state
+      (fn dispatch! [v] (swap! queue conj v))
+      (fn process! []
+        (let [q @queue]
+          (reset! queue [])
+          (doseq [v q]
+            (when (accept? v)
+              (reset! state v)))))])))
 
 ;;; Synchronous on-change, the case the workaround was written for
 
@@ -129,24 +139,10 @@
               (is (= "abcXYdef" @state (.-value node)))
               (is (= 5 (.-selectionStart node) (.-selectionEnd node))))
 
-            (testing "state equal to the typed text is never written to the node"
-              (is (= [] @writes)))))))))
-
-(u/deftest ^:dom sync-on-change-textarea
-  (let [state (r/atom "")
-        c (fn []
-            [:textarea {:value @state
-                        :on-change #(reset! state (.. % -target -value))}])]
-    (u/async
-      (with-focused-input [c]
-        (fn [node]
-          (let [writes (spy-writes! node)]
-            (type-keys! node "ab\ncd" r/flush)
-            (set-cursor! node 2)
-            (type-keys! node "xy" r/flush)
-            (is (= "abxy\ncd" @state (.-value node)))
-            (is (= 4 (.-selectionStart node)))
-            (is (= [] @writes))))))))
+            (p/do
+              (change-check!)
+              (testing "state equal to the typed text is never written to the node"
+                (is (= [] @writes))))))))))
 
 ;;; on-change that changes the typed text: the workaround writes the rendered
 ;;; value and restores the cursor.
@@ -169,33 +165,20 @@
           (type-text! node "x")
           (is (= "1x2" (.-value node)))
           (r/flush)
-          (is (= "12" @state (.-value node)))
-          (is (= 1 (.-selectionStart node)) "cursor stays where the key was typed")
+          (is (= "1x2" (.-value node)) "not restored before the change check")
+          (p/do
+            (change-check!)
+            (is (= "12" @state (.-value node)))
+            (is (= 1 (.-selectionStart node)) "cursor stays where the key was typed")
 
-          (type-text! node "3")
-          (r/flush)
-          (is (= "132" @state (.-value node)))
-          (is (= 2 (.-selectionStart node))))))))
-
-(u/deftest ^:dom on-change-transforms-value
-  (let [state (r/atom "ABCD")
-        c (fn []
-            [:input {:type "text"
-                     :value @state
-                     :on-change #(reset! state (string/upper-case (.. % -target -value)))}])]
-    (u/async
-      (with-focused-input [c]
-        (fn [node]
-          (set-cursor! node 2)
-          (type-text! node "x")
-          (r/flush)
-          (is (= "ABXCD" @state (.-value node)))
-          (is (= 3 (.-selectionStart node) (.-selectionEnd node))))))))
+            (type-text! node "3")
+            (change-check!)
+            (is (= "132" @state (.-value node)))
+            (is (= 2 (.-selectionStart node)))))))))
 
 (u/deftest ^:dom on-change-transforms-value-unicode
-  ;; #587, #619: cursor position is counted in UTF-16 code units by both
-  ;; the Selection API and `count`, characters outside the BMP (emoji) take
-  ;; two units.
+  ;; Cursor position is counted in UTF-16 code units by both the Selection
+  ;; API and `count`, characters outside the BMP (emoji) take two units.
   (let [state (r/atom "😀ab😀cd")
         c (fn []
             [:input {:type "text"
@@ -236,86 +219,12 @@
           (r/flush)
           (is (= "a" @state (.-value node))))))))
 
-;;; Inputs without the Selection API
-
-(defn- no-selection-api-typing [input-type]
-  ;; #609: email and number inputs don't have the Selection API, so the
-  ;; workaround can't restore the cursor. It must not write the value when
-  ;; the state follows the typed text.
-  (let [state (r/atom "")
-        c (fn []
-            [:input {:type input-type
-                     :value @state
-                     :on-change #(reset! state (.. % -target -value))}])]
-    (with-focused-input [c]
-      (fn [node]
-        (let [writes (spy-writes! node)]
-          (type-keys! node "123" r/flush)
-          (is (= "123" @state (.-value node)))
-          (is (= [] @writes)))))))
-
-(u/deftest ^:dom sync-on-change-email
-  (u/async (no-selection-api-typing "email")))
-
-(u/deftest ^:dom sync-on-change-number
-  (u/async (no-selection-api-typing "number")))
-
-;;; IME composition (#587, Korean/Chinese/Japanese input)
-
-(u/deftest ^:dom composition-sync-on-change
-  ;; Writing node.value during a composition ends the composition in the
-  ;; browser, so typing "리" (ㄹ + ㅣ) would give "ㄹ리".
-  (let [state (r/atom "")
-        c (fn []
-            [:input {:type "text"
-                     :value @state
-                     :on-change #(reset! state (.. % -target -value))}])]
-    (u/async
-      (with-focused-input [c]
-        (fn [node]
-          (let [writes (spy-writes! node)]
-            (.dispatchEvent node (js/CompositionEvent. "compositionstart" #js {:bubbles true}))
-            (set-native-value! node "ㄹ")
-            (dispatch-input! node {:isComposing true})
-            (r/flush)
-            (set-native-value! node "리")
-            (dispatch-input! node {:isComposing true})
-            (r/flush)
-            (.dispatchEvent node (js/CompositionEvent. "compositionend" #js {:bubbles true :data "리"}))
-            (r/flush)
-            (is (= "리" @state (.-value node)))
-            (is (= [] @writes) "no writes during composition")))))))
-
-(u/deftest ^:dom composition-async-on-change
-  (let [[state dispatch! process!] (async-state "")
-        c (fn []
-            [:input {:type "text"
-                     :value @state
-                     :on-change #(dispatch! (.. % -target -value))}])]
-    (u/async
-      (with-focused-input [c]
-        (fn [node]
-          (let [writes (spy-writes! node)]
-            (.dispatchEvent node (js/CompositionEvent. "compositionstart" #js {:bubbles true}))
-            (set-native-value! node "ㄹ")
-            (dispatch-input! node {:isComposing true})
-            ;; Render happens before the state update
-            (r/flush)
-            (process!)
-            (r/flush)
-            (set-native-value! node "리")
-            (dispatch-input! node {:isComposing true})
-            (.dispatchEvent node (js/CompositionEvent. "compositionend" #js {:bubbles true :data "리"}))
-            (process!)
-            (r/flush)
-            (is (= "리" @state (.-value node)))
-            (is (= [] @writes) "no writes during composition")))))))
-
 ;;; Asynchronous on-change (#676, re-frame dispatch)
 ;;
 ;; The state is updated on a later tick than the change event. Reagent can
 ;; render between the keystroke and the state update, with a state that is
-;; older than the text in the node.
+;; older than the text in the node. The real-timing version of these is
+;; "fast typing (#676)" in e2e/inputs.spec.js.
 
 (u/deftest ^:dom async-on-change-state-catches-up-before-render
   ;; Baseline: state is updated before every render.
@@ -334,13 +243,11 @@
 
 (u/deftest ^:dom async-on-change-render-before-state-update
   ;; Render (animation frame) runs between the keystroke and the state
-  ;; update. Reagent shouldn't put the old state into the node, as the user
-  ;; can type the next key before the state catches up: "a", render, "b"
-  ;; would end up as "b".
-  ;;
-  ;; NOTE: This conflicts with on-change-rejects-key: when the render runs,
-  ;; Reagent can't tell an on-change that ignored the key from one that
-  ;; hasn't updated the state yet.
+  ;; update. Reagent mustn't put the old state into the node, as the user can
+  ;; type the next key before the state catches up: "a", render, "b" would
+  ;; end up as "b". The check for a rejected change (see on-change-rejects-key)
+  ;; waits for a setTimeout after on-change, so the state has a chance to
+  ;; update first.
   (let [[state dispatch! process!] (async-state "")
         c (fn []
             [:input {:type "text"
@@ -362,8 +269,8 @@
 (u/deftest ^:dom async-on-change-render-with-lagging-state
   ;; The scenario from #676: state update for key n-1 triggers a render,
   ;; while key n is already in the node but not yet in the state. The render
-  ;; writes the text after key n-1 into the node, key n+1 is appended to
-  ;; that and key n is lost.
+  ;; mustn't write the text after key n-1 into the node, or key n+1 is
+  ;; appended to that and key n is lost.
   (let [[state dispatch! process!] (async-state "")
         c (fn []
             [:input {:type "text"
@@ -405,6 +312,31 @@
           (process!)
           (r/flush)
           (is (= text @state (.-value node))))))))
+
+(u/deftest ^:dom async-on-change-rejects-key
+  ;; Async on-change can still reject a change: once the state had a chance
+  ;; to update and didn't change, the rendered value is restored.
+  (let [[state dispatch! process!] (async-state "ab" #(not (re-find #"\d" %)))
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(dispatch! (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (type-text! node "1")
+          (r/flush)
+          (is (= "ab1" (.-value node)))
+          (process!)
+          (p/do
+            (change-check!)
+            (is (= "ab" @state (.-value node)))
+            (type-text! node "c")
+            ;; state update arrives before the change check
+            (p/delay 0)
+            (process!)
+            (r/flush)
+            (is (= "abc" @state (.-value node)))))))))
 
 (u/deftest ^:dom async-on-change-transform
   ;; Async state can still transform the value, once the state has caught up
