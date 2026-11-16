@@ -2,6 +2,18 @@
 // (src/reagent/impl/input.cljs). The page is test/reagenttest/e2e/inputs.cljs:
 // each scenario is an <input data-testid=ID> plus <pre data-testid=ID-state>
 // showing the value in the ratom.
+//
+// The sync-state cases (#609, #595, sync IME and fast typing) all failed
+// before #630 (5baa4cf), which runs Reagent's render queue inside
+// react-dom/flushSync. Before that, with a createRoot root, forceUpdate from
+// the requestAnimationFrame render queue was only scheduled by React, so the
+// after-render callback queued by input-handle-change ran before the
+// re-render, saw a stale rendered value and wrote it into node.value; the
+// later commit then wrote the new value again. For email/number (no Selection
+// API) each write moves the caret to the end, and keys typed in between were
+// overwritten. Async on-change (#676) still leaves the rendered value behind
+// the DOM, so the same kind of overwrite remains there.
+// https://github.com/reagent-project/reagent/pull/630
 const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
@@ -17,6 +29,7 @@ async function expectValue(page, id, value) {
 // #609: typing in the middle of the text must not move the caret to the end.
 // email and number inputs have no Selection API, so Reagent can't restore the
 // caret there; it must avoid touching node.value instead.
+// Fixed by #630 for sync state (see top of file).
 // https://github.com/reagent-project/reagent/issues/609
 test.describe('caret position when typing mid-text (#609)', () => {
   const cases = [
@@ -83,7 +96,7 @@ test.describe('IME composition (#587)', () => {
 });
 
 // #595: when the text overflows a narrow input, the caret (end of text) must
-// stay scrolled into view.
+// stay scrolled into view. Fails before #630 (see top of file).
 // https://github.com/reagent-project/reagent/issues/595
 test.describe('caret visible at the end of a full input (#595)', () => {
   for (const id of ['narrow-sync', 'narrow-upper-sync']) {
