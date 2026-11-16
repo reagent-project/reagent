@@ -11,9 +11,13 @@
 // re-render, saw a stale rendered value and wrote it into node.value; the
 // later commit then wrote the new value again. For email/number (no Selection
 // API) each write moves the caret to the end, and keys typed in between were
-// overwritten. Async on-change (#676) still leaves the rendered value behind
-// the DOM, so the same kind of overwrite remains there.
+// overwritten.
 // https://github.com/reagent-project/reagent/pull/630
+//
+// Async on-change (state updated on a later tick, like re-frame dispatch)
+// leaves the rendered value behind the DOM. Reagent ignores renders of values
+// that on-change already reported, and checks for a rejected change only
+// after the state for it had a chance to update (#676).
 const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
@@ -29,12 +33,6 @@ async function expectValue(page, id, value, options) {
   await expect(page.getByTestId(id)).toHaveValue(value, options);
   await expect.poll(() => stateText(page, id), options).toBe(value);
 }
-
-// Known bugs are marked with test.fail(). They are races, so one run can
-// happen to produce the right value, which test.fail() reports as a failure;
-// retries cover that. The short timeout keeps the expected failure fast.
-const knownBugRetries = { retries: 2 };
-const knownBugTimeout = { timeout: 500 };
 
 // #609: typing in the middle of the text must not move the caret to the end.
 // email and number inputs have no Selection API, so Reagent can't restore the
@@ -86,10 +84,18 @@ test.describe('IME composition (#587)', () => {
   ];
   const word = syllables.map((s) => s.commit).join('');
 
-  async function composeKorean(page, id) {
+  // Chinese pinyin IME: the composition shows the latin letters, then the
+  // chosen characters are committed.
+  const pinyin = [
+    { compose: ['n', 'ni', 'ni h', 'ni ha', 'ni hao'], commit: '你好' },
+    { compose: ['s', 'sh', 'shi', 'shi j', 'shi ji', 'shi jie'], commit: '世界' },
+  ];
+  const chineseWord = pinyin.map((s) => s.commit).join('');
+
+  async function compose(page, id, steps) {
     const cdp = await page.context().newCDPSession(page);
     await page.getByTestId(id).focus();
-    for (const { compose, commit } of syllables) {
+    for (const { compose, commit } of steps) {
       for (const text of compose) {
         await cdp.send('Input.imeSetComposition', {
           text, selectionStart: text.length, selectionEnd: text.length,
@@ -101,26 +107,19 @@ test.describe('IME composition (#587)', () => {
     }
   }
 
-  for (const id of ['ime-sync', 'textarea-sync']) {
-    test(`sync state, ${id}`, async ({ page }) => {
-      await composeKorean(page, id);
+  // Before #676 was fixed, renders with lagging state wrote node.value during
+  // composition, e.g. "ㄹ리리에에이이ㅈ전전ㅌ트" and
+  // "ni hao你好shshishi jishi jie世界".
+  for (const id of ['ime-sync', 'textarea-sync', 'ime-async']) {
+    test(`Korean, ${id}`, async ({ page }) => {
+      await compose(page, id, syllables);
       await expectValue(page, id, word);
     });
-  }
-
-  // Known failure: with on-change updating state on a later tick, the
-  // in-progress composition text is kept, e.g. "ㄹ리리에에이이ㅈ전전ㅌ트",
-  // matching the report.
-  // Likely the same cause as #676 (a render with lagging state writes
-  // node.value).
-  test.describe('async state', () => {
-    test.describe.configure(knownBugRetries);
-    test('ime-async', async ({ page }) => {
-      test.fail(true, 'https://github.com/reagent-project/reagent/issues/587');
-      await composeKorean(page, 'ime-async');
-      await expectValue(page, 'ime-async', word, knownBugTimeout);
+    test(`Chinese pinyin, ${id}`, async ({ page }) => {
+      await compose(page, id, pinyin);
+      await expectValue(page, id, chineseWord);
     });
-  });
+  }
 });
 
 // #595: when the text overflows a narrow input, the caret (end of text) must
@@ -181,15 +180,83 @@ test.describe('fast typing (#676)', () => {
     await expectValue(page, 'text-sync', text);
   });
 
-  // Known failure: roughly every other key is lost
+  // Before the fix, about every other key was lost
   // (e.g. "T uc bow xmsovrh lzd").
-  test.describe('async state', () => {
-    test.describe.configure(knownBugRetries);
-    test('text-async', async ({ page }) => {
-      test.fail(true, 'https://github.com/reagent-project/reagent/issues/676');
-      await page.getByTestId('text-async').click();
-      await page.keyboard.type(text, { delay: 10 });
-      await expectValue(page, 'text-async', text, knownBugTimeout);
+  test('async state', async ({ page }) => {
+    await page.getByTestId('text-async').click();
+    await page.keyboard.type(text, { delay: 10 });
+    await expectValue(page, 'text-async', text);
+  });
+});
+
+// on-change can reject a change by keeping the state unchanged; Reagent then
+// restores the rendered value. Here digits are rejected. With async state the
+// check waits for the state to update first.
+test.describe('rejected change is reverted', () => {
+  for (const id of ['reject-sync', 'reject-async']) {
+    test(id, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 100 });
+      await expectValue(page, id, 'abcd');
     });
+  }
+});
+
+// Async on-change that transforms the value: the caret is still restored.
+test('async upper-case, caret mid-text', async ({ page }) => {
+  const input = page.getByTestId('upper-async');
+  await input.click();
+  await page.keyboard.type('abcdef', { delay: 50 });
+  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+  await page.keyboard.type('xy', { delay: 50 });
+  await expectValue(page, 'upper-async', 'ABCXYDEF');
+  expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+});
+
+// Known issues, listed in doc/ControlledInputs.md. The fast typing ones are
+// races, so a run can happen to produce the right value, which test.fail()
+// reports as a failure; retries cover that.
+test.describe('known issues', () => {
+  test.describe.configure({ retries: 2 });
+
+  // email and number inputs have no Selection API: when on-change changes the
+  // value, Reagent writes it and the caret moves to the end, so the next key
+  // goes to the end.
+  const transformCases = [
+    // on-change lower-cases: the typed "Q" is written back as "q".
+    { id: 'email-lower-sync', initial: 'user@example.com', left: 4, insert: 'QR', expected: 'user@exampleqr.com' },
+    // on-change drops zeros: the typed "0" is removed.
+    { id: 'number-nozero-sync', initial: '12345', left: 2, insert: '09', expected: '123945' },
+  ];
+  for (const c of transformCases) {
+    test(`caret mid-text when on-change changes the value, ${c.id}`, async ({ page }) => {
+      test.fail(true, 'email/number inputs have no Selection API (#609)');
+      await page.getByTestId(c.id).click();
+      await page.keyboard.type(c.initial, { delay: 50 });
+      for (let i = 0; i < c.left; i++) await page.keyboard.press('ArrowLeft');
+      await page.keyboard.type(c.insert, { delay: 50 });
+      await expectValue(page, c.id, c.expected, { timeout: 1000 });
+    });
+  }
+
+  // Keys typed right after a rejected key land on the rejected text, and are
+  // lost when Reagent restores the rendered value.
+  for (const id of ['reject-sync', 'reject-async']) {
+    test(`fast typing after a rejected key, ${id}`, async ({ page }) => {
+      test.fail(true, 'rejected text is restored after a setTimeout and a render');
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectValue(page, id, 'abcd', { timeout: 1000 });
+    });
+  }
+
+  // Async on-change that transforms the value: a lagging transformed value
+  // can't be told apart from a new value set by the app, so it is written.
+  test('fast typing with async upper-case', async ({ page }) => {
+    test.fail(true, 'transformed values from async on-change are written');
+    const text = 'The quick brown fox jumps over the lazy d';
+    await page.getByTestId('upper-async').click();
+    await page.keyboard.type(text, { delay: 10 });
+    await expectValue(page, 'upper-async', text.toUpperCase(), { timeout: 1000 });
   });
 });

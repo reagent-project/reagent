@@ -1,7 +1,8 @@
 (ns reagenttest.e2e.inputs
   "Test page for the Playwright specs in e2e/. Each scenario renders one
   labelled controlled input with a data-testid, and a <pre> showing the
-  current state (data-testid \"<id>-state\")."
+  current state (data-testid \"<id>-state\"). The :note and :known-issue
+  texts are for trying the inputs by hand; the specs don't read them."
   (:require [clojure.string :as str]
             [reagent.core :as r]
             [reagent.dom.client :as rdomc]))
@@ -14,11 +15,11 @@
   (js/setTimeout f 0))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? style]
-    :or {tag :input transform identity}}]
+  [{:keys [id tag type transform async? style accept? note known-issue]
+    :or {tag :input transform identity accept? (constantly true)}}]
   (let [v (get @state id "")
-        update! (fn [x] (swap! state assoc id (transform x)))]
-    [:div {:style {:margin "8px 0"}}
+        update! (fn [x] (when (accept? x) (swap! state assoc id (transform x))))]
+    [:div {:style {:margin "12px 0"}}
      [:label {:for id :style {:display "inline-block" :width 160}} id]
      [tag {:id id
            :data-testid id
@@ -31,24 +32,77 @@
                             (later #(update! x))
                             (update! x))))}]
      [:pre {:data-testid (str id "-state") :style {:display "inline" :margin-left 8}}
-      v]]))
+      v]
+     [:div {:style {:margin-left 160 :font-size "0.85em" :color "#555"}}
+      note]
+     (when known-issue
+       [:div {:style {:margin-left 160 :font-size "0.85em" :color "#a40"}}
+        [:strong "Known issue: "] known-issue])]))
+
+(def mid-text
+  "Type some text, move the cursor left with the arrow keys and type more: ")
 
 (def scenarios
-  [{:id "text-sync"}
-   {:id "email-sync" :type "email"}
-   {:id "number-sync" :type "number"}
-   {:id "upper-sync" :transform str/upper-case}
-   {:id "textarea-sync" :tag :textarea}
-   {:id "textarea-upper-sync" :tag :textarea :transform str/upper-case}
-   {:id "narrow-sync" :style {:width "80px"}}
-   {:id "narrow-upper-sync" :transform str/upper-case :style {:width "80px"}}
-   {:id "ime-sync"}
-   {:id "ime-async" :async? true}
-   {:id "text-async" :async? true}])
+  [{:id "text-sync"
+    :note (str mid-text "the new text goes at the cursor.")}
+   {:id "email-sync" :type "email"
+    :note (str mid-text "the new text goes at the cursor.")}
+   {:id "number-sync" :type "number"
+    :note (str mid-text "the new digits go at the cursor.")}
+   {:id "email-lower-sync" :type "email" :transform str/lower-case
+    :note "on-change lower-cases the value."
+    :known-issue (str "typing an upper-case letter in the middle moves the cursor "
+                      "to the end. Email inputs have no Selection API, so Reagent "
+                      "can't restore the cursor after writing the lower-cased value.")}
+   {:id "number-nozero-sync" :type "number" :transform #(str/replace % "0" "")
+    :note "on-change drops zeros."
+    :known-issue (str "typing 0 in the middle moves the cursor to the end. Number "
+                      "inputs have no Selection API.")}
+   {:id "upper-sync" :transform str/upper-case
+    :note (str "on-change upper-cases the value. " mid-text
+               "the cursor stays after the new text.")}
+   {:id "textarea-sync" :tag :textarea
+    :note (str mid-text "the new text goes at the cursor.")}
+   {:id "textarea-upper-sync" :tag :textarea :transform str/upper-case
+    :note (str "on-change upper-cases the value. " mid-text
+               "the cursor stays after the new text.")}
+   {:id "narrow-sync" :style {:width "80px"}
+    :note "Type past the width: the cursor and the last letter stay visible."}
+   {:id "narrow-upper-sync" :transform str/upper-case :style {:width "80px"}
+    :note "on-change upper-cases the value. Type letters past the width."
+    :known-issue (str "in Chrome the cursor and the last letter end up a few "
+                      "pixels outside the input (#595).")}
+   {:id "ime-sync"
+    :note (str "Type with an IME, e.g. Korean (리에이전트) or Chinese pinyin "
+               "(ni hao → 你好): no doubled or leftover letters.")}
+   {:id "ime-async" :async? true
+    :note (str "on-change updates the state on a later tick, like re-frame "
+               "dispatch. Type with an IME: no doubled or leftover letters.")}
+   {:id "text-async" :async? true
+    :note (str "on-change updates the state on a later tick, like re-frame "
+               "dispatch. Type fast: no keys are lost.")}
+   {:id "reject-sync" :accept? #(not (re-find #"[0-9]" %))
+    :note "on-change rejects values with digits: a typed digit disappears."
+    :known-issue (str "keys typed very quickly after a digit (tens of "
+                      "milliseconds) can be lost when the digit is removed.")}
+   {:id "reject-async" :async? true :accept? #(not (re-find #"[0-9]" %))
+    :note (str "Same as reject-sync, with the state updated on a later tick. "
+               "The digit disappears after a short delay.")
+    :known-issue (str "keys typed very quickly after a digit can be lost when "
+                      "the digit is removed.")}
+   {:id "upper-async" :async? true :transform str/upper-case
+    :note (str "on-change upper-cases the value on a later tick. " mid-text
+               "the cursor stays after the new text.")
+    :known-issue (str "very fast typing loses keys: Reagent can't tell a "
+                      "lagging upper-cased value from a new value set by the "
+                      "app.")}])
 
 (defn page []
   [:div
    [:h1 "Reagent controlled input e2e"]
+   [:p "Each input shows the stored state on its right. The notes say what to
+   try; known issues are expected to fail (the e2e specs mark them with
+   test.fail)."]
    (for [s scenarios]
      ^{:key (:id s)} [controlled-input s])])
 

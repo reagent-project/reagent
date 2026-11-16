@@ -91,22 +91,48 @@
 
 (defn input-component-set-value [^clj this]
   (when (.-cljsInputLive this)
-    (set! (.-cljsInputDirty this) false)
     (let [rendered-value (.-cljsRenderedValue this)
           dom-value (.-cljsDOMValue this)
           ;; Default to the root node within this component
           node (.-inputEl this)]
-      (when (not= rendered-value dom-value)
-        (input-node-set-value node rendered-value dom-value this {})))))
+      (if (= rendered-value dom-value)
+        ;; State has caught up with the DOM.
+        (set! (.-cljsPendingValues this) nil)
+        (let [pending (.-cljsPendingValues this)
+              i (if (some? pending) (.indexOf pending rendered-value) -1)]
+          (if (>= i 0)
+            ;; The rendered value is one that on-change already reported, but
+            ;; the user has typed more since: the state lags behind the DOM,
+            ;; e.g. because on-change updates the state on a later tick (like
+            ;; re-frame dispatch). Writing it would lose the newer input, so
+            ;; only forget the values up to it.
+            (.splice pending 0 (inc i))
+            (do (set! (.-cljsPendingValues this) nil)
+                (input-node-set-value node rendered-value dom-value this {}))))))))
 
 (defn input-handle-change [^clj this on-change e]
-  (set! (.-cljsDOMValue this) (-> e .-target .-value))
-  ;; Make sure the input is re-rendered, in case on-change
-  ;; wants to keep the value unchanged
-  (when-not (.-cljsInputDirty this)
-    (set! (.-cljsInputDirty this) true)
-    (batch/do-after-render #(input-component-set-value this)))
-  (on-change e))
+  (let [v (-> e .-target .-value)]
+    (set! (.-cljsDOMValue this) v)
+    (when (nil? (.-cljsPendingValues this))
+      (set! (.-cljsPendingValues this) #js []))
+    (.push (.-cljsPendingValues this) v))
+  (try
+    (on-change e)
+    (finally
+      ;; Make sure the DOM is updated even if the input isn't re-rendered,
+      ;; in case on-change wants to keep the value unchanged.
+      ;; Check after a macrotask, scheduled after on-change, so that state
+      ;; updated on a later tick (setTimeout, re-frame dispatch) is rendered
+      ;; first. Only the check of the latest change runs, so it isn't done
+      ;; before the state for that change had a chance to update.
+      (let [n (inc (or (.-cljsChangeCount this) 0))]
+        (set! (.-cljsChangeCount this) n)
+        (js/setTimeout (fn []
+                         (batch/do-after-render
+                          (fn []
+                            (when (== n (.-cljsChangeCount this))
+                              (input-component-set-value this)))))
+                       0)))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]
