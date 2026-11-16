@@ -39,14 +39,13 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - Where: `doc/ReactFeatures.md:243-247` (`(react-dom/hydrate (r/as-element ...) container)`).
   - Reagent provides `reagent.dom.client/hydrate-root` (verified at `src/reagent/dom/client.cljs:72-81`; it takes `{:keys [compiler on-recoverable-error identifier-prefix]}`).
   - Fix: show `(rdomc/hydrate-root container [main-component])` and update the link to react.dev.
-- **[medium] The 2.0 upgrade guide is thin and its React version is stale.**
-  - Where: `doc/2.0-upgrade.md:11-13` says `npm i react@19.2.0`, but `package.json:24` and the CHANGELOG "Unreleased" section test 19.3.
-  - The guide also omits these 2.0 breaking changes listed in `CHANGELOG.md:62-66`:
+- **[medium] The 2.0 upgrade guide is thin.**
+  - The guide omits these 2.0 breaking changes listed in `CHANGELOG.md:62-66`:
     - `reagent.dom/dom-node` was removed.
     - The 2-arity of `force-update` was removed.
     - `rdomc/unmount` and `hydrate-root` exist.
     - `defc` and `reagent.hooks` are new.
-  - Fix: use a generic `react@19`, and add a short "Other changes" list that links to the CHANGELOG.
+  - These are now listed in `WhatsNew2.md`, which the guide links to. Fix: add a short "Other changes" list to the guide, or point to the Removed section of `WhatsNew2.md`.
 - **[medium] `reagent1.md` mixes up "Reagent 1" with "React 18 via Cljsjs".**
   - Where: `doc/reagent1.md:1-13`. The heading is "# Reagent 1", the cljdoc title is "Reagent 1 and React 18", and the content is really "using React ≤18 / Cljsjs", which also applies to Reagent 2 (see `2.0-upgrade.md:8-9`).
   - Fix: retitle it to "Using React 18 / Cljsjs" and cross-link it from `2.0-upgrade.md`.
@@ -244,3 +243,4 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-14: `http://` links changed to `https://` (all checked). `README.md` now links to re-frame's current docs (`day8.github.io/re-frame/Using-Stateful-JS-Components/`) and `timothypratley.blogspot.com`.
 - 2026-11-16: new `WhatsNew2.md` (from the 2.0.0/2.0.1 changelog); "Reagent 2" nav section with it and the upgrade guide, also at the top of `README.md`.
 - 2026-11-16: `WhatsNew2.md` and `2.0-upgrade.md` marked reviewed.
+- 2026-11-16: `2.0-upgrade.md` installs React 19.3.1 (latest on npm, matches the tested 19.3).
