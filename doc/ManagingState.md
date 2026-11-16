@@ -149,6 +149,58 @@ Cursors are created with `reagent/cursor`, which takes a ratom and a keypath (li
 
 Both `bar-component` and `quux-component` update whenever their respective cursors/atoms update, but because `bar-component`'s cursor is limited only to the relevant portion of the app-state, it only re-renders when `[:foo :bar]` updates, whereas `quux-component` updates each time `app-state` changes, even though `:quux` never changes.
 
+### Cursors are lazy: `add-watch` on a cursor
+
+A cursor doesn't watch its source atom by itself. Its value is only updated when the cursor is dereferenced, or when it is changed through the cursor (`reset!`/`swap!` on the cursor). This is by design: a cursor that eagerly watched its source atom would keep that watch forever, so every cursor would need to be explicitly destroyed after use to avoid a memory leak. Lazy cursors also perform better.
+
+Inside components this is not noticeable, because the component dereferences the cursor when rendering. But it matters for watches added with `add-watch`:
+
+```clojure
+(def state (r/atom {:a 1 :b 1}))
+(def a-cursor (r/cursor state [:a]))
+
+(add-watch a-cursor :log (fn [_ _ old new] (js/console.log "a:" old "->" new)))
+
+(swap! state assoc :a 2)
+;; Nothing is logged: nothing has dereferenced the cursor.
+
+@a-cursor
+;; Logs "a: nil -> 2". The watch is called when the cursor is dereferenced,
+;; with the previous value the cursor had seen (here nil, as it had never been read).
+
+(swap! state assoc :a 3)
+(swap! state assoc :a 4)
+@a-cursor
+;; Logs "a: 2 -> 4". The intermediate value 3 was never seen.
+
+(reset! a-cursor 5)
+;; Logs "a: 4 -> 5". Changes made through the cursor notify the watches immediately.
+```
+
+If the cursor is dereferenced in a reactive context (a component render, `r/track!`, `run!` or a reaction), it does follow its source atom, and watches on the cursor are called for changes to the source atom when Reagent processes queued updates (on the next animation frame, or on `r/flush`). Several changes before that are seen as one. Once nothing reactive dereferences the cursor anymore, it is lazy again.
+
+If you need to react to changes of the source atom outside a component, use one of these instead of `add-watch` on a cursor:
+
+```clojure
+;; 1. Watch the source atom and compare the value at the path.
+;;    Synchronous, sees every change. Remove the watch when done.
+(add-watch state :a-changed
+           (fn [_ _ old new]
+             (let [old-a (get-in old [:a])
+                   new-a (get-in new [:a])]
+               (when-not (identical? old-a new-a)
+                 (js/console.log "a:" old-a "->" new-a)))))
+
+(remove-watch state :a-changed)
+
+;; 2. Use track! with a function that dereferences the cursor.
+;;    Runs now, and again when the cursor value changes (batched, like
+;;    component updates). Dispose it when done.
+(def a-logger (r/track! (fn [] (js/console.log "a is" @a-cursor))))
+
+(r/dispose! a-logger)
+```
+
 ### More general cursors
 
 The cursor mechanism is more general than described above. You can pass a function that performs arbitrary transformations on one or more atoms.

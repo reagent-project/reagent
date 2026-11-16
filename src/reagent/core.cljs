@@ -309,8 +309,20 @@
   another cursor) these cursors are equivalent:
   `(cursor state [:foo])` and `(cursor set-get [:foo])`.
 
-  Note that a cursor is lazy: its value will not change until it is
-  used. This may be noticed with add-watch."
+  Note that a cursor is lazy: it doesn't watch the source atom by
+  itself, so its value is only updated when the cursor is deref'ed or
+  changed through the cursor (`reset!`/`swap!`). Watches added with
+  `add-watch` on a cursor are therefore not called when the source atom
+  is changed directly, unless the cursor is deref'ed in a reactive
+  context (a component render, `track!`, `run!`, a reaction), in which
+  case they are called when queued updates are processed (next
+  animation frame, or `flush`). Intermediate values may be
+  skipped. A cursor that watched its source eagerly would have to be
+  disposed to avoid leaking.
+
+  To react to changes of the source atom outside components, either
+  `add-watch` the source atom and compare the value at the path, or use
+  `(track! (fn [] (do-something @c)))` and `dispose!` it when done."
   ([src path]
    (ratom/cursor src path)))
 
