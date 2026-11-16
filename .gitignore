@@ -23,3 +23,7 @@ coverage/
 .nrepl.edn
 
 report.html
+
+# Playwright
+test-results/
+playwright-report/

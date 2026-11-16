@@ -2,7 +2,8 @@
   "name": "@reagent-project/reagent",
   "private": true,
   "scripts": {
-    "start": "lein figwheel client-npm"
+    "start": "lein figwheel client-npm",
+    "test:e2e": "shadow-cljs release e2e && playwright test"
   },
   "packageManager": "npm@^11",
   "engines": {
@@ -11,6 +12,7 @@
   },
   "devDependencies": {
     "@cljs-oss/module-deps": "1.1.1",
+    "@playwright/test": "1.64.1",
     "karma": "6.4.4",
     "karma-chrome-launcher": "3.2.0",
     "karma-cli": "2.0.0",

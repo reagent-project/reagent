@@ -16,6 +16,11 @@
          :source-map true
          :compiler-options {:infer-externs :auto}
          :ns-regexp "(reagenttest\\.test.*|reagent\\..*-test)"}
+  ;; Test page for the Playwright specs in e2e/ (npm run test:e2e)
+  :e2e {:target :browser
+        :output-dir "target/e2e/js"
+        :asset-path "/js"
+        :modules {:main {:init-fn reagenttest.e2e.inputs/init!}}}
   :prerender {:target :node-script
               :main sitetools.prerender/-main
               :output-to "target/shadow-cljs-prerender/main.js"}}
