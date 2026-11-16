@@ -1,6 +1,6 @@
 # Reagent user docs review
 
-Started 2026-11-14. Last updated 2026-11-14. This is a working list: update or remove entries as the issues are fixed.
+Started 2026-11-14. Last updated 2026-11-16. This is a working list: update or remove entries as the issues are fixed.
 
 When a page has been reviewed (and updated) against the current Reagent, add YAML front matter at the top of its Markdown file:
 
@@ -19,7 +19,7 @@ The site shows a "Not reviewed yet" notice on guide pages without it, and "Revie
 - The Cljsjs, npm and Material-UI advice is out of date: the FAQ says Reagent depends on Cljsjs packages (`project.clj` has `:dependencies []`), `0.8-upgrade.md` calls Cljsjs "the recommended setup", and the MUI doc shows the v1 `"material-ui"` API while the example project uses `@mui/material` v7.
 - The two indexes have drifted apart: `README.md` doesn't list 7 of the docs that `cljdoc.edn` lists, its numbering is broken, and the HTML-entity FAQ exists twice with different advice.
 
-Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line numbers match the files as of the last update.
+Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md` and the deref caveats and cursor watch sections added to `ManagingState.md` after the review.
 ---
 
 ## 1. Rendering entry point / React versions
@@ -29,7 +29,7 @@ Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line n
   - Verified against `src/reagent/core.cljs:377-381`: the function is `:deprecated "0.10.0"` and throws "moved to reagent.dom namespace".
   - Fix: use `rdomc/create-root` + `rdomc/render` (from `reagent.dom.client`), or at least `reagent.dom/render`.
 - **[high] The "primary entrypoint" is described as `reagent.dom/render`.**
-  - Where: `doc/UsingHiccupToDescribeHTML.md:174-183`.
+  - Where: `doc/UsingHiccupToDescribeHTML.md:179-188`.
   - Verified against `src/reagent/dom.cljs:31-33`. That docstring says "Usable only with React 18 or older", and the repo tests against React 19.3 (`package.json:24-25`).
   - Fix: make `reagent.dom.client/create-root` + `render` the primary example and mention `reagent.dom` as legacy (React ≤18).
 - **[medium] Other examples also use `rdom/render` / `reagent.dom/render`.**
@@ -109,21 +109,21 @@ Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line n
   - Where: `doc/BatchingAndTiming.md:122` ("The `after-update` is similar…").
   - Verified: the function is `reagent.core/after-render` (`src/reagent/core.cljs:348`); `after-update` doesn't exist.
 - **[medium] Wrong `make-reaction` options.**
-  - Where: `doc/ManagingState.md:170-174`. It lists a `derefed` option ("TODO unclear") and says `on-set`/`on-dispose` run "when the reaction is set and unset from the DOM".
+  - Where: `doc/ManagingState.md:222-226`. It lists a `derefed` option ("TODO unclear") and says `on-set`/`on-dispose` run "when the reaction is set and unset from the DOM".
   - Verified at `src/reagent/ratom.cljs:519-531`:
     - The only options are `:auto-run`, `:on-set` and `:on-dispose`.
     - `on-set` runs when the value updates, before watchers are notified.
     - `on-dispose` runs when the reaction is disposed.
 - **[medium] "Reactions are what give `r/atom`, `r/cursor`, and `r/wrap` their power" is wrong.**
-  - Where: `doc/ManagingState.md:168`.
+  - Where: `doc/ManagingState.md:220`.
   - `RAtom` (`ratom.cljs:126`) and `Wrapper` (`:561`) don't use Reaction. Only `RCursor`/`Track` do.
   - Fix: say "reactions back cursors and `track`".
 - **[medium] Wrong flush function for reactions.**
-  - Where: `doc/ManagingState.md:209` ("call `flush` if you depend on reaction side effects").
+  - Where: `doc/ManagingState.md:261` ("call `flush` if you depend on reaction side effects").
   - `r/flush` flushes the render queue (`core.cljs:211-217`). Reaction queues are flushed by `reagent.ratom/flush!` (`ratom.cljs:507`).
   - Fix: name the correct function.
 - **[medium] WIP markers.**
-  - Where: `doc/ManagingState.md:5,107,155,158,174` contain "TODO" notes, and `doc/README.md:7` still has the "[WIP]" title.
+  - Where: `doc/ManagingState.md:5,107,207,210,226` contain "TODO" notes, and `doc/README.md:7` still has the "[WIP]" title.
   - Fix: resolve them or move them to an issue.
 - **[low] Example bugs in ManagingState.md.**
   - `:150` refers to `app-state`, but the example's atom is `state`.
@@ -186,7 +186,7 @@ Scope: all files in `doc/`, checked against the source in `src/reagent/`. Line n
   - Where:
     - `ReactFeatures.md:6,30,32,53,95,97,144,173,226,243`
     - `CreatingReagentComponents.md:90,100,176`
-    - `UsingHiccupToDescribeHTML.md:58`
+    - `UsingHiccupToDescribeHTML.md:63`
     - `FAQ/MyAttributesAreMissing.md:7`
     - `FAQ/dangerouslySetInnerHTML.md:3`
     - `FAQ/UsingRefs.md:33`
