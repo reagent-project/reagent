@@ -1,3 +1,6 @@
+---
+reviewed: 2026-11-16
+---
 # What's new in Reagent 2.0
 
 Reagent 2.0 (2025-10-29) adds React 19 support, a new way to define function

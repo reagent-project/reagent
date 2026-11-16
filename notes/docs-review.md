@@ -19,7 +19,7 @@ The site shows a "Not reviewed yet" notice on guide pages without it, and "Revie
 - The Cljsjs, npm and Material-UI advice is out of date: the FAQ says Reagent depends on Cljsjs packages (`project.clj` has `:dependencies []`), `0.8-upgrade.md` calls Cljsjs "the recommended setup", and the MUI doc shows the v1 `"material-ui"` API while the example project uses `@mui/material` v7.
 - The two indexes have drifted apart: `README.md` doesn't list 7 of the docs that `cljdoc.edn` lists, its numbering is broken, and the HTML-entity FAQ exists twice with different advice.
 
-Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md`, `WhatsNew2.md` and the deref caveats and cursor watch sections added to `ManagingState.md` after the review.
+Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md` and the deref caveats and cursor watch sections added to `ManagingState.md` after the review.
 ---
 
 ## 1. Rendering entry point / React versions
@@ -40,7 +40,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - Reagent provides `reagent.dom.client/hydrate-root` (verified at `src/reagent/dom/client.cljs:72-81`; it takes `{:keys [compiler on-recoverable-error identifier-prefix]}`).
   - Fix: show `(rdomc/hydrate-root container [main-component])` and update the link to react.dev.
 - **[medium] The 2.0 upgrade guide is thin and its React version is stale.**
-  - Where: `doc/2.0-upgrade.md:8-10` says `npm i react@19.2.0`, but `package.json:24` and the CHANGELOG "Unreleased" section test 19.3.
+  - Where: `doc/2.0-upgrade.md:11-13` says `npm i react@19.2.0`, but `package.json:24` and the CHANGELOG "Unreleased" section test 19.3.
   - The guide also omits these 2.0 breaking changes listed in `CHANGELOG.md:62-66`:
     - `reagent.dom/dom-node` was removed.
     - The 2-arity of `force-update` was removed.
@@ -48,7 +48,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
     - `defc` and `reagent.hooks` are new.
   - Fix: use a generic `react@19`, and add a short "Other changes" list that links to the CHANGELOG.
 - **[medium] `reagent1.md` mixes up "Reagent 1" with "React 18 via Cljsjs".**
-  - Where: `doc/reagent1.md:1-13`. The heading is "# Reagent 1", the cljdoc title is "Reagent 1 and React 18", and the content is really "using React ≤18 / Cljsjs", which also applies to Reagent 2 (see `2.0-upgrade.md:5-6`).
+  - Where: `doc/reagent1.md:1-13`. The heading is "# Reagent 1", the cljdoc title is "Reagent 1 and React 18", and the content is really "using React ≤18 / Cljsjs", which also applies to Reagent 2 (see `2.0-upgrade.md:8-9`).
   - Fix: retitle it to "Using React 18 / Cljsjs" and cross-link it from `2.0-upgrade.md`.
 - **[medium] `BatchingAndTiming.md` says nothing about React 18/19.**
   - Where: `doc/BatchingAndTiming.md:3-18`. It describes rAF batching only. Since 2.0, the ratom queue is flushed via `flushSync` (verified at `src/reagent/impl/batching.cljs:31-50` and `dom/client.cljs:61`).
@@ -176,7 +176,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 ## 6. Outdated libraries and links
 
 - **[medium] `0.8-upgrade.md` reads as current advice.**
-  - Where: `doc/0.8-upgrade.md:15` ("**This is the recommended setup.**" for Cljsjs). This contradicts `2.0-upgrade.md:10-11` (Cljsjs can't do React 19).
+  - Where: `doc/0.8-upgrade.md:15` ("**This is the recommended setup.**" for Cljsjs). This contradicts `2.0-upgrade.md:15-16` (Cljsjs can't do React 19).
   - The file also references `create-react-class` (`:25,56,73`), which no longer appears in `src/`, and contains a "???" stub at `:79`.
   - Fix: add a "Historical (Reagent 0.8, 2018)" banner at the top.
 - **[medium] Dev workflow in `development.md` is outdated.**
@@ -243,3 +243,4 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-14: component forms are written in lower case (`form-1`, `form-2`, `form-3`) except at the start of a sentence or heading.
 - 2026-11-14: `http://` links changed to `https://` (all checked). `README.md` now links to re-frame's current docs (`day8.github.io/re-frame/Using-Stateful-JS-Components/`) and `timothypratley.blogspot.com`.
 - 2026-11-16: new `WhatsNew2.md` (from the 2.0.0/2.0.1 changelog); "Reagent 2" nav section with it and the upgrade guide, also at the top of `README.md`.
+- 2026-11-16: `WhatsNew2.md` and `2.0-upgrade.md` marked reviewed.
