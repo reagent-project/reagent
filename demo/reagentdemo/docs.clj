@@ -9,17 +9,12 @@
 
 ;;; Guides from doc/, navigation from doc/cljdoc.edn
 
-(defn doc-path [file]
-  (if (= "doc/README.md" file)
-    "doc/index.html"
-    (string/replace file #"\.md$" ".html")))
-
 (defn nav-tree
   "cljdoc.edn tree -> [{:title :file :path :children}]"
   [entries]
   (vec (for [[title {:keys [file]} & children] entries]
          (cond-> {:title title}
-           file (assoc :file file :path (doc-path file))
+           file (assoc :file file :path (md/doc-path file))
            (seq children) (assoc :children (nav-tree children))))))
 
 (defn flatten-nav [tree]
@@ -98,8 +93,7 @@
     (string/join "\n" (cons first-line (map #(if (string/blank? %) "" (subs % indent)) more)))))
 
 (def def-types
-  '{defn :function, defmacro :macro, def :var, defonce :var, defprotocol :protocol
-    defc :macro})
+  '{defn :function, defmacro :macro, def :var, defonce :var, defprotocol :protocol})
 
 (defn var-info [form]
   (when (and (seq? form) (contains? '#{defn defmacro def defonce defprotocol} (first form)))
@@ -115,7 +109,7 @@
                                            (map first (filter seq? more)))
                          nil))
           doc (or doc (:doc m))]
-      (when-not (or (:private m) (:no-doc m) (= op 'defn-))
+      (when-not (or (:private m) (:no-doc m))
         (cond-> {:name (str sym)
                  :type (def-types op)
                  :arglists (mapv pr-str arglists)
@@ -146,6 +140,11 @@
            {:ns ns-name
             :vars vars
             :doc-html (:html (md/render (unindent (or doc summary))))}))))
+
+(defmacro github-url
+  "The repository URL, shared with the Markdown link rewriting."
+  []
+  md/github)
 
 (defmacro inline-file
   "File contents as a string, at compile time."

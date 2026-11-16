@@ -9,8 +9,8 @@
            [org.commonmark.renderer NodeRenderer]
            [org.commonmark.renderer.html AttributeProvider AttributeProviderFactory HtmlNodeRendererContext HtmlNodeRendererFactory HtmlRenderer HtmlWriter]))
 
-(def github-blob "https://github.com/reagent-project/reagent/blob/master/")
-
+(def github "https://github.com/reagent-project/reagent")
+(def github-blob (str github "/blob/master/"))
 (def extensions [(TablesExtension/create) (AutolinkExtension/create)])
 
 (def ^Parser parser (-> (Parser/builder) (.extensions extensions) (.build)))
@@ -53,6 +53,13 @@
                [])
        (string/join "/")))
 
+(defn doc-path
+  "Site page for a doc file, e.g. doc/FAQ/UsingRefs.md -> doc/FAQ/UsingRefs.html."
+  [file]
+  (if (= "doc/README.md" file)
+    "doc/index.html"
+    (string/replace file #"\.md$" ".html")))
+
 (defn rewrite-href
   "Links between docs point to the site pages, links to other repository files
   point to GitHub. `dir` is the directory of the current file, e.g. \"doc/FAQ\"."
@@ -67,10 +74,7 @@
       (cond
         (and (string/starts-with? full "doc/")
              (string/ends-with? full ".md"))
-        (str (if (= "doc/README.md" full)
-               "doc/index.html"
-               (string/replace full #"\.md$" ".html"))
-             anchor)
+        (str (doc-path full) anchor)
 
         :else (str github-blob full anchor)))))
 

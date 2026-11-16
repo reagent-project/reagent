@@ -1,6 +1,8 @@
-(ns reagentdemo.docs
+;; The macros read doc/*.md and src/, which the shadow-cljs cache doesn't
+;; track (shadow.resource only tracks classpath files): never cache this ns.
+(ns ^:dev/always reagentdemo.docs
   "Guide pages from doc/*.md and API pages from docstrings."
-  (:require-macros [reagentdemo.docs :refer [doc-site api-docs]])
+  (:require-macros [reagentdemo.docs :refer [doc-site api-docs github-url]])
   (:require [clojure.string :as string]
             ["react" :as react]
             [reagent.core :as r]
@@ -9,7 +11,8 @@
 (def site (doc-site))
 (def api (api-docs))
 
-(def github-blob "https://github.com/reagent-project/reagent/blob/master/")
+(def github (github-url))
+(def github-blob (str github "/blob/master/"))
 
 (defn api-path [ns-name]
   (str "/api/" ns-name ".html"))
@@ -141,7 +144,7 @@
 
 (r/defc site-footer []
   [:footer.site-footer
-   [:a {:href "https://github.com/reagent-project/reagent"} "GitHub"] " · "
+   [:a {:href github} "GitHub"] " · "
    [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] " · "
    [:a {:href "https://clojurians.slack.com/messages/reagent/"} "#reagent on Clojurians Slack"] " · "
    [link {:href "/news/index.html"} "Old release notes"]])
@@ -247,9 +250,17 @@
       (string/replace "&amp;" "&")
       (string/replace #"\s+" " ")))
 
+(defn- with-lower-case
+  "Lowercased title and text, computed once instead of per keystroke."
+  [{:keys [title text] :as e}]
+  (assoc e
+         :title-lc (string/lower-case title)
+         :text-lc (some-> text string/lower-case)))
+
 (def search-index
   (delay
-    (vec
+    (mapv
+     with-lower-case
      (concat
       (for [{:keys [path title html headings]} (:pages site)
             entry (cons {:title title :path (str "/" path) :text (html->text html)}
@@ -266,9 +277,12 @@
          :text (some-> doc-html html->text)
          :api true})))))
 
-(defn snippet [text q]
-  (when-some [i (some-> text string/lower-case (string/index-of q))]
-    (let [start (max 0 (- i 40))]
+(defn snippet [text text-lc q]
+  (when-some [i (some-> text-lc (string/index-of q))]
+    ;; The index is into text-lc; use text only when lowercasing kept the
+    ;; length (it doesn't for e.g. "İ"), so the offsets line up.
+    (let [text (if (= (count text) (count text-lc)) text text-lc)
+          start (max 0 (- i 40))]
       (str (when (pos? start) "…")
            (subs text start (min (count text) (+ i (count q) 80)))
            "…"))))
@@ -277,17 +291,16 @@
   (let [q (string/lower-case (string/trim query))]
     (when (<= 2 (count q))
       (->> @search-index
-           (keep (fn [{:keys [title text api] :as e}]
-                   (let [t (string/lower-case title)
-                         score (cond
-                                 (= t q) 100
-                                 (string/starts-with? t q) 50
-                                 (string/includes? t q) 30
-                                 (some-> text string/lower-case (string/includes? q)) 10)]
+           (keep (fn [{:keys [title-lc text text-lc api] :as e}]
+                   (let [score (cond
+                                 (= title-lc q) 100
+                                 (string/starts-with? title-lc q) 50
+                                 (string/includes? title-lc q) 30
+                                 (some-> text-lc (string/includes? q)) 10)]
                      (when score
                        (assoc e
                               :score (+ score (if api 1 0))
-                              :snippet (when (< score 30) (snippet text q)))))))
+                              :snippet (when (< score 30) (snippet text text-lc q)))))))
            (sort-by (comp - :score))
            (take 12)))))
 

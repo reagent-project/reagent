@@ -17,9 +17,7 @@
                  "target/shadow-cljs/client/public/js"])
 
 (defn build []
-  ;; reagentdemo.docs reads doc/*.md in macros, which the shadow-cljs cache
-  ;; doesn't track; drop its cached output so the guides are always current.
-  (fs/delete-if-exists ".shadow-cljs/builds/prerender/dev/ana/reagentdemo/docs.cljs.cache.transit.json")
+  ;; reagentdemo.docs is ^:dev/always, so the guides are always current.
   (shell "npx shadow-cljs compile prerender")
   (shell "node target/shadow-cljs-prerender/main.js target/shadow-cljs/client/public/")
   (fs/delete-tree out-dir)

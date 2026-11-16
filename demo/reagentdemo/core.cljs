@@ -6,8 +6,6 @@
             [reagentdemo.docs :as docs])
   (:require-macros [reagentdemo.docs :refer [inline-file]]))
 
-(def github "https://github.com/reagent-project/reagent")
-
 (def index-page "/index.html")
 (def title "Minimalistic React for ClojureScript")
 
@@ -81,8 +79,8 @@
     [:nav.site-nav
      [link {:href docs/guide-index} "Guide"]
      [link {:href docs/api-index} "API"]
-     [:a {:href (str github "/blob/master/CHANGELOG.md")} "Changelog"]
-     [:a {:href github} "GitHub"]]
+     [:a {:href (str docs/github-blob "CHANGELOG.md")} "Changelog"]
+     [:a {:href docs/github} "GitHub"]]
     [docs/search-box]
     [theme-toggle]]])
 
