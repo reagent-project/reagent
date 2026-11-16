@@ -100,7 +100,11 @@
 ;;; History
 
 (defn init-history [page]
-  (when-not history
+  (if history
+    ;; Hot reload: the page's registration was re-evaluated with its new
+    ;; content (e.g. reagentdemo.docs re-reading doc/*.md), but
+    ;; :current-page still holds the old one; look it up again.
+    (emit [:set-page (get-in @config [:current-page :path] "/index.html")])
     (let [html5 (and page
                      (Html5History.isSupported)
                      (#{"http:" "https:"} js/location.protocol))
