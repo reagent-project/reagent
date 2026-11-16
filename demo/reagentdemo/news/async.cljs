@@ -1,7 +1,7 @@
 (ns reagentdemo.news.async
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]))
 
 (def url "/news/reagent-is-async.html")
@@ -197,4 +197,3 @@
                             :ncolors-choose :color-plate
                             :palette :color-demo])]}]])]]))
 
-(tools/register-page url [#'main] title)

@@ -6,7 +6,7 @@
             [reagentdemo.docs :as docs])
   (:require-macros [reagentdemo.docs :refer [inline-file]]))
 
-(def index-page "/index.html")
+(def index-page "/")
 (def title "Minimalistic React for ClojureScript")
 
 (tools/register-page index-page [#'intro/main] title)

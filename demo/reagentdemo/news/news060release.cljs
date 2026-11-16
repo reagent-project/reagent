@@ -1,6 +1,6 @@
 (ns reagentdemo.news.news060release
   (:require [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.news.news060 :as news060]
             [reagentdemo.news.news060rc :as news060rc]))
 
@@ -42,4 +42,3 @@
       [:section.demo-text
        [story]])]])
 
-(tools/register-page url [#'main] title)

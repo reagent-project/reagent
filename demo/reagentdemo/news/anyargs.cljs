@@ -1,7 +1,7 @@
 (ns reagentdemo.news.anyargs
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [geometry.core :as geometry]))
 
@@ -133,4 +133,3 @@
 
          [demo-component {:comp geometry-example}]])]]))
 
-(tools/register-page url [#'main] title)

@@ -54,10 +54,11 @@
        (string/join "/")))
 
 (defn doc-path
-  "Site page for a doc file, e.g. doc/FAQ/UsingRefs.md -> doc/FAQ/UsingRefs.html."
+  "Site page for a doc file, e.g. doc/FAQ/UsingRefs.md -> doc/FAQ/UsingRefs.html,
+  doc/README.md -> doc/."
   [file]
   (if (= "doc/README.md" file)
-    "doc/index.html"
+    "doc/"
     (string/replace file #"\.md$" ".html")))
 
 (defn rewrite-href

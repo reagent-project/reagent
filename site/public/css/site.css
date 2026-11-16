@@ -876,3 +876,64 @@ code, pre { font-family: var(--mono); }
 }
 
 .test-output-mini button:hover { background: #1f2328; color: #ffd33d; }
+
+/* Archive: old news articles (reagentdemo.news) */
+
+.archive {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 48px;
+}
+
+.archive h1 { color: var(--fg); margin-top: 0; }
+
+.archive-list {
+    list-style: none;
+    padding: 0;
+}
+
+.archive-list li {
+    display: flex;
+    gap: 16px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.archive-date {
+    flex: none;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.archive-notice {
+    margin: 0 0 24px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--fg-muted);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.archive .reagent-demo {
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.archive .reagent-demo > h1 {
+    font-family: inherit;
+    font-size: 36px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.archive .reagent-demo > span { color: var(--fg-muted); }
+
+/* The binary clock has a fixed width (wider still with 1/100 s). */
+.archive .clearfix:has(> .clock-main) { overflow-x: auto; }
+
+@media (max-width: 768px) {
+    .archive { padding: 24px 16px 32px; }
+    .archive .reagent-demo > h1 { font-size: 28px; }
+}

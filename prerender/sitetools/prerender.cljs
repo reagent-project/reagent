@@ -14,7 +14,7 @@
             [fs :as fs]))
 
 (defn base [page]
-  (let [depth (->> page tools/to-relative (re-seq #"/") count)]
+  (let [depth (->> (subs page 1) (re-seq #"/") count)]
     (->> "../" (repeat depth) (apply str))))
 
 (defn danger [t s]
@@ -84,7 +84,8 @@
         {:keys [site-dir pages] :as conf} (assoc @tools/config :js-resource-path js-resource-path)]
     (write-resources site-dir conf)
     (doseq [f (keys pages)]
-      (write-file (->> f tools/to-relative (path/join site-dir))
+      ;; Index pages like "/doc/" are written as doc/index.html.
+      (write-file (path/join site-dir (subs f 1) (if (string/ends-with? f "/") "index.html" ""))
                   (gen-page f conf))))
   (log "Wrote site")
   (js/process.exit 0))

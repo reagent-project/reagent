@@ -17,8 +17,8 @@
 (defn api-path [ns-name]
   (str "/api/" ns-name ".html"))
 
-(def api-index "/api/index.html")
-(def guide-index "/doc/index.html")
+(def api-index "/api/")
+(def guide-index "/doc/")
 
 ;;; Layout
 
@@ -147,7 +147,7 @@
    [:a {:href github} "GitHub"] " · "
    [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] " · "
    [:a {:href "https://clojurians.slack.com/messages/reagent/"} "#reagent on Clojurians Slack"] " · "
-   [link {:href "/news/index.html"} "Old release notes"]])
+   [link {:href "/news/"} "Archive"]])
 
 (r/defc docs-layout [{:keys [headings]} & content]
   ;; The footer is inside the content column so the grid reaches the page
@@ -224,8 +224,8 @@
    [:h1 "API reference"]
    [:p "Generated from the docstrings in the current Reagent source. "
     "API docs for each released version are on "
-    ;; Codox output deployed by build-docs.sh; no .html so the site's link
-    ;; handler leaves it to the browser.
+    ;; Codox output deployed by build-docs.sh; not a site page, so the
+    ;; site's link handler leaves it to the browser.
     [:a {:href "docs/"} "the versioned API docs"] " and on "
     [:a {:href "https://cljdoc.org/d/reagent/reagent/"} "cljdoc"] "."]
    (for [{ns-name :ns :keys [vars doc-html]} api]

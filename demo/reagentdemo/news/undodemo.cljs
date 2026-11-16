@@ -1,7 +1,7 @@
 (ns reagentdemo.news.undodemo
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [todomvc.core :as todomvc]))
 
@@ -90,4 +90,3 @@
 
          [undo-demo-cleanup]])]]))
 
-(tools/register-page url [#'main] title)

@@ -1,7 +1,7 @@
 (ns reagentdemo.news.news051
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.common :as common :refer [demo-component]]
             [clojure.string :as string]))
 
@@ -96,4 +96,3 @@
 
         [:li "Some other bug fixes and performance tweaks."]]])]])
 
-(tools/register-page url [#'main] title)

@@ -1,7 +1,7 @@
 (ns reagentdemo.news.news060rc
   (:require [reagent.core :as r]
             [reagentdemo.syntax :as s]
-            [sitetools.core :as tools :refer [link]]
+            [sitetools.core :refer [link]]
             [reagentdemo.news.news060 :as news060]
             [reagentdemo.common :as common :refer [demo-component]]))
 
@@ -65,4 +65,3 @@
         [:p "Any object hat satisfies IPrintWithWriter is allowed, and
         is converted to a string using " [:code "pr-str" "."]]]])]])
 
-(tools/register-page url [#'main] title)
