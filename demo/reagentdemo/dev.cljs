@@ -1,5 +1,5 @@
 (ns reagentdemo.dev
-  "Initializes the demo app, and runs the tests."
+  "Initializes the demo app and the test runner (tests run on load only when\n  enabled in the DEV box)."
   (:require [reagentdemo.core :as core]
             [reagenttest.runtests :as tests]))
 

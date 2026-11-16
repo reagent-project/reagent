@@ -868,4 +868,11 @@ code, pre { font-family: var(--mono); }
     cursor: pointer;
 }
 
+.test-output-mini label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
 .test-output-mini button:hover { background: #1f2328; color: #ffd33d; }

@@ -22,8 +22,9 @@ compiler). Use `u/*test-compiler*` / `with-render` helpers so both variants are 
 
 Start the dev server (`.claude/launch.json` → `shadow-client`, i.e.
 `npx shadow-cljs watch client`), then open http://localhost:8090 in a browser so
-a CLJS runtime connects. The page also runs the whole test suite on load (result
-box top-right, details in the browser console).
+a CLJS runtime connects. The DEV box in the bottom right corner runs the whole
+test suite ("Run tests", details in the browser console); its "Run on load"
+checkbox, off by default, runs it on every page load.
 
 Then use the shadow nREPL (port in `.shadow-cljs/nrepl.port`):
 
