@@ -109,7 +109,8 @@
   ;; Filter vars on namespaces using ^:dom metadata on test vars.
   (filter-vars! [(ns-publics 'reagenttest.testreagent)
                  (ns-publics 'reagenttest.testwrap)
-                 (ns-publics 'reagenttest.testhooks)]
+                 (ns-publics 'reagenttest.testhooks)
+                 (ns-publics 'reagenttest.testinput)]
                 (fn [var] (not (:dom (meta var))))))
 
 ;; Macro which sets *main-cli-fn*
