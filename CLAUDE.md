@@ -104,8 +104,9 @@ Should report no findings; keep it that way. CI pins the clj-kondo version
 `.clj-kondo/<group>/<artifact>/` are configs imported from libraries on the
 classpath (clojure-lsp copies them, or `clj-kondo --lint <classpath>
 --dependencies --copy-configs --skip-lint`). The ones the code here uses are
-committed; don't edit or reformat them. The rest come from libraries built into
-babashka and are listed in `.gitignore`.
+committed; don't edit or reformat them. The rest are listed in `.gitignore`:
+those from libraries built into babashka, and the copy of Reagent's own export
+(`src/clj-kondo/clj-kondo.exports`).
 
 ## Conventions
 

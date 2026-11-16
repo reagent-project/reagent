@@ -25,6 +25,9 @@ coverage/
 .clj-kondo/http-kit/
 .clj-kondo/rewrite-clj/
 .clj-kondo/taoensso/
+# Copy of our own src/clj-kondo/clj-kondo.exports; .clj-kondo/config.edn
+# already has the same settings
+.clj-kondo/reagent/
 .cpcache/
 .lsp/.cache
 .nrepl.edn
