@@ -1,7 +1,11 @@
 (ns reagentdemo.intro
+  (:require-macros [reagentdemo.docs :refer [project-version]])
   (:require [reagent.core :as r]
             [reagentdemo.common :as common :refer [demo-component]]
+            [reagent.dom.client :as rdomc]
+            [reagentdemo.docs :as docs]
             [reagentdemo.syntax :as s]
+            [sitetools.core :refer [link]]
             [simpleexample.core :as simple]
             [todomvc.core :as todo]))
 
@@ -105,7 +109,11 @@
   (:require [reagent.core :as r]))"))
 
 (def ns-src-with-rdom (s/syntaxed "(ns example
-  (:require [reagent.dom :as rdom]))"))
+  (:require [reagent.dom.client :as rdomc]))"))
+
+(defn render-simple []
+  (let [root (rdomc/create-root (js/document.getElementById "app"))]
+    (rdomc/render root [simple-component])))
 
 (r/defc intro []
   (let [github {:href "https://github.com/reagent-project/reagent"}
@@ -223,9 +231,10 @@
 
    [:p "Reagent supports most of React’s API, but there is really only
    one entry-point that is necessary for most applications: "
-    [:code "reagent.dom/render"] "."]
+    [:code "reagent.dom.client/render"] "."]
 
-   [:p "It takes two arguments: a component, and a DOM node. For
+   [:p "Create a React root for a DOM node with "
+    [:code "create-root"] ", then render a component into it. For
    example, splashing the very first example all over the page would
    look like this:"]
 
@@ -318,18 +327,68 @@
                     :complete true
                     :src (s/src-of nil "todomvc/core.cljs")}]])
 
+(def version (project-version))
+
+(defonce clicks (r/atom 0))
+
+(r/defc counter []
+  [:div
+   [:button {:on-click #(swap! clicks inc)} "Click me"]
+   " Clicked " @clicks " times"])
+
+(r/defc hero []
+  [:div.hero-grid
+   [:div.hero
+    [:h1 "Reagent"]
+    [:p.tagline "A minimalistic ClojureScript interface to "
+     [:a {:href "https://react.dev/"} "React"] "."]
+    [:p.hero-text "Define React components with plain ClojureScript functions
+    and data. Describe the UI with Hiccup, keep state in atoms, and Reagent
+    re-renders what changed."]
+    [:div.hero-actions
+     [link {:href docs/guide-index :class "button primary"} "Read the guide"]
+     [link {:href docs/api-index :class "button"} "API reference"]]
+    [:div.install
+     [:div.install-label "deps.edn"]
+     [:pre [:code "reagent/reagent {:mvn/version \"" version "\"}"]]
+     [:div.install-label "Leiningen"]
+     [:pre [:code "[reagent \"" version "\"]"]]
+     [:div.install-label "npm"]
+     [:pre [:code "npm install react react-dom"]]]]
+   [:div.hero-demo
+    [:div.hero-demo-live
+     [:span.hero-demo-label "Live"]
+     [counter]]
+    (s/src-of [:clicks :counter])]])
+
+(r/defc features []
+  [:div.features
+   [:div
+    [:h3 "Functions and data"]
+    [:p "Components are functions that return Hiccup vectors. No JSX, no
+    classes, no templates."]]
+   [:div
+    [:h3 "Reactive atoms"]
+    [:p "Deref a Reagent atom in a component and it re-renders when the
+    atom changes. Cursors and reactions build on the same idea."]]
+   [:div
+    [:h3 "Plain React underneath"]
+    [:p "Use React components, hooks and libraries directly, with React 18
+    or 19."]]])
+
 (defn main []
-  (let [show-all (r/atom false)
-        head "Reagent: Minimalistic React for ClojureScript"]
+  (let [show-all (r/atom false)]
     (js/setTimeout #(reset! show-all true) 500)
     (fn []
-      [:div.reagent-demo
-       [:h1 head]
-       [intro]
-       [managing-state]
-       [essential-api]
-       [bmi-demo]
-       [performance]
-       ;; Show heavy examples on load, to make html file smaller
-       (when @show-all [complete-simple-demo])
-       (when @show-all [todomvc-demo])])))
+      [:div.landing
+       [hero]
+       [features]
+       [:div.reagent-demo
+        [intro]
+        [managing-state]
+        [essential-api]
+        [bmi-demo]
+        [performance]
+        ;; Show heavy examples on load, to make html file smaller
+        (when @show-all [complete-simple-demo])
+        (when @show-all [todomvc-demo])]])))

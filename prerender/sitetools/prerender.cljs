@@ -36,13 +36,16 @@
      [:base {:href (-> page-conf :page-path base)}]
      [:link {:href (add-cache-buster site-dir css-file)
              :rel "stylesheet"}]
+     ;; Apply the stored theme choice before first paint.
+     [:script "try{var t=localStorage.getItem(\"theme\");if(t)document.documentElement.dataset.theme=t}catch(e){}"]
      [:title title]]
     [:body
      [:div
       {:id "main-content"}
       (danger :div body-html)]
-     (danger :script (str "var pageConfig = "
-                          (-> page-conf clj->js js/JSON.stringify)))
+     ;; React 19 writes <script> text content unescaped.
+     [:script (str "var pageConfig = "
+                   (-> page-conf clj->js js/JSON.stringify))]
      [:script {:src (add-cache-buster js-resource-path js-file)
                :type "text/javascript"}]]]))
 

@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["shadow-cljs", "watch", "client"],
       "port": 8090
+    },
+    {
+      "name": "site-prerendered",
+      "runtimeExecutable": "bb",
+      "runtimeArgs": ["site-preview-watch", "8095"],
+      "port": 8095
     }
   ]
 }

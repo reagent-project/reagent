@@ -44,14 +44,48 @@
                     ps (:pages state)
                     p (get ps path (get ps "/index.html"))]
                 (recur state [:set-content p]))
-    :goto-page (let [path x
-                     _ (assert (string? path))]
+    :goto-page (let [_ (assert (string? x))
+                     [path anchor] (string/split x #"#" 2)]
                  (when-some [h history]
                    (r/after-render (fn []
-                                     (.setToken h x)
-                                     (js/scrollTo 0 0)))
-                   state)
-                 (recur state [:set-page x]))))
+                                     (.setToken h path)
+                                     ;; With HTML5 history keep the anchor in
+                                     ;; the URL; hash history uses the
+                                     ;; fragment for the page path.
+                                     (when (and anchor (instance? Html5History h))
+                                       (js/history.replaceState nil "" (str js/location.pathname "#" anchor)))
+                                     (if-some [el (and anchor (js/document.getElementById anchor))]
+                                       (.scrollIntoView el)
+                                       (js/scrollTo 0 0)))))
+                 (recur state [:set-page path]))))
+
+(declare emit)
+
+(defn goto-page
+  "Navigate to a site page, path like \"/doc/index.html#anchor\"."
+  [path]
+  (emit [:goto-page path]))
+
+(defn internal-link-handler
+  "on-click handler for a container of plain links (e.g. rendered markdown):
+  navigates relative .html links within the site without a page load, and
+  handles same-page #anchor links (which would otherwise clash with the
+  hash history used in development)."
+  [^js e]
+  (when-some [a (.closest (.-target e) "a")]
+    (let [href (.getAttribute a "href")]
+      (when (and href
+                 (not (.-defaultPrevented e))
+                 (not (.-metaKey e)) (not (.-ctrlKey e)))
+        (cond
+          (string/starts-with? href "#")
+          (do (.preventDefault e)
+              (goto-page (str (get-in @config [:current-page :path]) href)))
+
+          ;; Relative links only: no scheme (https:), no leading / or #.
+          (re-find #"^[^:/#][^:#]*\.html(#.*)?$" href)
+          (do (.preventDefault e)
+              (goto-page (str "/" href))))))))
 
 (defn emit [event]
   ;; (dbg event)
@@ -61,12 +95,16 @@
   {:pre [(re-matches #"/.*[.]html" url)
          (vector? comp)]}
   (swap! config update-in [:pages]
-         assoc url {:content comp :title title}))
+         assoc url {:content comp :title title :path url}))
 
 ;;; History
 
 (defn init-history [page]
-  (when-not history
+  (if history
+    ;; Hot reload: the page's registration was re-evaluated with its new
+    ;; content (e.g. reagentdemo.docs re-reading doc/*.md), but
+    ;; :current-page still holds the old one; look it up again.
+    (emit [:set-page (get-in @config [:current-page :path] "/index.html")])
     (let [html5 (and page
                      (Html5History.isSupported)
                      (#{"http:" "https:"} js/location.protocol))
@@ -96,12 +134,12 @@
 
 ;;; Components
 
-(defn link [props child]
-  [:a (assoc props
-             :href (-> props :href to-relative)
-             :on-click #(do (.preventDefault %)
-                            (emit [:goto-page (:href props)])))
-   child])
+(defn link [props & children]
+  (into [:a (assoc props
+                   :href (-> props :href to-relative)
+                   :on-click #(do (.preventDefault %)
+                                  (emit [:goto-page (:href props)])))]
+        children))
 
 (defn main-content []
   (get-in @config [:current-page :content]))
