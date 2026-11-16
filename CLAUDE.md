@@ -47,6 +47,22 @@ npx shadow-cljs compile test && npx karma start test-environments/shadow-cljs-pr
 ~30s cold; faster if the shadow server is already running. Runs all ~200 tests
 in ChromeHeadless.
 
+### Controlled input e2e (Playwright, Chromium)
+
+`e2e/inputs.spec.js` types into the page `test/reagenttest/e2e/inputs.cljs`
+(shadow-cljs `:e2e` build) with real, trusted input (keyboard, CDP IME
+composition) to test `reagent.impl.input`. Known bugs are marked `test.fail`
+with the issue link (the list reporter shows them as ✘ but counts them as
+passed; they fail the run if they start passing).
+
+```bash
+npx playwright install chromium-headless-shell   # once
+npm run test:e2e   # shadow-cljs release e2e && playwright test
+```
+
+`npx playwright test` alone reuses the last build; `--repeat-each 20` checks
+for flakiness.
+
 ### All environments (CI-equivalent, slow)
 
 `./run-tests.sh` runs every `test-environments/*/test.sh` (lein/cljsbuild with npm
