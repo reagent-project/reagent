@@ -13,7 +13,7 @@ Reagent doesn't currently provide helpers or an example on how to do this.
 
 *Currently* rendering Reagent components on the JVM is out of scope for the project.
 
-It would be possible to to render the hiccup-style markup with just Clojure
+It would be possible to render the hiccup-style markup with just Clojure
 code without using React, but the approach has big limitations:
 
 - Any JS libraries (like Material-UI) would be unavailable

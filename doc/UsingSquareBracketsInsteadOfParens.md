@@ -152,9 +152,9 @@ Armed with a bit more knowledge, we'll revisit this subject at the end of the ne
 
 ## A Further, Significant "Why"
 
-In the examples above, we've explored [Form-1 components](CreatingReagentComponents.md#form-1-a-simple-function)  - the simplest kind - and we've seen we have some choice regarding use of `()` or `[]`. Eventually, I claim that `[]` is much preferred, but you can get away with `()`, up to a point. 
+In the examples above, we've explored [form-1 components](CreatingReagentComponents.md#form-1-a-simple-function)  - the simplest kind - and we've seen we have some choice regarding use of `()` or `[]`. Eventually, I claim that `[]` is much preferred, but you can get away with `()`, up to a point. 
 
-**But** ... the moment you start using Form-2 or Form-3 components, you absolutely must be using `[]`.  No choice.  Using `()` just won't work at all. Given the explanations above, I'm hoping you can work out why. Either that or just shrug and use `[]` forever more. 
+**But** ... the moment you start using form-2 or form-3 components, you absolutely must be using `[]`.  No choice.  Using `()` just won't work at all. Given the explanations above, I'm hoping you can work out why. Either that or just shrug and use `[]` forever more. 
 
 ### Appendix #1
 

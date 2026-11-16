@@ -115,7 +115,7 @@ Child component 2:
    "More"])    
 ```
 
-And, finally, a Form-2 parent Component which uses these two child components:
+And, finally, a form-2 parent Component which uses these two child components:
 ```clj
 (defn parent
   [] 
@@ -239,7 +239,7 @@ What happens next?
 2. So it will rerender that component. In the hiccup produced (by the rerender), it will see that `greet-family-square` has a new 3rd prop. And, by that, I mean that the value for the 3rd prop ("Uncle John") will not compare `=` to the value last rendered ("Aunt Edith"). 
 3. So Reagent will trigger a rerender of `greet-family-square` with the new props ("Mum" "Dad" and "Uncle John")
 4. In the hiccup produced by this rerender, Reagent will notice that the first two `greet` components have the same prop as that last rendered ("Mum" and "Dad") but that the 3rd `greet` component has a new prop value ("Uncle John"). 
-5. So it will NOT rerender the first two `greet`, but the renderer for the 3rd will be rereun. 
+5. So it will NOT rerender the first two `greet`, but the renderer for the 3rd will be rerun. 
  
 As you can see, only the right parts of the tree are re-rendered.  Nothing unnecessary is done.
 

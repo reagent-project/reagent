@@ -312,7 +312,7 @@ in a RAtom (or state hook.)
 (defn slow-component []
   (when (nil? (.-current data))
     ;; React 18, in 19 react/use replaces throwing Promises to suspend
-    ;; an component.
+    ;; a component.
     (throw slow-data-request))
   [:div (.-current data)])
 

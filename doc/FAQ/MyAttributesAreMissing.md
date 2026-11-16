@@ -1,8 +1,6 @@
-### Question
+# Why is my attribute (like `autoFocus`) missing?
 
-Why isn't my attribute `xyz` showing up on <some-element>?  (where is `xyz` is something like `autoFocus`)
-
-### Answer
+Why isn't my attribute `xyz` showing up on `<some-element>`?
 
 You might be spelling it incorrectly. 
 

@@ -62,7 +62,7 @@ The `:style` attribute can be written a string or as a map. The following two ar
 
 The map form is the same as [React's style attribute](https://reactjs.org/docs/dom-elements.html#style), except that when using the map form of the style attribute, the keys should be the same as the CSS attribute as shown in the example above (not in camel case as is required JavaScript).
 
-### CSS custom properties styntax
+### CSS custom properties syntax
 
 To create an element with a CSS custom property like this:
 
@@ -83,7 +83,7 @@ starting with `--` but it isn't implemented now.
 
 ## Special interpretation of `class` attribute
 
-In JavaScript, `class` is a reserved keyword, so React uses the `className` to specify class attibutes. Reagent just uses `class`.
+In JavaScript, `class` is a reserved keyword, so React uses the `className` to specify class attributes. Reagent just uses `class`.
 
 The `class` attribute of HTML elements accepts a string, a keyword or
 symbol, or a collection of these. Collections can be nested, and `nil` and

@@ -1,4 +1,4 @@
-# Forcing Component re-creation?
+# How do I force component re-creation?
 
 ## React key with a stateful component
 

@@ -1,3 +1,8 @@
+## Reagent 2
+
+- [What's new in Reagent 2.0](WhatsNew2.md): React 19, `defc` and `reagent.hooks`
+- [Upgrading to 2.0](2.0-upgrade.md)
+
 ## Tutorials
 
 0. [Getting Started](GettingStarted.md): create a new app with shadow-cljs
@@ -11,20 +16,20 @@
 8. [React Features](ReactFeatures.md) and how to use them in Reagent
 8. [Reagent Compiler](ReagentCompiler.md)
 8. [Controlled Inputs](ControlledInputs.md)
+8. [Best Practices](BestPractices.md) (draft)
 8. [Web Components (Custom Elements)](WebComponents.md)
 
 Also:
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/) - an excellent, written tutorial
-  * [Reagent Deep Dive Series by Timothy Pratley](http://timothypratley.blogspot.com.au/p/p.html) - a four part series
+  * [Reagent Deep Dive Series by Timothy Pratley](https://timothypratley.blogspot.com/p/p.html) - a four part series
   * [Reagent Mysteries series by Paulus Esterhazy](https://presumably.de/) - a four part series
   * [Props, Children & Component Lifecycle](https://www.martinklepsch.org/posts/props-children-and-component-lifecycle-in-reagent.html) by Martin Klepsch
-  * [Using Stateful JS Components - like D3](https://github.com/Day8/re-frame/blob/master/docs/Using-Stateful-JS-Components.md)  (external link)
+  * [Using Stateful JS Components - like D3](https://day8.github.io/re-frame/Using-Stateful-JS-Components/)  (external link)
 
 ## Commercial Videos Series
 
-  * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT)
-  * [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
-  * [Learn Re-frame](https://www.jacekschae.com/learn-re-frame-pro?coupon=REAGENT) (Affiliate link, early access)
+  * [Learn Reagent](https://clojure.stream/courses/reagent) by Jacek Schae (ClojureStream)
+  * [Learn Re-frame](https://clojure.stream/courses/reframe) by Jacek Schae (ClojureStream)
   * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
   * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
@@ -38,7 +43,7 @@ Also:
 5. [Reagent doesn't work after updating dependencies](FAQ/CljsjsReactProblems.md)
 5. [How do I force Component re-creation?](FAQ/ForcingComponentRecreation.md)
 5. [Using HTML entities](FAQ/HtmlEntities.md)
-6. [How do I access "props" in lifecycle methods?](http://nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
+6. [How do I access "props" in lifecycle methods?](https://www.nils-blum-oeste.net/clojurescripts-reagent-using-props-in-lifecycle-hooks/) (external link)
 
 ## Examples
 
