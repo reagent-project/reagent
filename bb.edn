@@ -1,5 +1,8 @@
 {:paths ["bb"]
- :deps {org.babashka/http-server {:mvn/version "0.1.13"}}
+ :min-bb-version "1.13.220" ; babashka.filewatcher needs babashka.ffi
+ :deps {org.babashka/http-server {:mvn/version "0.1.13"}
+        io.github.babashka/filewatcher {:git/url "https://github.com/babashka/filewatcher"
+                                        :git/sha "8353fe0f6f6715428eba4ac7d7cceb865dcd2840"}}
  :tasks {figwheel {:task (shell "lein figwheel")}
          shadow {:task (shell "npx shadow-cljs watch client")}
          build-report {:task (shell "npx shadow-cljs run shadow.cljs.build-report client report.html")}

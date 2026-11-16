@@ -9,7 +9,9 @@
                                  change"
   (:require [babashka.fs :as fs]
             [babashka.http-server :as http-server]
-            [babashka.process :refer [shell]]))
+            [babashka.filewatcher :as fw]
+            [babashka.process :refer [shell]])
+  (:import [java.util.concurrent LinkedBlockingQueue TimeUnit]))
 
 (def out-dir "target/site-preview")
 
@@ -34,36 +36,46 @@
     (catch Exception e
       (println "[site-preview] build failed:" (ex-message e)))))
 
-(defn- changed-since [^long t]
-  (into []
-        (comp (filter fs/exists?)
-              (mapcat #(fs/glob % "**" {:hidden false}))
-              (filter #(and (fs/regular-file? %)
-                            (> (.toMillis (fs/last-modified-time %)) t))))
-        watch-dirs))
+(def settle-ms
+  "Rebuild once no change has arrived for this long, so a burst of saves (or
+  the client watch build writing its output) causes one build."
+  300)
+
+(defn- take-changes
+  "Waits for a change (forever, or up to `wait-ms`), then collects changes
+  until settle-ms pass without one. Returns the changed paths."
+  ([q] (take-changes q nil))
+  ([^LinkedBlockingQueue q wait-ms]
+   (loop [paths (if-some [p (if wait-ms
+                              (.poll q wait-ms TimeUnit/MILLISECONDS)
+                              (.take q))]
+                  [p]
+                  [])]
+     (if-some [p (and (seq paths) (.poll q settle-ms TimeUnit/MILLISECONDS))]
+       (recur (conj paths p))
+       paths))))
 
 (defn watch [& [port]]
-  (let [port (parse-long (or port "8095"))]
+  (let [port (parse-long (or port "8095"))
+        changes (LinkedBlockingQueue.)]
     (try-build)
     (http-server/serve {:port port :dir out-dir})
+    (fw/watch (filterv fs/exists? watch-dirs)
+              (fn [{:keys [type path error]}]
+                (case type
+                  :ready nil
+                  :error (println "[site-preview] watch error:" (ex-message error))
+                  (.put changes path)))
+              {:ignore-initial true})
     (println (str "[site-preview] serving http://localhost:" port))
-    (loop [since (System/currentTimeMillis)]
-      (Thread/sleep 1000)
-      (let [now (System/currentTimeMillis)
-            changed (changed-since since)]
-        (if (empty? changed)
-          (recur now)
-          (do
-            ;; Let a burst of saves (or the client watch build) settle.
-            (loop []
-              (Thread/sleep 1000)
-              (when (seq (changed-since (- (System/currentTimeMillis) 1000)))
-                (recur)))
-            ;; The guides are read by macros in reagentdemo.docs; touching it
-            ;; makes the client watch recompile them too.
-            (when (some #(fs/starts-with? % "doc") changed)
-              (fs/set-last-modified-time "demo/reagentdemo/docs.cljs"
-                                         (fs/instant->file-time (java.time.Instant/now))))
-            (let [start (System/currentTimeMillis)]
-              (try-build)
-              (recur start))))))))
+    (loop []
+      (let [changed (take-changes changes)]
+        ;; The guides are read by macros in reagentdemo.docs; touching it
+        ;; makes the client watch recompile them too.
+        (when (some #(fs/starts-with? % "doc") changed)
+          (fs/set-last-modified-time "demo/reagentdemo/docs.cljs"
+                                     (fs/instant->file-time (java.time.Instant/now)))
+          ;; Swallow the change event of the touch itself.
+          (take-changes changes 1000))
+        (try-build)
+        (recur)))))
