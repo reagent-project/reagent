@@ -7,6 +7,7 @@
             [reagenttest.testwithlet]
             [reagenttest.testwrap]
             [reagenttest.testhooks]
+            [reagenttest.testinput]
             [reagenttest.performancetest]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
