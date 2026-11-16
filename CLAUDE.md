@@ -61,7 +61,8 @@ npm run test:e2e   # shadow-cljs release e2e && playwright test
 ```
 
 `npx playwright test` alone reuses the last build; `--repeat-each 20` checks
-for flakiness.
+for flakiness. The page is served on port 8091; set `E2E_PORT` to run in
+several checkouts at once.
 
 ### All environments (CI-equivalent, slow)
 

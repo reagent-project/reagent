@@ -14,22 +14,22 @@
   (js/setTimeout f 0))
 
 (defn controlled-input
-  [{:keys [id type transform async? style]
-    :or {type "text" transform identity}}]
+  [{:keys [id tag type transform async? style]
+    :or {tag :input transform identity}}]
   (let [v (get @state id "")
         update! (fn [x] (swap! state assoc id (transform x)))]
     [:div {:style {:margin "8px 0"}}
      [:label {:for id :style {:display "inline-block" :width 160}} id]
-     [:input {:id id
-              :data-testid id
-              :type type
-              :style style
-              :value v
-              :on-change (fn [e]
-                           (let [x (.. e -target -value)]
-                             (if async?
-                               (later #(update! x))
-                               (update! x))))}]
+     [tag {:id id
+           :data-testid id
+           :type type
+           :style style
+           :value v
+           :on-change (fn [e]
+                        (let [x (.. e -target -value)]
+                          (if async?
+                            (later #(update! x))
+                            (update! x))))}]
      [:pre {:data-testid (str id "-state") :style {:display "inline" :margin-left 8}}
       v]]))
 
@@ -38,6 +38,8 @@
    {:id "email-sync" :type "email"}
    {:id "number-sync" :type "number"}
    {:id "upper-sync" :transform str/upper-case}
+   {:id "textarea-sync" :tag :textarea}
+   {:id "textarea-upper-sync" :tag :textarea :transform str/upper-case}
    {:id "narrow-sync" :style {:width "80px"}}
    {:id "narrow-upper-sync" :transform str/upper-case :style {:width "80px"}}
    {:id "ime-sync"}

@@ -6,6 +6,11 @@ import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const port = Number(process.env.PORT || 8091);
+const mainJs = path.join(root, 'target/e2e/js/main.js');
+if (!fs.existsSync(mainJs)) {
+  console.error(`${mainJs} not found. Build it first: npx shadow-cljs release e2e (or npm run test:e2e)`);
+  process.exit(1);
+}
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.map': 'application/json' };
 
 http.createServer((req, res) => {

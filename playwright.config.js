@@ -3,7 +3,8 @@
 // Run with `npm run test:e2e`, which first builds the :e2e shadow-cljs build.
 const { defineConfig, devices } = require('@playwright/test');
 
-const port = 8091;
+// Set E2E_PORT to run in several checkouts at the same time.
+const port = Number(process.env.E2E_PORT || 8091);
 
 module.exports = defineConfig({
   testDir: './e2e',
@@ -21,6 +22,8 @@ module.exports = defineConfig({
     command: 'node e2e/server.mjs',
     url: `http://127.0.0.1:${port}/`,
     env: { PORT: String(port) },
-    reuseExistingServer: !process.env.CI,
+    // Never reuse: a server left running by another checkout would serve
+    // that checkout's build.
+    reuseExistingServer: false,
   },
 });
