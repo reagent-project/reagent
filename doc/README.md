@@ -57,5 +57,5 @@ Many Thanks!! We'd like that:
 
 #### Misc Docs
 
- - [0.8-upgrade](0.8-upgrade.md)
+ - [Upgrading to 0.8](0.8-upgrade.md)
  - [development](development.md)
