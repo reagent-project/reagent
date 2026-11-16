@@ -15,7 +15,7 @@ jobs:
           clj-kondo: 2026.10.26
           cljfmt: 0.16.6
       - name: clj-kondo
-        run: clj-kondo --lint src test
+        run: ./lint.sh
       - name: cljfmt check
         run: ./cljfmt.sh check
 

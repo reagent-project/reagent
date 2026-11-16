@@ -1,0 +1,4 @@
+{:linters {:babashka-fs/with-temp-dir-first-arg-not-vector {:level :error}
+           :babashka-fs/with-temp-dir-vector-arg-needs-binding-symbol {:level :error}
+           :babashka-fs/with-temp-dir-vector-arg-extra-value {:level :error}}
+ :hooks {:analyze-call {babashka.fs/with-temp-dir babashka.fs/with-temp-dir}}}

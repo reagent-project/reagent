@@ -1,9 +1,7 @@
 (ns sitetools.core
   (:require [clojure.string :as string]
             [goog.events :as evt]
-            ["react" :as react]
             [reagent.core :as r]
-            [reagent.dom :as rdom]
             [reagent.dom.client :as rdomc])
   (:import goog.History
            [goog.history Html5History EventType]))
@@ -183,5 +181,6 @@
       ;; Enable StrictMode to warn about e.g. findDOMNode
       ;; NOTE: timer-component will go forward 2 seconds at a time, because the
       ;; render fn will be called twice and it will register two timeouts.
+      ;; Needs ["react" :as react] in the ns requires.
       ; (rdomc/render @react-root [:> react/StrictMode {} body])
       (rdomc/render @react-root body))))

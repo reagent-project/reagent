@@ -1,8 +1,6 @@
 (ns shadow-dom-input-demo.core
-  (:require [clojure.string :as str]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [reagent.dom.client :as rdomc]
-            ["react-dom/client" :as rdom-client]
             [shadow.cljs.modern :refer [defclass]]))
 
 (defonce shadow-value (r/atom ""))

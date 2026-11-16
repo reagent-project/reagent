@@ -1,0 +1,36 @@
+(ns babashka.fs
+  (:require [clj-kondo.hooks-api :as api]))
+
+(defn- symbol-node? [node]
+  (and (api/token-node? node)
+       (symbol? (api/sexpr node))))
+
+(defn with-temp-dir
+  [{:keys [node]}]
+  (let [args (rest (:children node))
+        binding-like-vector (first args)
+        body (rest args)]
+    (when-not (zero? (count args)) ;; let clj-kondo report on arity
+      (if-not (api/vector-node? binding-like-vector)
+        (api/reg-finding! (assoc (meta binding-like-vector)
+                                 :message "babashka.fs/with-temp-dir requires a vector for first arg"
+                                 :type :babashka-fs/with-temp-dir-first-arg-not-vector))
+        (let [[binding-sym options & rest-in-vec] (:children binding-like-vector)]
+          (when (not (symbol-node? binding-sym))
+            (api/reg-finding! (assoc (meta (or binding-sym binding-like-vector))
+                                     :message "babashka.fs/with-temp-dir vector arg requires binding-name symbol as first value"
+                                     :type :babashka-fs/with-temp-dir-vector-arg-needs-binding-symbol)))
+          (doseq [extra-vector-arg rest-in-vec]
+            (api/reg-finding! (assoc (meta extra-vector-arg)
+                                     :message "babashka.fs/with-temp-dir vector arg accepts at most 2 values"
+                                     :type :babashka-fs/with-temp-dir-vector-arg-extra-value)))
+
+          (when binding-sym
+            {:node (api/list-node
+                     ;; satisfy linter by creating binding for for binding-sym
+                    (list*
+                     (api/token-node 'let)
+                       ;; it doesn't really matter what we bind to, so long as it is bound
+                     (api/vector-node [binding-sym (api/token-node nil)])
+                     options ;; avoid unused binding when options is a binding
+                     body))}))))))

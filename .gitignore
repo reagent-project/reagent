@@ -18,6 +18,13 @@ junit
 coverage/
 
 .clj-kondo/.cache
+# Configs clojure-lsp imports from libraries built into babashka (bb.edn
+# classpath), not used by the code here
+.clj-kondo/babashka/ffi/
+.clj-kondo/hiccup/
+.clj-kondo/http-kit/
+.clj-kondo/rewrite-clj/
+.clj-kondo/taoensso/
 .cpcache/
 .lsp/.cache
 .nrepl.edn
