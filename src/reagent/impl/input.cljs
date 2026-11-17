@@ -1,7 +1,8 @@
 (ns reagent.impl.input
   (:require [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
-            [reagent.impl.protocols :as p]))
+            [reagent.impl.protocols :as p]
+            [reagent.debug :refer-macros [warn]]))
 
 ;; <input type="??" >
 ;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
@@ -16,6 +17,11 @@
 (declare input-component-set-value)
 
 (def ^:dynamic *force-set-dom-value* false)
+
+(def ^:dynamic *change*
+  "While a controlled input's on-change runs: a JS object with the input node
+  and its value before the change, for reject-change!."
+  nil)
 
 (defn get-true-active-element []
   ;; For controlled inputs `input-node-set-value` tries to do some heurestics to
@@ -135,9 +141,10 @@
   ;; text stays: Reagent can't tell that apart from state that is updated
   ;; later (e.g. re-frame dispatch while the event queue is busy), and
   ;; restoring the rendered value then would lose keys (#676). To reject a
-  ;; change, on-change can set the node's value itself.
+  ;; change, on-change calls reject-change! or sets the node's value itself.
   (let [node (.-target e)
         v (.-value node)
+        previous (.-cljsDOMValue this)
         cursor (when (has-selection-api? (.-type node))
                  (.-selectionStart node))]
     (set! (.-cljsDOMValue this) v)
@@ -145,7 +152,13 @@
       (set! (.-cljsPendingValues this) #js []))
     (.push (.-cljsPendingValues this) v)
     (try
-      (on-change e)
+      ;; Properties set with set!, not a #js literal: its quoted keys would
+      ;; not match the renamed property names under advanced compilation.
+      (binding [*change* (let [c #js {}]
+                           (set! (.-node c) node)
+                           (set! (.-previous c) previous)
+                           c)]
+        (on-change e))
       (finally
         ;; Also if on-change throws: it may have written the node first.
         (let [nv (.-value node)]
@@ -166,6 +179,18 @@
             (when (and (some? cursor)
                        (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
               (set-cursor-from-end! node nv (- (count v) cursor)))))))))
+
+(defn reject-change!
+  "Put the value the input had before the change being handled back into the
+  input. input-handle-change then treats it as a value on-change wrote."
+  [e]
+  (let [c *change*
+        node (.-target e)]
+    (if (and (some? c) (identical? node (.-node c)))
+      (set! (.-value node) (.-previous c))
+      (warn "reject-change! was called outside the :on-change of a controlled "
+            ":input or :textarea (one with :value and :on-change). The change "
+            "isn't rejected."))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]

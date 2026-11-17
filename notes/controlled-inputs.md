@@ -25,10 +25,10 @@ What broke: `:on-change` handlers that rely on the revert, e.g.
 - truncating to a maximum length: `(reset! s (subs v 0 5))`,
 - filtering: `(reset! s (str/replace v #"\D" ""))`.
 
-The typed text stays visible while the state differs. The documented
-workaround (`doc/ControlledInputs.md`, "Rejecting a change") is to write the
-last accepted value into the input in `:on-change`. With re-frame that needs
-`dispatch-sync`, as the db otherwise lags behind the input.
+The typed text stays visible while the state differs. To reject a change,
+`:on-change` calls `r/reject-change!` (added in #690), which writes the value
+the input had before the change back into it (`doc/ControlledInputs.md`,
+"Rejecting a change"). It works with async state too.
 
 Whether the breaking change stays is still open. These are options to soften
 it or make rejecting easier.
@@ -61,21 +61,23 @@ synchronously.
 - Can be combined with the blur restore: blur by default, opt-in for the old
   behavior.
 
-### Give on-change the previous value
+### Give on-change the previous value (done: `r/reject-change!`)
 
 Reagent already knows the DOM value before the change (`cljsDOMValue` before
 `input-handle-change` updates it), including values the app set. User code
 can't track this correctly without copying the pending-value logic: a local
 "last accepted value" goes stale when the app sets the value (e.g. clears the
-input). Options:
+input).
 
-- a function, e.g. `(r/reject-change! e)`, that writes the previous DOM value
-  back into the input (and keeps the cursor, which `input-handle-change`
-  already does for writes from `:on-change`);
-- `:on-change` returning a marker (e.g. `false`) to reject the change.
+#690 adds `(r/reject-change! e)`: `input-handle-change` binds the node and
+the previous value while `:on-change` runs, and `reject-change!` writes the
+previous value back (the cursor is kept by the code that handles writes from
+`:on-change`). Outside such an `:on-change` it warns and does nothing.
+InterMine's bluegenes has an app-side `inputs/reject-input!` for the same
+purpose, used by 2 of about 108 inputs.
 
-This makes the documented workaround easy to get right with async state too,
-without `dispatch-sync`.
+Not done: `:on-change` returning a marker (e.g. `false`) to reject the
+change. A return value is easy to return by accident (e.g. from `when`).
 
 ### Cursor when on-change moves it to the end
 
@@ -129,6 +131,7 @@ Status is as of #690.
 | 14 | Sync on-change transforms back to the current state (drop a 0, truncate, filter) | Transformed value written | Stays, like 13 | B (conflicts with 10) | `number-nozero-sync` |
 | 15 | Async on-change rejects a change | Typed text reverted | Stays | B (conflicts with 10) | `reject-async`, `async-on-change-rejects-key` |
 | 16 | on-change writes the last accepted value into the input | Rejected text removed, caret where the key was typed | Passes | C | `reject-restore-sync`, `on-change-restores-value*`, `async-on-change-restores-value` |
+| 16b | on-change calls `r/reject-change!` (sync and async state) | Value before the change restored, caret where the key was typed | Passes | C | `reject-change-sync`, `reject-change-async`, `on-change-reject-change`, `async-on-change-reject-change`, `reject-change-outside-on-change` |
 | 17 | on-change writes the input and moves the caret to the end itself | Caret at the end | Moved back to the old distance from the end | C (setter hook prototype, depends on React internals) | `on-change-moves-cursor-after-write` (prototype only) |
 | 18 | React StrictMode remount | Same as without StrictMode | Passes | C | `strict-mode-*` |
 | 19 | Input rendered by a JS component (`react/createElement "input"`) | Same as a Reagent input | Cursor jumps, lost keys, doubled IME letters | A (Reagent never sees the input) | `js-text-sync` |
@@ -139,9 +142,10 @@ Status is as of #690.
 - **13, 14, 15 vs 10:** after a change, the rendered value stays at the old
   value either because on-change rejected it or because the state hasn't
   caught up yet. Reverting fixes 13-15 and loses keys in 10, however long it
-  waits. #690 picks 10. Resolving both needs the app to say which it is, see
-  "Possible solutions" (reject API, opt-in, or reverting on blur, which
-  avoids the key loss).
+  waits. #690 picks 10. Resolving both needs the app to say which it is:
+  `r/reject-change!` (#690) does that for 13 and 15; for 14 the app calls it
+  or writes the value. See "Possible solutions" for the opt-in revert and
+  reverting on blur.
 - **11 vs 7:** a lagging transformed value ("A" for typed "a") isn't one of
   the reported values, so it looks like a new value from the app. Writing it
   loses keys typed since; not writing it would break 7. Would need on-change

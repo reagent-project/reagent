@@ -45,8 +45,8 @@
   (r/adapt-react-class (fn [props] (react/createElement input-component props))))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? delay rerender? style accept? restore? note
-           known-issue]
+  [{:keys [id tag type transform async? delay rerender? style accept? restore?
+           reject-change? note known-issue]
     :or {tag :input transform identity accept? (constantly true)}}]
   (when rerender? @tick)
   (let [v (get @state id "")
@@ -63,6 +63,8 @@
            :on-change (fn [e]
                         (let [x (.. e -target -value)]
                           (cond
+                            (and reject-change? (not (accept? x)))
+                            (r/reject-change! e)
                             async? (later #(update! x) delay)
                             (and restore? (not (accept? x)))
                             ;; Reject by putting the current value back into
@@ -136,16 +138,24 @@
     :note "on-change rejects values with digits, keeping the state unchanged."
     :known-issue (str "the typed digit stays in the input, but not in the "
                       "state. Reagent can't tell a rejected change from state "
-                      "that is updated later. Put the value back in on-change, "
-                      "as reject-restore-sync does.")}
+                      "that is updated later. Call r/reject-change! in "
+                      "on-change, as reject-change-sync does.")}
    {:id "reject-restore-sync" :accept? #(not (re-find #"[0-9]" %)) :restore? true
     :note (str "on-change rejects values with digits and puts the current "
                "value back into the input: a typed digit disappears.")}
+   {:id "reject-change-sync" :accept? #(not (re-find #"[0-9]" %)) :reject-change? true
+    :note (str "on-change rejects values with digits with r/reject-change!: "
+               "a typed digit disappears.")}
+   {:id "reject-change-async" :async? true :delay 50
+    :accept? #(not (re-find #"[0-9]" %)) :reject-change? true
+    :note (str "Same as reject-change-sync, with the state updated 50 ms "
+               "later. Type fast: digits disappear and no keys are lost.")}
    {:id "reject-async" :async? true :accept? #(not (re-find #"[0-9]" %))
     :note "Same as reject-sync, with the state updated on a later tick."
     :known-issue (str "the typed digit stays in the input, but not in the "
-                      "state. The later update can't put the value back, "
-                      "validate in on-change before updating the state.")}
+                      "state. The later update can't put the value back: "
+                      "validate in on-change and call r/reject-change!, as "
+                      "reject-change-async does.")}
    {:id "upper-async" :async? true :transform str/upper-case
     :note (str "on-change upper-cases the value on a later tick. " mid-text
                "the cursor stays after the new text.")

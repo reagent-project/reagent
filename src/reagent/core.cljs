@@ -6,6 +6,7 @@
             [reagent.impl.component :as comp]
             [reagent.impl.util :as util]
             [reagent.impl.batching :as batch]
+            [reagent.impl.input :as input]
             [reagent.impl.protocols :as p]
             [reagent.ratom :as ratom]
             [reagent.debug :as deb :refer-macros [assert-some assert-component
@@ -364,6 +365,30 @@
   frame (and even if no renders actually occur)."
   [f]
   (batch/do-after-render f))
+
+(defn reject-change!
+  "Reject the change that the :on-change of a controlled input is handling:
+  puts the value the input had before the change back into it, with the
+  cursor where the change was made. Call it from :on-change of an :input or
+  :textarea with :value and :on-change, with the event:
+
+  ```cljs
+  [:input {:value @state
+           :on-change (fn [e]
+                        (let [v (.. e -target -value)]
+                          (if (re-matches #\"\\d*\" v)
+                            (reset! state v)
+                            (r/reject-change! e))))}]
+  ```
+
+  Without it, a change that :on-change doesn't put into the state stays in
+  the input. The value before the change is right also when the state is
+  updated later (e.g. re-frame dispatch) and lags behind the input.
+
+  Outside such an :on-change it does nothing (and warns in development
+  builds)."
+  [e]
+  (input/reject-change! e))
 
 (defn partial
   "Works just like clojure.core/partial, but the result can be compared with ="

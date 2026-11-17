@@ -19,6 +19,7 @@
             [clojure.string :as string]
             [promesa.core :as p]
             [reagent.core :as r]
+            [reagent.debug :as d]
             [reagenttest.utils :as u]))
 
 ;;; Helpers
@@ -225,6 +226,46 @@
           (r/flush)
           (is (= "132" @state (.-value node)))
           (is (= 2 (.-selectionStart node) (.-selectionEnd node))))))))
+
+(u/deftest ^:dom on-change-reject-change
+  ;; r/reject-change! puts the value before the change back into the input.
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-matches #"\d*" v)
+                                      (reset! state v)
+                                      (r/reject-change! e))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (set-cursor! node 1)
+          (type-text! node "x")
+          (is (= "12" @state (.-value node)))
+          (is (= 1 (.-selectionStart node) (.-selectionEnd node))
+              "cursor stays where the key was typed")
+          (type-text! node "3")
+          (r/flush)
+          (is (= "132" @state (.-value node)))
+          (is (= 2 (.-selectionStart node) (.-selectionEnd node))))))))
+
+(u/deftest ^:dom reject-change-outside-on-change
+  ;; Outside on-change there is no change to reject: nothing happens.
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(reset! state (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (type-text! node "3")
+          (let [w (d/track-warnings #(r/reject-change! #js {:target node}))]
+            (is (= "123" @state (.-value node)))
+            (when (d/dev?)
+              (is (= 1 (count (:warn w)))))))))))
 
 (u/deftest ^:dom on-change-transforms-value-unicode
   ;; Cursor position is counted in UTF-16 code units by both the Selection
@@ -477,6 +518,41 @@
             (reset! state "")
             (r/flush)
             (is (= "" (.-value node)) "new value is written")))))))
+
+(u/deftest ^:dom async-on-change-reject-change
+  ;; r/reject-change! with async state: the value before the change is newer
+  ;; than the state, and lagging renders don't overwrite it. After the app
+  ;; sets a value, that is the value before the next change.
+  (let [[state dispatch! process!] (async-state "")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-find #"\d" v)
+                                      (r/reject-change! e)
+                                      (dispatch! v))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "a")
+            (process!)
+            (type-text! node "b")
+            (type-text! node "1")
+            (is (= "ab" (.-value node)) "rejected key is removed")
+            ;; state = "a", lags behind "ab"
+            (r/flush)
+            (is (= "ab" (.-value node)) "lagging render isn't written")
+            (process!)
+            (r/flush)
+            (is (= "ab" @state (.-value node)))
+            (is (= ["ab"] @writes) "only reject-change! wrote the node")
+            (reset! state "")
+            (r/flush)
+            (is (= "" (.-value node)))
+            (type-text! node "2")
+            (is (= "" (.-value node)) "value set by the app is restored")))))))
 
 (u/deftest ^:dom async-on-change-transform
   ;; Async state can still transform the value, once the state has caught up

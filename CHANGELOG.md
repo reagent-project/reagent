@@ -16,10 +16,14 @@
   in the input: the typed text stays. Reagent can't tell a rejected change
   apart from state that is updated later, e.g. by a re-frame event queue that
   is busy for longer than a frame, and restoring the value then lost keys. To
-  reject a change, set the input's value in `:on-change` (Reagent keeps the
-  cursor where the key was typed), see
+  reject a change, call the new `r/reject-change!` with the event in
+  `:on-change`, see
   [Controlled inputs](doc/ControlledInputs.md#rejecting-a-change).
   [#676](https://github.com/reagent-project/reagent/issues/676)
+- New `reagent.core/reject-change!`: called in `:on-change` of a controlled
+  `:input` or `:textarea`, it puts the value the input had before the change
+  back into it, keeping the cursor where the change was made. It works also
+  when the state is updated later, e.g. with re-frame `dispatch`.
 - Fix controlled inputs in React StrictMode (development builds): after
   StrictMode's simulated unmount and remount, the first new value rendered
   wasn't written to the input, and the first render with state that lagged

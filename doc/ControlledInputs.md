@@ -35,7 +35,8 @@ If `:on-change` keeps the state unchanged, the typed text stays in the input.
 Reagent can't tell this apart from state that is updated later (e.g. a re-frame
 event queue that is busy for longer than a frame), and writing the rendered
 value back then would lose the keys typed meanwhile. To reject a change,
-`:on-change` can put the last accepted value back into the input itself:
+call `r/reject-change!` with the event in `:on-change`. It puts the value the
+input had before the change back into the input:
 
 ```clojure
 [:input {:value @state
@@ -43,31 +44,26 @@ value back then would lose the keys typed meanwhile. To reject a change,
                       (let [v (.. e -target -value)]
                         (if (re-matches #"\d*" v)
                           (reset! state v)
-                          (set! (.. e -target -value) @state))))}]
+                          (r/reject-change! e))))}]
 ```
 
-`@state` is the last accepted value here because `:on-change` updates it
-synchronously. Don't restore the value from the last render (e.g. a value
-captured when the component rendered): with several keys typed between
-renders it is older than the input, and restoring it loses the keys typed
-since.
-
-With re-frame, validate in `:on-change` (the event handler doesn't see the
-input), update the db with `dispatch-sync` and restore the value from the
-subscription, dereferenced in `:on-change`. With `dispatch` the db lags
-behind the typed text and restoring it would lose keys too.
+This works also when the state is updated later. With re-frame, validate in
+`:on-change` (the event handler doesn't see the input) and only dispatch
+accepted values:
 
 ```clojure
-(defn digits-input []
-  (let [value (rf/subscribe [:digits])]
-    (fn []
-      [:input {:value @value
-               :on-change (fn [e]
-                            (let [v (.. e -target -value)]
-                              (if (re-matches #"\d*" v)
-                                (rf/dispatch-sync [:set-digits v])
-                                (set! (.. e -target -value) @value))))}])))
+[:input {:value @(rf/subscribe [:digits])
+         :on-change (fn [e]
+                      (let [v (.. e -target -value)]
+                        (if (re-matches #"\d*" v)
+                          (rf/dispatch [:set-digits v])
+                          (r/reject-change! e))))}]
 ```
+
+`:on-change` can also write a value into the input itself, e.g. the last
+accepted value. Don't write the value from the last render (e.g. a value
+captured when the component rendered), or state that is updated later: with
+keys typed since, it is older than the input, and writing it loses them.
 
 Reagent keeps the cursor where the key was typed (its distance from the end
 of the text), unless `:on-change` moves it somewhere other than the end of the
@@ -82,11 +78,12 @@ the end, move it after the event, e.g. with `r/after-render`.
   transformed value apart from a new value set by the application. Update the
   state synchronously in this case, e.g. with re-frame `dispatch-sync`.
 - If `:on-change` rejects a change by keeping the state unchanged, the typed
-  text stays in the input, but not in the state. Put the value back into the
-  input in `:on-change`, see [Rejecting a change](#rejecting-a-change).
+  text stays in the input, but not in the state. Call `r/reject-change!`, see
+  [Rejecting a change](#rejecting-a-change).
 - If `:on-change` transforms the typed text back to the current state (e.g.
   drops a typed `0`), nothing is rendered and the typed text stays, as with a
-  rejected change. Put the value back into the input as shown above.
+  rejected change. Call `r/reject-change!` when the transformed value equals
+  the current state, or write the transformed value into the input.
 - `email` and `number` inputs don't have the Selection API, so Reagent can't
   restore the cursor when it writes a different value to them. If
   `:on-change` changes the typed value of such an input, the cursor moves to

@@ -221,9 +221,28 @@ test.describe('slow async state (#676)', () => {
   }
 });
 
-// on-change rejects digits and puts the current value back into the input.
-// (Keeping the state unchanged is a known issue, see below.)
+// on-change rejects digits with r/reject-change!, or by putting the current
+// value back into the input. (Keeping the state unchanged leaves the typed
+// text, see below.)
 test.describe('rejected change', () => {
+  for (const id of ['reject-change-sync', 'reject-change-async']) {
+    test(`r/reject-change!, ${id}`, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectValue(page, id, 'abcd');
+    });
+
+    test(`caret mid-text after a rejected key, ${id}`, async ({ page }) => {
+      const input = page.getByTestId(id);
+      await input.click();
+      await page.keyboard.type('abcdef');
+      for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+      await page.keyboard.type('x1y', { delay: 50 });
+      await expectValue(page, id, 'abcxydef');
+      expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+    });
+  }
+
   test('on-change restores the value, reject-restore-sync', async ({ page }) => {
     await page.getByTestId('reject-restore-sync').click();
     await page.keyboard.type('ab1c2d', { delay: 10 });
