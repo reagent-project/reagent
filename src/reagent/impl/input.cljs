@@ -117,35 +117,43 @@
     ;; A render that didn't change the value (e.g. a parent re-rendered) while
     ;; on-change values are pending carries state that lags behind the DOM:
     ;; its value was rendered before the user typed the pending values.
-    ;; Writing it would lose them. A rejected change is still reverted by the
-    ;; check scheduled in input-handle-change.
+    ;; Writing it would lose them.
     (when-not (and (some? (.-cljsPendingValues this))
                    (= rendered-value committed-value))
       (input-component-set-value this))))
 
 (defn input-handle-change [^clj this on-change e]
-  (let [v (-> e .-target .-value)]
+  ;; The DOM is the truth while the user types: the typed value is only
+  ;; replaced when the input renders a new value that on-change didn't report.
+  ;; If on-change keeps the state unchanged (rejects the change), the typed
+  ;; text stays: Reagent can't tell that apart from state that is updated
+  ;; later (e.g. re-frame dispatch while the event queue is busy), and
+  ;; restoring the rendered value then would lose keys (#676). To reject a
+  ;; change, on-change can set the node's value itself.
+  (let [node (.-target e)
+        v (.-value node)
+        cursor (when (has-selection-api? (.-type node))
+                 (.-selectionStart node))]
     (set! (.-cljsDOMValue this) v)
     (when (nil? (.-cljsPendingValues this))
       (set! (.-cljsPendingValues this) #js []))
-    (.push (.-cljsPendingValues this) v))
-  (try
+    (.push (.-cljsPendingValues this) v)
     (on-change e)
-    (finally
-      ;; Make sure the DOM is updated even if the input isn't re-rendered,
-      ;; in case on-change wants to keep the value unchanged.
-      ;; Check after a macrotask, scheduled after on-change, so that state
-      ;; updated on a later tick (setTimeout, re-frame dispatch) is rendered
-      ;; first. Only the check of the latest change runs, so it isn't done
-      ;; before the state for that change had a chance to update.
-      (let [n (inc (or (.-cljsChangeCount this) 0))]
-        (set! (.-cljsChangeCount this) n)
-        (js/setTimeout (fn []
-                         (batch/do-after-render
-                          (fn []
-                            (when (== n (.-cljsChangeCount this))
-                              (input-component-set-value this)))))
-                       0)))))
+    (let [nv (.-value node)]
+      (when-not (identical? nv v)
+        ;; on-change wrote the node: that's the text in the DOM now, and the
+        ;; typed value won't be rendered.
+        (set! (.-cljsDOMValue this) nv)
+        (when-some [pending (.-cljsPendingValues this)]
+          (.pop pending))
+        ;; Writing the value moved the cursor to the end. Keep its distance
+        ;; from the end instead, like input-node-set-value, unless on-change
+        ;; moved the cursor itself.
+        (when (and (some? cursor)
+                   (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
+          (let [pos (max 0 (- (count nv) (- (count v) cursor)))]
+            (set! (.-selectionStart node) pos)
+            (set! (.-selectionEnd node) pos)))))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]

@@ -16,8 +16,8 @@
 //
 // Async on-change (state updated on a later tick, like re-frame dispatch)
 // leaves the rendered value behind the DOM. Reagent ignores renders of values
-// that on-change already reported, and checks for a rejected change only
-// after the state for it had a chance to update (#676).
+// that on-change already reported, and doesn't restore the rendered value
+// when on-change keeps the state unchanged (#676).
 const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
@@ -205,17 +205,39 @@ test.describe('re-render with lagging state (#676)', () => {
   }
 });
 
-// on-change can reject a change by keeping the state unchanged; Reagent then
-// restores the rendered value. Here digits are rejected. With async state the
-// check waits for the state to update first.
-test.describe('rejected change is reverted', () => {
-  for (const id of ['reject-sync', 'reject-async']) {
+// #676 (comment): the state lags by more than a setTimeout and a frame (e.g.
+// a busy re-frame queue). Before 2.1.0 a check for a rejected change, run
+// after a setTimeout and a render, wrote the lagging value back.
+// https://github.com/reagent-project/reagent/issues/676#issuecomment-6951981693
+test.describe('slow async state (#676)', () => {
+  const text = 'PPARG, HFE, GSTP1, CYP2D6';
+  for (const id of ['text-async-slow', 'textarea-async-slow']) {
     test(id, async ({ page }) => {
       await page.getByTestId(id).click();
-      await page.keyboard.type('ab1c2d', { delay: 100 });
-      await expectValue(page, id, 'abcd');
+      await page.keyboard.type(text, { delay: 10 });
+      await expectValue(page, id, text);
     });
   }
+});
+
+// on-change rejects digits and puts the current value back into the input.
+// (Keeping the state unchanged is a known issue, see below.)
+test.describe('rejected change', () => {
+  test('on-change restores the value, reject-restore-sync', async ({ page }) => {
+    await page.getByTestId('reject-restore-sync').click();
+    await page.keyboard.type('ab1c2d', { delay: 10 });
+    await expectValue(page, 'reject-restore-sync', 'abcd');
+  });
+
+  test('caret mid-text after a restored value, reject-restore-sync', async ({ page }) => {
+    const input = page.getByTestId('reject-restore-sync');
+    await input.click();
+    await page.keyboard.type('abcdef');
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('x1y', { delay: 50 });
+    await expectValue(page, 'reject-restore-sync', 'abcxydef');
+    expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+  });
 });
 
 // Async on-change that transforms the value: the caret is still restored.
@@ -241,8 +263,6 @@ test.describe('known issues', () => {
   const transformCases = [
     // on-change lower-cases: the typed "Q" is written back as "q".
     { id: 'email-lower-sync', initial: 'user@example.com', left: 4, insert: 'QR', expected: 'user@exampleqr.com' },
-    // on-change drops zeros: the typed "0" is removed.
-    { id: 'number-nozero-sync', initial: '12345', left: 2, insert: '09', expected: '123945' },
   ];
   for (const c of transformCases) {
     test(`caret mid-text when on-change changes the value, ${c.id}`, async ({ page }) => {
@@ -255,16 +275,30 @@ test.describe('known issues', () => {
     });
   }
 
-  // Keys typed right after a rejected key land on the rejected text, and are
-  // lost when Reagent restores the rendered value.
+  // on-change rejects digits by keeping the state unchanged: the typed text
+  // stays in the input, as Reagent can't tell it apart from state that is
+  // updated later (#676).
   for (const id of ['reject-sync', 'reject-async']) {
-    test(`fast typing after a rejected key, ${id}`, async ({ page }) => {
-      test.fail(true, 'rejected text is restored after a setTimeout and a render');
+    test(`rejected key stays in the input, ${id}`, async ({ page }) => {
+      test.fail(true, 'a change that keeps the state unchanged is not reverted');
       await page.getByTestId(id).click();
-      await page.keyboard.type('ab1c2d', { delay: 10 });
-      await expectValue(page, id, 'abcd', { timeout: 1000 });
+      await page.keyboard.type('ab1c2d', { delay: 50 });
+      await page.waitForTimeout(400);
+      // Every value after the digit has a digit too.
+      await expectValue(page, id, 'ab', { timeout: 1000 });
     });
   }
+
+  // on-change drops zeros: the value without the typed 0 is the current
+  // state, so nothing is rendered and the 0 stays, like a rejected change.
+  test('typed 0 stays, number-nozero-sync', async ({ page }) => {
+    test.fail(true, 'a transform back to the current state is not written');
+    await page.getByTestId('number-nozero-sync').click();
+    await page.keyboard.type('12345', { delay: 50 });
+    for (let i = 0; i < 2; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('0', { delay: 50 });
+    await expectValue(page, 'number-nozero-sync', '12345', { timeout: 1000 });
+  });
 
   // Async on-change that transforms the value: a lagging transformed value
   // can't be told apart from a new value set by the app, so it is written.

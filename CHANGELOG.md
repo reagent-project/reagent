@@ -7,18 +7,22 @@
 - Fix controlled inputs losing keys when `:on-change` updates the state on a
   later tick, e.g. with re-frame `dispatch`: a render with state that lags
   behind newer typed text no longer overwrites it. This also fixes IME
-  composition (e.g. Korean) with such inputs. The check that restores the
-  value when `:on-change` keeps it unchanged now runs after a `setTimeout`, so
-  the reverted text can stay visible a bit longer. Tests that type into an
-  input and check the reverted value right after `r/flush` need to wait for a
-  `setTimeout` first. A render that doesn't change the value (e.g. a parent
-  re-rendering while the user types) is ignored too while the state lags
-  behind.
+  composition (e.g. Korean) with such inputs. A render that doesn't change the
+  value (e.g. a parent re-rendering while the user types) is ignored too while
+  the state lags behind.
+- **Breaking:** If `:on-change` of a controlled input keeps the state
+  unchanged (rejects the change), Reagent no longer restores the rendered value
+  in the input: the typed text stays. Reagent can't tell a rejected change
+  apart from state that is updated later, e.g. by a re-frame event queue that
+  is busy for longer than a frame, and restoring the value then lost keys. To
+  reject a change, set the input's value in `:on-change` (Reagent keeps the
+  cursor where the key was typed), see
+  [Controlled inputs](doc/ControlledInputs.md#rejecting-a-change).
   [#676](https://github.com/reagent-project/reagent/issues/676)
 - Fix controlled inputs in React StrictMode (development builds): after
-  StrictMode's simulated unmount and remount, the first change that
-  `:on-change` rejected wasn't reverted, and the first render with state that
-  lagged behind the typed text could lose keys.
+  StrictMode's simulated unmount and remount, the first new value rendered
+  wasn't written to the input, and the first render with state that lagged
+  behind the typed text could lose keys.
   [#688](https://github.com/reagent-project/reagent/issues/688)
 - Tests are now running against React 19.3
   [#654](https://github.com/reagent-project/reagent/pull/654)

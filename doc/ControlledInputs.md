@@ -25,9 +25,30 @@ after updating the value.
 `:on-change` can update the state on a later tick, e.g. with re-frame
 `dispatch`. While the state lags behind the typed text, Reagent doesn't write
 the older values back to the input, also when something else re-renders the
-input meanwhile (e.g. its parent). If `:on-change` keeps the value unchanged
-(rejects the change), Reagent restores the rendered value after a short delay,
-so that async state has time to update first.
+input meanwhile (e.g. its parent). Reagent only writes the value to the input
+when the input renders a new value that `:on-change` didn't report, e.g. when
+the application clears the input.
+
+## Rejecting a change
+
+If `:on-change` keeps the state unchanged, the typed text stays in the input.
+Reagent can't tell this apart from state that is updated later (e.g. a re-frame
+event queue that is busy for longer than a frame), and writing the rendered
+value back then would lose the keys typed meanwhile. To reject a change,
+`:on-change` can put the current value back into the input itself:
+
+```clojure
+[:input {:value @state
+         :on-change (fn [e]
+                      (let [v (.. e -target -value)]
+                        (if (re-matches #"\d*" v)
+                          (reset! state v)
+                          (set! (.. e -target -value) @state))))}]
+```
+
+Reagent keeps the cursor where the key was typed (its distance from the end
+of the text), unless `:on-change` moves it itself. With re-frame, validate in
+`:on-change` before dispatching, as the event handler doesn't see the input.
 
 ## Known issues
 
@@ -35,9 +56,12 @@ so that async state has time to update first.
   state asynchronously, fast typing can lose keys: Reagent can't tell the
   transformed value apart from a new value set by the application. Update the
   state synchronously in this case, e.g. with re-frame `dispatch-sync`.
-- If `:on-change` rejects a change, the rejected text stays visible until the
-  check described above. Keys typed very quickly after it (tens of
-  milliseconds) can be lost when the value is restored.
+- If `:on-change` rejects a change by keeping the state unchanged, the typed
+  text stays in the input, but not in the state. Put the value back into the
+  input in `:on-change`, see [Rejecting a change](#rejecting-a-change).
+- If `:on-change` transforms the typed text back to the current state (e.g.
+  drops a typed `0`), nothing is rendered and the typed text stays, as with a
+  rejected change. Put the value back into the input as shown above.
 - `email` and `number` inputs don't have the Selection API, so Reagent can't
   restore the cursor when it writes a different value to them. If
   `:on-change` changes the typed value of such an input, the cursor moves to

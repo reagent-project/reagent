@@ -31,9 +31,10 @@
     (reset! ticker nil)))
 
 (defn- later
-  "Run f on a later tick, like re-frame dispatch does."
-  [f]
-  (js/setTimeout f 0))
+  "Run f on a later tick, like re-frame dispatch does, or after delay ms,
+  like a re-frame event queue that is busy for longer than a frame."
+  [f delay]
+  (js/setTimeout f (or delay 0)))
 
 (defn- js-text-field
   "Like a text field from a JS component library: a React component that
@@ -44,7 +45,7 @@
   (r/adapt-react-class (fn [props] (react/createElement input-component props))))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? rerender? style accept? note
+  [{:keys [id tag type transform async? delay rerender? style accept? restore? note
            known-issue]
     :or {tag :input transform identity accept? (constantly true)}}]
   (when rerender? @tick)
@@ -61,9 +62,14 @@
            :on-blur (when rerender? stop-ticker!)
            :on-change (fn [e]
                         (let [x (.. e -target -value)]
-                          (if async?
-                            (later #(update! x))
-                            (update! x))))}]
+                          (cond
+                            async? (later #(update! x) delay)
+                            (and restore? (not (accept? x)))
+                            ;; Reject by putting the current value back into
+                            ;; the input. Not v: the state can be newer than
+                            ;; the last render.
+                            (set! (.. e -target -value) (get @state id ""))
+                            :else (update! x))))}]
      [:pre {:data-testid (str id "-state") :style {:display "inline" :margin-left 8}}
       v]
      [:div {:style {:margin-left 160 :font-size "0.85em" :color "#555"}}
@@ -89,8 +95,8 @@
                       "can't restore the cursor after writing the lower-cased value.")}
    {:id "number-nozero-sync" :type "number" :transform #(str/replace % "0" "")
     :note "on-change drops zeros."
-    :known-issue (str "typing 0 in the middle moves the cursor to the end. Number "
-                      "inputs have no Selection API.")}
+    :known-issue (str "a typed 0 stays in the input: dropping it keeps the "
+                      "state unchanged, like a rejected change.")}
    {:id "upper-sync" :transform str/upper-case
     :note (str "on-change upper-cases the value. " mid-text
                "the cursor stays after the new text.")}
@@ -121,15 +127,25 @@
    {:id "textarea-async-rerender" :tag :textarea :async? true
     :rerender? true
     :note "Same as text-async-rerender, with a textarea."}
+   {:id "text-async-slow" :async? true :delay 50
+    :note (str "on-change updates the state 50 ms later, longer than a frame, "
+               "like a busy re-frame event queue. Type fast: no keys are lost.")}
+   {:id "textarea-async-slow" :tag :textarea :async? true :delay 50
+    :note "Same as text-async-slow, with a textarea."}
    {:id "reject-sync" :accept? #(not (re-find #"[0-9]" %))
-    :note "on-change rejects values with digits: a typed digit disappears."
-    :known-issue (str "keys typed very quickly after a digit (tens of "
-                      "milliseconds) can be lost when the digit is removed.")}
+    :note "on-change rejects values with digits, keeping the state unchanged."
+    :known-issue (str "the typed digit stays in the input, but not in the "
+                      "state. Reagent can't tell a rejected change from state "
+                      "that is updated later. Put the value back in on-change, "
+                      "as reject-restore-sync does.")}
+   {:id "reject-restore-sync" :accept? #(not (re-find #"[0-9]" %)) :restore? true
+    :note (str "on-change rejects values with digits and puts the current "
+               "value back into the input: a typed digit disappears.")}
    {:id "reject-async" :async? true :accept? #(not (re-find #"[0-9]" %))
-    :note (str "Same as reject-sync, with the state updated on a later tick. "
-               "The digit disappears after a short delay.")
-    :known-issue (str "keys typed very quickly after a digit can be lost when "
-                      "the digit is removed.")}
+    :note "Same as reject-sync, with the state updated on a later tick."
+    :known-issue (str "the typed digit stays in the input, but not in the "
+                      "state. The later update can't put the value back, "
+                      "validate in on-change before updating the state.")}
    {:id "upper-async" :async? true :transform str/upper-case
     :note (str "on-change upper-cases the value on a later tick. " mid-text
                "the cursor stays after the new text.")
