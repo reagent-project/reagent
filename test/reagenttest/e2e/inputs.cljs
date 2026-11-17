@@ -10,10 +10,17 @@
 
 (defonce state (r/atom {}))
 
+;; Bumped every few milliseconds; inputs with :rerender? deref it, so they
+;; re-render while the user types, like a parent that re-renders when a
+;; background request finishes.
+(defonce tick (r/atom 0))
+
+(defonce ticker (js/setInterval #(swap! tick inc) 5))
+
 (defn- later
-  "Run f on a later tick, like re-frame dispatch does."
-  [f]
-  (js/setTimeout f 0))
+  "Run f on a later tick, like re-frame dispatch does, after delay-ms."
+  ([f] (later f 0))
+  ([f delay-ms] (js/setTimeout f delay-ms)))
 
 (defn- js-text-field
   "Like a text field from a JS component library: a React component that
@@ -24,8 +31,10 @@
   (r/adapt-react-class (fn [props] (react/createElement input-component props))))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? style accept? note known-issue]
-    :or {tag :input transform identity accept? (constantly true)}}]
+  [{:keys [id tag type transform async? delay-ms rerender? style accept? note
+           known-issue]
+    :or {tag :input transform identity accept? (constantly true) delay-ms 0}}]
+  (when rerender? @tick)
   (let [v (get @state id "")
         update! (fn [x] (when (accept? x) (swap! state assoc id (transform x))))]
     [:div {:style {:margin "12px 0"}}
@@ -38,7 +47,7 @@
            :on-change (fn [e]
                         (let [x (.. e -target -value)]
                           (if async?
-                            (later #(update! x))
+                            (later #(update! x) delay-ms)
                             (update! x))))}]
      [:pre {:data-testid (str id "-state") :style {:display "inline" :margin-left 8}}
       v]
@@ -90,6 +99,13 @@
    {:id "text-async" :async? true
     :note (str "on-change updates the state on a later tick, like re-frame "
                "dispatch. Type fast: no keys are lost.")}
+   {:id "text-async-rerender" :async? true :rerender? true
+    :note (str "on-change updates the state on a later tick, and the input "
+               "re-renders every few milliseconds meanwhile, with the state "
+               "that lags behind. Type fast: no keys are lost.")}
+   {:id "textarea-async-rerender" :tag :textarea :async? true
+    :rerender? true
+    :note "Same as text-async-rerender, with a textarea."}
    {:id "reject-sync" :accept? #(not (re-find #"[0-9]" %))
     :note "on-change rejects values with digits: a typed digit disappears."
     :known-issue (str "keys typed very quickly after a digit (tens of "

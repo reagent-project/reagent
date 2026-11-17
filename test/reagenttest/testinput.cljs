@@ -291,6 +291,36 @@
             (is (= "abc" @state (.-value node)) "no lost keys")
             (is (= [] @writes))))))))
 
+(u/deftest ^:dom async-on-change-rerender-with-lagging-state
+  ;; #676 (comment): something else re-renders the input (e.g. its parent,
+  ;; when a background request finishes) after a key that isn't in the state
+  ;; yet. The render has the value that was already rendered before the key,
+  ;; which on-change no longer lists as pending, and mustn't be written.
+  (let [[state dispatch! process!] (async-state "")
+        other (r/atom 0)
+        c (fn []
+            @other
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(dispatch! (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "a")
+            (process!)
+            (r/flush)
+            ;; state = "a", node = "ab"
+            (type-text! node "b")
+            (swap! other inc)
+            (r/flush)
+            (is (= "ab" (.-value node)) "typed key stays in the node")
+            (type-text! node "c")
+            (process!)
+            (r/flush)
+            (is (= "abc" @state (.-value node)) "no lost keys")
+            (is (= [] @writes))))))))
+
 (u/deftest ^:dom async-on-change-fast-typing
   ;; Same as above with more keys and a render after every key, state lags
   ;; one key behind.
@@ -337,6 +367,29 @@
             (process!)
             (r/flush)
             (is (= "abc" @state (.-value node)))))))))
+
+(u/deftest ^:dom async-on-change-rejects-key-with-rerender
+  ;; A re-render with the unchanged value is ignored while on-change values
+  ;; are pending (see async-on-change-rerender-with-lagging-state), but the
+  ;; change check still restores the value of a rejected change.
+  (let [[state dispatch! process!] (async-state "ab" #(not (re-find #"\d" %)))
+        other (r/atom 0)
+        c (fn []
+            @other
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(dispatch! (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (type-text! node "1")
+          (process!)
+          (swap! other inc)
+          (r/flush)
+          (is (= "ab1" (.-value node)))
+          (p/do
+            (change-check!)
+            (is (= "ab" @state (.-value node)))))))))
 
 (u/deftest ^:dom async-on-change-transform
   ;; Async state can still transform the value, once the state has caught up

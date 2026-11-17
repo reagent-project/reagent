@@ -24,7 +24,8 @@ after updating the value.
 
 `:on-change` can update the state on a later tick, e.g. with re-frame
 `dispatch`. While the state lags behind the typed text, Reagent doesn't write
-the older values back to the input. If `:on-change` keeps the value unchanged
+the older values back to the input, also when something else re-renders the
+input meanwhile (e.g. its parent). If `:on-change` keeps the value unchanged
 (rejects the change), Reagent restores the rendered value after a short delay,
 so that async state has time to update first.
 

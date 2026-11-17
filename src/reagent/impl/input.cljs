@@ -110,6 +110,19 @@
             (do (set! (.-cljsPendingValues this) nil)
                 (input-node-set-value node rendered-value dom-value this {}))))))))
 
+(defn input-component-did-update [^clj this]
+  (let [rendered-value (.-cljsRenderedValue this)
+        committed-value (.-cljsCommittedValue this)]
+    (set! (.-cljsCommittedValue this) rendered-value)
+    ;; A render that didn't change the value (e.g. a parent re-rendered) while
+    ;; on-change values are pending carries state that lags behind the DOM:
+    ;; its value was rendered before the user typed the pending values.
+    ;; Writing it would lose them. A rejected change is still reverted by the
+    ;; check scheduled in input-handle-change.
+    (when-not (and (some? (.-cljsPendingValues this))
+                   (= rendered-value committed-value))
+      (input-component-set-value this))))
+
 (defn input-handle-change [^clj this on-change e]
   (let [v (-> e .-target .-value)]
     (set! (.-cljsDOMValue this) v)
@@ -148,7 +161,8 @@
       (when-not (.-cljsInputLive this)
         ;; set initial value
         (set! (.-cljsInputLive this) true)
-        (set! (.-cljsDOMValue this) value))
+        (set! (.-cljsDOMValue this) value)
+        (set! (.-cljsCommittedValue this) value))
       (when-not (.-reagentRefFn this)
         (set! (.-reagentRefFn this)
               (cond
@@ -183,7 +197,7 @@
 
 (def input-spec
   {:display-name "ReagentInput"
-   :component-did-update input-component-set-value
+   :component-did-update input-component-did-update
    :component-will-unmount input-unmount
    :reagent-render
    (fn [argv component jsprops first-child compiler]
