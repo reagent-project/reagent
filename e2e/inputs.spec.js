@@ -189,6 +189,22 @@ test.describe('fast typing (#676)', () => {
   });
 });
 
+// #676 (comment): the input re-renders while the state lags behind the typed
+// text, e.g. its parent re-renders when a background request finishes. The
+// render carries the previously rendered value, which on-change reported
+// before, so Reagent must not write it back.
+// https://github.com/reagent-project/reagent/issues/676#issuecomment-6928985191
+test.describe('re-render with lagging state (#676)', () => {
+  const text = 'PPARG, HFE, GSTP1, CYP2D6';
+  for (const id of ['text-async-rerender', 'textarea-async-rerender']) {
+    test(id, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type(text, { delay: 10 });
+      await expectValue(page, id, text);
+    });
+  }
+});
+
 // on-change can reject a change by keeping the state unchanged; Reagent then
 // restores the rendered value. Here digits are rejected. With async state the
 // check waits for the state to update first.

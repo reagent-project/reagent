@@ -11,7 +11,9 @@
   value when `:on-change` keeps it unchanged now runs after a `setTimeout`, so
   the reverted text can stay visible a bit longer. Tests that type into an
   input and check the reverted value right after `r/flush` need to wait for a
-  `setTimeout` first.
+  `setTimeout` first. A render that doesn't change the value (e.g. a parent
+  re-rendering while the user types) is ignored too while the state lags
+  behind.
   [#676](https://github.com/reagent-project/reagent/issues/676)
 - Fix controlled inputs in React StrictMode (development builds): after
   StrictMode's simulated unmount and remount, the first change that
