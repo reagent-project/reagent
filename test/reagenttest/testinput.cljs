@@ -321,6 +321,25 @@
             (is (= "abc" @state (.-value node)) "no lost keys")
             (is (= [] @writes))))))))
 
+(u/deftest ^:dom async-on-change-external-change-while-pending
+  ;; Only a render that keeps the value unchanged is ignored while on-change
+  ;; values are pending (see async-on-change-rerender-with-lagging-state). A
+  ;; new value from elsewhere (e.g. a reset button) is written right away.
+  (let [[state dispatch!] (async-state "ab")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(dispatch! (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "c")
+            (reset! state "")
+            (r/flush)
+            (is (= "" (.-value node)))
+            (is (= [""] @writes))))))))
+
 (u/deftest ^:dom async-on-change-fast-typing
   ;; Same as above with more keys and a render after every key, state lags
   ;; one key behind.
