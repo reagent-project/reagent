@@ -35,7 +35,7 @@ If `:on-change` keeps the state unchanged, the typed text stays in the input.
 Reagent can't tell this apart from state that is updated later (e.g. a re-frame
 event queue that is busy for longer than a frame), and writing the rendered
 value back then would lose the keys typed meanwhile. To reject a change,
-`:on-change` can put the current value back into the input itself:
+`:on-change` can put the last accepted value back into the input itself:
 
 ```clojure
 [:input {:value @state
@@ -46,13 +46,34 @@ value back then would lose the keys typed meanwhile. To reject a change,
                           (set! (.. e -target -value) @state))))}]
 ```
 
+`@state` is the last accepted value here because `:on-change` updates it
+synchronously. Don't restore the value from the last render (e.g. a value
+captured when the component rendered): with several keys typed between
+renders it is older than the input, and restoring it loses the keys typed
+since.
+
+With re-frame, validate in `:on-change` (the event handler doesn't see the
+input), update the db with `dispatch-sync` and restore the value from the
+subscription, dereferenced in `:on-change`. With `dispatch` the db lags
+behind the typed text and restoring it would lose keys too.
+
+```clojure
+(defn digits-input []
+  (let [value (rf/subscribe [:digits])]
+    (fn []
+      [:input {:value @value
+               :on-change (fn [e]
+                            (let [v (.. e -target -value)]
+                              (if (re-matches #"\d*" v)
+                                (rf/dispatch-sync [:set-digits v])
+                                (set! (.. e -target -value) @value))))}])))
+```
+
 Reagent keeps the cursor where the key was typed (its distance from the end
 of the text), unless `:on-change` moves it somewhere other than the end of the
 text. Reagent can't tell a cursor that `:on-change` put at the end apart from
 the browser moving it there when the value is written. To put the cursor at
-the end, move it after the event, e.g. with `r/after-render`. With re-frame,
-validate in `:on-change` before dispatching, as the event handler doesn't see
-the input.
+the end, move it after the event, e.g. with `r/after-render`.
 
 ## Known issues
 
