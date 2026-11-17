@@ -241,6 +241,40 @@ test.describe('rejected change', () => {
   });
 });
 
+// on-change keeps the state unchanged: the typed text stays in the input
+// (listed as known issues in doc/ControlledInputs.md), as Reagent can't tell
+// it apart from state that is updated later (#676). Checks the input and the
+// state separately, after a pause, so a delayed write of the state into the
+// input would fail the test.
+test.describe('state unchanged by on-change (#676)', () => {
+  async function expectStays(page, id, value, state) {
+    await expect.poll(() => stateText(page, id)).toBe(state);
+    await page.waitForTimeout(100);
+    await expect(page.getByTestId(id)).toHaveValue(value);
+    expect(await stateText(page, id)).toBe(state);
+  }
+
+  // on-change rejects values with digits. Every value after the first digit
+  // has a digit too, so the state stays "ab".
+  for (const id of ['reject-sync', 'reject-async']) {
+    test(`rejected key stays in the input, ${id}`, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectStays(page, id, 'ab1c2d', 'ab');
+    });
+  }
+
+  // on-change drops zeros: the value without the typed 0 is the current
+  // state, so nothing is rendered and the 0 stays.
+  test('typed 0 stays, number-nozero-sync', async ({ page }) => {
+    await page.getByTestId('number-nozero-sync').click();
+    await page.keyboard.type('12345', { delay: 10 });
+    for (let i = 0; i < 2; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('0');
+    await expectStays(page, 'number-nozero-sync', '123045', '12345');
+  });
+});
+
 // Async on-change that transforms the value: the caret is still restored.
 test('async upper-case, caret mid-text', async ({ page }) => {
   const input = page.getByTestId('upper-async');
@@ -275,31 +309,6 @@ test.describe('known issues', () => {
       await expectValue(page, c.id, c.expected, { timeout: 1000 });
     });
   }
-
-  // on-change rejects digits by keeping the state unchanged: the typed text
-  // stays in the input, as Reagent can't tell it apart from state that is
-  // updated later (#676).
-  for (const id of ['reject-sync', 'reject-async']) {
-    test(`rejected key stays in the input, ${id}`, async ({ page }) => {
-      test.fail(true, 'a change that keeps the state unchanged is not reverted');
-      await page.getByTestId(id).click();
-      await page.keyboard.type('ab1c2d', { delay: 50 });
-      await page.waitForTimeout(400);
-      // Every value after the digit has a digit too.
-      await expectValue(page, id, 'ab', { timeout: 1000 });
-    });
-  }
-
-  // on-change drops zeros: the value without the typed 0 is the current
-  // state, so nothing is rendered and the 0 stays, like a rejected change.
-  test('typed 0 stays, number-nozero-sync', async ({ page }) => {
-    test.fail(true, 'a transform back to the current state is not written');
-    await page.getByTestId('number-nozero-sync').click();
-    await page.keyboard.type('12345', { delay: 50 });
-    for (let i = 0; i < 2; i++) await page.keyboard.press('ArrowLeft');
-    await page.keyboard.type('0', { delay: 50 });
-    await expectValue(page, 'number-nozero-sync', '12345', { timeout: 1000 });
-  });
 
   // Async on-change that transforms the value: a lagging transformed value
   // can't be told apart from a new value set by the app, so it is written.

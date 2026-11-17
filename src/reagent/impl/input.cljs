@@ -144,23 +144,26 @@
     (when (nil? (.-cljsPendingValues this))
       (set! (.-cljsPendingValues this) #js []))
     (.push (.-cljsPendingValues this) v)
-    (on-change e)
-    (let [nv (.-value node)]
-      (when-not (identical? nv v)
-        ;; on-change wrote the node: that's the text in the DOM now, and the
-        ;; typed value won't be rendered.
-        (set! (.-cljsDOMValue this) nv)
-        (when-some [pending (.-cljsPendingValues this)]
-          (.pop pending)
-          ;; nil means nothing is pending, see input-component-did-update.
-          (when (zero? (.-length pending))
-            (set! (.-cljsPendingValues this) nil)))
-        ;; Writing the value moved the cursor to the end. Keep its distance
-        ;; from the end instead, like input-node-set-value, unless on-change
-        ;; moved the cursor itself.
-        (when (and (some? cursor)
-                   (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
-          (set-cursor-from-end! node nv (- (count v) cursor)))))))
+    (try
+      (on-change e)
+      (finally
+        ;; Also if on-change throws: it may have written the node first.
+        (let [nv (.-value node)]
+          (when-not (identical? nv v)
+            ;; on-change wrote the node: that's the text in the DOM now, and
+            ;; the typed value won't be rendered.
+            (set! (.-cljsDOMValue this) nv)
+            (when-some [pending (.-cljsPendingValues this)]
+              (.pop pending)
+              ;; nil means nothing is pending, see input-component-did-update.
+              (when (zero? (.-length pending))
+                (set! (.-cljsPendingValues this) nil)))
+            ;; Writing the value moved the cursor to the end. Keep its
+            ;; distance from the end instead, like input-node-set-value,
+            ;; unless on-change moved the cursor itself.
+            (when (and (some? cursor)
+                       (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
+              (set-cursor-from-end! node nv (- (count v) cursor)))))))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]
