@@ -79,6 +79,60 @@ purpose, used by 2 of about 108 inputs.
 Not done: `:on-change` returning a marker (e.g. `false`) to reject the
 change. A return value is easy to return by accident (e.g. from `when`).
 
+### Transform the value in on-change: `r/transform-change!` (proposed)
+
+The counterpart of `reject-change!` for transformed values, with a rule for
+what the input shows while the user types.
+
+**Rule:** `:on-change` decides synchronously what the input shows: the typed
+text, the previous value (`r/reject-change!`) or a transformed value
+(`r/transform-change!`). The input's value when `:on-change` returns is what
+it reported. A later render of a reported value is the state catching up and
+is never written. Any other rendered value comes from the app (e.g. Reset)
+and is written.
+
+**`(r/transform-change! e v)`:** writes `v` into the input during
+`:on-change`, with the cursor handling that writes from `:on-change` already
+get (`set-cursor-from-end!`), and records `v` as reported.
+
+- `input-handle-change` currently pops the typed value from
+  `cljsPendingValues` when `:on-change` wrote the input. For a transform it
+  has to replace the last entry with the written value instead, so that the
+  later render of `v` is found in the pending list. That is right for
+  `reject-change!` too, which then becomes `transform-change!` with the
+  previous value.
+
+**What it fixes** (matrix rows):
+
+- 11, async transform: `:on-change` upper-cases and dispatches. Now the later
+  render of "A" isn't a reported value, so it is written and keys typed since
+  are lost. With `transform-change!`, "A" is already in the input and pending,
+  so the render is ignored. Moves 11 from B to C (with the API); the last case
+  that loses keys.
+- 14, transform back to the current state (drop a typed 0, truncate): the
+  input shows the transformed value right away, no render needed.
+- Maybe 5 (#595, caret outside a narrow input in Chrome): writing during the
+  input event instead of after a render might avoid it. Needs testing.
+
+**What it doesn't fix:**
+
+- 4, email/number: no Selection API, the cursor can't be kept.
+- Transforms done later, outside `:on-change` (e.g. in a re-frame event
+  handler): they still look like values from the app. Document the rule: with
+  async state, validate and transform in `:on-change`.
+- 12, an app value equal to a pending typed value: still taken for a lagging
+  render. Rare.
+
+**Breaking changes:** none beyond #690. Sync transforms through the state keep
+working without the function (the render comes before the next key), so only
+async-state apps need it, and their transforms lose keys now anyway. The rule
+only adds a requirement for async transforms.
+
+**Work:** the pending-list change, the function with a docstring, a
+CHANGELOG entry, a section in `doc/ControlledInputs.md`, unit tests, and an
+`upper-async` e2e variant that uses it; the `upper-async` known issue would
+become a passing spec.
+
 ### Cursor when on-change moves it to the end
 
 Not about rejected changes, but found in the same review. After `:on-change`
@@ -125,7 +179,7 @@ Status is as of #690.
 | 8 | Async state (a later tick), fast typing, renders between keys and updates | No lost keys, no writes | Passes | C | `text-async`, `async-on-change-*` |
 | 9 | Async state, input re-rendered with the lagging value (parent re-render) | Ignored | Passes | C | `text-async-rerender`, `textarea-async-rerender`, `async-on-change-rerender-with-lagging-state` |
 | 10 | Async state lagging longer than a frame (busy re-frame queue) | No lost keys | Passes since #690 | B (conflicts with 13-15) | `text-async-slow`, `textarea-async-slow` |
-| 11 | Async transform (upper-case), fast typing | Transformed value shown, no lost keys | Very fast typing loses keys | B (conflicts with 7) | `upper-async`, `async-on-change-transform` |
+| 11 | Async transform (upper-case), fast typing | Transformed value shown, no lost keys | Very fast typing loses keys | B (conflicts with 7); C with `r/transform-change!` (proposed) | `upper-async`, `async-on-change-transform` |
 | 12 | App sets a value equal to a pending typed value (e.g. resets to an earlier text while the state lags) | Written | Not written, taken as a lagging render | B (conflicts with 8) | None |
 | 13 | Sync on-change rejects a change by keeping the state | Typed text reverted | Stays until the next new value | B (conflicts with 10) | `reject-sync`, `on-change-rejects-key` |
 | 14 | Sync on-change transforms back to the current state (drop a 0, truncate, filter) | Transformed value written | Stays, like 13 | B (conflicts with 10) | `number-nozero-sync` |
@@ -149,7 +203,8 @@ Status is as of #690.
 - **11 vs 7:** a lagging transformed value ("A" for typed "a") isn't one of
   the reported values, so it looks like a new value from the app. Writing it
   loses keys typed since; not writing it would break 7. Would need on-change
-  to report the transformed value, or sync state.
+  to report the transformed value (`r/transform-change!`, proposed above), or
+  sync state.
 - **12 vs 8:** a value from the app that equals a pending typed value looks
   like a lagging render. Writing it would break 8. Rare in practice.
 
