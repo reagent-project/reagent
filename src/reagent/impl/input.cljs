@@ -187,6 +187,15 @@
       (set! (.-onChange jsprops) #(input-handle-change this on-change %))
       (set! (.-ref jsprops) (.-reagentRefFn this)))))
 
+(defn input-mount [^clj this]
+  ;; React 18+ StrictMode unmounts and remounts the component right after
+  ;; mounting it, without rendering in between (#688). Mark the input live
+  ;; again, without resetting the DOM value like the first render does: the
+  ;; user may have typed already. The ref fn is only set up for controlled
+  ;; inputs.
+  (when (some? (.-reagentRefFn this))
+    (set! (.-cljsInputLive this) true)))
+
 (defn input-unmount [^clj this]
   (set! (.-cljsInputLive this) nil))
 
@@ -197,6 +206,7 @@
 
 (def input-spec
   {:display-name "ReagentInput"
+   :component-did-mount input-mount
    :component-did-update input-component-did-update
    :component-will-unmount input-unmount
    :reagent-render

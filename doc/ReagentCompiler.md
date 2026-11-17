@@ -52,6 +52,88 @@ change. Could be related to how `react/memo` handles changes properties.
 
 (Local test run with https://github.com/krausest/js-framework-benchmark, with added function component case)
 
+## Custom compiler
+
+`create-compiler` returns an implementation of the
+`reagent.impl.protocols/Compiler` protocol. You can also implement the
+protocol yourself, for example to create the React elements with something
+else than `react/createElement`.
+
+The `make-element` method is called for HTML elements, inputs, fragments
+(`:<>`), `:>` and `:r>` elements. `jsprops` are the props already converted
+to a JS object (for `:r>`, the props as given, without conversion), and the
+children are in `argv`, starting from index `first-child`.
+The example below implements it with a `create-element` function that takes
+the same arguments as `react/createElement`. The other methods do the same as
+the compiler from `create-compiler`:
+
+```cljs
+(ns example.compiler
+  (:require [reagent.impl.component :as comp]
+            [reagent.impl.protocols :as p]
+            [reagent.impl.template :as tmpl]))
+
+(defn make-element
+  "Like `reagent.impl.template/make-element`, but calls `create-element`
+  instead of `react/createElement`."
+  [create-element compiler argv component jsprops first-child]
+  (apply create-element component jsprops
+         (map #(p/as-element compiler %) (drop first-child argv))))
+
+(defn create-compiler
+  "Like `reagent.core/create-compiler`, but creates the elements with
+  `create-element`."
+  [opts create-element]
+  (let [id (gensym "custom-compiler")
+        fn-to-element (if (:function-components opts)
+                        tmpl/maybe-function-element
+                        tmpl/reag-element)
+        parse-fn (get opts :parse-tag tmpl/cached-parse)]
+    (reify p/Compiler
+      (get-id [_this] id)
+      (parse-tag [this tag-name tag-value]
+        (parse-fn this tag-name tag-value))
+      (as-element [this x]
+        (tmpl/as-element this x fn-to-element))
+      (make-element [this argv component jsprops first-child]
+        (make-element create-element this argv component jsprops first-child))
+      (reactify-component [this c]
+        (if (:function-components opts)
+          (comp/functional-reactify-component this c)
+          (comp/as-class c this))))))
+```
+
+For example, [Emotion](https://emotion.sh/docs/css-prop) provides `jsx`, a
+replacement for `react/createElement` that supports the `css` prop:
+
+```cljs
+(ns example.core
+  (:require ["@emotion/react" :as emotion]
+            [example.compiler :as compiler]
+            [reagent.dom.client :as rdomc]))
+
+(def emotion-compiler (compiler/create-compiler {:function-components true} emotion/jsx))
+
+(defonce root (rdomc/create-root (.getElementById js/document "app")))
+
+(rdomc/render root
+              [:div {:css {:color "hotpink"
+                           "&:hover" {:color "darkmagenta"}}}
+               "Hello"]
+              emotion-compiler)
+```
+
+Reagent converts the `:css` map to a JS object like the other props, so
+nested maps and string keys work. Functions, e.g. Emotion theme functions,
+are called with JS arguments and their return value isn't converted: return
+a JS object, or wrap the function to convert the result with
+`reagent.impl.template/convert-prop-value`.
+
+The `reagent.impl` namespaces are internal: the functions used here can
+change between Reagent versions, and the `Compiler` protocol can get new
+methods. Check the implementation of `create-compiler` in
+`reagent.impl.template` when you update Reagent.
+
 ## Reasoning
 
 Now that this mechanism to control how Reagent compiles Hiccup-style markup
