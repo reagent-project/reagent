@@ -33,6 +33,15 @@
       (recur (.-activeElement shadow-root))
       active-element)))
 
+(defn- set-cursor-from-end!
+  "Put the cursor offset characters from the end of value, the node's new
+  value. A negative position ends up at the end of the text: the setters
+  take an unsigned long and clamp it to the length."
+  [node value offset]
+  (let [pos (- (count value) offset)]
+    (set! (.-selectionStart node) pos)
+    (set! (.-selectionEnd node) pos)))
+
 (defn input-node-set-value
   [node rendered-value dom-value ^clj component {:keys [on-write]}]
   (if (or (not (and (identical? node (get-true-active-element))
@@ -79,15 +88,12 @@
         (batch/do-after-render #(binding [*force-set-dom-value* true]
                                   (input-component-set-value component)))
         (let [existing-offset-from-end (- (count node-value)
-                                          (.-selectionStart node))
-              new-cursor-offset        (- (count rendered-value)
-                                          existing-offset-from-end)]
+                                          (.-selectionStart node))]
           (set! (.-cljsDOMValue component) rendered-value)
           (set! (.-value node) rendered-value)
           (when (fn? on-write)
             (on-write rendered-value))
-          (set! (.-selectionStart node) new-cursor-offset)
-          (set! (.-selectionEnd node) new-cursor-offset))))))
+          (set-cursor-from-end! node rendered-value existing-offset-from-end))))))
 
 (defn input-component-set-value [^clj this]
   (when (.-cljsInputLive this)
@@ -145,15 +151,16 @@
         ;; typed value won't be rendered.
         (set! (.-cljsDOMValue this) nv)
         (when-some [pending (.-cljsPendingValues this)]
-          (.pop pending))
+          (.pop pending)
+          ;; nil means nothing is pending, see input-component-did-update.
+          (when (zero? (.-length pending))
+            (set! (.-cljsPendingValues this) nil)))
         ;; Writing the value moved the cursor to the end. Keep its distance
         ;; from the end instead, like input-node-set-value, unless on-change
         ;; moved the cursor itself.
         (when (and (some? cursor)
                    (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
-          (let [pos (max 0 (- (count nv) (- (count v) cursor)))]
-            (set! (.-selectionStart node) pos)
-            (set! (.-selectionEnd node) pos)))))))
+          (set-cursor-from-end! node nv (- (count v) cursor)))))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]
