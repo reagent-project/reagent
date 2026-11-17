@@ -10,17 +10,30 @@
 
 (defonce state (r/atom {}))
 
-;; Bumped every few milliseconds; inputs with :rerender? deref it, so they
-;; re-render while the user types, like a parent that re-renders when a
-;; background request finishes.
+;; Inputs with :rerender? deref tick, so they re-render on every animation
+;; frame while one of them is focused, like a parent that re-renders when a
+;; background request finishes. The ticker only runs while such an input has
+;; focus, so it doesn't affect the timing of the other scenarios.
 (defonce tick (r/atom 0))
 
-(defonce ticker (js/setInterval #(swap! tick inc) 5))
+(defonce ^:private ticker (atom nil))
+
+(defn- start-ticker! []
+  (when-not @ticker
+    (letfn [(step []
+              (swap! tick inc)
+              (reset! ticker (js/requestAnimationFrame step)))]
+      (step))))
+
+(defn- stop-ticker! []
+  (when-some [id @ticker]
+    (js/cancelAnimationFrame id)
+    (reset! ticker nil)))
 
 (defn- later
-  "Run f on a later tick, like re-frame dispatch does, after delay-ms."
-  ([f] (later f 0))
-  ([f delay-ms] (js/setTimeout f delay-ms)))
+  "Run f on a later tick, like re-frame dispatch does."
+  [f]
+  (js/setTimeout f 0))
 
 (defn- js-text-field
   "Like a text field from a JS component library: a React component that
@@ -31,9 +44,9 @@
   (r/adapt-react-class (fn [props] (react/createElement input-component props))))
 
 (defn controlled-input
-  [{:keys [id tag type transform async? delay-ms rerender? style accept? note
+  [{:keys [id tag type transform async? rerender? style accept? note
            known-issue]
-    :or {tag :input transform identity accept? (constantly true) delay-ms 0}}]
+    :or {tag :input transform identity accept? (constantly true)}}]
   (when rerender? @tick)
   (let [v (get @state id "")
         update! (fn [x] (when (accept? x) (swap! state assoc id (transform x))))]
@@ -44,10 +57,12 @@
            :type type
            :style style
            :value v
+           :on-focus (when rerender? start-ticker!)
+           :on-blur (when rerender? stop-ticker!)
            :on-change (fn [e]
                         (let [x (.. e -target -value)]
                           (if async?
-                            (later #(update! x) delay-ms)
+                            (later #(update! x))
                             (update! x))))}]
      [:pre {:data-testid (str id "-state") :style {:display "inline" :margin-left 8}}
       v]
@@ -101,7 +116,7 @@
                "dispatch. Type fast: no keys are lost.")}
    {:id "text-async-rerender" :async? true :rerender? true
     :note (str "on-change updates the state on a later tick, and the input "
-               "re-renders every few milliseconds meanwhile, with the state "
+               "re-renders on every frame while focused, with the state "
                "that lags behind. Type fast: no keys are lost.")}
    {:id "textarea-async-rerender" :tag :textarea :async? true
     :rerender? true
