@@ -47,8 +47,12 @@ value back then would lose the keys typed meanwhile. To reject a change,
 ```
 
 Reagent keeps the cursor where the key was typed (its distance from the end
-of the text), unless `:on-change` moves it itself. With re-frame, validate in
-`:on-change` before dispatching, as the event handler doesn't see the input.
+of the text), unless `:on-change` moves it somewhere other than the end of the
+text. Reagent can't tell a cursor that `:on-change` put at the end apart from
+the browser moving it there when the value is written. To put the cursor at
+the end, move it after the event, e.g. with `r/after-render`. With re-frame,
+validate in `:on-change` before dispatching, as the event handler doesn't see
+the input.
 
 ## Known issues
 

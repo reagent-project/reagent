@@ -160,7 +160,9 @@
                 (set! (.-cljsPendingValues this) nil)))
             ;; Writing the value moved the cursor to the end. Keep its
             ;; distance from the end instead, like input-node-set-value,
-            ;; unless on-change moved the cursor itself.
+            ;; unless on-change moved the cursor itself. A cursor that
+            ;; on-change put at the end looks the same as the browser's
+            ;; jump, so it is moved too (documented).
             (when (and (some? cursor)
                        (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
               (set-cursor-from-end! node nv (- (count v) cursor)))))))))
