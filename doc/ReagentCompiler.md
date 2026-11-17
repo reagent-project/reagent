@@ -60,8 +60,9 @@ protocol yourself, for example to create the React elements with something
 else than `react/createElement`.
 
 The `make-element` method is called for HTML elements, inputs, fragments
-(`:<>`) and `:>` elements. `jsprops` are the props already converted to a JS
-object, and the children are in `argv`, starting from index `first-child`.
+(`:<>`), `:>` and `:r>` elements. `jsprops` are the props already converted
+to a JS object (for `:r>`, the props as given, without conversion), and the
+children are in `argv`, starting from index `first-child`.
 The example below implements it with a `create-element` function that takes
 the same arguments as `react/createElement`. The other methods do the same as
 the compiler from `create-compiler`:
@@ -86,11 +87,12 @@ the compiler from `create-compiler`:
   (let [id (gensym "custom-compiler")
         fn-to-element (if (:function-components opts)
                         tmpl/maybe-function-element
-                        tmpl/reag-element)]
+                        tmpl/reag-element)
+        parse-fn (get opts :parse-tag tmpl/cached-parse)]
     (reify p/Compiler
       (get-id [_this] id)
       (parse-tag [this tag-name tag-value]
-        (tmpl/cached-parse this tag-name tag-value))
+        (parse-fn this tag-name tag-value))
       (as-element [this x]
         (tmpl/as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]

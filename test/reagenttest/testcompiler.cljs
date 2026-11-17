@@ -24,11 +24,12 @@
   (let [id (gensym "custom-compiler")
         fn-to-element (if (:function-components opts)
                         tmpl/maybe-function-element
-                        tmpl/reag-element)]
+                        tmpl/reag-element)
+        parse-fn (get opts :parse-tag tmpl/cached-parse)]
     (reify p/Compiler
       (get-id [_this] id)
       (parse-tag [this tag-name tag-value]
-        (tmpl/cached-parse this tag-name tag-value))
+        (parse-fn this tag-name tag-value))
       (as-element [this x]
         (tmpl/as-element this x fn-to-element))
       (make-element [this argv component jsprops first-child]
