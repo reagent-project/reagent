@@ -10,6 +10,7 @@
   composition (e.g. Korean) with such inputs. A render that doesn't change the
   value (e.g. a parent re-rendering while the user types) is ignored too while
   the state lags behind.
+  [#676](https://github.com/reagent-project/reagent/issues/676)
 - **Breaking:** If `:on-change` of a controlled input keeps the state
   unchanged (rejects the change), Reagent no longer restores the rendered value
   in the input: the typed text stays. Reagent can't tell a rejected change

@@ -206,8 +206,9 @@ test.describe('re-render with lagging state (#676)', () => {
 });
 
 // #676 (comment): the state lags by more than a setTimeout and a frame (e.g.
-// a busy re-frame queue). Before 2.1.0 a check for a rejected change, run
-// after a setTimeout and a render, wrote the lagging value back.
+// a busy re-frame queue). A check for a rejected change, which restored the
+// rendered value after a render (2.0.x; later also after a setTimeout), wrote
+// the lagging value back.
 // https://github.com/reagent-project/reagent/issues/676#issuecomment-6951981693
 test.describe('slow async state (#676)', () => {
   const text = 'PPARG, HFE, GSTP1, CYP2D6';
