@@ -13,6 +13,11 @@
   input and check the reverted value right after `r/flush` need to wait for a
   `setTimeout` first.
   [#676](https://github.com/reagent-project/reagent/issues/676)
+- Fix controlled inputs in React StrictMode (development builds): after
+  StrictMode's simulated unmount and remount, the first change that
+  `:on-change` rejected wasn't reverted, and the first render with state that
+  lagged behind the typed text could lose keys.
+  [#688](https://github.com/reagent-project/reagent/issues/688)
 - Tests are now running against React 19.3
   [#654](https://github.com/reagent-project/reagent/pull/654)
 - `class-names` and `merge-props` now flatten nested collections in class

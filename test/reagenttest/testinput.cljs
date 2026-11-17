@@ -82,16 +82,17 @@
   "Render comp into a container attached to the document, focus the first
   input or textarea and call (f node), which can return a promise. The
   container needs to be in the document for focus and so for the cursor
-  handling of the workaround."
-  [comp f]
-  (u/with-render* comp
-    (fn [div]
-      (.appendChild (.-body js/document) div)
-      (-> (p/do
-            (let [node (.querySelector div "input, textarea")]
-              (.focus node)
-              (f node)))
-          (p/finally (fn [] (.remove div)))))))
+  handling of the workaround. options are passed to `u/with-render*`."
+  ([comp f] (with-focused-input comp u/*test-compiler* f))
+  ([comp options f]
+   (u/with-render* comp options
+     (fn [div]
+       (.appendChild (.-body js/document) div)
+       (-> (p/do
+             (let [node (.querySelector div "input, textarea")]
+               (.focus node)
+               (f node)))
+           (p/finally (fn [] (.remove div))))))))
 
 (defn- async-state
   "State container that applies updates later, like re-frame's dispatch,
@@ -355,3 +356,67 @@
           (process!)
           (r/flush)
           (is (= "AB" @state (.-value node))))))))
+
+;;; StrictMode (#688)
+;;
+;; In development builds React 18+ StrictMode unmounts and remounts the
+;; component right after mounting (componentDidMount, componentWillUnmount,
+;; componentDidMount). The workaround must still work after that.
+
+(defn- strict
+  "Test options for rendering in StrictMode. StrictMode has to be at the root:
+  React doesn't remount components inside a StrictMode element that is
+  mounted inside a non-strict tree."
+  []
+  (assoc u/*test-compiler* :strict? true :strict-mode? true))
+
+(u/deftest ^:dom strict-mode-rejects-first-key
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (when (re-matches #"\d*" v)
+                                      (reset! state v))))}])]
+    (u/async
+      (with-focused-input [c] (strict)
+        (fn [node]
+          (set-cursor! node 1)
+          (type-text! node "x")
+          (is (= "1x2" (.-value node)))
+          (p/do
+            (change-check!)
+            (is (= "12" @state (.-value node)) "first key after mount is reverted")
+            (is (= 1 (.-selectionStart node)))))))))
+
+(u/deftest ^:dom strict-mode-async-on-change-lagging-state
+  ;; The first render after mount has state that lags behind the node.
+  (let [[state dispatch! process!] (async-state "")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(dispatch! (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c] (strict)
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "a")
+            (process!)
+            (type-text! node "b")
+            (type-text! node "c")
+            ;; state = "a", node = "abc"
+            (r/flush)
+            (is (= "abc" (.-value node)))
+            ;; state update for "b" arrives, "c" is still on the way
+            (reset! state "ab")
+            (r/flush)
+            (is (= "abc" (.-value node)))
+            (type-text! node "d")
+            (r/flush)
+            (process!)
+            (r/flush)
+            (p/do
+              (change-check!)
+              (is (= "abcd" @state (.-value node)) "no lost keys")
+              (is (= [] @writes)))))))))
