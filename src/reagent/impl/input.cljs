@@ -46,7 +46,19 @@
   [node value offset]
   (let [pos (- (count value) offset)]
     (set! (.-selectionStart node) pos)
-    (set! (.-selectionEnd node) pos)))
+    (set! (.-selectionEnd node) pos)
+    ;; With the cursor at the end of a text that overflows the input, Chrome
+    ;; scrolls only until the caret position is inside, cutting off the caret
+    ;; and part of the last character (#595). Scroll to the end, as typing
+    ;; does natively. The setter clamps to the scroll range, which includes
+    ;; padding. In right-to-left text the end is on the left, where
+    ;; scrollLeft is negative.
+    (when (and (== (.-selectionStart node) (.. node -value -length))
+               (> (.-scrollWidth node) (.-clientWidth node)))
+      (set! (.-scrollLeft node)
+            (if (= "rtl" (.-direction (js/getComputedStyle node)))
+              (- (.-scrollWidth node))
+              (.-scrollWidth node))))))
 
 (defn input-node-set-value
   [node rendered-value dom-value ^clj component {:keys [on-write]}]

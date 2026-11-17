@@ -129,7 +129,7 @@ test.describe('IME composition (#587)', () => {
 // digits when upper-casing) let the browser scroll back into place.
 // https://github.com/reagent-project/reagent/issues/595
 test.describe('caret visible at the end of a full input (#595)', () => {
-  async function scrollGaps(page, id, transform) {
+  async function scrollGaps(page, id, transform, rtl = false) {
     const input = page.getByTestId(id);
     await input.click();
     const text = 'abcdefghijklmnopqrstuvwxyz';
@@ -137,13 +137,15 @@ test.describe('caret visible at the end of a full input (#595)', () => {
     for (let i = 0; i < text.length; i++) {
       await page.keyboard.press(text[i]);
       await expect(input).toHaveValue(transform(text.slice(0, i + 1)));
-      const m = await input.evaluate((el) => new Promise((resolve) =>
+      const m = await input.evaluate((el, rtl) => new Promise((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve({
-          gap: el.scrollWidth - el.clientWidth - el.scrollLeft,
+          // In right-to-left text the end is on the left: scrollLeft goes
+          // from 0 down to -(scrollWidth - clientWidth).
+          gap: el.scrollWidth - el.clientWidth - (rtl ? -el.scrollLeft : el.scrollLeft),
           overflow: el.scrollWidth > el.clientWidth,
           caret: el.selectionStart,
         }))),
-      ));
+      ), rtl);
       expect(m.caret).toBe(i + 1);
       if (m.overflow) gaps.push(m.gap);
     }
@@ -156,13 +158,17 @@ test.describe('caret visible at the end of a full input (#595)', () => {
     expect(gaps.filter((g) => g > 1)).toEqual([]);
   });
 
-  // Known failure: Reagent writes the upper-cased (wider) value and sets the
-  // selection, and Chrome then scrolls only until the caret position itself is
-  // inside the input, so the last character and the caret are cut off by
-  // 2-10px.
+  // Reagent writes the upper-cased (wider) value and sets the selection.
+  // Chrome then scrolls only until the caret position itself is inside the
+  // input, cutting off the caret and the last character by 2-10px, so Reagent
+  // scrolls to the end itself when the cursor is at the end.
   test('narrow-upper-sync', async ({ page }) => {
-    test.fail(true, 'https://github.com/reagent-project/reagent/issues/595');
     const gaps = await scrollGaps(page, 'narrow-upper-sync', (s) => s.toUpperCase());
+    expect(gaps.filter((g) => g > 1)).toEqual([]);
+  });
+
+  test('narrow-upper-rtl-sync', async ({ page }) => {
+    const gaps = await scrollGaps(page, 'narrow-upper-rtl-sync', (s) => s.toUpperCase(), true);
     expect(gaps.filter((g) => g > 1)).toEqual([]);
   });
 });

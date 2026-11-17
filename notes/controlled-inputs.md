@@ -111,8 +111,6 @@ get (`set-cursor-from-end!`), and records `v` as reported.
   that loses keys.
 - 14, transform back to the current state (drop a typed 0, truncate): the
   input shows the transformed value right away, no render needed.
-- Maybe 5 (#595, caret outside a narrow input in Chrome): writing during the
-  input event instead of after a render might avoid it. Needs testing.
 
 **What it doesn't fix:**
 
@@ -148,6 +146,31 @@ but wraps React's value tracker property (`trackValueOnNode` in react-dom,
 which React defines on the node from the prototype's descriptor), so it
 depends on React internals. Not merged; revisit if someone needs it.
 
+### Caret cut off in a narrow input (#595, fixed in #690)
+
+When Reagent writes a value with the cursor at the end of a text that
+overflows the input, Chrome scrolls only until the caret position is inside
+the input, cutting off the caret and part of the last character by 2-10px.
+Native typing scrolls to the end of the scroll range.
+
+`set-cursor-from-end!` (used for rendered values and for values `:on-change`
+writes, including `r/reject-change!`) now sets `scrollLeft` to the end when
+the cursor is at the end and the text overflows:
+
+- The `scrollLeft` setter clamps to the scroll range, and the range includes
+  padding, so `scrollWidth` works as "the end" with padding, borders and
+  `box-sizing: border-box`. Measured with a probe: with these styles the
+  transformed input ends exactly at the end, native typing 1px short of it.
+- Right-to-left: the end of the text is on the left, where `scrollLeft` goes
+  from 0 down to `-(scrollWidth - clientWidth)`. Setting `scrollWidth` scrolled
+  to the start of the text, hiding the end. The code checks the computed
+  `direction` (only when the cursor is at the end and the text overflows) and
+  sets `-scrollWidth` for `rtl`. Covered by `narrow-upper-rtl-sync` (rtl with
+  padding).
+- Not checked: browsers other than Chromium, and `dir="auto"` (the computed
+  `direction` should reflect it). Textareas also get `scrollLeft` set, which
+  has no effect while their text wraps.
+
 ## Desired-behavior matrix
 
 For a possible rewrite of the workaround: write the tests for the wanted
@@ -173,7 +196,7 @@ Status is as of #690.
 | 2 | Sync state, mid-text in email/number, value stored as-is | Caret stays (only because nothing is written) | Passes | C | `email-sync`, `number-sync` |
 | 3 | Sync transform (upper-case), mid-text (text, textarea) | Transformed value written, caret after the new text | Passes | C | `upper-sync`, `textarea-upper-sync`, `on-change-transforms-value-unicode` |
 | 4 | Sync transform in email/number, mid-text | Caret stays | Caret moves to the end | A (no Selection API) | `email-lower-sync` |
-| 5 | Sync transform in a narrow input, typing past the width | Caret and last letter visible | Chrome leaves them outside (#595) | A | `narrow-upper-sync` |
+| 5 | Sync transform in a narrow input, typing past the width (also right-to-left, with padding) | Caret and last letter visible | Passes since #690: Reagent scrolls to the end when the cursor is at the end (Chrome left them outside, #595) | C | `narrow-upper-sync`, `narrow-upper-rtl-sync` |
 | 6 | IME composition, sync and async state | No doubled or leftover letters | Passes | C | `ime-sync`, `ime-async` |
 | 7 | App sets a new value (e.g. a reset button), also while on-change values are pending | Written | Passes | C | `state-changed-from-outside`, `async-on-change-external-change-while-pending` |
 | 8 | Async state (a later tick), fast typing, renders between keys and updates | No lost keys, no writes | Passes | C | `text-async`, `async-on-change-*` |

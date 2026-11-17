@@ -110,9 +110,12 @@
    {:id "narrow-sync" :style {:width "80px"}
     :note "Type past the width: the cursor and the last letter stay visible."}
    {:id "narrow-upper-sync" :transform str/upper-case :style {:width "80px"}
-    :note "on-change upper-cases the value. Type letters past the width."
-    :known-issue (str "in Chrome the cursor and the last letter end up a few "
-                      "pixels outside the input (#595).")}
+    :note (str "on-change upper-cases the value. Type letters past the width: "
+               "the cursor and the last letter stay visible (#595).")}
+   {:id "narrow-upper-rtl-sync" :transform str/upper-case
+    :style {:width "80px" :direction "rtl" :padding "0 12px"}
+    :note (str "Same as narrow-upper-sync, right-to-left and with padding: "
+               "the end of the text, on the left, stays visible.")}
    {:id "ime-sync"
     :note (str "Type with an IME, e.g. Korean (리에이전트) or Chinese pinyin "
                "(ni hao → 你好): no doubled or leftover letters.")}

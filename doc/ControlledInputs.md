@@ -88,10 +88,6 @@ the end, move it after the event, e.g. with `r/after-render`.
   restore the cursor when it writes a different value to them. If
   `:on-change` changes the typed value of such an input, the cursor moves to
   the end. Typing with the value stored as-is works.
-- When `:on-change` changes the value of a text input that is too narrow for
-  its text, Chrome can leave the cursor and the last character just outside
-  the visible area after Reagent writes the value
-  ([#595](https://github.com/reagent-project/reagent/issues/595)).
 
 ## Trying it out
 

@@ -24,6 +24,11 @@
   `:input` or `:textarea`, it puts the value the input had before the change
   back into it, keeping the cursor where the change was made. It works also
   when the state is updated later, e.g. with re-frame `dispatch`.
+- Fix the cursor and the last character of a controlled text input being cut
+  off in Chrome when `:on-change` changes the value (e.g. upper-cases it) of
+  a text that overflows the input: Reagent now scrolls to the end when the
+  cursor is at the end.
+  [#595](https://github.com/reagent-project/reagent/issues/595)
 - Fix controlled inputs in React StrictMode (development builds): after
   StrictMode's simulated unmount and remount, the first new value rendered
   wasn't written to the input, and the first render with state that lagged
