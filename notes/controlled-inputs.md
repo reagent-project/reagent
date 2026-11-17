@@ -181,9 +181,9 @@ Status is as of #690.
 | 10 | Async state lagging longer than a frame (busy re-frame queue) | No lost keys | Passes since #690 | B (conflicts with 13-15) | `text-async-slow`, `textarea-async-slow` |
 | 11 | Async transform (upper-case), fast typing | Transformed value shown, no lost keys | Very fast typing loses keys | B (conflicts with 7); C with `r/transform-change!` (proposed) | `upper-async`, `async-on-change-transform` |
 | 12 | App sets a value equal to a pending typed value (e.g. resets to an earlier text while the state lags) | Written | Not written, taken as a lagging render | B (conflicts with 8) | None |
-| 13 | Sync on-change rejects a change by keeping the state | Typed text reverted | Stays until the next new value | B (conflicts with 10) | `reject-sync`, `on-change-rejects-key` |
-| 14 | Sync on-change transforms back to the current state (drop a 0, truncate, filter) | Transformed value written | Stays, like 13 | B (conflicts with 10) | `number-nozero-sync` |
-| 15 | Async on-change rejects a change | Typed text reverted | Stays | B (conflicts with 10) | `reject-async`, `async-on-change-rejects-key` |
+| 13 | Sync on-change rejects a change by keeping the state (doesn't call `r/reject-change!`) | Not supported: call `r/reject-change!` (row 16b). Typed text stays (or reverted on blur, if added) | Stays until the next new value | B (conflicts with 10) | `reject-sync`, `on-change-rejects-key` |
+| 14 | Sync on-change transforms back to the current state (drop a 0, truncate, filter) | Not supported without an explicit call: `r/transform-change!` (proposed), or `r/reject-change!` when the result equals the current state. Typed text stays otherwise | Stays, like 13 | B (conflicts with 10); C with `r/transform-change!` | `number-nozero-sync` |
+| 15 | Async on-change rejects a change (the later update drops it, on-change doesn't reject) | Not supported: reject in on-change with `r/reject-change!` (row 16b). Typed text stays (or reverted on blur, if added) | Stays | B (conflicts with 10) | `reject-async`, `async-on-change-rejects-key` |
 | 16 | on-change writes the last accepted value into the input | Rejected text removed, caret where the key was typed | Passes | C | `reject-restore-sync`, `on-change-restores-value*`, `async-on-change-restores-value` |
 | 16b | on-change calls `r/reject-change!` (sync and async state) | Value before the change restored, caret where the key was typed | Passes | C | `reject-change-sync`, `reject-change-async`, `on-change-reject-change`, `async-on-change-reject-change`, `reject-change-outside-on-change` |
 | 17 | on-change writes the input and moves the caret to the end itself | Caret at the end | Moved back to the old distance from the end | C (setter hook prototype, depends on React internals) | `on-change-moves-cursor-after-write` (prototype only) |
@@ -191,15 +191,28 @@ Status is as of #690.
 | 19 | Input rendered by a JS component (`react/createElement "input"`) | Same as a Reagent input | Cursor jumps, lost keys, doubled IME letters | A (Reagent never sees the input) | `js-text-sync` |
 | 20 | JS component rendering Reagent's `:input` (e.g. MUI `inputComponent`) | Same as a Reagent input | Passes | C | `js-reagent-text-sync` |
 
+Rows 13-15 (`reject-sync`, `number-nozero-sync`, `reject-async`): the value
+is dropped or transformed back to the current state, by on-change itself
+(sync) or by the later update (async, like a re-frame event handler that
+leaves the db unchanged), without telling Reagent. Nothing re-renders, so
+the typed text stays in the input until the user changes it or the app sets
+another value. That is intended: Reagent can't tell whether on-change
+updates the state synchronously, later or not at all, and clearing the text
+would need a revert decided after on-change returns, which is what lost keys
+(2.0.x reverted after the next render). Rejecting or transforming has to be
+explicit in on-change (`reject-change-sync`, `reject-change-async`, the
+proposed `r/transform-change!`); the only safe automatic clean-up would be
+the restore on blur, or the opt-in revert for apps that say their state is
+sync.
+
 ### Conflicts
 
 - **13, 14, 15 vs 10:** after a change, the rendered value stays at the old
   value either because on-change rejected it or because the state hasn't
   caught up yet. Reverting fixes 13-15 and loses keys in 10, however long it
-  waits. #690 picks 10. Resolving both needs the app to say which it is:
-  `r/reject-change!` (#690) does that for 13 and 15; for 14 the app calls it
-  or writes the value. See "Possible solutions" for the opt-in revert and
-  reverting on blur.
+  waits. #690 picks 10 and makes rejecting explicit: `r/reject-change!` for
+  13 and 15, `r/transform-change!` (proposed) or `r/reject-change!` for 14.
+  See "Possible solutions" for the opt-in revert and reverting on blur.
 - **11 vs 7:** a lagging transformed value ("A" for typed "a") isn't one of
   the reported values, so it looks like a new value from the app. Writing it
   loses keys typed since; not writing it would break 7. Would need on-change
