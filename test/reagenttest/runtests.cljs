@@ -8,6 +8,7 @@
             [reagenttest.testwrap]
             [reagenttest.testhooks]
             [reagenttest.testinput]
+            [reagenttest.testcompiler]
             [reagenttest.performancetest]
             [reagent.impl.template-test]
             [reagent.impl.util-test]
