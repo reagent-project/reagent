@@ -167,9 +167,14 @@ the cursor is at the end and the text overflows:
   `direction` (only when the cursor is at the end and the text overflows) and
   sets `-scrollWidth` for `rtl`. Covered by `narrow-upper-rtl-sync` (rtl with
   padding).
-- Not checked: browsers other than Chromium, and `dir="auto"` (the computed
-  `direction` should reflect it). Textareas also get `scrollLeft` set, which
-  has no effect while their text wraps.
+- Firefox, checked by hand on 2026-11-17 with the e2e page built with and
+  without the fix: the caret stayed visible in both, possibly drawn on top of
+  the last typed letter, with no visible difference. The bug looks
+  Chromium-only; in Firefox the fix should be a no-op (the scroll is already
+  at the end). Not measured: the e2e specs only run in Chromium.
+- Not checked: Safari, and `dir="auto"` (the computed `direction` should
+  reflect it). Textareas also get `scrollLeft` set, which has no effect while
+  their text wraps.
 
 ## Desired-behavior matrix
 
