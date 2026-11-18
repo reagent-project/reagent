@@ -9,15 +9,12 @@ A simple [ClojureScript](http://github.com/clojure/clojurescript) interface to [
 
 Reagent provides a way to write efficient React components using (almost) nothing but plain ClojureScript functions.
 
-  * **[Detailed intro with live examples](http://reagent-project.github.io/)**
-  * **[News](http://reagent-project.github.io/news/index.html)**
-  * **[Documentation, latest release](https://cljdoc.org/d/reagent/reagent/CURRENT)**
-  * **Documentation, next release: [API docs](http://reagent-project.github.io/docs/master/), [Tutorials and FAQ](https://github.com/reagent-project/reagent/tree/master/doc)**
+  * **[Documentation](https://reagent-project.github.io/)**: intro with live examples, guide and API docs
   * **Community discussion and support channels**
     * **[#reagent](https://clojurians.slack.com/messages/reagent/)** channel in [Clojure Slack](http://clojurians.net/)
   * **Commercial video material**
-    * [Learn Reagent Free](https://www.jacekschae.com/learn-reagent-free/tycit?coupon=REAGENT), [Learn Reagent Pro](https://www.jacekschae.com/learn-reagent-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
-    * [Learn Re-frame Free](https://www.jacekschae.com/learn-re-frame-free/tycit?coupon=REAGENT), [Learn Re-frame Pro](https://www.jacekschae.com/learn-re-frame-pro/tycit?coupon=REAGENT) (Affiliate link, $30 discount)
+    * [Learn Reagent](https://clojure.stream/courses/reagent) by Jacek Schae (ClojureStream)
+    * [Learn Re-frame](https://clojure.stream/courses/reframe) by Jacek Schae (ClojureStream)
     * [purelyfunctional.tv ](https://purelyfunctional.tv/guide/reagent/)
     * [Lambda Island Videos](https://lambdaisland.com/collections/react-reagent-re-frame)
 
@@ -42,7 +39,7 @@ To use Reagent in an existing project you add this to your dependencies in `proj
 And provide React using npm (when using e.g. [Shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html))
 
 ```
-npm i react@19.2.3 react-dom@19.2.3
+npm i react@19.3.1 react-dom@19.3.1
 ```
 
 If there is a more recent minor or patch version of React available, it should

@@ -38,8 +38,8 @@ that `npx shadow-cljs` uses the version of this project.
     "release": "shadow-cljs release app"
   },
   "dependencies": {
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "shadow-cljs": "3.2.1"
