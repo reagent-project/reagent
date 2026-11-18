@@ -157,12 +157,19 @@ to any static file host.
 ## Other starting points
 
 [reagent-template](https://github.com/reagent-project/reagent-template)
-creates a larger Leiningen project with a Clojure web server, routing, and
-optional features like tests and CSS compilation:
+creates a larger [Leiningen](https://leiningen.org/) project: the same
+shadow-cljs and React 19 setup, plus a Clojure (Ring and Jetty) web server,
+[Reitit](https://metosin.github.io/reitit/) routing on the server and client,
+and an uberjar build. It requires JDK 21+ and Node.js.
 
 ```bash
 lein new reagent my-app
 ```
+
+Add `+test` for cljs.test with browser and Karma test runners, `+cider` for
+CIDER middleware, or `+less` / `+sass` for CSS compilation. See the
+[template README](https://github.com/reagent-project/reagent-template#usage)
+for details.
 
 ## Where to go next
 

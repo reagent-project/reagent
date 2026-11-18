@@ -26,6 +26,15 @@ Reagent provides a way to write efficient React components using (almost) nothin
 New to Reagent? The [Getting Started guide](./doc/GettingStarted.md) walks
 through creating a new app with shadow-cljs.
 
+For a larger project with a Clojure backend, use the
+[reagent-template](https://github.com/reagent-project/reagent-template)
+for [Leiningen](https://leiningen.org/):
+
+    lein new reagent myproject
+
+This sets up a shadow-cljs and Ring app with routing, with optional tests
+(`+test`), CIDER support (`+cider`) and Less/Sass compilation (`+less`, `+sass`).
+
 To use Reagent in an existing project you add this to your dependencies in `project.clj`:
 
 [![Clojars Project](http://clojars.org/reagent/latest-version.svg)](http://clojars.org/reagent) <br>
