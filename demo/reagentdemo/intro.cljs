@@ -347,6 +347,8 @@
     re-renders what changed."]
     [:div.hero-actions
      [link {:href docs/guide-index :class "button primary"} "Read the guide"]
+     [link {:href (str docs/guide-index "GettingStarted.html") :class "button"}
+      "Start a project"]
      [link {:href docs/api-index :class "button"} "API reference"]]
     [:div.install
      [:div.install-label "deps.edn"]
