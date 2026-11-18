@@ -177,9 +177,6 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - The file also references `create-react-class` (`:28,59,62,76,93`), which no longer appears in `src/`, and contains a "???" stub at `:82`.
   - The page was retitled "Upgrading to 0.8", moved under "Older versions" in the nav and marked `reviewed: 2026-11-16`, but the text above is unchanged.
   - Fix: add a "Historical (Reagent 0.8, 2018)" banner at the top, or reword the "recommended" sentence and remove the "???".
-- **[medium] Dev workflow in `development.md` is outdated.**
-  - Where: `doc/development.md:23-33`. It only describes lein Figwheel (`client`/`client-npm` builds still exist in `project.clj:55-73`). The current dev loop (shadow-cljs `watch client` on :8090, and `npx shadow-cljs compile test` + karma) isn't mentioned. The Karma link points to the 2.0 docs (`:5`).
-  - Fix: add the shadow-cljs workflow first.
 - **[low] Many links still point to legacy reactjs.org.**
   - Where:
     - `ReactFeatures.md:6,30,32,53,95,97,144,173,226,243`
@@ -266,4 +263,5 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-16: `BestPractices.md` and `WhatsNew2.md` explain calling `defc` vs `defn` components as functions.
 - 2026-11-16: upgrade guides have consistent "Upgrading to X" titles. New `1.0-upgrade.md` and `1.1-upgrade.md`; `reagent1.md` replaced by `1.2-upgrade.md` (reviewed), which covers React 18 via `reagent.dom.client` and the Cljsjs packages. The "Older versions" nav section and README "Misc Docs" list all four guides.
 - 2026-11-16: `ControlledInputs.md` has new "Async state updates", "Known issues", "Trying it out" and "JS libraries" sections; the sentence that ended with a colon now continues with the Material UI / Smooth UI links.
+- 2026-11-18: `development.md` rewritten (reviewed): requirements, shadow-cljs `watch client` + DEV box and REPL, headless Karma run, `run-tests.sh`, Playwright e2e, lint and cljfmt. The lein Figwheel instructions were dropped; the `client`/`client-npm` builds are still in `project.clj`.
 - 2026-11-17: `ReagentCompiler.md` has a "Custom compiler" section (implementing `reagent.impl.protocols/Compiler`, Emotion example; #592).

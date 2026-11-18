@@ -1,3 +1,7 @@
+---
+reviewed: 2026-11-18
+---
+
 # Getting Started
 
 This guide creates a minimal single-page application with Reagent, using

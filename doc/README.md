@@ -1,3 +1,6 @@
+---
+reviewed: 2026-11-18
+---
 ## Reagent 2
 
 - [What's new in Reagent 2.0](WhatsNew2.md): React 19, `defc` and `reagent.hooks`
