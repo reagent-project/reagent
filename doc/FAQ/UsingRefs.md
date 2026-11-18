@@ -31,7 +31,3 @@ Notes:
    5. Thereafter, `@!video` is used with the `:button's` `:on-click` to manipulate the `video` DOM methods.
    6. For full notes [read Paulus' blog post](https://presumably.de/reagent-mysteries-part-3-manipulating-the-dom.html)
    7. For more background on callback refs, see [React's documentation](https://reactjs.org/docs/refs-and-the-dom.html)
-
-***
-
-Up:  [FAQ Index](../README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

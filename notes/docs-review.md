@@ -16,7 +16,7 @@ The site shows a "Not reviewed yet" notice on guide pages without it, and "Revie
 - Almost every rendering example still uses `reagent.dom/render` (React 18 only), and two use `reagent.core/render`, which now throws. No doc outside `2.0-upgrade.md` shows `reagent.dom.client`. `ReactFeatures.md` uses `react-dom/hydrate`, which React 19 removed.
 - The 2.0 features `defc` and `reagent.hooks` are only introduced briefly in `WhatsNew2.md`; no guide covers them. The Hooks and function-component sections still show `:f>` plus raw `react/useState`, and they include a "Pre 1.0 workaround" that links to the archived `hx` library.
 - Some docs name APIs that don't exist: `r/dom-node`, `after-update` (the function is `after-render`) and the `make-reaction` option `derefed`. Others describe behaviour wrongly: ratom-triggered re-renders skipping `component-did-update`, ratoms comparing with `=`, and "Reactions power `r/atom`".
-- The Cljsjs, npm and Material-UI advice is out of date: the FAQ says Reagent depends on Cljsjs packages (`project.clj` has `:dependencies []`), `0.8-upgrade.md` calls Cljsjs "the recommended setup", and the MUI doc shows the v1 `"material-ui"` API while the example project uses `@mui/material` v7.
+- The Cljsjs, npm and Material-UI advice is out of date: `0.8-upgrade.md` calls Cljsjs "the recommended setup", and the MUI doc shows the v1 `"material-ui"` API while the example project uses `@mui/material` v7.
 - The two indexes have drifted apart: `README.md` doesn't list 5 of the docs that `cljdoc.edn` lists, its numbering is broken, and the HTML-entity FAQ exists twice with different advice.
 
 Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/reagent/`. Line numbers match the files as of the last update. Not reviewed yet: `GettingStarted.md`, `WebComponents.md`, the deref caveats and cursor watch sections added to `ManagingState.md` after the review, and pages and sections added since: `1.0-upgrade.md`, `1.1-upgrade.md` (no `reviewed` front matter), the "Custom compiler" section of `ReagentCompiler.md` and the new sections of `ControlledInputs.md` (2026-11-16/17).
@@ -157,14 +157,6 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
     - UsingAnEntity warns that `unescapeEntities` needs the DOM (Node/SSR).
     - HtmlEntities instead suggests literal or `×` characters and says nothing about the DOM requirement.
   - Fix: merge them into one FAQ, and recommend literal or `\uXXXX` characters as the first option because they also work in SSR.
-- **[medium] Cljsjs FAQ is wrong for 2.x.**
-  - Where: `doc/FAQ/CljsjsReactProblems.md:10-14`. It says to add exclusions "so only Reagent will have transitive dependency on React packages" and that "Reagent still depends on empty package" (`cljsjs/react-dom-server`).
-  - Verified: `project.clj:6` has `:dependencies []`, and Cljsjs is only in the `:dev` profile. The FAQ also mentions Boot (`:5,16`).
-  - Fix: say that Reagent has no React dependency, so users must provide React themselves (npm recommended; Cljsjs only for React ≤18). `1.1-upgrade.md` ("Declare the React dependency yourself") now explains this and can be linked.
-- **[low] Inconsistent FAQ structure.**
-  - Headings: fixed on 2026-11-14. Every FAQ now starts with the question as an H1, and `cljdoc.edn` has short titles.
-  - The "Up: FAQ Index" footer is missing in CljsjsReactProblems, ForcingComponentRecreation and HtmlEntities.
-  - Fix: use the same footer everywhere, or drop it since the site has a nav.
 - **[low] ForcingComponentRecreation example shadows `comp`.**
   - The example function is named `comp`, which shadows `clojure.core/comp`. (The title mismatch with the index was fixed on 2026-11-14.)
 - **[low] Refs FAQ only covers Form-2.**
@@ -263,5 +255,7 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
 - 2026-11-16: `BestPractices.md` and `WhatsNew2.md` explain calling `defc` vs `defn` components as functions.
 - 2026-11-16: upgrade guides have consistent "Upgrading to X" titles. New `1.0-upgrade.md` and `1.1-upgrade.md`; `reagent1.md` replaced by `1.2-upgrade.md` (reviewed), which covers React 18 via `reagent.dom.client` and the Cljsjs packages. The "Older versions" nav section and README "Misc Docs" list all four guides.
 - 2026-11-16: `ControlledInputs.md` has new "Async state updates", "Known issues", "Trying it out" and "JS libraries" sections; the sentence that ended with a colon now continues with the Material UI / Smooth UI links.
+- 2026-11-18: the "Up: FAQ Index" footer removed from the FAQ pages (the site has a nav).
+- 2026-11-18: `FAQ/CljsjsReactProblems.md` removed (Cljsjs conflicts are rare now: Reagent has no React dependency and React 19 has no Cljsjs packages), also from `cljdoc.edn` and `README.md`.
 - 2026-11-18: `development.md` rewritten (reviewed): requirements, shadow-cljs `watch client` + DEV box and REPL, headless Karma run, `run-tests.sh`, Playwright e2e, lint and cljfmt. The lein Figwheel instructions were dropped; the `client`/`client-npm` builds are still in `project.clj`.
 - 2026-11-17: `ReagentCompiler.md` has a "Custom compiler" section (implementing `reagent.impl.protocols/Compiler`, Emotion example; #592).

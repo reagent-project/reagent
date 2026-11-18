@@ -8,8 +8,4 @@ React supports [camelCased HTML attributes](https://reactjs.org/docs/dom-element
 but the equivalent in Reagent is dashed and lower cased. 
 
 For example, with Reagent, you use `auto-focus`, instead of `autoFocus`. And 
-you use `col-span` instead of React's `colSpan`. 
-
-***
-
-Up:  [FAQ Index](../README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+you use `col-span` instead of React's `colSpan`.

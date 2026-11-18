@@ -38,9 +38,4 @@ will hold the initial parameter values. The inner renderer on the other hand,
 will be called by Reagent many times and, each time, potentially with alternative 
 parameter values, but unless you repeat the parameters on the renderer it will 
 close over those initial values in `outer`. As a result, the component renderer 
-will stubbornly only ever render the original parameter values, not the updated ones. 
-
-
-***
-
-Up:  [FAQ Index](../README.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+will stubbornly only ever render the original parameter values, not the updated ones.

@@ -11,7 +11,3 @@ A minimal (contrived example):
 ```
 
 See [Security](../Security.md).
-
-***
-
-Up:  [FAQ Index](../README.md)

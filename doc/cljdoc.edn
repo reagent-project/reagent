@@ -29,8 +29,7 @@
                     ["HTML entities" {:file "doc/FAQ/HtmlEntities.md"}]
                     ["Missing attributes" {:file "doc/FAQ/MyAttributesAreMissing.md"}]
                     ["dangerouslySetInnerHTML" {:file "doc/FAQ/dangerouslySetInnerHTML.md"}]
-                    ["Forcing re-creation" {:file "doc/FAQ/ForcingComponentRecreation.md"}]
-                    ["Broken after updating deps" {:file "doc/FAQ/CljsjsReactProblems.md"}]]
+                    ["Forcing re-creation" {:file "doc/FAQ/ForcingComponentRecreation.md"}]]
                    ["Older versions" {}
                     ["Upgrading to 1.2" {:file "doc/1.2-upgrade.md"}]
                     ["Upgrading to 1.1" {:file "doc/1.1-upgrade.md"}]
