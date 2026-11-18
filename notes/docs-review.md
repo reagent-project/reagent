@@ -1,6 +1,6 @@
 # Reagent user docs review
 
-Started 2026-11-14. Last updated 2026-11-17. This is a working list: update or remove entries as the issues are fixed.
+Started 2026-11-14. Last updated 2026-11-18. This is a working list: update or remove entries as the issues are fixed.
 
 When a page has been reviewed (and updated) against the current Reagent, add YAML front matter at the top of its Markdown file:
 
@@ -228,6 +228,27 @@ Scope: all files in `doc/` as of 2026-11-14, checked against the source in `src/
   - Fix: rephrase neutrally.
 - **[low] TODO left in Security.md.**
   - Where: `doc/Security.md:11` ("TODO: Does this change in React 19?").
+
+## 9. Missing topics (from #302)
+
+[#302](https://github.com/reagent-project/reagent/issues/302) (2017) lists topics a guide should cover. Checked against `doc/` on 2026-11-18: most are covered now. The gaps are below. `force-update-all` (deprecated) and `force-update` are left out on purpose, and `dom-node` was removed in 2.0 (see section 2).
+
+- **[medium] Vectors vs. sequences in Hiccup.**
+  - No guide explains that a vector is an element and a seq is a list of children (spliced in, needs keys). `ManagingState.md:334` covers only derefs inside lazy seqs.
+  - Fix: add a section to `UsingHiccupToDescribeHTML.md`.
+- **[medium] Setting keys with metadata.**
+  - `^{:key …}` appears in examples (`ManagingState.md:85,299`) but isn't explained anywhere: metadata vs. the `:key` prop, when keys are needed, the missing-key warning. `BestPractices.md:29` only lists it as a candidate topic.
+  - Fix: explain it next to vectors vs. sequences.
+- **[low] `r/state`, `r/replace-state`, `r/set-state`.**
+  - Public API (`src/reagent/core.cljs:126-153`), not in any guide.
+  - Fix: mention them in the form-3 section of `CreatingReagentComponents.md`, or say that a form-2 local ratom is the usual alternative.
+- **[low] Props name conversion is only in an FAQ.**
+  - `:on-change` → `onChange`, `:auto-focus` → `autoFocus` is explained in `FAQ/MyAttributesAreMissing.md`; `UsingHiccupToDescribeHTML.md` only mentions it for style keys (`:63,79`).
+  - Fix: add a short section on attribute names to the Hiccup guide and link the FAQ.
+- **[low] List of lifecycle methods.**
+  - `CreatingReagentComponents.md:158-200` links to React's lifecycle docs and shows `component-did-mount`, but doesn't list the Reagent keys (`:component-did-update`, `:get-derived-state-from-props`, `:reagent-render`, …) or how their arguments differ from React's.
+- **[low] How `should-component-update` works.**
+  - "Changed?" (`WhenDoComponentsUpdate.md:154`) explains the argument equality check, but doesn't say that this is the default `should-component-update` or how to override it.
 
 ### Out of scope (source, noticed while verifying)
 - `src/reagent/core.cljs:155-160`: the `force-update` docstring still describes the removed second ("deep") argument.
