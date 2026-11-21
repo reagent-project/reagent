@@ -1,7 +1,8 @@
 (ns reagent.impl.input
   (:require [reagent.impl.component :as comp]
             [reagent.impl.batching :as batch]
-            [reagent.impl.protocols :as p]))
+            [reagent.impl.protocols :as p]
+            [reagent.debug :refer-macros [warn]]))
 
 ;; <input type="??" >
 ;; The properites 'selectionStart' and 'selectionEnd' only exist on some inputs
@@ -16,6 +17,11 @@
 (declare input-component-set-value)
 
 (def ^:dynamic *force-set-dom-value* false)
+
+(def ^:dynamic *change*
+  "While a controlled input's on-change runs: a JS object with the input node
+  and its value before the change, for reject-change!."
+  nil)
 
 (defn get-true-active-element []
   ;; For controlled inputs `input-node-set-value` tries to do some heurestics to
@@ -32,6 +38,27 @@
     (if-let [shadow-root (.-shadowRoot active-element)]
       (recur (.-activeElement shadow-root))
       active-element)))
+
+(defn- set-cursor-from-end!
+  "Put the cursor offset characters from the end of value, the node's new
+  value. A negative position ends up at the end of the text: the setters
+  take an unsigned long and clamp it to the length."
+  [node value offset]
+  (let [pos (- (count value) offset)]
+    (set! (.-selectionStart node) pos)
+    (set! (.-selectionEnd node) pos)
+    ;; With the cursor at the end of a text that overflows the input, Chrome
+    ;; scrolls only until the caret position is inside, cutting off the caret
+    ;; and part of the last character (#595). Scroll to the end, as typing
+    ;; does natively. The setter clamps to the scroll range, which includes
+    ;; padding. In right-to-left text the end is on the left, where
+    ;; scrollLeft is negative.
+    (when (and (== (.-selectionStart node) (.. node -value -length))
+               (> (.-scrollWidth node) (.-clientWidth node)))
+      (set! (.-scrollLeft node)
+            (if (= "rtl" (.-direction (js/getComputedStyle node)))
+              (- (.-scrollWidth node))
+              (.-scrollWidth node))))))
 
 (defn input-node-set-value
   [node rendered-value dom-value ^clj component {:keys [on-write]}]
@@ -79,15 +106,12 @@
         (batch/do-after-render #(binding [*force-set-dom-value* true]
                                   (input-component-set-value component)))
         (let [existing-offset-from-end (- (count node-value)
-                                          (.-selectionStart node))
-              new-cursor-offset        (- (count rendered-value)
-                                          existing-offset-from-end)]
+                                          (.-selectionStart node))]
           (set! (.-cljsDOMValue component) rendered-value)
           (set! (.-value node) rendered-value)
           (when (fn? on-write)
             (on-write rendered-value))
-          (set! (.-selectionStart node) new-cursor-offset)
-          (set! (.-selectionEnd node) new-cursor-offset))))))
+          (set-cursor-from-end! node rendered-value existing-offset-from-end))))))
 
 (defn input-component-set-value [^clj this]
   (when (.-cljsInputLive this)
@@ -117,35 +141,68 @@
     ;; A render that didn't change the value (e.g. a parent re-rendered) while
     ;; on-change values are pending carries state that lags behind the DOM:
     ;; its value was rendered before the user typed the pending values.
-    ;; Writing it would lose them. A rejected change is still reverted by the
-    ;; check scheduled in input-handle-change.
+    ;; Writing it would lose them.
     (when-not (and (some? (.-cljsPendingValues this))
                    (= rendered-value committed-value))
       (input-component-set-value this))))
 
 (defn input-handle-change [^clj this on-change e]
-  (let [v (-> e .-target .-value)]
+  ;; The DOM is the truth while the user types: the typed value is only
+  ;; replaced when the input renders a new value that on-change didn't report.
+  ;; If on-change keeps the state unchanged (rejects the change), the typed
+  ;; text stays: Reagent can't tell that apart from state that is updated
+  ;; later (e.g. re-frame dispatch while the event queue is busy), and
+  ;; restoring the rendered value then would lose keys (#676). To reject a
+  ;; change, on-change calls reject-change! or sets the node's value itself.
+  (let [node (.-target e)
+        v (.-value node)
+        previous (.-cljsDOMValue this)
+        cursor (when (has-selection-api? (.-type node))
+                 (.-selectionStart node))]
     (set! (.-cljsDOMValue this) v)
     (when (nil? (.-cljsPendingValues this))
       (set! (.-cljsPendingValues this) #js []))
-    (.push (.-cljsPendingValues this) v))
-  (try
-    (on-change e)
-    (finally
-      ;; Make sure the DOM is updated even if the input isn't re-rendered,
-      ;; in case on-change wants to keep the value unchanged.
-      ;; Check after a macrotask, scheduled after on-change, so that state
-      ;; updated on a later tick (setTimeout, re-frame dispatch) is rendered
-      ;; first. Only the check of the latest change runs, so it isn't done
-      ;; before the state for that change had a chance to update.
-      (let [n (inc (or (.-cljsChangeCount this) 0))]
-        (set! (.-cljsChangeCount this) n)
-        (js/setTimeout (fn []
-                         (batch/do-after-render
-                          (fn []
-                            (when (== n (.-cljsChangeCount this))
-                              (input-component-set-value this)))))
-                       0)))))
+    (.push (.-cljsPendingValues this) v)
+    (try
+      ;; Properties set with set!, not a #js literal: its quoted keys would
+      ;; not match the renamed property names under advanced compilation.
+      (binding [*change* (let [c #js {}]
+                           (set! (.-node c) node)
+                           (set! (.-previous c) previous)
+                           c)]
+        (on-change e))
+      (finally
+        ;; Also if on-change throws: it may have written the node first.
+        (let [nv (.-value node)]
+          (when-not (identical? nv v)
+            ;; on-change wrote the node: that's the text in the DOM now, and
+            ;; the typed value won't be rendered.
+            (set! (.-cljsDOMValue this) nv)
+            (when-some [pending (.-cljsPendingValues this)]
+              (.pop pending)
+              ;; nil means nothing is pending, see input-component-did-update.
+              (when (zero? (.-length pending))
+                (set! (.-cljsPendingValues this) nil)))
+            ;; Writing the value moved the cursor to the end. Keep its
+            ;; distance from the end instead, like input-node-set-value,
+            ;; unless on-change moved the cursor itself. A cursor that
+            ;; on-change put at the end looks the same as the browser's
+            ;; jump, so it is moved too (documented).
+            (when (and (some? cursor)
+                       (== (count nv) (.-selectionStart node) (.-selectionEnd node)))
+              (set-cursor-from-end! node nv (- (count v) cursor)))))))))
+
+(defn reject-change!
+  "Put the value the input had before the change being handled back into the
+  input. input-handle-change then treats it as a value on-change wrote."
+  [e]
+  (let [c *change*
+        node (.-target e)]
+    (if (and (some? c) (identical? node (.-node c)))
+      (set! (.-value node) (.-previous c))
+      (warn "reject-change! was called outside the :on-change of a controlled "
+            ":input or :textarea (one with :value and :on-change). The change "
+            "isn't rejected."))))
 
 (defn input-render-setup
   [^clj this ^js jsprops]

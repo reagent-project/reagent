@@ -19,6 +19,7 @@
             [clojure.string :as string]
             [promesa.core :as p]
             [reagent.core :as r]
+            [reagent.debug :as d]
             [reagenttest.utils :as u]))
 
 ;;; Helpers
@@ -70,13 +71,6 @@
                    (swap! writes conj v)
                    (.call (.-set desc) this v)))})
     writes))
-
-(defn- change-check!
-  "Let the check that restores the rendered value after a change run: it is
-  scheduled with a setTimeout after on-change and then waits for a render."
-  []
-  (p/do (p/delay 0)
-        (r/flush)))
 
 (defn- with-focused-input
   "Render comp into a container attached to the document, focus the first
@@ -140,19 +134,20 @@
               (is (= "abcXYdef" @state (.-value node)))
               (is (= 5 (.-selectionStart node) (.-selectionEnd node))))
 
-            (p/do
-              (change-check!)
-              (testing "state equal to the typed text is never written to the node"
-                (is (= [] @writes))))))))))
+            (testing "state equal to the typed text is never written to the node"
+              (is (= [] @writes)))))))))
 
 ;;; on-change that changes the typed text: the workaround writes the rendered
 ;;; value and restores the cursor.
 
 (u/deftest ^:dom on-change-rejects-key
-  ;; Documented behavior: if on-change doesn't update the state, the input
-  ;; goes back to the rendered value.
+  ;; If on-change keeps the state unchanged, the typed text stays in the
+  ;; input: Reagent can't tell that apart from state that is updated later
+  ;; (#676). The next new value is written.
   (let [state (r/atom "12")
+        other (r/atom 0)
         c (fn []
+            @other
             [:input {:type "text"
                      :value @state
                      :on-change (fn [e]
@@ -162,20 +157,115 @@
     (u/async
       (with-focused-input [c]
         (fn [node]
+          (let [writes (spy-writes! node)]
+            (set-cursor! node 1)
+            (type-text! node "x")
+            (r/flush)
+            (is (= "12" @state))
+            (is (= "1x2" (.-value node)) "rejected key stays")
+            (swap! other inc)
+            (r/flush)
+            (is (= "1x2" (.-value node)) "re-render with the same value doesn't restore it")
+            (is (= [] @writes))
+            (reset! state "5")
+            (r/flush)
+            (is (= "5" (.-value node)) "new value is written")))))))
+
+(u/deftest ^:dom on-change-restores-value
+  ;; To reject a change, on-change can put the current value back into the
+  ;; input itself.
+  (let [state (r/atom "12")
+        other (r/atom 0)
+        c (fn []
+            @other
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-matches #"\d*" v)
+                                      (reset! state v)
+                                      (set! (.. e -target -value) @state))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (type-text! node "x")
+          (is (= "12" @state (.-value node)))
           (set-cursor! node 1)
           (type-text! node "x")
-          (is (= "1x2" (.-value node)))
+          (is (= "12" @state (.-value node)))
+          (is (= 1 (.-selectionStart node) (.-selectionEnd node))
+              "cursor stays where the key was typed")
+          (swap! other inc)
           (r/flush)
-          (is (= "1x2" (.-value node)) "not restored before the change check")
-          (p/do
-            (change-check!)
-            (is (= "12" @state (.-value node)))
-            (is (= 1 (.-selectionStart node)) "cursor stays where the key was typed")
-
+          (is (= "12" (.-value node)))
+          (let [writes (spy-writes! node)]
             (type-text! node "3")
-            (change-check!)
+            (r/flush)
             (is (= "132" @state (.-value node)))
-            (is (= 2 (.-selectionStart node)))))))))
+            (is (= [] @writes) "state equal to the typed text isn't written")))))))
+
+(u/deftest ^:dom on-change-restores-value-textarea
+  ;; Same as on-change-restores-value, with a textarea.
+  (let [state (r/atom "12")
+        c (fn []
+            [:textarea {:value @state
+                        :on-change (fn [e]
+                                     (let [v (.. e -target -value)]
+                                       (if (re-matches #"\d*" v)
+                                         (reset! state v)
+                                         (set! (.. e -target -value) @state))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (set-cursor! node 1)
+          (type-text! node "x")
+          (is (= "12" @state (.-value node)))
+          (is (= 1 (.-selectionStart node) (.-selectionEnd node))
+              "cursor stays where the key was typed")
+          (type-text! node "3")
+          (r/flush)
+          (is (= "132" @state (.-value node)))
+          (is (= 2 (.-selectionStart node) (.-selectionEnd node))))))))
+
+(u/deftest ^:dom on-change-reject-change
+  ;; r/reject-change! puts the value before the change back into the input.
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-matches #"\d*" v)
+                                      (reset! state v)
+                                      (r/reject-change! e))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (set-cursor! node 1)
+          (type-text! node "x")
+          (is (= "12" @state (.-value node)))
+          (is (= 1 (.-selectionStart node) (.-selectionEnd node))
+              "cursor stays where the key was typed")
+          (type-text! node "3")
+          (r/flush)
+          (is (= "132" @state (.-value node)))
+          (is (= 2 (.-selectionStart node) (.-selectionEnd node))))))))
+
+(u/deftest ^:dom reject-change-outside-on-change
+  ;; Outside on-change there is no change to reject: nothing happens.
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change #(reset! state (.. % -target -value))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (type-text! node "3")
+          (let [w (d/track-warnings #(r/reject-change! #js {:target node}))]
+            (is (= "123" @state (.-value node)))
+            (when (d/dev?)
+              (is (= 1 (count (:warn w)))))))))))
 
 (u/deftest ^:dom on-change-transforms-value-unicode
   ;; Cursor position is counted in UTF-16 code units by both the Selection
@@ -246,9 +336,7 @@
   ;; Render (animation frame) runs between the keystroke and the state
   ;; update. Reagent mustn't put the old state into the node, as the user can
   ;; type the next key before the state catches up: "a", render, "b" would
-  ;; end up as "b". The check for a rejected change (see on-change-rejects-key)
-  ;; waits for a setTimeout after on-change, so the state has a chance to
-  ;; update first.
+  ;; end up as "b".
   (let [[state dispatch! process!] (async-state "")
         c (fn []
             [:input {:type "text"
@@ -364,34 +452,9 @@
           (is (= text @state (.-value node))))))))
 
 (u/deftest ^:dom async-on-change-rejects-key
-  ;; Async on-change can still reject a change: once the state had a chance
-  ;; to update and didn't change, the rendered value is restored.
-  (let [[state dispatch! process!] (async-state "ab" #(not (re-find #"\d" %)))
-        c (fn []
-            [:input {:type "text"
-                     :value @state
-                     :on-change #(dispatch! (.. % -target -value))}])]
-    (u/async
-      (with-focused-input [c]
-        (fn [node]
-          (type-text! node "1")
-          (r/flush)
-          (is (= "ab1" (.-value node)))
-          (process!)
-          (p/do
-            (change-check!)
-            (is (= "ab" @state (.-value node)))
-            (type-text! node "c")
-            ;; state update arrives before the change check
-            (p/delay 0)
-            (process!)
-            (r/flush)
-            (is (= "abc" @state (.-value node)))))))))
-
-(u/deftest ^:dom async-on-change-rejects-key-with-rerender
-  ;; A re-render with the unchanged value is ignored while on-change values
-  ;; are pending (see async-on-change-rerender-with-lagging-state), but the
-  ;; change check still restores the value of a rejected change.
+  ;; As with sync on-change (on-change-rejects-key), a change that the state
+  ;; never takes stays in the input, also when the input re-renders: it looks
+  ;; the same as state that lags behind.
   (let [[state dispatch! process!] (async-state "ab" #(not (re-find #"\d" %)))
         other (r/atom 0)
         c (fn []
@@ -402,14 +465,94 @@
     (u/async
       (with-focused-input [c]
         (fn [node]
-          (type-text! node "1")
-          (process!)
-          (swap! other inc)
-          (r/flush)
-          (is (= "ab1" (.-value node)))
-          (p/do
-            (change-check!)
-            (is (= "ab" @state (.-value node)))))))))
+          (let [writes (spy-writes! node)]
+            (type-text! node "1")
+            (process!)
+            (swap! other inc)
+            (r/flush)
+            (p/do
+              (p/delay 0)
+              (r/flush)
+              (is (= "ab" @state))
+              (is (= "ab1" (.-value node)))
+              (is (= [] @writes)))))))))
+
+(u/deftest ^:dom async-on-change-restores-value
+  ;; Async on-change that validates before dispatching and puts the last
+  ;; accepted value back into the input. The restored value is newer than the
+  ;; state: the lagging renders before it catches up mustn't be written, and
+  ;; values typed after it still reach the input.
+  (let [[state dispatch! process!] (async-state "")
+        accepted (atom "")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-find #"\d" v)
+                                      (set! (.. e -target -value) @accepted)
+                                      (do (reset! accepted v)
+                                          (dispatch! v)))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "a")
+            (process!)
+            (type-text! node "b")
+            (type-text! node "1")
+            (is (= "ab" (.-value node)) "rejected key is removed")
+            (is (= ["ab"] @writes) "only on-change wrote the node")
+            ;; state = "a", lags behind "ab"
+            (r/flush)
+            (is (= "ab" (.-value node)) "lagging render isn't written")
+            (process!)
+            (r/flush)
+            (is (= "ab" @state (.-value node)))
+            (type-text! node "c")
+            (r/flush)
+            (process!)
+            (r/flush)
+            (is (= "abc" @state (.-value node)))
+            (is (= ["ab"] @writes))
+            (reset! state "")
+            (r/flush)
+            (is (= "" (.-value node)) "new value is written")))))))
+
+(u/deftest ^:dom async-on-change-reject-change
+  ;; r/reject-change! with async state: the value before the change is newer
+  ;; than the state, and lagging renders don't overwrite it. After the app
+  ;; sets a value, that is the value before the next change.
+  (let [[state dispatch! process!] (async-state "")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-find #"\d" v)
+                                      (r/reject-change! e)
+                                      (dispatch! v))))}])]
+    (u/async
+      (with-focused-input [c]
+        (fn [node]
+          (let [writes (spy-writes! node)]
+            (type-text! node "a")
+            (process!)
+            (type-text! node "b")
+            (type-text! node "1")
+            (is (= "ab" (.-value node)) "rejected key is removed")
+            ;; state = "a", lags behind "ab"
+            (r/flush)
+            (is (= "ab" (.-value node)) "lagging render isn't written")
+            (process!)
+            (r/flush)
+            (is (= "ab" @state (.-value node)))
+            (is (= ["ab"] @writes) "only reject-change! wrote the node")
+            (reset! state "")
+            (r/flush)
+            (is (= "" (.-value node)))
+            (type-text! node "2")
+            (is (= "" (.-value node)) "value set by the app is restored")))))))
 
 (u/deftest ^:dom async-on-change-transform
   ;; Async state can still transform the value, once the state has caught up
@@ -442,25 +585,23 @@
   []
   (assoc u/*test-compiler* :strict? true :strict-mode? true))
 
-(u/deftest ^:dom strict-mode-rejects-first-key
+(u/deftest ^:dom strict-mode-new-value-after-first-key
+  ;; The input must still be live after StrictMode's remount: a new value is
+  ;; written to the node.
   (let [state (r/atom "12")
         c (fn []
             [:input {:type "text"
                      :value @state
-                     :on-change (fn [e]
-                                  (let [v (.. e -target -value)]
-                                    (when (re-matches #"\d*" v)
-                                      (reset! state v))))}])]
+                     :on-change #(reset! state (.. % -target -value))}])]
     (u/async
       (with-focused-input [c] (strict)
         (fn [node]
-          (set-cursor! node 1)
-          (type-text! node "x")
-          (is (= "1x2" (.-value node)))
-          (p/do
-            (change-check!)
-            (is (= "12" @state (.-value node)) "first key after mount is reverted")
-            (is (= 1 (.-selectionStart node)))))))))
+          (type-text! node "3")
+          (r/flush)
+          (is (= "123" @state (.-value node)))
+          (reset! state "")
+          (r/flush)
+          (is (= "" (.-value node)) "first new value after mount is written"))))))
 
 (u/deftest ^:dom strict-mode-async-on-change-lagging-state
   ;; The first render after mount has state that lags behind the node.
@@ -488,7 +629,31 @@
             (r/flush)
             (process!)
             (r/flush)
-            (p/do
-              (change-check!)
-              (is (= "abcd" @state (.-value node)) "no lost keys")
-              (is (= [] @writes)))))))))
+            (is (= "abcd" @state (.-value node)) "no lost keys")
+            (is (= [] @writes))))))))
+
+(u/deftest ^:dom strict-mode-restores-value-after-first-key
+  ;; on-change puts the value back on the first key after StrictMode's
+  ;; remount: the cursor is kept and later values are still written.
+  (let [state (r/atom "12")
+        c (fn []
+            [:input {:type "text"
+                     :value @state
+                     :on-change (fn [e]
+                                  (let [v (.. e -target -value)]
+                                    (if (re-matches #"\d*" v)
+                                      (reset! state v)
+                                      (set! (.. e -target -value) @state))))}])]
+    (u/async
+      (with-focused-input [c] (strict)
+        (fn [node]
+          (set-cursor! node 1)
+          (type-text! node "x")
+          (is (= "12" @state (.-value node)))
+          (is (= 1 (.-selectionStart node) (.-selectionEnd node)))
+          (type-text! node "3")
+          (r/flush)
+          (is (= "132" @state (.-value node)))
+          (reset! state "")
+          (r/flush)
+          (is (= "" (.-value node)) "new value is written"))))))

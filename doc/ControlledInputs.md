@@ -25,9 +25,51 @@ after updating the value.
 `:on-change` can update the state on a later tick, e.g. with re-frame
 `dispatch`. While the state lags behind the typed text, Reagent doesn't write
 the older values back to the input, also when something else re-renders the
-input meanwhile (e.g. its parent). If `:on-change` keeps the value unchanged
-(rejects the change), Reagent restores the rendered value after a short delay,
-so that async state has time to update first.
+input meanwhile (e.g. its parent). Reagent only writes the value to the input
+when the input renders a new value that `:on-change` didn't report, e.g. when
+the application clears the input.
+
+## Rejecting a change
+
+If `:on-change` keeps the state unchanged, the typed text stays in the input.
+Reagent can't tell this apart from state that is updated later (e.g. a re-frame
+event queue that is busy for longer than a frame), and writing the rendered
+value back then would lose the keys typed meanwhile. To reject a change,
+call `r/reject-change!` with the event in `:on-change`. It puts the value the
+input had before the change back into the input:
+
+```clojure
+[:input {:value @state
+         :on-change (fn [e]
+                      (let [v (.. e -target -value)]
+                        (if (re-matches #"\d*" v)
+                          (reset! state v)
+                          (r/reject-change! e))))}]
+```
+
+This works also when the state is updated later. With re-frame, validate in
+`:on-change` (the event handler doesn't see the input) and only dispatch
+accepted values:
+
+```clojure
+[:input {:value @(rf/subscribe [:digits])
+         :on-change (fn [e]
+                      (let [v (.. e -target -value)]
+                        (if (re-matches #"\d*" v)
+                          (rf/dispatch [:set-digits v])
+                          (r/reject-change! e))))}]
+```
+
+`:on-change` can also write a value into the input itself, e.g. the last
+accepted value. Don't write the value from the last render (e.g. a value
+captured when the component rendered), or state that is updated later: with
+keys typed since, it is older than the input, and writing it loses them.
+
+Reagent keeps the cursor where the key was typed (its distance from the end
+of the text), unless `:on-change` moves it somewhere other than the end of the
+text. Reagent can't tell a cursor that `:on-change` put at the end apart from
+the browser moving it there when the value is written. To put the cursor at
+the end, move it after the event, e.g. with `r/after-render`.
 
 ## Known issues
 
@@ -35,17 +77,17 @@ so that async state has time to update first.
   state asynchronously, fast typing can lose keys: Reagent can't tell the
   transformed value apart from a new value set by the application. Update the
   state synchronously in this case, e.g. with re-frame `dispatch-sync`.
-- If `:on-change` rejects a change, the rejected text stays visible until the
-  check described above. Keys typed very quickly after it (tens of
-  milliseconds) can be lost when the value is restored.
+- If `:on-change` rejects a change by keeping the state unchanged, the typed
+  text stays in the input, but not in the state. Call `r/reject-change!`, see
+  [Rejecting a change](#rejecting-a-change).
+- If `:on-change` transforms the typed text back to the current state (e.g.
+  drops a typed `0`), nothing is rendered and the typed text stays, as with a
+  rejected change. Call `r/reject-change!` when the transformed value equals
+  the current state, or write the transformed value into the input.
 - `email` and `number` inputs don't have the Selection API, so Reagent can't
   restore the cursor when it writes a different value to them. If
   `:on-change` changes the typed value of such an input, the cursor moves to
   the end. Typing with the value stored as-is works.
-- When `:on-change` changes the value of a text input that is too narrow for
-  its text, Chrome can leave the cursor and the last character just outside
-  the visible area after Reagent writes the value
-  ([#595](https://github.com/reagent-project/reagent/issues/595)).
 
 ## Trying it out
 

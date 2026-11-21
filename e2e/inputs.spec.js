@@ -16,8 +16,8 @@
 //
 // Async on-change (state updated on a later tick, like re-frame dispatch)
 // leaves the rendered value behind the DOM. Reagent ignores renders of values
-// that on-change already reported, and checks for a rejected change only
-// after the state for it had a chance to update (#676).
+// that on-change already reported, and doesn't restore the rendered value
+// when on-change keeps the state unchanged (#676).
 const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
@@ -129,7 +129,7 @@ test.describe('IME composition (#587)', () => {
 // digits when upper-casing) let the browser scroll back into place.
 // https://github.com/reagent-project/reagent/issues/595
 test.describe('caret visible at the end of a full input (#595)', () => {
-  async function scrollGaps(page, id, transform) {
+  async function scrollGaps(page, id, transform, rtl = false) {
     const input = page.getByTestId(id);
     await input.click();
     const text = 'abcdefghijklmnopqrstuvwxyz';
@@ -137,13 +137,15 @@ test.describe('caret visible at the end of a full input (#595)', () => {
     for (let i = 0; i < text.length; i++) {
       await page.keyboard.press(text[i]);
       await expect(input).toHaveValue(transform(text.slice(0, i + 1)));
-      const m = await input.evaluate((el) => new Promise((resolve) =>
+      const m = await input.evaluate((el, rtl) => new Promise((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve({
-          gap: el.scrollWidth - el.clientWidth - el.scrollLeft,
+          // In right-to-left text the end is on the left: scrollLeft goes
+          // from 0 down to -(scrollWidth - clientWidth).
+          gap: el.scrollWidth - el.clientWidth - (rtl ? -el.scrollLeft : el.scrollLeft),
           overflow: el.scrollWidth > el.clientWidth,
           caret: el.selectionStart,
         }))),
-      ));
+      ), rtl);
       expect(m.caret).toBe(i + 1);
       if (m.overflow) gaps.push(m.gap);
     }
@@ -156,13 +158,17 @@ test.describe('caret visible at the end of a full input (#595)', () => {
     expect(gaps.filter((g) => g > 1)).toEqual([]);
   });
 
-  // Known failure: Reagent writes the upper-cased (wider) value and sets the
-  // selection, and Chrome then scrolls only until the caret position itself is
-  // inside the input, so the last character and the caret are cut off by
-  // 2-10px.
+  // Reagent writes the upper-cased (wider) value and sets the selection.
+  // Chrome then scrolls only until the caret position itself is inside the
+  // input, cutting off the caret and the last character by 2-10px, so Reagent
+  // scrolls to the end itself when the cursor is at the end.
   test('narrow-upper-sync', async ({ page }) => {
-    test.fail(true, 'https://github.com/reagent-project/reagent/issues/595');
     const gaps = await scrollGaps(page, 'narrow-upper-sync', (s) => s.toUpperCase());
+    expect(gaps.filter((g) => g > 1)).toEqual([]);
+  });
+
+  test('narrow-upper-rtl-sync', async ({ page }) => {
+    const gaps = await scrollGaps(page, 'narrow-upper-rtl-sync', (s) => s.toUpperCase(), true);
     expect(gaps.filter((g) => g > 1)).toEqual([]);
   });
 });
@@ -205,17 +211,93 @@ test.describe('re-render with lagging state (#676)', () => {
   }
 });
 
-// on-change can reject a change by keeping the state unchanged; Reagent then
-// restores the rendered value. Here digits are rejected. With async state the
-// check waits for the state to update first.
-test.describe('rejected change is reverted', () => {
-  for (const id of ['reject-sync', 'reject-async']) {
+// #676 (comment): the state lags by more than a setTimeout and a frame (e.g.
+// a busy re-frame queue). A check for a rejected change, which restored the
+// rendered value after a render (2.0.x; later also after a setTimeout), wrote
+// the lagging value back.
+// https://github.com/reagent-project/reagent/issues/676#issuecomment-6951981693
+test.describe('slow async state (#676)', () => {
+  const text = 'PPARG, HFE, GSTP1, CYP2D6';
+  for (const id of ['text-async-slow', 'textarea-async-slow']) {
     test(id, async ({ page }) => {
       await page.getByTestId(id).click();
-      await page.keyboard.type('ab1c2d', { delay: 100 });
-      await expectValue(page, id, 'abcd');
+      await page.keyboard.type(text, { delay: 10 });
+      await expectValue(page, id, text);
     });
   }
+});
+
+// on-change rejects digits with r/reject-change!, or by putting the current
+// value back into the input. (Keeping the state unchanged leaves the typed
+// text, see below.)
+test.describe('rejected change', () => {
+  for (const id of ['reject-change-sync', 'reject-change-async']) {
+    test(`r/reject-change!, ${id}`, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectValue(page, id, 'abcd');
+    });
+
+    test(`caret mid-text after a rejected key, ${id}`, async ({ page }) => {
+      const input = page.getByTestId(id);
+      await input.click();
+      await page.keyboard.type('abcdef');
+      for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+      await page.keyboard.type('x1y', { delay: 50 });
+      await expectValue(page, id, 'abcxydef');
+      expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+    });
+  }
+
+  test('on-change restores the value, reject-restore-sync', async ({ page }) => {
+    await page.getByTestId('reject-restore-sync').click();
+    await page.keyboard.type('ab1c2d', { delay: 10 });
+    await expectValue(page, 'reject-restore-sync', 'abcd');
+  });
+
+  test('caret mid-text after a restored value, reject-restore-sync', async ({ page }) => {
+    const input = page.getByTestId('reject-restore-sync');
+    await input.click();
+    await page.keyboard.type('abcdef');
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('x1y', { delay: 50 });
+    await expectValue(page, 'reject-restore-sync', 'abcxydef');
+    expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual([5, 5]);
+  });
+});
+
+// on-change keeps the state unchanged: the typed text stays in the input
+// (listed as known issues in doc/ControlledInputs.md), as Reagent can't tell
+// it apart from state that is updated later (#676). Checks the input and the
+// state separately, after a pause, so a delayed write of the state into the
+// input would fail the test.
+test.describe('state unchanged by on-change (#676)', () => {
+  async function expectStays(page, id, value, state) {
+    await expect.poll(() => stateText(page, id)).toBe(state);
+    await page.waitForTimeout(100);
+    await expect(page.getByTestId(id)).toHaveValue(value);
+    expect(await stateText(page, id)).toBe(state);
+  }
+
+  // on-change rejects values with digits. Every value after the first digit
+  // has a digit too, so the state stays "ab".
+  for (const id of ['reject-sync', 'reject-async']) {
+    test(`rejected key stays in the input, ${id}`, async ({ page }) => {
+      await page.getByTestId(id).click();
+      await page.keyboard.type('ab1c2d', { delay: 10 });
+      await expectStays(page, id, 'ab1c2d', 'ab');
+    });
+  }
+
+  // on-change drops zeros: the value without the typed 0 is the current
+  // state, so nothing is rendered and the 0 stays.
+  test('typed 0 stays, number-nozero-sync', async ({ page }) => {
+    await page.getByTestId('number-nozero-sync').click();
+    await page.keyboard.type('12345', { delay: 10 });
+    for (let i = 0; i < 2; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('0');
+    await expectStays(page, 'number-nozero-sync', '123045', '12345');
+  });
 });
 
 // Async on-change that transforms the value: the caret is still restored.
@@ -241,8 +323,6 @@ test.describe('known issues', () => {
   const transformCases = [
     // on-change lower-cases: the typed "Q" is written back as "q".
     { id: 'email-lower-sync', initial: 'user@example.com', left: 4, insert: 'QR', expected: 'user@exampleqr.com' },
-    // on-change drops zeros: the typed "0" is removed.
-    { id: 'number-nozero-sync', initial: '12345', left: 2, insert: '09', expected: '123945' },
   ];
   for (const c of transformCases) {
     test(`caret mid-text when on-change changes the value, ${c.id}`, async ({ page }) => {
@@ -252,17 +332,6 @@ test.describe('known issues', () => {
       for (let i = 0; i < c.left; i++) await page.keyboard.press('ArrowLeft');
       await page.keyboard.type(c.insert, { delay: 50 });
       await expectValue(page, c.id, c.expected, { timeout: 1000 });
-    });
-  }
-
-  // Keys typed right after a rejected key land on the rejected text, and are
-  // lost when Reagent restores the rendered value.
-  for (const id of ['reject-sync', 'reject-async']) {
-    test(`fast typing after a rejected key, ${id}`, async ({ page }) => {
-      test.fail(true, 'rejected text is restored after a setTimeout and a render');
-      await page.getByTestId(id).click();
-      await page.keyboard.type('ab1c2d', { delay: 10 });
-      await expectValue(page, id, 'abcd', { timeout: 1000 });
     });
   }
 
