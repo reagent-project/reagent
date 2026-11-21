@@ -50,7 +50,6 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      ENV: ${{ matrix.env }}
       REACT_VERSION: ${{ matrix.react }}
 
     steps:
@@ -95,10 +94,6 @@ jobs:
 
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
-
-      - uses: codecov/codecov-action@v7
-        with:
-          env_vars: ENV
 
   update-site:
     name: Update site
