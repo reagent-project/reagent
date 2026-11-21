@@ -3,6 +3,9 @@ name: Run tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint and format check
@@ -79,7 +82,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -122,7 +125,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -159,7 +162,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
