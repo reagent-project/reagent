@@ -3,14 +3,19 @@ name: Run tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint and format check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup clj-kondo and cljfmt
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@13.7.0
         with:
           clj-kondo: 2026.10.26
           cljfmt: 0.16.6
@@ -45,20 +50,22 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      ENV: ${{ matrix.env }}
       REACT_VERSION: ${{ matrix.react }}
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
         with:
-          distribution: 'adopt'
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
           java-version: 21
       - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@13.7.0
         with:
-          lein: 2.9.10
+          # 2.13.x tags on the GitHub mirror have a stale bin/lein (2.12.1-SNAPSHOT)
+          lein: 2.12.0
           cli: latest
 
       # Note, react 18 doesn't get cached? Or might even mess up node cache
@@ -69,16 +76,16 @@ jobs:
           cp react-18-package-lock.json package-lock.json
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: 'package.json'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -88,10 +95,6 @@ jobs:
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
 
-      - uses: codecov/codecov-action@v5
-        with:
-          env_vars: ENV
-
   update-site:
     name: Update site
     runs-on: ubuntu-latest
@@ -99,28 +102,31 @@ jobs:
     needs: test
     environment: build-site
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
         with:
-          distribution: 'adopt'
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
           java-version: 21
       - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@13.7.0
         with:
-          lein: 2.9.8
+          # 2.13.x tags on the GitHub mirror have a stale bin/lein (2.12.1-SNAPSHOT)
+          lein: 2.12.0
           cli: latest
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: 'package.json'
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -139,24 +145,27 @@ jobs:
     needs: test
     environment: build-site
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
         with:
-          distribution: 'adopt'
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
           java-version: 21
       - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@13.7.0
         with:
-          lein: 2.9.8
+          # 2.13.x tags on the GitHub mirror have a stale bin/lein (2.12.1-SNAPSHOT)
+          lein: 2.12.0
           cli: latest
 
       # setup-java cache only looks at pom.xml for the key
       - name: Cache m2
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
