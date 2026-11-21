@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup clj-kondo and cljfmt
         uses: DeLaGuardo/setup-clojure@13.7.0
         with:
@@ -53,6 +55,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
@@ -82,7 +86,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -104,6 +108,8 @@ jobs:
     environment: build-site
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
@@ -125,7 +131,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
@@ -145,6 +151,8 @@ jobs:
     environment: build-site
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
@@ -162,7 +170,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-m2-
 
