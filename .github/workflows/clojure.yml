@@ -112,14 +112,15 @@ jobs:
         with:
           node-version-file: 'package.json'
 
-      # setup-java cache only looks at pom.xml for the key
+      # Own key: this job only fetches the shadow-cljs deps, so saving under
+      # the test jobs' key could leave their cache without the lein deps.
       - name: Cache m2
         uses: actions/cache@v6
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj', 'shadow-cljs.edn', 'deps.edn') }}
+          key: ${{ runner.os }}-m2-e2e-${{ hashFiles('shadow-cljs.edn', 'deps.edn') }}
           restore-keys: |
-            ${{ runner.os }}-m2-
+            ${{ runner.os }}-m2-e2e-
 
       - name: Install node deps
         run: npm ci
