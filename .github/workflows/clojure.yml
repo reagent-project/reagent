@@ -95,6 +95,54 @@ jobs:
       - name: Run tests
         run: ./test-environments/${{ matrix.env }}/test.sh
 
+  e2e:
+    name: Controlled input e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: 21
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: 'package.json'
+
+      # Own key: this job only fetches the shadow-cljs deps, so saving under
+      # the test jobs' key could leave their cache without the lein deps.
+      - name: Cache m2
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-e2e-${{ hashFiles('shadow-cljs.edn', 'deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-e2e-
+
+      - name: Install node deps
+        run: npm ci
+
+      # Playwright recommends not caching browsers: restoring takes about as
+      # long as downloading, and the system deps have to be installed anyway.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium-headless-shell
+
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+      # Traces of failed tests (playwright.config.js: trace retain-on-failure),
+      # open with `npx playwright show-trace <trace.zip>` or trace.playwright.dev
+      - name: Upload Playwright traces
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 14
+
   update-site:
     name: Update site
     runs-on: ubuntu-latest

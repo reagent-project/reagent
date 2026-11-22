@@ -85,6 +85,9 @@ Known bugs are marked with `test.fail` and a link to the issue.
 To try the page by hand, run `npm run e2e:page` and open
 http://127.0.0.1:8091.
 
+CI runs these in the `e2e` job of `.github/workflows/clojure.yml`. Traces of
+failed tests are uploaded as the `playwright-test-results` artifact.
+
 ## Lint and formatting
 
 ```bash

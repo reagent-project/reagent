@@ -60,6 +60,9 @@ npx playwright install chromium-headless-shell   # once
 npm run test:e2e   # shadow-cljs release e2e && playwright test
 ```
 
+CI runs them in the `e2e` job (`clojure.yml`); failure traces are uploaded
+as the `playwright-test-results` artifact.
+
 `npx playwright test` alone reuses the last build; `--repeat-each 20` checks
 for flakiness. The page is served on port 8091; set `E2E_PORT` to run in
 several checkouts at once. To try the page by hand, `npm run e2e:page` builds
